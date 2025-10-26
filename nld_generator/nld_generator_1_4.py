@@ -1,7 +1,8 @@
-import pandas as pd
-import google.generativeai as genai
 import os
 import time
+
+import google.generativeai as genai
+import pandas as pd
 
 try:
     genai.configure(api_key=os.environ["GEMINI_API_KEY"])

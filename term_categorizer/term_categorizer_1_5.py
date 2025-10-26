@@ -1,8 +1,10 @@
-import pandas as pd
-import google.generativeai as genai
+import json
 import os
 import time
-import json
+
+import google.generativeai as genai
+import pandas as pd
+
 
 def run_term_categorization():
     try:
@@ -166,8 +168,6 @@ def run_term_categorization():
 
         try:
             final_df = pd.DataFrame(classification_results)
-
-            column_order = ['Term', 'Category', 'Reasoning', 'NLD']
 
             final_df.to_csv(OUTPUT_FILE_PATH, index=False, encoding='utf-8-sig')
             print(f"Classification results successfully saved to '{OUTPUT_FILE_PATH}'")

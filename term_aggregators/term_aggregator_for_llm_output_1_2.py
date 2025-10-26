@@ -1,7 +1,7 @@
-import pandas as pd
-from collections import Counter
-import nltk
 import os
+from collections import Counter
+
+import pandas as pd
 from nltk.stem import RSLPStemmer
 
 INPUT_FILE_PATH = os.environ["LLM_OUTPUT_FILE"]

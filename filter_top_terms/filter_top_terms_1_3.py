@@ -1,6 +1,6 @@
-import pandas as pd
 import os
 
+import pandas as pd
 
 INPUT_FILTERED_CSV= os.environ["AGGREGATOR_OUTPUT_FILE"]
 OUTPUT_FILTERED_CSV = os.environ["FILTERED_TERMS_OUTPUT"]

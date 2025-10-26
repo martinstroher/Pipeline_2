@@ -1,8 +1,9 @@
-import pandas as pd
-import google.generativeai as genai
-import os
 import json
-import time
+import os
+
+import google.generativeai as genai
+import pandas as pd
+
 
 def run_llm_term_extraction():
     try:
