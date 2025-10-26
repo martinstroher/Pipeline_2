@@ -1,0 +1,25 @@
+Sedimentary Geological Object: A Geological Object constituted by some Sedimentary Rock or Sediment.
+Depositional Unit: A Sedimentary Geological Object recognizable in a mapping scale of at least 1:1000 m.
+Channel Unit: An elongated Depositional Unit having some Channel Surface as its boundary and constituted by some Sediment or Sedimentary Rock that fills it.
+Lobe Unit: A Depositional Unit having some Lobe Geometry.
+Levee Unit: A Depositional Unit having Wedge Geometry and forming a bank or ridge geomorphology associated with some Channel Unit.
+Mound Unit: A Depositional Unit having Mound Geometry with an irregular top surface and internal chaotic facies.
+Overbank Unit: A Depositional Unit found at some overbank area, which is geomorphologically associated with some Channel Unit or Levee Unit.
+Sedimentary Rock: A Rock constituted by some collection of sedimentary grains or particles.
+Sediment: An Unconsolidated Earth Material constituted by some collection of sedimentary grains or particles.
+Depositional System: An Object Aggregate whose members are mereotopologically linked Depositional Units.
+Channel Surface: A Geological Boundary that forms the basis of a Channel Unit, having a concave-up shape unless truncated by overlying depositional units.
+Dimension: A Quality that inheres in an Independent Continuant by virtue of one of its one-dimensional extents. It is a category that includes at least the three dimensions defined in this ontology: Width, Length, and Thickness. All dimensions are expressed by a real number indicating its value and a literal string indicating its measurement unit.
+Length: A Dimension that inheres in an Independent Continuant by virtue of the distance between its two extremes along its longest side.
+Thickness: A Dimension that inheres in an Independent Continuant by virtue of the distance between its two extremes perpendicularly to its width and length.
+Geometry: A Quality that inheres in a Depositional Unit by virtue of its external three-dimensional shape. It does not reflect the exact mathematical specifications of a geometric shape but abstracts and simplifies these specifications
+Geometry Value: An enumeration of the possible values for Geometry instances.
+Channel Geometry: A synonym for Geometry with “channel” value.
+Lobe Geometry: A synonym for Geometry with “lobe” value.
+Mound Geometry: A synonym for Geometry with “mound” value.
+Wedge Geometry: A synonym for Geometry with “wedge” value.
+Sinuosity: A Quality that inheres in a Channel Unit by virtue of how wavy it is across its length. It is expressed by a real number given by its curved length divided by its length in a straight line.
+Facies: A visual pattern of properties of Geological Objects.
+Sedimentary Facies: A Facies consisting of the sum of the sedimentological characteristics of Depositional Units.
+Facies Association: A Generically Dependent Continuant that consists of a collective of Facies.
+Sedimentary Structure: A Geological Structure consisting of a pattern of the internal arrangement of Depositional Units.
