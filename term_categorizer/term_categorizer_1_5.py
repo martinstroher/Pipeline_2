@@ -66,7 +66,7 @@ def run_term_categorization():
 
 
     system_instruction = "You are an expert ontology engineer specializing in foundational (BFO) and geological (GeoCore and GeoReservoir) ontologies. You process data in batches and your response format MUST be a valid JSON array of objects."
-    prompt_template = """Your task is to classify a batch of geological terms based on their Natural Language Definitions (NLDs). The terms and its definitions may be in Portguese or English.
+    prompt_template = """Your task is to classify a batch of geological terms based on their Natural Language Definitions (NLDs).
     
     **METHODOLOGY (Follow Strictly for each item):**
     1.  **Analyze Data:** Read the Term and its NLD.

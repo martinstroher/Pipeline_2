@@ -77,9 +77,6 @@ def run_nld_generation():
                     prompt_template_definicao.format(term=term)) # Pass term directly
                 nld_generated = response_definicao.text.strip()
 
-                term_lower = term.lower()
-                nld_lower = nld_generated.lower()
-
                 print(f"  -> Definition generated successfully.")
                 results.append({'Term': term, 'NLD': nld_generated}) # Save Term and NLD
 
