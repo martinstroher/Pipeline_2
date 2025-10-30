@@ -44,7 +44,7 @@ def run_nld_generation():
 
 
     system_instruction_definicao = "You are a senior geoscientist and ontology engineer. Your expertise is in oil and gas exploration geology, with a specific focus on the carbonate reservoirs of the Brazilian Pre-Salt."
-    prompt_template_definicao = """Generate a concise and precise Natural Language Definition (NLD) in Portuguese for the provided geological term. The term may be in Portuguese or English.
+    prompt_template_definicao = """Generate a concise and precise Natural Language Definition (NLD) for the provided geological term.
     
     Mandatory Instructions:
     1. The definition must strictly follow the Aristotelian structure "X is a Y that Z". For example, "An amount of rock is a solid consolidated earth material that is constituted by an aggregate of particles made of mineral matter or material of biological origin".

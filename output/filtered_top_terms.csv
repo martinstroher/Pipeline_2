@@ -1,995 +1,950 @@
 ﻿Readable_Term,Frequency
-rift,38
-dolomite,35
+dolomite,39
 fault,35
-aptian,32
-reservoir,29
-fracture,28
-unconformity,28
-carbonate,27
-permeable,27
-porosity,27
-evaporite,25
-grainstone,25
-cement,23
+rift,35
+aptian,34
+reservoir,32
+sediment,30
+unconformity,30
+carbonate,29
+porosity,29
+evaporite,29
+fracture,27
+grainstone,26
+permeable,26
+reservoir quality,23
+depositional environment,23
+structural high,23
 spherulite,22
-sediment,21
-reservoir quality,20
-structural high,20
+dissolution,21
 calcite,20
-seismic data,20
+lacustrine environment,20
+mudstone,20
+rift phase,20
+seismic facies,20
 diagenesis,19
-dissolution,19
-carbonate reservoir,19
+erosion,19
+lacustrine carbonate,19
 coquina,19
-mudstone,19
-lacustrine environment,18
-rift phase,18
-silica,18
-stevensite,18
-subsidence,18
-depositional environment,18
-erosion,17
-facies,17
+barremian,19
+facies,18
+carbonate reservoir,18
+onlap,18
+rudstone,18
+ostracod,17
 packstone,17
-rudstone,17
+shrub,17
+silica,17
+carbonate platform,17
+shale,17
+volcanic,17
 anhydrite,17
-compaction,16
-lacustrine carbonate,16
+stevensite,17
+tectonic,17
+stromatolite,17
+carbonate rock,16
+cement,16
+intraclast,16
 microbialite,16
-ostracod,16
-pre-salt,16
-barremian,16
+subsidence,16
 basalt,16
-cretaceous,16
-seismic facies,16
-shale,16
-onlap,16
-stromatolite,16
-alkaline,15
-hydrocarbon,15
-salt,15
-shrub,15
-laminite,15
-carbonate rock,14
-intraclast,14
-mound,14
-recrystallization,14
-silicification,14
+sag phase,16
+compaction,15
+mound,15
+silicification,15
+accommodation space,15
+halite,15
+cretaceous,15
+evaporation,14
+hauterivian,14
+laminate,14
+recrystallized,14
+salt,14
 travertine,14
-albian,14
-carbonate platform,14
+seismic data,14
+deposit,14
+salt deposit,14
 wackestone,14
-depositional model,14
-evaporation,13
-sag phase,13
-accommodation space,13
-halite,13
+peloid,13
+secondary porosity,13
 normal fault,13
+sandstone,13
 depositional system,13
-tectonics,13
-core,12
-formation,12
-lower cretaceous,12
-peloid,12
-reworked,12
+albian,13
+depositional model,13
+alkalinity,12
+evaporite deposit,12
+hydrocarbon,12
+lithology,12
+pre-salt,12
 water depth,12
-basement,12
-clinoform,12
+bed,12
 graben,12
-platform,12
+horst,12
+lithofacies,12
+seal,12
+sedimentary basin,12
 seismic attribute,12
 source rock,12
-precipitate,12
-heterogeneity,12
-hauterivian,11
-lake,11
-secondary porosity,11
+substrate,12
+basement,12
+clinoform,12
+laminite,12
+early cretaceous,11
+facies association,11
+lower cretaceous,11
+organic matter,11
+salinity,11
+carbonate mound,11
 continental margin,11
-horst,11
-lithofacies,11
-sandstone,11
-seal,11
+lacustrine deposit,11
+petroleum system,11
+post-rift,11
 thermal subsidence,11
 volcanic rock,11
-laminate,11
-salt deposit,11
+well log,11
+basin,11
+ooid,11
+hydrothermal activity,11
+quartz,11
 rift section,11
-calcite spherulite,11
-alkaline lacustrine environment,10
-carbonate deposit,10
-dolomite cement,10
-evaporite deposit,10
-lithology,10
+boundstone,10
+carbonate facies,10
+core,10
+crystal shrub,10
+cyclicity,10
+depositional facies,10
+lake,10
 micrite,10
 reservoir facies,10
-dip,10
+texture,10
 economic basement,10
-sedimentary basin,10
-seismic interpretation,10
 tectonic activity,10
-volcanic,10
-well log,10
-current,10
-substrate,10
-thin section,10
-well,10
-hydrothermal activity,10
-kerolite,10
-boundstone,9
-crystal shrub,9
-depositional facies,9
-drift phase,9
+drift phase,10
+bioclast,10
+calcite spherulite,10
+precipitate,10
+alkaline lake,9
 limestone,9
-microcrystalline calcite,9
-reservoir heterogeneity,9
-reservoir rock,9
-salinity,9
-bed,9
-deep water,9
-petroleum system,9
+acoustic impedance,9
+clay,9
+geological model,9
+half-graben,9
 petrophysical property,9
-post-rift,9
-rift basin,9
-deposit,9
-lake water,9
-ooid,9
-carbonate mound,9
-reservoir characterization,9
-structure map,9
-basin,9
-organic matter,9
-sedimentary rock,9
-igneous rock,9
-post-rift phase,9
-depositional process,9
-quartz,9
+salt layer,9
+aragonite,9
+deep water,9
+platform,9
+thin section,9
+stratigraphy,9
 facies distribution,9
-calcite cement,8
-clay mineral,8
+margin,9
+sequence,9
+well,9
+alkaline lacustrine environment,9
+formation,9
+uplift,9
+carbonate deposit,8
+chalcedony,8
 crust,8
-cyclicity,8
+cyclothem,8
 depositional setting,8
-early cretaceous,8
-facies association,8
-geometry,8
+dolomite cement,8
+fabric,8
+geochemical model,8
 marine fossil,8
-post-rift sequence,8
-reservoir property,8
+microcrystalline calcite,8
+organic-rich shale,8
+regional seal,8
+reservoir heterogeneity,8
+reservoir interval,8
+reworked,8
 sediment-water interface,8
+shrubstone,8
 silica nodule,8
-texture,8
-water column,8
-amplitude,8
+structure,8
+truncation,8
 bathymetry,8
-bivalve,8
-climate,8
-depocenter,8
 diagenetic process,8
-geologic model,8
-lacustrine deposit,8
+dip,8
+oceanic crust,8
 oil,8
-sag,8
+passive margin,8
+post-rift phase,8
+prograde,8
+regional unconformity,8
+rift fault,8
 structural low,8
+transfer zone,8
+transitional environment,8
+bivalve,8
+calcite cement,8
+current,8
+hydrothermal fluid,8
 hydrothermal vent,8
+lacustrine carbonate platform,8
 lake level,8
 moldic porosity,8
 replacive,8
-sequence boundary,8
-transitional environment,8
-transport,8
-reservoir model,8
+build-up,8
+geological setting,8
+reservoir characterization,8
+rift basin,8
 seismic reflector,8
-stratigraphic unit,8
-tectono-stratigraphic evolution,8
 well data,8
-geochemical model,8
-petrography,8
-sequence stratigraphy,8
-fabric,8
-pre-salt section,8
-salt layer,8
-clay matrix,8
+intraclast grainstone,8
+heterogeneity,8
+sedimentary rock,8
+continental breakup,8
+igneous rock,8
+depositional process,8
+kerolite,8
+lacustrine carbonate reservoir,8
 matrix,8
+siliciclastic grain,8
+microbial carbonate,8
 sorting,8
-oil field,8
-alkaline lake,7
-chalcedony,7
-cyclothem,7
+water column,8
+abiotic precipitation,7
+clay mineral,7
 dolostone,7
-intraclastic grainstone,7
+mg-rich clay,7
 microcrystalline dolomite,7
-organic-rich shale,7
-shrubstone,7
+post-rift sequence,7
+water chemistry,7
+continental crust,7
 crystalline basement,7
-half-graben,7
-marine environment,7
-microbial carbonate,7
-passive margin,7
+depocenter,7
+pre-salt reservoir,7
 reflector,7
-sequence,7
-transfer zone,7
-uplift,7
-carbonate facies,7
+reservoir rock,7
+rift stage,7
+seismic interpretation,7
 hydrothermal alteration,7
-hydrothermal fluid,7
-lacustrine carbonate platform,7
+lacustrine carbonate deposit,7
+lake water,7
+marine environment,7
+neomorphism,7
+sequence boundary,7
+silica cement,7
 siliciclastic,7
 siltstone,7
-build-up,7
-deformation,7
-downlap,7
-pre-salt sequence,7
-regional unconformity,7
-stratigraphic chart,7
-distal facies,7
+wave base,7
+magmatic event,7
+reservoir model,7
+seismic horizon,7
+stratigraphic unit,7
+tectono-stratigraphic evolution,7
+petrography,7
+carbonate sediment,7
+environmental condition,7
 facies model,7
-margin,7
 reworked facies,7
+sag section,7
 carnallite,7
-rift stage,7
+pre-salt section,7
+arid climate,7
+clay matrix,7
+climate,7
 grain size,7
 interparticle porosity,7
-pyrite,7
-siliciclastic grain,7
+sag stage,7
 talc,7
-abiotic precipitation,6
-accumulation,6
+rock type,7
+hydrocarbon exploration,7
+production,7
+trap,7
+relief,7
+alluvial fan,7
 allochem,6
 buildup,6
-extension,6
+conjugate margin,6
+distal facies,6
+dolomite rhomb,6
 geological record,6
 intraparticle porosity,6
-lamina,6
-late jurassic,6
-microcrystalline quartz,6
-microcrystalline silica,6
-morphology,6
-oncoid,6
-silica precipitate,6
-structure,6
-truncation,6
-volcanic fragment,6
-water chemistry,6
-acoustic impedance,6
-evaporation rate,6
-fracture zone,6
-frequency,6
-hanging wall,6
-oceanic crust,6
-progradation,6
-rift fault,6
-seismic pattern,6
-shallow water,6
-stratification,6
-tectonic evolution,6
-abiotic origin,6
-dolomite rhomb,6
-effective porosity,6
-gas,6
-low-energy environment,6
-microporosity,6
-mineral,6
-neomorphism,6
-primary porosity,6
-saddle dolomite,6
-saponite,6
-sidewall core,6
-silica cement,6
-supersaturation,6
-trap,6
-wave base,6
-carbonate factory,6
-seismic horizon,6
-syn-depositional fault,6
-carbonate mud,6
-geological setting,6
 lacustrine system,6
-seismic trace,6
-tectonic setting,6
-fragment,6
-reservoir interval,6
+lamina,6
+microbial origin,6
+microcrystalline quartz,6
+oncoid,6
+slope,6
+volcanic fragment,6
+aggradation,6
+amplitude,6
+crustal thinning,6
+drift,6
+halokinesis,6
+hanging wall,6
+high-energy environment,6
+lithosphere,6
+oil accumulation,6
+reservoir characteristic,6
+salt tectonics,6
+seismic pattern,6
+seismic resolution,6
+chert,6
+conglomerate,6
+desiccation,6
+isotope analysis,6
+carbonate factory,6
+deformation,6
+downlap,6
+erosional truncation,6
+extension,6
 fault reactivation,6
-ultra-deep water,6
-bioclast,6
-diagenetic constituent,6
-host rock,6
+fault block,6
+feldspar,6
+lacustrine setting,6
+magmatic,6
+stratigraphic framework,6
+syn-deposition fault,6
+tectonic setting,6
+accommodation,6
+stratigraphic architecture,6
+fragment,6
+chemical precipitate,6
 hydrocarbon accumulation,6
 hydrothermal process,6
-sag section,6
-sag stage,6
-stratigraphy,6
+pore system,6
+primary porosity,6
+pyrite,6
+sedimentology,6
+syngenetic precipitate,6
 wave,6
-fault block,6
 gypsum,6
 wave action,6
-bivalve rudstone,6
-lacustrine carbonate reservoir,6
-seismic section,6
-stratigraphic framework,6
-relief,6
-abiotic process,5
-clast,5
-hydrodynamics,5
+vertical resolution,6
+accumulation,6
+geochemistry,6
+subaerial exposure,6
+tectonic evolution,6
+in situ deposit,6
+mud,6
+oil field,6
+reservoir property,6
+cementstone,5
+displacive,5
+fascicular-optic calcite,5
+lacustrine coquina,5
+lake margin,5
 layer,5
-mg-rich clay,5
-mg-silicate,5
-microbial macrostructure,5
 microbial mat,5
-microbial microstructure,5
-pre-salt structure,5
-regional seal,5
+microcrystalline silica,5
 sedimentary structure,5
-subaerial exposure,5
-bed thickness,5
+silica precipitation,5
+spherulitestone,5
+stylolite,5
+vertical growth,5
+vug,5
+aggrading geometry,5
+bioclastic grainstone,5
 channel,5
-composition,5
-continental crust,5
-continental environment,5
-continuity,5
-crustal thinning,5
-density log,5
-discontinuity,5
-drift,5
+diagenetic alteration,5
+evaporite sequence,5
 extensional fault,5
-footwall,5
-geological history,5
-halokinesis,5
-high-energy environment,5
-isopach map,5
-lithosphere,5
+gas,5
+lateral continuity,5
 mg-clay,5
-offshore,5
-reactivity,5
-reservoir characteristic,5
-rift process,5
-seismic resolution,5
-stratigraphic sequence,5
+resistivity log,5
+seismic image,5
+stratification,5
 sylvite,5
-thickness,5
-valanginian,5
-chert,5
-clay,5
-conduit,5
-conglomerate,5
-depositional energy,5
-fibrous calcite,5
-gel,5
-isotope analysis,5
+syn-rift,5
+turbidite,5
+abiotic,5
+early diagenesis,5
+effective porosity,5
+lake level fluctuation,5
+low-energy environment,5
+micropore,5
+mineral,5
 pore space,5
-sepiolite,5
-shallow marine environment,5
-silt,5
-topographic high,5
+saponite,5
+seismic stratigraphy,5
+shallow water,5
 weathering,5
-erosional truncation,5
-feldspar,5
+deep lake,5
+depositional geometry,5
+fault system,5
+gneiss,5
 hinge line,5
-magmatic event,5
-magmatism,5
+laminated carbonate,5
 mechanical subsidence,5
-oceanic anoxic event,5
-precambrian basement,5
+precambrian,5
+pre-salt sequence,5
+rift system,5
+rift margin,5
+sedimentary record,5
+structural feature,5
+structure map,5
 tholeiitic basalt,5
-accommodation,5
-breccia,5
+valanginian,5
+carbonate mud,5
 carbonate system,5
-high,5
-lacustrine carbonate system,5
+fetch,5
+jurassic,5
 mg-silicate clay,5
-toplap,5
-environmental condition,5
-fossil,5
-oil equivalent,5
-oil reserve,5
-intercalated,5
-marginal basin,5
+palaeotopography,5
+seismic trace,5
+stratigraphic chart,5
+base of salt,5
+carbonate build-up,5
+in situ facies,5
+sequence stratigraphy,5
+talc-stevensite ooid,5
+topography,5
+base salt,5
+basement high,5
+climate change,5
 salt basin,5
+ultra-deep water,5
 velocity model,5
-arid climate,5
 barite,5
-chemical precipitate,5
-continental carbonate,5
-exposure,5
-fluid flow,5
+depositional sequence,5
+fibrous calcite,5
 gastropod,5
-genesis,5
+host rock,5
+intraclast rudstone,5
 intracrystalline porosity,5
-muscovite,5
-nucleus,5
-phosphate bioclast,5
-pore system,5
+metamorphic rock,5
+microporosity,5
 pore type,5
-analogue,5
+saddle dolomite,5
+carbonate precipitate,5
+exploration,5
 pre-salt play,5
-rock type,5
+density log,5
 static model,5
-geochemical analysis,5
+lake hydrology,5
+late aptian,5
 marine setting,5
 mica,5
-lake hydrology,5
+microbial influence,5
+mineralogy,5
+pebble,5
+burial,5
 magnesite,5
-serpentinization,5
-fracture porosity,5
-microbial origin,5
-aquifer,5
-carbonate mineral,5
-fault system,5
-hydrocarbon exploration,5
-structural setting,5
+offshore,5
+spatial distribution,5
+sediment transport,5
 tachyhydrite,5
-isotopic composition,5
-stable isotope,5
-late aptian,5
-alluvial fan,5
-carbonate precipitate,4
-cementstone,4
+fluid,5
+laminated calcimudstone,5
+sedimentary succession,5
+abiotic process,4
+breakup,4
+carbonate production,4
+clast,4
 continental siliciclastic,4
 cross-lamination,4
 debris apron,4
-fascicular-optic calcite,4
-floatstone,4
+depositional condition,4
+evaporitic lake,4
+fault block high,4
 groundwater,4
 growth phase,4
-lacustrine coquina,4
-lake margin,4
+half-graben system,4
 lake water chemistry,4
+late jurassic,4
+marine incursion,4
 mechanical compaction,4
-megasequence,4
-microbial activity,4
-microbial boundstone,4
-microbial platform,4
+microfacies,4
 nodule,4
 organic acid,4
-particle,4
 planar lamination,4
-plug,4
 pre-rift,4
-redeposition,4
-sag sequence,4
-saline lacustrine environment,4
-shallow lake,4
-slope,4
-spherulitestone,4
+pre-salt structure,4
+redeposited,4
+sag basin,4
+sidewall sample,4
+subsurface,4
 sweeping extinction,4
-vertebrate remain,4
-vug,4
-aggradation,4
-azimuth,4
-bioclastic grainstone,4
+volcanic clast,4
+anticline,4
+asthenospheric uplift,4
+basin evolution,4
+bivalve rudstone,4
+carbonate sequence,4
 continental flood basalt,4
-diagenetic alteration,4
+discontinuity,4
+exploratory well,4
+fault plane,4
 fault zone,4
-gravitational deposit,4
-group,4
-hydrocarbon migration,4
-hydrocarbon production,4
-lateral continuity,4
-marl,4
+fine-grained carbonate,4
+fold,4
+frequency,4
+horizon,4
+isopach map,4
+lithospheric stretching,4
+mineralogical composition,4
 pre-salt succession,4
 prograding geometry,4
-rms amplitude,4
-resistivity log,4
 salt structure,4
-salt tectonics,4
+seismic response,4
 seismic unit,4
-seismic volume,4
-syn-rift,4
-topography,4
-abiotic,4
-aragonite,4
-burial,4
-cathodoluminescence,4
+stratigraphic sequence,4
+structural domain,4
+syncline,4
+transgression,4
+abiotic origin,4
+biofilm,4
 clotted texture,4
 fan delta,4
-fluid inclusion,4
-foraminifera,4
-gneiss,4
-grain,4
-lacustrine sediment,4
-marine carbonate,4
-ocean,4
+gel,4
 petroleum province,4
-presalt,4
-relict,4
-saline lake,4
-sand,4
-stylolite,4
+platform top,4
+reef,4
+sepiolite,4
+shallow marine environment,4
+silt,4
 alteration,4
-clay content,4
-deep lake,4
-inversion,4
+bioclastic rudstone,4
+calcite shrub,4
+depositional architecture,4
+extensional basin,4
+fault pattern,4
+footwall,4
+geometry,4
+internal reflector,4
+lineament,4
 lithostratigraphy,4
-lithotype,4
-pre-salt carbonate,4
-rift system,4
-rifted margin,4
-sedimentary record,4
-seismic line,4
+neoproterozoic,4
+oceanic anoxic event,4
+precambrian basement,4
+reworked deposit,4
+shallow marine setting,4
+shoreface,4
 stacking pattern,4
-strike,4
-structural control,4
+supersequence,4
+tectonic quiescence,4
+tectonic regime,4
+tectono-stratigraphy,4
+volcaniclastic,4
+angular unconformity,4
 antecedent topography,4
-biotic,4
-fetch,4
-production curve,4
+lacustrine carbonate system,4
 reflector termination,4
-rift setting,4
-seismic geometry,4
-stratigraphic architecture,4
-turbidite,4
-base of salt,4
-carbonate sediment,4
-coquina deposit,4
-exploration,4
-fluid,4
-geology,4
-in situ facies,4
-internal reflection,4
-lithostratigraphic unit,4
-production,4
+reworked spherulite,4
+sequence-stratigraphic architecture,4
+supersaturation,4
+alkaline lacustrine setting,4
+chaotic seismic facies,4
+chloride,4
+deposition phase,4
+fossil,4
+high-energy condition,4
+petrophysics,4
+prograding seismic facies,4
+sedimentary layer,4
 sedimentation rate,4
-shell,4
+sulphate,4
+toplap,4
 uplifted area,4
-basement high,4
-base salt,4
-climate change,4
-flood basalt,4
-post-rift supersequence,4
-rift supersequence,4
-seismic response,4
+conduit,4
+fracture zone,4
+margin basin,4
 supercontinent,4
 arenite,4
 blocky calcite,4
-breakup,4
+blocky dolomite,4
+continental carbonate,4
+exposure,4
 fascicular calcite crust,4
 fluorite,4
-hydrology,4
 illite,4
 intercrystalline porosity,4
 magmatic activity,4
-metamorphic rock,4
 microbial laminite,4
-passive-margin basin,4
-petrophysical analysis,4
+muscovite,4
+pervasive dolomitization,4
+phosphate bioclast,4
+pressure dissolution,4
 primary constituent,4
-quantitative petrography,4
 rhombohedral dolomite,4
-sedimentology,4
-syngenetic precipitate,4
-talc-stevensite ooid,4
-abiotic model,4
-diagenetic pathway,4
-evaporite sequence,4
+sulfate,4
+vuggy porosity,4
+laminated mudstone,4
+marine carbonate platform,4
+microbial macrostructure,4
 mineral precipitation,4
 post-deposition fault,4
-reworked sediment,4
-tufa,4
+shallow evaporitic lake,4
+electrofacies,4
 flow unit,4
 impedance contrast,4
+reservoir zonation,4
+sedimentary facies,4
+seismic amplitude,4
 stratigraphic level,4
-crenulated lamination,4
-lacustrine setting,4
-pebble,4
+carbonate environment,4
+evaporation rate,4
+geochemical analysis,4
+high-frequency cycle,4
+magnesian clay,4
+meteoric water,4
+nucleation,4
 precipitation rate,4
-sedimentary process,4
-shoreline,4
+reworked carbonate,4
+stratigraphic zone,4
 calcirudite,4
-in situ deposit,4
-mantle exhumation,4
-mud,4
-smectite,4
-forward modeling,4
+fluid inclusion,4
+lacustrine sediment,4
+laminated deposit,4
+fracture porosity,4
+hydrocarbon province,4
 oil-water contact,4
-spatial distribution,4
-pervasive silicification,4
+biotic,4
+carbonate mineral,4
+intercalation,4
+shrub-dominated facies,4
+sulfide,4
+textural component,4
+depositional feature,4
 facies variation,4
-reservoir architecture,4
-sediment transport,4
-calcite aggregate,4
-detrital material,4
-lake deposit,4
-solute,4
-continental breakup,4
-desiccation,4
-hydrothermal,4
-laminated calcimudstone,4
-shoreline deposit,4
-tilted fault block,4
-drift supersequence,4
-fascicular calcite,4
-vertical resolution,4
+structural setting,4
+fluid flow,4
+serpentinization,4
+aquifer,4
+breccia,4
+flood basalt,4
+isotopic composition,4
+vent,4
+paleoenvironmental condition,4
+compartmentalization,4
 dip slope,4
-orientation,4
+carbonate buildup,4
+biotic origin,3
+bioturbated,3
 brecciation,3
-calcite crystal,3
 coated grain,3
-coating,3
 collapse,3
 colluvial wedge,3
-conjugate margin,3
-desiccation crack,3
-dissolved organic acid,3
+composite shrub,3
+diagenetic product,3
 facies pattern,3
-fault block high,3
-fine-grained sediment,3
-framework,3
-growth-framework porosity,3
+fibrous calcite crystal,3
+flooding,3
+geometric pattern,3
 hydrocarbon reserve,3
-lake system,3
-late rift,3
-microfacies,3
-open fracture,3
+hyper-alkaline lake,3
+megasequence,3
+microbial activity,3
+microbial boundstone,3
+microbial community,3
+microbial platform,3
+morphology,3
+non-marine,3
 palaeohydrology,3
-photic zone,3
-sag basin,3
-sidewall sample,3
-south atlantic ocean,3
-spherulitic packstone,3
-vertical growth,3
-base level,3
-calcilutite,3
+particle,3
+rift sequence,3
+rounded,3
+saline lacustrine environment,3
+sedimentary infill,3
+silica layer,3
+silicified,3
+spherulite grainstone,3
+spherulitic shrubstone,3
+super-sequence,3
+sutured contact,3
+vertebrate remain,3
+vuggy pore,3
+azimuth,3
 carbonate ramp,3
-coastline,3
-coherence,3
-curvature,3
-density,3
-distal portion,3
-eocene,3
-exploratory well,3
-fault plane,3
-fine-grained carbonate,3
-gamma-ray log,3
-horizon,3
-lithologic variation,3
-lithospheric stretching,3
-magnetic data,3
+composite log,3
+debris,3
+depositional evolution,3
+geometric attribute,3
+gravitational deposit,3
+hydrocarbon migration,3
+hydrocarbon production,3
+lithospheric thinning,3
 mantle plume,3
 marine transgression,3
+marl,3
 mega-sequence,3
-neocomian,3
-oil exploration,3
 open marine condition,3
-package,3
-pre-salt reservoir,3
-sea level,3
-seismic,3
-seismic image,3
+reflectivity,3
 shear zone,3
 stratified salt,3
-structural domain,3
-syncline,3
-thinning,3
-transtension,3
-upper crust,3
-wavy seismic pattern,3
-alkaline lake water,3
-biofilm,3
+structural attribute,3
+upper rift,3
+agitation,3
 botryoidal chalcedony,3
-core data,3
-early cement,3
-early diagenesis,3
+cutting,3
+detrital clay,3
 flooding event,3
+flow rate,3
+intergranular porosity,3
 isotopic fractionation,3
-massive bed,3
-oxide,3
-platform top,3
-poor sorting,3
-prismatic crystal,3
-quartz cement,3
-reef,3
+lake floor,3
+late cretaceous,3
+marine water,3
+muddy sediment,3
 regional subsidence,3
-rift lake,3
 sag interval,3
+sand,3
 seawater,3
-seismic stratigraphy,3
-shallowing,3
-transitional grain type,3
-transgression,3
-winnowing,3
-3d geological model,3
-bioclastic rudstone,3
-carbon isotope,3
-depositional architecture,3
-fault segment,3
+stable isotope composition,3
+topographic high,3
+transport,3
+basement structure,3
+drift supersequence,3
+extension direction,3
+fault activity,3
 fauna,3
-kinematic buffer,3
+inversion,3
+karstification,3
 magmatic intrusion,3
-petrographic study,3
-reworked deposit,3
+normal displacement,3
+post-rift stage,3
+pre-salt carbonate,3
+pre-salt deposit,3
+prograding wedge,3
+reactivation,3
+seismic architecture,3
+seismic line,3
 seismic signal,3
-shallow marine setting,3
-syn-rift sequence,3
-tectonic quiescence,3
-tectonic regime,3
-thickness variation,3
+sidewall core,3
+spherulitic carbonate,3
+strain,3
+stratum,3
+structural complexity,3
+syn-rift stage,3
 time-depth conversion,3
+volcano,3
+well marker,3
+2d seismic line,3
 basement rock,3
 basement topography,3
 calcite crystal shrub,3
-carbonate accumulation,3
+coalesced,3
 conceptual model,3
 depositional profile,3
-depositional relief,3
-framestone,3
-isochore map,3
-jurassic,3
+early cementation,3
+grain-supported fabric,3
 lacustrine basin,3
+lithotype,3
 marine system,3
 metasediment,3
-palaeotopography,3
+mound geometry,3
 petrophysical data,3
-reworked spherulite,3
-spherulitic wackestone,3
-storm,3
-synrift,3
-tectono-stratigraphy,3
+production curve,3
+rift shoulder,3
+seismic-scale geometry,3
 upper rift section,3
 wedge geometry,3
 aggradational carbonate platform,3
-aggrading geometry,3
-alkaline lacustrine setting,3
-carbonate build-up,3
 carbonate shale,3
-chaotic seismic facies,3
-chloride,3
 clastic sediment,3
-continental sediment,3
 coquina bank,3
-dark shale,3
+coquina deposit,3
 debris flow,3
-deposition phase,3
-extensional basin,3
 geological context,3
-geologic feature,3
+high,3
 hydrocarbon seal,3
-petrophysics,3
-plane-parallel seismic facies,3
+hydrodynamics,3
+lithostratigraphic unit,3
+marine evaporite,3
+neoaptian,3
+offshore basin,3
+plateau,3
 progradational carbonate platform,3
-prograding seismic facies,3
-sedimentary layer,3
+shell,3
 siliciclastic deposit,3
-strata,3
-structural feature,3
-sulphate,3
-tectonic event,3
+tectonic history,3
 thermal anomaly,3
-asthenospheric uplift,3
-composite log,3
+volcanic source area,3
+continental environment,3
 eoaptian,3
-magnesium clay,3
-marine incursion,3
-microbial limestone,3
+growth fault,3
 ocean opening,3
-oil accumulation,3
-play,3
-reactivated fault,3
-sediment influx,3
-supercontinent breakup,3
+producing field,3
+rift process,3
+siliciclastic sediment,3
+structural control,3
 sylvinite,3
+wavelet,3
 benthic microbial community,3
-biotite,3
-bladed crystal,3
-blocky dolomite,3
-calcite shrub,3
+bioclastic deposit,3
 calcrete,3
 celestine,3
-clay ooid,3
-depositional sequence,3
-depositional texture,3
-eodiagenesis,3
+clastic,3
 flooding phase,3
-intraclastic rudstone,3
+group,3
+lithologic type,3
 lithospheric extension,3
-massive,3
-matrix dissolution,3
-microstylolite,3
+mg-silicate,3
 mineral composition,3
 mud intraclast,3
-nuclear magnetic resonance,3
+nucleus,3
 original fabric,3
-paragenetic relationship,3
-phosphate grain,3
-pre-compaction,3
-pressure dissolution,3
+passive-margin basin,3
 pseudomatrix,3
-scanning electron microscopy,3
-shrinkage crack,3
-siliciclastic mud,3
 stevensitic claystone,3
-subaqueous environment,3
-syngenetic magnesian clay mineral,3
 viscous medium,3
 volcanic high,3
 vugular porosity,3
-x-ray diffraction,3
-field,3
 hydrothermal vent complex,3
-laminated mudstone,3
-low frequency,3
-marine carbonate platform,3
-marine carbonate system,3
-marine evaporite,3
+isolated carbonate buildup,3
 microbial texture,3
+microstructure,3
+porosity formation,3
 post-depositional deformation,3
-precambrian,3
-reservoir distribution,3
-ridge,3
-seismic facies analysis,3
-seismic feature,3
+seismic geometry,3
 shallowing-upward cyclothem,3
+travertine system,3
+truncated reflector,3
 tufa deposit,3
-vent,3
-diagenetic history,3
+barrier,3
 gamma ray,3
-intrusive rock,3
-porosity generation,3
+intrusive igneous rock,3
 post-salt,3
-reverse time migration,3
-sedimentary facies,3
 seismic acquisition,3
-seismic amplitude,3
 seismic inversion,3
 stratigraphic control,3
-3d model,3
 alkaline environment,3
-asymmetric spherulite,3
-basinward,3
 biologic activity,3
-co2 degassing,3
-capillary pressure,3
-carbonate environment,3
-coarse sand,3
-cross-stratification,3
+carbonate grainstone package,3
+crenulated lamination,3
+depositional energy,3
+early aptian,3
 energy level,3
-evaporite section,3
-external geometry,3
-facies succession,3
-fine sand,3
-high-frequency cycle,3
+gamma-ray log,3
 history match,3
-magnesian clay,3
-marine influence,3
-meteoric water,3
-microbial influence,3
-mineralogy,3
+ion concentration,3
+labile mg-clay,3
+low frequency,3
+non-marine succession,3
 non-reservoir facies,3
-ostracod bioclast,3
-reservoir management,3
-reworked carbonate,3
+oil equivalent,3
+oil production,3
+phosphatic fragment,3
+pore,3
 sedimentological process,3
-siliciclastic rock,3
 stable shoreline,3
-stratigraphic correlation,3
 stratigraphic surface,3
-stratigraphic zone,3
 subaerial exposure feature,3
-sulfate,3
-workflow,3
-calcarenite,3
-climatic condition,3
-depositional condition,3
-facies classification,3
+water body,3
+wetter period,3
+arid climatic condition,3
+composition,3
+continental deposit,3
 fascicular aggregate,3
-hybrid arenite,3
-intraclastic deposit,3
-laminated deposit,3
-mg-silicate matrix,3
-monocrystalline quartz,3
-paleotopography,3
+floatstone,3
+framestone,3
+image log facies,3
+lake chemistry,3
+mantle exhumation,3
+micrite matrix,3
 reworked rock,3
-sediment mineralogy,3
-shrinkage pore,3
+smectite,3
 sparite,3
-spherulitic rock,3
-superficial ooid,3
-syngenetic constituent,3
 thrombolite,3
-volcanic clast,3
 cycle,3
-facies log,3
-hydrocarbon province,3
-image log,3
 isolated carbonate platform,3
+lake-level oscillation,3
+seismic,3
+simulation,3
 spherulitite,3
+crystal growth,3
+detrital grain,3
+diagenetic pathway,3
 flow barrier,3
-geochemistry,3
 hydrodynamic condition,3
+lake system,3
 mg-silicate gel,3
-sag-type basin,3
-sulfide,3
-textural component,3
-angular unconformity,3
-appraisal well,3
-biotic origin,3
-black shale,3
+pisoid,3
+prospect,3
+coastline,3
 continental rift,3
-depositional feature,3
-exploration well,3
-fault pattern,3
-four-way closure,3
-kerogen,3
+genesis,3
 migration pathway,3
-onshore,3
 pre-salt field,3
+reservoir architecture,3
+sonic log,3
 tectonic environment,3
-burial diagenesis,3
+calcite aggregate,3
 catchment area,3
-debris,3
-fascicular calcite shrub,3
+detrital material,3
+flank,3
 fluid composition,3
-gas phase,3
-hydrologic balance,3
-in-situ facies,3
-lake level fluctuation,3
-laminated carbonate,3
+horizontal layer,3
+lake deposit,3
 migration,3
-petrographic analysis,3
-plane-parallel lamination,3
-pre-salt deposit,3
-salt base,3
-spatial heterogeneity,3
-wavy lamination,3
+ocean,3
+paragenesis,3
+pressure,3
+solute,3
 calcimudstone,3
 chemocline,3
-evaporitic environment,3
+chronostratigraphy,3
+eocene,3
 exhumed mantle,3
 extracellular polymeric substance,3
+fascicular optic calcite,3
 felsic rock,3
-fish,3
-gamma-defined cycle,3
-isolated mound,3
-mixing,3
-normal grading,3
+fluvial input,3
+influx,3
+isotopic data,3
 planar cross-bedding,3
 primary carbonate,3
+rising lake level,3
+shoreline deposit,3
+stable isotope,3
 stratigraphic record,3
-subaerial,3
 subaerial disaggregation,3
-well-rounded grain,3
+tilted fault block,3
+volcanic activity,3
+depositional history,3
 geobody,3
-noise,3
-spectral decomposition,3
-total porosity,3
-upper rift,3
+reworked sediment,3
+rms amplitude,3
+tectonic-sedimentary evolution,3
+abiotic model,3
+antithetic fault,3
+deepwater environment,3
+depositional pattern,3
+igneous intrusion,3
+ridge,3
+rift setting,3
+shallow-water deposit,3
+stratigraphic evolution,3
 abrasion,3
+clay lamination,3
+cryptocrystalline silica,3
 dawsonite,3
+diagenetic constituent,3
 diagenetic evolution,3
-encrustation,3
-lithologic type,3
+gravitational redeposition,3
+growth-framework porosity,3
+humid climate,3
 macrocrystalline calcite,3
 macrocrystalline quartz,3
-borehole image log,3
+oil province,3
+wavy lamination,3
 relay ramp,3
+reservoir management,3
+closed lake,3
+normal grading,3
+petrophysical characteristic,3
+sedimentary process,3
 transition zone,3
-continental setting,3
-core plug,3
+analogue,3
 detrital component,3
-high-energy condition,3
-neoproterozoic,3
-paleoenvironmental condition,3
-sedimentary succession,3
+fascicular crust,3
+hydrothermal,3
 water residence time,3
-conceptual geological model,3
+co2 degassing,3
+continuity,3
 growth strata,3
 net pay,3
-prospect,3
 seismic illumination,3
-sequence-stratigraphic architecture,3
-signal-to-noise ratio,3
 chemical deposit,3
-laminated clay,3
-photomicrograph,3
 subaerial erosion,3
-endorheic lake,3
 holocene,3
+carbon stable isotope,3
 depositional gradient,3
 escarpment,3
-granule,3
-paleocurrent,3
+oxygen stable isotope,3
 terminal splay deposit,3
-carbonate buildup,3
-structural dip,3
-exploration target,3
-depositional geometry,3
-displacement,3
