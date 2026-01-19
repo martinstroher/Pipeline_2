@@ -1,8 +1,8 @@
 import os
 import time
-
 import google.generativeai as genai
 import pandas as pd
+from rag_setup import load_vector_store, get_rag_response
 
 try:
     genai.configure(api_key=os.environ["GEMINI_API_KEY"])
@@ -26,6 +26,7 @@ generation_config = genai.GenerationConfig(
 )
 
 def run_nld_generation():
+    vector_store = load_vector_store()
     def load_terms_from_aggregator_csv(filepath):
         """Loads terms from the aggregator output CSV file."""
         if not os.path.exists(filepath):
@@ -48,11 +49,14 @@ def run_nld_generation():
     
     Mandatory Instructions:
     1. The definition must strictly follow the Aristotelian structure "X is a Y that Z". For example, "An amount of rock is a solid consolidated earth material that is constituted by an aggregate of particles made of mineral matter or material of biological origin".
-    2. Base the definition on your knowledge of Brazilian Pre-Salt geology and petroleum systems.
+    2. Base the definition on the provided context and your knowledge of Brazilian Pre-Salt geology and petroleum systems.
     3. The definition should be technical yet clear, and a maximum of three sentences.
     4. Your response must contain only the generated NLD, without any extra text.
     
     Term to be defined: "{term}"
+    
+    Relevant context:
+    {context}
     """
 
 
@@ -73,12 +77,15 @@ def run_nld_generation():
             print(f"Processing term {index + 1}/{total_terms}: '{term}'...")
 
             try:
+                # Get relevant context using RAG
+                context = get_rag_response(f"Provide context for the term: {term}", vector_store)
+                
                 response_definicao = model_definicao.generate_content(
-                    prompt_template_definicao.format(term=term)) # Pass term directly
+                    prompt_template_definicao.format(term=term, context=context))
                 nld_generated = response_definicao.text.strip()
 
                 print(f"  -> Definition generated successfully.")
-                results.append({'Term': term, 'NLD': nld_generated}) # Save Term and NLD
+                results.append({'Term': term, 'NLD': nld_generated, 'Context': context})
 
                 time.sleep(1)
 
