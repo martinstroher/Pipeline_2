@@ -25,6 +25,29 @@ generation_config = genai.GenerationConfig(
     temperature=MODEL_TEMPERATURE,
 )
 
+def generate_nld(term, vector_store):
+    system_instruction_definicao = "You are a senior geoscientist and ontology engineer. Your expertise is in oil and gas exploration geology, with a specific focus on the carbonate reservoirs of the Brazilian Pre-Salt."
+    prompt_template_definicao = """Generate a concise and precise Natural Language Definition (NLD) for the provided geological term.
+    
+    Mandatory Instructions:
+    1. The definition must strictly follow the Aristotelian structure "X is a Y that Z". For example, "An amount of rock is a solid consolidated earth material that is constituted by an aggregate of particles made of mineral matter or material of biological origin".
+    2. Base the definition on the provided context and your knowledge of Brazilian Pre-Salt geology and petroleum systems.
+    3. The definition should be technical yet clear, and a maximum of three sentences.
+    4. Your response must contain only the generated NLD, without any extra text.
+    
+    Term to be defined: "{term}"
+    
+    Relevant context:
+    {context}
+    """
+    
+    context = get_rag_response(f"Provide context for the term: {term}", vector_store)
+    model_definicao = genai.GenerativeModel(model_name=MODEL_NAME, system_instruction=system_instruction_definicao,
+                                            generation_config=generation_config)
+    response_definicao = model_definicao.generate_content(
+        prompt_template_definicao.format(term=term, context=context))
+    return response_definicao.text.strip()
+
 def run_nld_generation():
     vector_store = load_vector_store()
     def load_terms_from_aggregator_csv(filepath):

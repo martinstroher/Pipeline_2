@@ -7,7 +7,7 @@ from langchain_community.embeddings import HuggingFaceEmbeddings
 from langchain_community.llms import Ollama
 from langchain.chains import RetrievalQA
 
-DOCS_DIR = "resources/"  # Update this path if your documents are stored elsewhere
+DOCS_DIR = "rag_test_extracted/"  # Path to the folder with extracted text files
 CHROMA_DB_DIR = "chroma_db"
 EMBED_MODEL = "sentence-transformers/all-MiniLM-L6-v2"
 LLM_MODEL = "llama2"
@@ -40,14 +40,19 @@ def get_rag_response(query: str, vector_store: Chroma) -> str:
     return response["result"]
 
 def setup_rag():
-    if not os.path.exists(CHROMA_DB_DIR):
-        print("Setting up RAG system...")
-        documents = load_documents(DOCS_DIR)
-        split_docs = split_documents(documents)
-        create_vector_store(split_docs)
-        print("RAG system setup complete.")
-    else:
-        print("RAG system already set up. Loading existing vector store.")
+    print("Setting up RAG system...")
+    if not os.path.exists(DOCS_DIR):
+        print(f"Error: The directory {DOCS_DIR} does not exist. Please run text extraction first.")
+        return
+    
+    documents = load_documents(DOCS_DIR)
+    if not documents:
+        print(f"No documents found in {DOCS_DIR}. Please ensure text extraction was successful.")
+        return
+    
+    split_docs = split_documents(documents)
+    create_vector_store(split_docs)
+    print("RAG system setup complete.")
 
 if __name__ == "__main__":
     setup_rag()

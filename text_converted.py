@@ -244,6 +244,29 @@ def prepara_ocrs(pasta,lista_pdfs,total_pdfs):
     return(resultado_ocr)
 #fim def
 #=============================================================================
+def extract_text_for_rag_test(input_folder, output_folder):
+    os.makedirs(output_folder, exist_ok=True)
+    lista_arquivos_pdf = [f for f in os.listdir(input_folder) if f.endswith('.pdf')]
+    
+    for arquivo_pdf in tqdm(lista_arquivos_pdf):
+        input_path = os.path.join(input_folder, arquivo_pdf)
+        output_path = os.path.join(output_folder, arquivo_pdf.replace('.pdf', '.txt'))
+        
+        try:
+            documento_pdf = pymupdf.open(input_path)
+            paginas, _ = calcula_total_paginas(documento_pdf)
+            texto_extraido = extrai_texto(documento_pdf, paginas)
+            
+            if texto_extraido:
+                with open(output_path, 'w', encoding='utf-8') as f:
+                    f.write(texto_extraido)
+                print(f"Texto extraído com sucesso: {arquivo_pdf}")
+            else:
+                print(f"Falha na extração de texto: {arquivo_pdf}")
+        except Exception as e:
+            print(f"Erro ao processar {arquivo_pdf}: {str(e)}")
+#fim def
+#=============================================================================
 tudo_ok = False
 qtde_parametros = len(sys.argv)
 #print(qtde_parametros)
@@ -278,7 +301,11 @@ else:
 #fim if
 
 if __name__ == '__main__':
-    if (tudo_ok):
+    if len(sys.argv) == 4 and sys.argv[1] == 'rag_test':
+        input_folder = sys.argv[2]
+        output_folder = sys.argv[3]
+        extract_text_for_rag_test(input_folder, output_folder)
+    elif (tudo_ok):
         total_arquivos_pdf = len(lista_arquivos_pdf)
         print('Encontrados %s arquivos PDFs.' % total_arquivos_pdf)
         lista_arquivos_imagens_ocr = []
@@ -355,5 +382,12 @@ if __name__ == '__main__':
         arquivo_final = open(pasta_textos+"resultado_final.dat", "a")
         arquivo_final.write(str_final)
         arquivo_final.close()
+    else:
+        print("Erro de sintaxe!")
+        print("Para extração RAG: python3 text_converted.py rag_test <pasta-de-entrada> <pasta-de-saida>")
+        print("Para conversão normal: python3 text_converted.py <pasta-de-arquivos-pdf>/ | <arquivo-pdf>")
+        print("\tExemplo: python3 text_converted.py /home/corpus/")
+        print("\tExemplo: python3 text_converted.py /home/corpus/ texto-especifico.pdf")
+        print("\tSaída: todos arquivos convertidos em MD (MarkDown)  TXT (Texto).\n")
     #fim if
 #fim if
