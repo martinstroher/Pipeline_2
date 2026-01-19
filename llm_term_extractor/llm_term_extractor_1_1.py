@@ -39,16 +39,21 @@ def run_llm_term_extraction():
             return None
 
 
-    system_instruction = "You are an expert geologist and ontology engineer specializing in South Atlantic Pre-Salt petroleum systems. Your task is to extract core geological concepts from technical texts suitable for building a domain ontology. This ontology's primary purpose is to assist geologists in describing and comparing analog reservoirs geological settings."
+    system_instruction = """You are an expert geologist and ontology engineer specializing in South Atlantic Pre-Salt petroleum systems.
+                            Your task is to extract core geological concepts from technical texts suitable for building a domain ontology.
+                          "This ontology's primary purpose is to assist geologists in describing and comparing analog reservoirs geological settings."""
 
 
     prompt_template = """**METHODOLOGY**
-    1.  **Identify Conceptual Entities:** Identify all terms or phrases representing geological concepts. Focus on identifying *types* or *classes* of entities relevant to petroleum geology and pre-salt context.
-    2.  **Normalize Terms:** Return all extracted concepts translated to English and, where appropriate, in their singular, base form (e.g., "carbonates" -> "Carbonate", "faults" -> "Fault"). Use title case for concepts.
+    1.  **Identify Conceptual Entities:** Identify all terms or phrases representing geological concepts. 
+    Focus on identifying *types* or *classes* of entities relevant to petroleum geology and pre-salt context.
+    2.  **Normalize Terms:** Return all extracted concepts translated to English and, where appropriate, in their singular, base form (e.g., "carbonates" -> "Carbonate", "faults" -> "Fault"). 
+    Use title case for concepts.
     3.  **Strict Filtering:** You MUST exclude:
-        * Specific, non-conceptual proper nouns (e.g., individual well names like 'Well 1-BRSA-123', specific field names unless used generically, basin names like 'Santos Basin', author names, company names).
+        * Specific, non-conceptual proper nouns (e.g., individual well names like 'Well 1-BRSA-123', specific field names unless used generically, 
+        basin names like 'Santos Basin', author names, company names).
         * Units of measure, numerical values, and codes (e.g., 'mD', 'API', '10%', 'SiO2').
-    4.  **Focus:** Prioritize terms that represent reusable classes within an ontology framework. Do not rank or limit the number extracted from this snippet.
+    4.  **Focus:** Prioritize terms that represent reusable classes within an ontology framework. Do not rank or limit the number extracted from this snippet.x
     
     **OUTPUT FORMAT:**
     Your response MUST BE a valid JSON array of unique strings.
