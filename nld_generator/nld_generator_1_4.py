@@ -95,8 +95,8 @@ def run_nld_generation():
 
             try:
                 # Get relevant context using RAG
-                relevant_docs = get_relevant_documents(f"Provide context for the term: {term}", vector_store)
-                context = "\n".join([doc.page_content for doc in relevant_docs])
+                relevant_docs_with_scores = get_relevant_documents(f"What is the definition of {term}?", vector_store)
+                context = "\n".join([doc.page_content for doc, _ in relevant_docs_with_scores])
                 
                 nld_generated, _ = generate_nld(term, context)
 

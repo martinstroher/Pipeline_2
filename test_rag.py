@@ -56,26 +56,38 @@ def test_rag():
     vector_store = load_vector_store()
     
     test_terms = ["betume", "basin", "evaporite", "carbonatite", "aptian"]
-    output_file = "output/rag_test_output.txt"
+    output_file = "output/rag_test_output.md"
     
     with open(output_file, "w") as f:
+        f.write("# RAG Pipeline Test Results\n\n")
+        
         for term in test_terms:
             print(f"\nTesting term: {term}")
-            f.write(f"Term: {term}\n")
+            f.write(f"## Term: {term}\n\n")
             
-            print("Retrieving relevant documents...")
-            relevant_docs = get_relevant_documents(f"Provide context for the term: {term}", vector_store)
-            context = "\n".join([doc.page_content for doc in relevant_docs])
-            # print(f"Retrieved context:\n{context}\n") # Optional: don't print full context to console to keep it clean if desired, but user didn't ask to remove it. I'll keep it.
+            print("Retrieving relevant documents (Hybrid + Rerank)...")
+            relevant_docs_with_scores = get_relevant_documents(f"What is the definition of {term}?", vector_store)
+            
+            # Extract just text for the context string passed to LLM
+            context = "\n".join([doc.page_content for doc, _ in relevant_docs_with_scores])
+            
+            f.write("### Top 5 Retrieved Segments\n")
+            for i, (doc, score) in enumerate(relevant_docs_with_scores, 1):
+                source = doc.metadata.get('source', 'Unknown source')
+                f.write(f"**{i}. Score: {score:.4f}** | Source: `{os.path.basename(source)}`\n")
+                f.write(f"> {doc.page_content}\n\n")
             
             print("Generating NLD...")
             nld, full_prompt = generate_nld(term, context)
             print(f"Generated NLD:\n{nld}\n")
             
-            f.write(f"Context Provided:\n{context}\n\n")
-            f.write(f"Full Prompt Sent to Gemini:\n{full_prompt}\n\n")
-            f.write(f"Generated NLD:\n{nld}\n")
-            f.write("-" * 50 + "\n")
+            f.write("### Generated Definition (NLD)\n")
+            f.write(f"{nld}\n\n")
+            
+            f.write("<details>\n<summary>Full Prompt</summary>\n\n")
+            f.write(f"```text\n{full_prompt}\n```\n")
+            f.write("</details>\n\n")
+            f.write("---\n\n")
             
             print("-" * 50)
 
