@@ -8,7 +8,7 @@ load_dotenv()
 # Print GEMINI_API_KEY status immediately after loading
 print(f"GEMINI_API_KEY at start: {'set' if os.getenv('GEMINI_API_KEY') else 'not set'}")
 
-from rag_setup import setup_rag, load_vector_store, get_rag_response
+from rag_setup import setup_rag, load_vector_store, get_relevant_documents
 from nld_generator.nld_generator_1_4 import generate_nld
 
 # Print current working directory and .env file path
@@ -55,20 +55,29 @@ def test_rag():
     print("Loading vector store...")
     vector_store = load_vector_store()
     
-    test_terms = ["dolomite", "carbonate", "sedimentary", "petroleum", "rock"]
+    test_terms = ["betume", "basin", "evaporite", "carbonatite", "aptian"]
+    output_file = "output/rag_test_output.txt"
     
-    for term in test_terms:
-        print(f"\nTesting term: {term}")
-        
-        print("Retrieving context...")
-        context = get_rag_response(f"Provide context for the term: {term}", vector_store)
-        print(f"Retrieved context:\n{context}\n")
-        
-        print("Generating NLD...")
-        nld = generate_nld(term, vector_store)
-        print(f"Generated NLD:\n{nld}\n")
-        
-        print("-" * 50)
+    with open(output_file, "w") as f:
+        for term in test_terms:
+            print(f"\nTesting term: {term}")
+            f.write(f"Term: {term}\n")
+            
+            print("Retrieving relevant documents...")
+            relevant_docs = get_relevant_documents(f"Provide context for the term: {term}", vector_store)
+            context = "\n".join([doc.page_content for doc in relevant_docs])
+            # print(f"Retrieved context:\n{context}\n") # Optional: don't print full context to console to keep it clean if desired, but user didn't ask to remove it. I'll keep it.
+            
+            print("Generating NLD...")
+            nld, full_prompt = generate_nld(term, context)
+            print(f"Generated NLD:\n{nld}\n")
+            
+            f.write(f"Context Provided:\n{context}\n\n")
+            f.write(f"Full Prompt Sent to Gemini:\n{full_prompt}\n\n")
+            f.write(f"Generated NLD:\n{nld}\n")
+            f.write("-" * 50 + "\n")
+            
+            print("-" * 50)
 
 if __name__ == "__main__":
     test_rag()

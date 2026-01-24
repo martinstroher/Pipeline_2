@@ -4,13 +4,10 @@ from langchain_community.document_loaders import DirectoryLoader, TextLoader
 from langchain_text_splitters import RecursiveCharacterTextSplitter
 from langchain_community.vectorstores import Chroma
 from langchain_community.embeddings import HuggingFaceEmbeddings
-from langchain_community.llms import Ollama
-from langchain.chains import RetrievalQA
 
 DOCS_DIR = "rag_test_extracted/"  # Path to the folder with extracted text files
 CHROMA_DB_DIR = "chroma_db"
 EMBED_MODEL = "sentence-transformers/all-MiniLM-L6-v2"
-LLM_MODEL = "llama2"
 
 def load_documents(docs_dir: str) -> List:
     loader = DirectoryLoader(docs_dir, glob="**/*.txt", loader_cls=TextLoader)
@@ -33,11 +30,9 @@ def load_vector_store() -> Chroma:
     vector_store = Chroma(persist_directory=CHROMA_DB_DIR, embedding_function=embeddings)
     return vector_store
 
-def get_rag_response(query: str, vector_store: Chroma) -> str:
-    llm = Ollama(model=LLM_MODEL)
-    qa_chain = RetrievalQA.from_chain_type(llm, retriever=vector_store.as_retriever())
-    response = qa_chain({"query": query})
-    return response["result"]
+def get_relevant_documents(query: str, vector_store: Chroma) -> List:
+    retriever = vector_store.as_retriever(search_kwargs={"k": 5})
+    return retriever.get_relevant_documents(query)
 
 def setup_rag():
     print("Setting up RAG system...")

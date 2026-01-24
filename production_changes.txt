@@ -1,0 +1,33 @@
+# Production Changes Required
+
+The following changes are recommended for preparing the RAG pipeline for production:
+
+## 1. Dependency Updates
+- **Replace Deprecated Embeddings Class**: 
+  - `rag_setup.py`: `HuggingFaceEmbeddings` is deprecated in `langchain-community`.
+  - **Action**: Install `langchain-huggingface` and update import to `from langchain_huggingface import HuggingFaceEmbeddings`.
+- **Replace Deprecated VectorStore Class**:
+  - `rag_setup.py`: `Chroma` from `langchain_community.vectorstores` is deprecated.
+  - **Action**: Install `langchain-chroma` and update import to `from langchain_chroma import Chroma`.
+- **Replace Deprecated Retrieval Methods**:
+  - `rag_setup.py`: `get_relevant_documents` is deprecated. Use `invoke` or `as_retriever()` chain methods.
+
+## 2. Configuration & Secrets
+- **Model Selection**:
+  - `nld_generator_1_4.py`: Hardcoded `MODEL_NAME = "gemini-2.5-flash"` (was `gemini-2.5-pro` which hit quotas).
+  - **Action**: Move model name to environment variable or config file to allow easy switching between models (Flash for speed/cost, Pro for quality if quota allows).
+- **Paths**:
+  - `rag_setup.py`: `DOCS_DIR = "rag_test_extracted/"` is hardcoded.
+  - **Action**: Use environment variables or a configuration class to manage input/output paths.
+
+## 3. Error Handling & Robustness
+- **API Rate Limiting**:
+  - `nld_generator_1_4.py` encountered 429 errors.
+  - **Action**: Implement proper exponential backoff retry logic for `genai.generate_content` calls. `tenacity` library is a good choice.
+- **Import Fixes**:
+  - `nld_generator_1_4.py`: Added `import google.generativeai as genai` (was missing). Ensure this persists.
+
+## 4. Performance
+- **Batch Processing**:
+  - Current testing processes terms sequentially.
+  - **Action**: Consider parallel processing (async) for NLD generation if rate limits allow, to speed up processing of large term lists.

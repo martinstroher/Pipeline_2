@@ -1,8 +1,5 @@
 import os
-import time
 import google.generativeai as genai
-import pandas as pd
-from rag_setup import load_vector_store, get_rag_response
 
 try:
     genai.configure(api_key=os.environ["GEMINI_API_KEY"])
@@ -15,8 +12,8 @@ except Exception as e:
     print(f"ERROR configuring Gemini API: {e}")
     exit()
 
-MODEL_NAME = os.environ.get("LLM_MODEL_NAME") # Use get with default
-MODEL_TEMPERATURE = float(os.environ.get("LLM_MODEL_TEMPERATURE", 0.0))
+MODEL_NAME = "gemini-2.5-flash"
+MODEL_TEMPERATURE = 0.2
 INPUT_FILE = os.environ.get("FILTERED_TERMS_OUTPUT")
 OUTPUT_FILE = os.environ.get("CONSOLIDATED_LLM_RESULTS_WITH_NLDS")
 OUTPUT_FAILURE_FILE = os.environ.get("OUTPUT_FAILURE_FILE")
@@ -25,7 +22,7 @@ generation_config = genai.GenerationConfig(
     temperature=MODEL_TEMPERATURE,
 )
 
-def generate_nld(term, vector_store):
+def generate_nld(term, context):
     system_instruction_definicao = "You are a senior geoscientist and ontology engineer. Your expertise is in oil and gas exploration geology, with a specific focus on the carbonate reservoirs of the Brazilian Pre-Salt."
     prompt_template_definicao = """Generate a concise and precise Natural Language Definition (NLD) for the provided geological term.
     
@@ -41,15 +38,12 @@ def generate_nld(term, vector_store):
     {context}
     """
     
-    context = get_rag_response(f"Provide context for the term: {term}", vector_store)
-    model_definicao = genai.GenerativeModel(model_name=MODEL_NAME, system_instruction=system_instruction_definicao,
-                                            generation_config=generation_config)
-    response_definicao = model_definicao.generate_content(
-        prompt_template_definicao.format(term=term, context=context))
-    return response_definicao.text.strip()
+    model_definicao = genai.GenerativeModel(model_name=MODEL_NAME)
+    full_prompt = system_instruction_definicao + "\n\n" + prompt_template_definicao.format(term=term, context=context)
+    response_definicao = model_definicao.generate_content(full_prompt)
+    return response_definicao.text.strip(), full_prompt
 
 def run_nld_generation():
-    vector_store = load_vector_store()
     def load_terms_from_aggregator_csv(filepath):
         """Loads terms from the aggregator output CSV file."""
         if not os.path.exists(filepath):
@@ -101,11 +95,10 @@ def run_nld_generation():
 
             try:
                 # Get relevant context using RAG
-                context = get_rag_response(f"Provide context for the term: {term}", vector_store)
+                relevant_docs = get_relevant_documents(f"Provide context for the term: {term}", vector_store)
+                context = "\n".join([doc.page_content for doc in relevant_docs])
                 
-                response_definicao = model_definicao.generate_content(
-                    prompt_template_definicao.format(term=term, context=context))
-                nld_generated = response_definicao.text.strip()
+                nld_generated, _ = generate_nld(term, context)
 
                 print(f"  -> Definition generated successfully.")
                 results.append({'Term': term, 'NLD': nld_generated, 'Context': context})
