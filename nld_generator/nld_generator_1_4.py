@@ -144,7 +144,7 @@ def run_nld_generation():
                 print(f"  -> Definition generated successfully.")
                 results.append({'Term': term, 'NLD': nld_generated, 'Context': context})
 
-                time.sleep(60)
+                time.sleep(float(os.environ.get("NLD_SLEEP_SECONDS", 60)))
 
             except Exception as e:
                 print(f"  -> ERROR processing term '{term}': {e}")

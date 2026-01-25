@@ -9,7 +9,7 @@ from langchain_community.retrievers import BM25Retriever
 from langchain.retrievers import EnsembleRetriever
 from sentence_transformers import CrossEncoder
 
-DOCS_DIR = "rag_test/"  # Path to the folder with extracted text files including .md
+DOCS_DIR = os.environ.get("DOCS_DIR", "inputs/")  # Path to the folder with extracted text files including .md
 CHROMA_DB_DIR = "chroma_db"
 # Upgraded from all-MiniLM-L6-v2 for better semantic quality
 EMBED_MODEL = "sentence-transformers/all-mpnet-base-v2"
