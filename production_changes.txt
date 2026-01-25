@@ -4,27 +4,21 @@
 - **Hybrid Search**: 
   - Integrated `BM25Retriever` + `EnsembleRetriever`.
   - **Requirement**: `DOCS_DIR` must contain extracted `.md` files.
-  - **Requirement**: BM25 index needs to be rebuilt on startup or persisted.
 - **Re-ranking**:
-  - Integrated `CrossEncoder` (`cross-encoder/ms-marco-MiniLM-L-6-v2`).
+  - Integrated `CrossEncoder`.
   - **Requirement**: Model download (~80MB) on first use.
 
-## 2. Text Extraction (Updated)
-- **Pipeline**: MUST use the "Robust" pipeline (default mode in `text_converted.py`) to generate `.md` files.
-- **Input Format**: RAG now consumes Markdown (`.md`) files instead of plain text (`.txt`). This preserves headers and structure, improving chunk semantic quality.
-- **Action**: Ensure the production workflow runs `text_converted.py` (without `rag_test` arg) and points `RAG_SETUP` to the output folder.
+## 2. Text Extraction Integration (Implemented)
+- **Pipeline Integration**: `pipeline.py` and `test_rag.py` now explicitly call `text_converted.process_folder(DOCS_DIR)`.
+- **Robust Pipeline**: This ensures OCR and Markdown conversion happen automatically before RAG indexing.
+- **Format**: `.md` files are the source of truth for RAG.
 
-## 3. Dependency Updates
-- **New Packages**:
-  - `rank_bm25`: For Hybrid Search.
-  - `sentence-transformers`: For CrossEncoder.
-  - `langchain-chroma`, `langchain-huggingface`: Modern LangChain integrations.
-- **Action**: Add to `requirements.txt`.
+## 3. Configuration & Secrets
+- **Environment Variables**:
+  - `GEMINI_API_KEY`: Required.
+  - `RAG_SEARCH_K`: Default 10 (Env var control enabled).
+  - `RAG_RERANK_K`: Default 5 (Env var control enabled).
+- **Paths**: `DOCS_DIR`, `CHROMA_DB_DIR`.
 
-## 4. Configuration & Secrets
-- **Model Selection**: `gemini-2.5-flash`.
-- **Paths**: `DOCS_DIR`, `CHROMA_DB_DIR` configurable.
-
-## 5. Error Handling & Performance
-- **API Rate Limiting**: Implement retry logic for Gemini.
-- **Batch Processing**: Consider GPU for CrossEncoder if throughput is high.
+## 4. Dependency Updates
+- **New Packages**: `rank_bm25`, `sentence-transformers`, `langchain-chroma`, `langchain-huggingface`.

@@ -1,4 +1,7 @@
 import os
+import pandas as pd
+import time
+from rag_setup import get_relevant_documents, load_vector_store
 import google.generativeai as genai
 
 try:
@@ -21,6 +24,39 @@ OUTPUT_FAILURE_FILE = os.environ.get("OUTPUT_FAILURE_FILE")
 generation_config = genai.GenerationConfig(
     temperature=MODEL_TEMPERATURE,
 )
+
+def format_docs_for_context(docs):
+    """
+    Formats a list of documents (with metadata) into a context string.
+    Injects breadcrumbs from metadata (Header 1 > Header 2...) to preserve context.
+    """
+    context_parts = []
+    for doc_item in docs:
+        # Normalize doc_item to document object
+        # If it's a tuple (doc, score), extract doc. Otherwise use doc_item as is.
+        if isinstance(doc_item, tuple):
+             doc = doc_item[0]
+        else:
+             doc = doc_item
+
+        # Extract headers from metadata
+        h1 = doc.metadata.get("Header 1", "")
+        h2 = doc.metadata.get("Header 2", "")
+        h3 = doc.metadata.get("Header 3", "")
+        source = os.path.basename(doc.metadata.get("source", "Unknown"))
+        
+        # Build a breadcrumb string
+        breadcrumbs = f"[{source}"
+        if h1: breadcrumbs += f" > {h1}"
+        if h2: breadcrumbs += f" > {h2}"
+        if h3: breadcrumbs += f" > {h3}"
+        breadcrumbs += "]"
+        
+        document_content = doc.page_content
+
+        context_parts.append(f"{breadcrumbs}\n{document_content}")
+
+    return "\n\n".join(context_parts)
 
 def generate_nld(term, context):
     system_instruction_definicao = "You are a senior geoscientist and ontology engineer. Your expertise is in oil and gas exploration geology, with a specific focus on the carbonate reservoirs of the Brazilian Pre-Salt."
@@ -86,6 +122,9 @@ def run_nld_generation():
         model_definicao = genai.GenerativeModel(model_name=MODEL_NAME, system_instruction=system_instruction_definicao,
                                                 generation_config=generation_config)
 
+        # Load vector store for RAG
+        vector_store = load_vector_store()
+
         total_terms = len(df_termos)
         for index, row in df_termos.iterrows():
             # Get the term directly
@@ -96,14 +135,16 @@ def run_nld_generation():
             try:
                 # Get relevant context using RAG
                 relevant_docs_with_scores = get_relevant_documents(f"What is the definition of {term}?", vector_store)
-                context = "\n".join([doc.page_content for doc, _ in relevant_docs_with_scores])
+                
+                # Format context using the shared helper function
+                context = format_docs_for_context(relevant_docs_with_scores)
                 
                 nld_generated, _ = generate_nld(term, context)
 
                 print(f"  -> Definition generated successfully.")
                 results.append({'Term': term, 'NLD': nld_generated, 'Context': context})
 
-                time.sleep(1)
+                time.sleep(60)
 
             except Exception as e:
                 print(f"  -> ERROR processing term '{term}': {e}")

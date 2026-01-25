@@ -7,7 +7,6 @@ try:
     genai.configure(api_key=os.environ["GEMINI_API_KEY"])
     print("Listing models...")
     for m in genai.list_models():
-        if 'generateContent' in m.supported_generation_methods:
-            print(m.name)
+        print(f"{m.name} ({m.supported_generation_methods})")
 except Exception as e:
     print(f"Error: {e}")

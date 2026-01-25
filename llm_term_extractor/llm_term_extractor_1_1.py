@@ -15,8 +15,8 @@ def run_llm_term_extraction():
 
     LLM_MODEL_NAME = os.environ["LLM_MODEL_NAME"]
     LLM_MODEL_TEMPERATURE=float(os.environ["LLM_MODEL_TEMPERATURE"])
-    PAPER_END_DELIMITER = os.environ["PAPER_END_DELIMITER"]
-    LLM_INPUT_FILE=os.environ["LLM_INPUT_FILE"]
+    # PAPER_END_DELIMITER = os.environ["PAPER_END_DELIMITER"] # Deprecated in favor of individual files
+    LLM_INPUT_DIR=os.environ["LLM_INPUT_DIR"]
     LLM_OUTPUT_FILE=os.environ["LLM_OUTPUT_FILE"]
 
     generation_config = genai.GenerationConfig(
@@ -24,25 +24,32 @@ def run_llm_term_extraction():
         response_mime_type="application/json"
     )
 
-
-    def load_text_from_file(filepath):
-        if not os.path.exists(filepath):
-            print(f"ERROR: The file '{filepath}' was not found.")
-            return None
-        try:
-            with open(filepath, 'r', encoding='utf-8') as f:
-                content = f.read()
-            print(f"Success! Loaded {len(content)} characters from '{filepath}'.")
-            return content
-        except Exception as e:
-            print(f"ERROR reading the text file: {e}")
-            return None
-
+    def load_papers_from_dir(directory):
+        papers = []
+        if not os.path.exists(directory):
+             print(f"ERROR: Directory '{directory}' not found.")
+             return []
+        
+        files = [f for f in os.listdir(directory) if f.endswith('.md')]
+        if not files:
+             print(f"ERROR: No .md files found in '{directory}'.")
+             return []
+             
+        for filename in files:
+            filepath = os.path.join(directory, filename)
+            try:
+                with open(filepath, 'r', encoding='utf-8') as f:
+                    content = f.read()
+                if content.strip():
+                    papers.append(content)
+                print(f"Loaded paper: {filename} ({len(content)} chars)")
+            except Exception as e:
+                print(f"Error reading {filename}: {e}")
+        return papers
 
     system_instruction = """You are an expert geologist and ontology engineer specializing in South Atlantic Pre-Salt petroleum systems.
                             Your task is to extract core geological concepts from technical texts suitable for building a domain ontology.
                           "This ontology's primary purpose is to assist geologists in describing and comparing analog reservoirs geological settings."""
-
 
     prompt_template = """**METHODOLOGY**
     1.  **Identify Conceptual Entities:** Identify all terms or phrases representing geological concepts. 
@@ -67,10 +74,10 @@ def run_llm_term_extraction():
     """
 
 
-    print("Loading the text corpus...")
-    full_text = load_text_from_file(LLM_INPUT_FILE)
-
-    if full_text:
+    print(f"Loading papers from {LLM_INPUT_DIR}...")
+    papers = load_papers_from_dir(LLM_INPUT_DIR)
+    
+    if papers:
         all_extracted_terms = []
 
         model = genai.GenerativeModel(
@@ -79,10 +86,8 @@ def run_llm_term_extraction():
             generation_config=generation_config
         )
 
-        papers = full_text.split(PAPER_END_DELIMITER)
-        papers = [paper.strip() for paper in papers if paper.strip()]
         num_papers = len(papers)
-        print(f"\nText has been split into {num_papers} separate papers.")
+        print(f"\\nFound {num_papers} papers to process.")
 
         for i, paper_text in enumerate(papers):
             paper_num = i + 1

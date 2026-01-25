@@ -1,5 +1,6 @@
 import sys
 import os
+import time
 from dotenv import load_dotenv
 
 # Load environment variables at the very beginning
@@ -9,7 +10,8 @@ load_dotenv()
 print(f"GEMINI_API_KEY at start: {'set' if os.getenv('GEMINI_API_KEY') else 'not set'}")
 
 from rag_setup import setup_rag, load_vector_store, get_relevant_documents
-from nld_generator.nld_generator_1_4 import generate_nld
+from nld_generator.nld_generator_1_4 import generate_nld, format_docs_for_context
+import text_converted
 
 # Print current working directory and .env file path
 current_dir = os.getcwd()
@@ -49,6 +51,9 @@ if os.environ.get('GEMINI_API_KEY') is None:
     print("GEMINI_API_KEY is not set in the environment variables")
 
 def test_rag():
+    print("Running Robust Text Extraction...")
+    text_converted.process_folder("rag_test/")
+    
     print("Setting up RAG system...")
     setup_rag()
     
@@ -68,8 +73,8 @@ def test_rag():
             print("Retrieving relevant documents (Hybrid + Rerank)...")
             relevant_docs_with_scores = get_relevant_documents(f"What is the definition of {term}?", vector_store)
             
-            # Extract just text for the context string passed to LLM
-            context = "\n".join([doc.page_content for doc, _ in relevant_docs_with_scores])
+            # Construct context with metadata (Headers) using shared function
+            context = format_docs_for_context(relevant_docs_with_scores)
             
             f.write("### Top 5 Retrieved Segments\n")
             for i, (doc, score) in enumerate(relevant_docs_with_scores, 1):
@@ -90,6 +95,10 @@ def test_rag():
             f.write("---\n\n")
             
             print("-" * 50)
+            
+            # Respect API rate limits (Free Tier: 15 RPM / 1M TPM)
+            print("Waiting 60 seconds to satisfy API rate limits...")
+            time.sleep(60)
 
 if __name__ == "__main__":
     test_rag()
