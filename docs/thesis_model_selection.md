@@ -1,7 +1,20 @@
-# Methodology: RAG Pipeline Model Selection
-
-## 1. Overview
+## 1. Overview and Theoretical Framework
 The retrieval subsystem of the RAG pipeline is the critical bottleneck for accuracy. If the relevant context is not retrieved, the LLM cannot generate a correct answer ("garbage in, garbage out"). To maximize retrieval performance for the specific domain of **Brazilian Pre-Salt Geology**, we selected a state-of-the-art **Hybrid Retrieval + Re-ranking** architecture.
+
+### 1.1. Retrieval Paradigms Explained
+To understand the model selection, it is necessary to define the three main retrieval approaches:
+
+*   **Sparse Retrieval (Keyword/Lexical)**:
+    *   *Mechanism*: Matches exact words between the query and document (e.g., BM25).
+    *   *Pros*: Excellent for specific technical identifiers (e.g., "Well 3-BRSA-123", "Stevensite").
+    *   *Cons*: Fails on synonyms (e.g., "ancient lake" might not match "lacustrine deposit").
+*   **Dense Retrieval (Semantic/Vector)**:
+    *   *Mechanism*: Converts text into numerical vectors where similar *meanings* are close together.
+    *   *Pros*: Captures conceptual similarity (e.g., understands that "Ostracod" is related to "Crustacean").
+    *   *Cons*: Can "hallucinate" relevance or miss exact keyword matches in technical domains.
+*   **Hybrid Retrieval**:
+    *   *Mechanism*: Fuses the scores of Sparse and Dense retrieval.
+    *   *Justification*: In geology, we need **both**: the concept understanding of Dense (to find descriptions of deposition) AND the precision of Sparse (to find specific formation names like "Barra Velha").
 
 ## 2. Embedding Model: BAAI/bge-m3
 We selected **`BAAI/bge-m3`** as the core embedding model. This decision is driven by three specific requirements of our corpus:
