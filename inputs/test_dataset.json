@@ -1,0 +1,112 @@
+[
+    {
+        "question": "Define 'Grainstone' in the context of carbonate classification.",
+        "ground_truth": "Grainstone is a sedimentary carbonate rock characterized by a grain-supported fabric (typically with grains up to 2mm) containing essentially no micrite matrix, predominantly composed of allochems such as bivalves, ostracods, gastropods, ooids, or intraclasts.",
+        "group": "Group A (Correction)"
+    },
+    {
+        "question": "What is the precise geological definition of 'Coquina' in the Brazilian Pre-Salt context?",
+        "ground_truth": "The term coquina refers to a sedimentary rock accumulation primarily composed of mollusk shells (bivalves and gastropods) and their fragments, which may also contain a variety of carbonate or siliciclastic grains as secondary constituents, deposited in lacustrine environments.",
+        "group": "Group A (Correction)"
+    },
+    {
+        "question": "Describe the 'Shrub' constituent found in Pre-Salt reservoirs.",
+        "ground_truth": "A shrub is a carbonate constituent characterized by an abiotic, chemically precipitated fascicular crystal habit (typically calcite) with a dendritic or arborescent morphology, distinct from microbially mediated structures.",
+        "group": "Group A (Correction)"
+    },
+    {
+        "question": "Define 'Spherulite' as it appears in the Barra Velha Formation.",
+        "ground_truth": "A spherulite is a spherical to subspherical aggregate of radially arranged acicular to fibrous carbonate crystals (often calcite) formed by abiotic chemical precipitation; it is a grain or crystal constituent, not a rock type itself.",
+        "group": "Group A (Correction)"
+    },
+    {
+        "question": "What is the distinction between 'Dolomite' and 'Dolostone'?",
+        "ground_truth": "Dolomite is a carbonate mineral with the chemical formula CaMg(CO3)2, whereas the sedimentary rock composed primarily of this mineral is correctly termed dolostone.",
+        "group": "Group A (Correction)"
+    },
+    {
+        "question": "Define 'Halite' in the context of the Aptian seal.",
+        "ground_truth": "Halite is an evaporite mineral composed of sodium chloride (NaCl) that constitutes the bulk of the massive evaporite sequences; it is the mineral phase, distinguished from the rock body (salt/evaporite).",
+        "group": "Group A (Correction)"
+    },
+    {
+        "question": "What is the specific nature of 'Peloids' in the Brazilian Pre-Salt reservoirs?",
+        "ground_truth": "In the context of the Brazilian Pre-Salt, peloids are often grains originally composed of magnesium-rich clays (such as stevensite) or associated authigenic minerals that have been reworked, rather than typical micritized carbonate grains.",
+        "group": "Group A (Correction)"
+    },
+    {
+        "question": "Define 'Rudstone' according to carbonate textural classification.",
+        "ground_truth": "A rudstone is a grain-supported carbonate rock where more than 10% of the volume consists of grains larger than 2 mm, supported by a finer-grained matrix or cement; it is the carbonate equivalent of a conglomerate.",
+        "group": "Group A (Correction)"
+    },
+    {
+        "question": "How should 'Microbialite' be defined relative to other Pre-Salt facies?",
+        "ground_truth": "A microbialite is an organosedimentary rock formed by the trapping, binding, or precipitation of minerals mediated by microbial communities; it is distinct from the extensive abiotic chemical precipitates (such as shrubs and spherulites) found in the sag section.",
+        "group": "Group A (Correction)"
+    },
+    {
+        "question": "Describe the process of 'Silicification' in the Aptian Pre-Salt section.",
+        "ground_truth": "Silicification is a diagenetic process involving the replacement of precursor minerals by authigenic silica; in the Pre-Salt Aptian section, this commonly affects magnesium-rich clays (stevensite) and carbonates, often influencing reservoir quality.",
+        "group": "Group A (Correction)"
+    },
+    {
+        "question": "What characterizes an 'Ostracod' in Pre-Salt stratigraphy?",
+        "ground_truth": "An ostracod is a microfossil that represents a small bivalved crustacean, commonly preserved in the lacustrine and hypersaline carbonate-siliciclastic successions of the Brazilian Pre-Salt. These fossils are significant biostratigraphic markers and paleoenvironmental indicators for the sag and rift phases.",
+        "group": "Group B (Baseline)"
+    },
+    {
+        "question": "Define 'Fault' in the context of Pre-Salt structural geology.",
+        "ground_truth": "A fault is a planar fracture within a rock body that exhibits measurable displacement of the rock masses on either side, resulting from brittle deformation. In the Brazilian Pre-Salt, these structures are critical physical elements that control reservoir compartmentalization and fluid migration.",
+        "group": "Group B (Baseline)"
+    },
+    {
+        "question": "What is a 'Bivalve' in the context of Pre-Salt fossils?",
+        "ground_truth": "A bivalve is a fossil invertebrate that belongs to the class Bivalvia, characterized by a two-part hinged shell enclosing a soft body. These organisms are commonly preserved in marine and lacustrine sedimentary rocks, serving as biostratigraphic markers and paleoenvironmental indicators.",
+        "group": "Group B (Baseline)"
+    },
+    {
+        "question": "Define 'Laminite' in the Pre-Salt sedimentary succession.",
+        "ground_truth": "A laminite is a sedimentary rock that is characterized by fine, parallel laminations, typically less than 1 cm thick. In the Brazilian Pre-Salt, these rocks commonly represent microbial (e.g., stromatolitic) or chemical precipitates formed in lacustrine environments.",
+        "group": "Group B (Baseline)"
+    },
+    {
+        "question": "What is 'Seismic Facies' analysis used for in the Pre-Salt?",
+        "ground_truth": "A seismic facies is a mappable, three-dimensional seismic unit characterized by a distinct set of reflection parameters, including internal configuration, continuity, amplitude, and frequency. This interpretive unit is inferred to correspond to a specific depositional system or lithofacies association.",
+        "group": "Group B (Baseline)"
+    },
+    {
+        "question": "Define 'Porosity' in the context of reservoir petrophysics.",
+        "ground_truth": "Porosity is a fundamental petrophysical property of a reservoir rock that quantifies the fraction of the total rock volume occupied by void spaces, known as pores. In Brazilian Pre-Salt carbonates, this system comprises a complex network of interparticle, intraparticle, vuggy, and moldic voids.",
+        "group": "Group B (Baseline)"
+    },
+    {
+        "question": "What is a 'Seal Rock' in the petroleum system?",
+        "ground_truth": "A seal rock is a stratigraphic unit that acts as a hydraulic barrier to fluid migration due to its high capillary entry pressure and extremely low permeability. In the Brazilian Pre-Salt, the regional seal is a thick succession of Aptian evaporites.",
+        "group": "Group B (Baseline)"
+    },
+    {
+        "question": "Define 'Total Organic Carbon' (TOC).",
+        "ground_truth": "Total Organic Carbon is a fundamental geochemical parameter that quantifies the concentration of carbon bound within the organic matter of a sedimentary rock. Expressed as a weight percentage (wt.%), it is the primary measure used to assess the hydrocarbon generation potential of a source rock.",
+        "group": "Group B (Baseline)"
+    },
+    {
+        "question": "What does the 'Albian' stage represent in the Brazilian margin?",
+        "ground_truth": "Albian is a chronostratigraphic stage of the Early Cretaceous that marks the onset of the post-rift thermal subsidence phase. It is characterized by the deposition of the first widespread marine sediments directly overlying the Aptian evaporite sequence.",
+        "group": "Group B (Baseline)"
+    },
+    {
+        "question": "Define 'Rift Phase' in the context of basin evolution.",
+        "ground_truth": "A rift phase is a tectonic phase marking the initial stage of continental break-up, characterized by crustal extension forming a series of half-grabens. In the Brazilian Pre-Salt, these basins accumulate critical lacustrine source rocks and reservoirs prior to the sag section.",
+        "group": "Group B (Baseline)"
+    },
+    {
+        "question": "What is the dominant depositional origin of the carbonate reservoirs in the Sag section (Barra Velha Formation)?",
+        "ground_truth": "According to the abiotic interpretation (De Ros et al.), the Sag section reservoirs are predominantly composed of abiotic chemical precipitates (such as shrubs and spherulites) formed in hyperalkaline lacustrine environments, and are NOT primarily microbialites.",
+        "group": "Group A (Correction - Microbial Bias)"
+    },
+    {
+        "question": "Distinguish between 'Microbialite' and 'Abiotic Precipitates' (e.g., Shrubs) in the Pre-Salt context.",
+        "ground_truth": "Microbialites are organosedimentary rocks formed by microbial trapping/binding (e.g., stromatolites), whereas Abiotic Precipitates (shrubs, spherulites) are formed by purely chemical precipitation of crystal aggregates (fascicular calcite) in the water column, without direct microbial mediation.",
+        "group": "Group A (Correction - Conceptual Distinction)"
+    }
+]
