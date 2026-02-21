@@ -56,9 +56,9 @@ def run_term_categorization():
             return None
         try:
             df = pd.read_csv(filepath, encoding='utf-8', delimiter=',', header=0,
-                             usecols=['Term', 'NLD'])
+                             usecols=['Term', 'NLD', 'Context_Used'])
 
-            print(f"Success! {len(df)} terms, NLDs, and labels loaded from '{filepath}'.")
+            print(f"Success! {len(df)} terms, NLDs, and context flags loaded from '{filepath}'.")
             return df
         except Exception as e:
             print(f"ERROR reading the CSV file: {e}")
@@ -133,6 +133,7 @@ def run_term_categorization():
 
                     classification_results.append({
                         'Term': original_row['Term'],
+                        'RAG_Context_Used': original_row['Context_Used'],
                         'Category': result_item['category'],
                         'Reasoning': result_item['reasoning'],
                         'NLD': original_row['NLD']

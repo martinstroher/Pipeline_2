@@ -15,8 +15,8 @@ except Exception as e:
     print(f"ERROR configuring Gemini API: {e}")
     exit()
 
-MODEL_NAME = "gemini-2.5-flash"
-MODEL_TEMPERATURE = 0.2
+MODEL_NAME = os.environ.get("LLM_MODEL_NAME", "gemini-2.5-pro")
+MODEL_TEMPERATURE = float(os.environ.get("LLM_MODEL_TEMPERATURE", 0.0))
 INPUT_FILE = os.environ.get("FILTERED_TERMS_OUTPUT")
 OUTPUT_FILE = os.environ.get("CONSOLIDATED_LLM_RESULTS_WITH_NLDS")
 OUTPUT_FAILURE_FILE = os.environ.get("OUTPUT_FAILURE_FILE")
@@ -63,10 +63,11 @@ def generate_nld(term, context):
     prompt_template_definicao = """Generate a concise and precise Natural Language Definition (NLD) for the provided geological term.
     
     Mandatory Instructions:
-    1. The definition must strictly follow the Aristotelian structure "X is a Y that Z". For example, "An amount of rock is a solid consolidated earth material that is constituted by an aggregate of particles made of mineral matter or material of biological origin".
-    2. Base the definition on the provided context and your knowledge of Brazilian Pre-Salt geology and petroleum systems.
-    3. The definition should be technical yet clear, and a maximum of three sentences.
-    4. Your response must contain only the generated NLD, without any extra text.
+    1. The definition must strictly follow the Aristotelian structure "X is a Y that Z" and be a maximum of three sentences.
+    2. Primary Knowledge Source: Base the definition PRIMARILY on the provided context, as it contains the most up-to-date and domain-specific knowledge. Use your internal knowledge of Brazilian Pre-Salt geology only to structure the definition correctly, fill in minor conceptual gaps, or if the provided context does not define the term geologically.
+    3. Output ONLY a valid JSON object with exactly two keys:
+       - "Definition": strictly the string containing the generated NLD.
+       - "Context_Used": boolean (true if the provided context was relevant and used as the primary source, false if you had to fallback entirely to internal knowledge).
     
     Term to be defined: "{term}"
     
@@ -74,7 +75,12 @@ def generate_nld(term, context):
     {context}
     """
     
-    model_definicao = genai.GenerativeModel(model_name=MODEL_NAME)
+    generation_config_json = genai.GenerationConfig(
+        temperature=MODEL_TEMPERATURE,
+        response_mime_type="application/json"
+    )
+    
+    model_definicao = genai.GenerativeModel(model_name=MODEL_NAME, generation_config=generation_config_json)
     full_prompt = system_instruction_definicao + "\n\n" + prompt_template_definicao.format(term=term, context=context)
     response_definicao = model_definicao.generate_content(full_prompt)
     return response_definicao.text.strip(), full_prompt
@@ -96,31 +102,11 @@ def run_nld_generation():
             print(f"ERROR reading the CSV file '{filepath}': {e}")
             return None
 
-
-    system_instruction_definicao = "You are a senior geoscientist and ontology engineer. Your expertise is in oil and gas exploration geology, with a specific focus on the carbonate reservoirs of the Brazilian Pre-Salt."
-    prompt_template_definicao = """Generate a concise and precise Natural Language Definition (NLD) for the provided geological term.
-    
-    Mandatory Instructions:
-    1. The definition must strictly follow the Aristotelian structure "X is a Y that Z". For example, "An amount of rock is a solid consolidated earth material that is constituted by an aggregate of particles made of mineral matter or material of biological origin".
-    2. Base the definition on the provided context and your knowledge of Brazilian Pre-Salt geology and petroleum systems.
-    3. The definition should be technical yet clear, and a maximum of three sentences.
-    4. Your response must contain only the generated NLD, without any extra text.
-    
-    Term to be defined: "{term}"
-    
-    Relevant context:
-    {context}
-    """
-
-
     df_termos = load_terms_from_aggregator_csv(INPUT_FILE)
 
     if df_termos is not None:
         results = []
         terms_for_review = []
-
-        model_definicao = genai.GenerativeModel(model_name=MODEL_NAME, system_instruction=system_instruction_definicao,
-                                                generation_config=generation_config)
 
         # Load vector store for RAG
         vector_store = load_vector_store()
@@ -139,10 +125,20 @@ def run_nld_generation():
                 # Format context using the shared helper function
                 context = format_docs_for_context(relevant_docs_with_scores)
                 
-                nld_generated, _ = generate_nld(term, context)
+                nld_json_str, _ = generate_nld(term, context)
+                
+                import json
+                try:
+                    nld_data = json.loads(nld_json_str)
+                    nld_generated = nld_data.get("Definition", "")
+                    context_used = nld_data.get("Context_Used", True)
+                except json.JSONDecodeError:
+                    print(f"  -> ERROR: Failed to parse JSON response. Raw: {nld_json_str}")
+                    nld_generated = nld_json_str
+                    context_used = "Error Parsing JSON"
 
-                print(f"  -> Definition generated successfully.")
-                results.append({'Term': term, 'NLD': nld_generated, 'Context': context})
+                print(f"  -> Definition generated successfully. Context Used: {context_used}")
+                results.append({'Term': term, 'NLD': nld_generated, 'Context_Used': context_used, 'Context': context})
 
                 time.sleep(float(os.environ.get("NLD_SLEEP_SECONDS", 60)))
 
