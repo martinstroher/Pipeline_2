@@ -15,8 +15,8 @@ def run_term_categorization():
         exit()
 
     BATCH_SIZE = int(os.environ.get("BATCH_SIZE", 1))
-    MODEL_NAME = os.environ["LLM_MODEL_NAME"]
-    MODEL_TEMPERATURE=float(os.environ.get("LLM_MODEL_TEMPERATURE", 0))
+    MODEL_NAME = os.environ.get("LLM_GENERATION_MODEL", "gemini-2.5-pro")
+    MODEL_TEMPERATURE=float(os.environ.get("LLM_GENERATION_TEMPERATURE", 0))
     INPUT_FILE_PATH = os.environ["CONSOLIDATED_LLM_RESULTS_WITH_NLDS"]
     OUTPUT_FILE_PATH = os.environ["CATEGORIZED_LLM_TERMS"]
     GEORESERVOIR_DEFS_PATH = os.environ["GEORESERVOIR_DEFS_PATH"]

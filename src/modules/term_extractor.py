@@ -13,8 +13,8 @@ def run_llm_term_extraction():
         print(f"ERROR configuring Gemini API: {e}")
         exit()
 
-    LLM_MODEL_NAME = os.environ["LLM_MODEL_NAME"]
-    LLM_MODEL_TEMPERATURE=float(os.environ["LLM_MODEL_TEMPERATURE"])
+    LLM_MODEL_NAME = os.environ.get("LLM_EXTRACTION_MODEL", "gemini-2.5-flash")
+    LLM_MODEL_TEMPERATURE=float(os.environ.get("LLM_EXTRACTION_TEMPERATURE", 0.0))
     # PAPER_END_DELIMITER = os.environ["PAPER_END_DELIMITER"] # Deprecated in favor of individual files
     LLM_INPUT_DIR=os.environ["LLM_INPUT_DIR"]
     LLM_OUTPUT_FILE=os.environ["LLM_OUTPUT_FILE"]
@@ -48,8 +48,8 @@ def run_llm_term_extraction():
         return papers
 
     system_instruction = """You are an expert geologist and ontology engineer specializing in South Atlantic Pre-Salt petroleum systems.
-                            Your task is to extract core geological concepts from technical texts suitable for building a domain ontology.
-                          "This ontology's primary purpose is to assist geologists in describing and comparing analog reservoirs geological settings."""
+                            Your task is to extract core geological concepts from scientific texts suitable for building a domain ontology.
+                          This ontology's primary purpose is to assist geologists in describing and comparing analog reservoirs geological settings."""
 
     prompt_template = """**METHODOLOGY**
     1.  **Identify Conceptual Entities:** Identify all terms or phrases representing geological concepts. 
@@ -60,7 +60,7 @@ def run_llm_term_extraction():
         * Specific, non-conceptual proper nouns (e.g., individual well names like 'Well 1-BRSA-123', specific field names unless used generically, 
         basin names like 'Santos Basin', author names, company names).
         * Units of measure, numerical values, and codes (e.g., 'mD', 'API', '10%', 'SiO2').
-    4.  **Focus:** Prioritize terms that represent reusable classes within an ontology framework. Do not rank or limit the number extracted from this snippet.x
+    4.  **Focus:** Prioritize terms that represent reusable classes within an ontology framework. Do not rank or limit the number extracted from this snippet.
     
     **OUTPUT FORMAT:**
     Your response MUST BE a valid JSON array of unique strings.

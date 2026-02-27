@@ -15,8 +15,8 @@ except Exception as e:
     print(f"ERROR configuring Gemini API: {e}")
     exit()
 
-MODEL_NAME = os.environ.get("LLM_MODEL_NAME", "gemini-2.5-pro")
-MODEL_TEMPERATURE = float(os.environ.get("LLM_MODEL_TEMPERATURE", 0.0))
+MODEL_NAME = os.environ.get("LLM_GENERATION_MODEL", "gemini-2.5-pro")
+MODEL_TEMPERATURE = float(os.environ.get("LLM_GENERATION_TEMPERATURE", 0.0))
 INPUT_FILE = os.environ.get("FILTERED_TERMS_OUTPUT")
 OUTPUT_FILE = os.environ.get("CONSOLIDATED_LLM_RESULTS_WITH_NLDS")
 OUTPUT_FAILURE_FILE = os.environ.get("OUTPUT_FAILURE_FILE")

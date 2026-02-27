@@ -31,7 +31,7 @@ GOLDEN_SET_PATH = "inputs/test_dataset.json"
 RESULTS_FILE = "output/optimization_results.csv"
 
 # Grid Search Parameters
-CHUNK_SIZES = [1024, 2048, 4000]
+CHUNK_SIZES = [512, 1024, 2048]
 RETRIEVAL_CONFIGS = [
     {"search_k": 20, "rerank_k": 5},
     {"search_k": 50, "rerank_k": 10}
