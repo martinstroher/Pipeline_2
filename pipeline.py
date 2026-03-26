@@ -12,16 +12,16 @@ def main():
     text_converted.process_folder(DOCS_DIR)
 
     # Set up RAG system
-    setup_rag()
+    vector_store, bm25 = setup_rag()
 
     # Run existing pipeline steps
     run_llm_term_extraction()
     term_aggregator.run_term_aggregation()
     filter_top_terms()
-    
+
     # Run NLD generation with RAG
-    run_nld_generation()
-    
+    run_nld_generation(vector_store=vector_store, bm25_retriever=bm25)
+
     # Run term categorization
     run_term_categorization()
 

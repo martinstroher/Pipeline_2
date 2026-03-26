@@ -1,3 +1,4 @@
+import json
 import os
 import pandas as pd
 import time
@@ -85,7 +86,7 @@ def generate_nld(term, context):
     response_definicao = model_definicao.generate_content(full_prompt)
     return response_definicao.text.strip(), full_prompt
 
-def run_nld_generation():
+def run_nld_generation(vector_store=None, bm25_retriever=None):
     def load_terms_from_aggregator_csv(filepath):
         """Loads terms from the aggregator output CSV file."""
         if not os.path.exists(filepath):
@@ -105,29 +106,54 @@ def run_nld_generation():
     df_termos = load_terms_from_aggregator_csv(INPUT_FILE)
 
     if df_termos is not None:
+        # Load previously checkpointed results if they exist
+        completed_terms = set()
         results = []
+        if os.path.exists(OUTPUT_FILE):
+            try:
+                df_existing = pd.read_csv(OUTPUT_FILE, encoding='utf-8-sig')
+                completed_terms = set(df_existing['Term'].tolist())
+                results = df_existing.to_dict('records')
+                print(f"Resuming from checkpoint: {len(completed_terms)} terms already processed.")
+            except Exception:
+                pass
+
         terms_for_review = []
 
-        # Load vector store for RAG
-        vector_store = load_vector_store()
+        # Load vector store for RAG if not passed
+        if vector_store is None:
+            print("Warning: No vector_store passed, loading from disk (dense-only, no BM25).")
+            vector_store = load_vector_store()
+
+        if bm25_retriever is not None:
+            print("BM25 hybrid retrieval is ACTIVE.")
+        else:
+            print("Warning: BM25 not available, using dense-only retrieval.")
 
         total_terms = len(df_termos)
         for index, row in df_termos.iterrows():
             # Get the term directly
             term = row['Readable_Term']
 
+            # Skip already checkpointed terms
+            if term in completed_terms:
+                continue
+
             print(f"Processing term {index + 1}/{total_terms}: '{term}'...")
 
             try:
-                # Get relevant context using RAG
-                relevant_docs_with_scores = get_relevant_documents(f"What is the definition of {term}?", vector_store)
+                # Get relevant context using RAG (with BM25 if available)
+                relevant_docs_with_scores = get_relevant_documents(
+                    f"What is the definition of {term}?",
+                    vector_store,
+                    bm25_retriever=bm25_retriever
+                )
                 
                 # Format context using the shared helper function
                 context = format_docs_for_context(relevant_docs_with_scores)
                 
                 nld_json_str, _ = generate_nld(term, context)
-                
-                import json
+
                 try:
                     nld_data = json.loads(nld_json_str)
                     nld_generated = nld_data.get("Definition", "")
@@ -138,16 +164,22 @@ def run_nld_generation():
                     context_used = "Error Parsing JSON"
 
                 print(f"  -> Definition generated successfully. Context Used: {context_used}")
-                results.append({'Term': term, 'NLD': nld_generated, 'Context_Used': context_used, 'Context': context})
+                result_row = {'Term': term, 'NLD': nld_generated, 'Context_Used': context_used, 'Context': context}
+                results.append(result_row)
 
-                time.sleep(float(os.environ.get("NLD_SLEEP_SECONDS", 60)))
+                # Checkpoint: atomic append to CSV
+                single_row_df = pd.DataFrame([result_row])
+                single_row_df.to_csv(OUTPUT_FILE, mode='a', header=not os.path.exists(OUTPUT_FILE) or len(results) == 1, index=False, encoding='utf-8-sig')
+
+                time.sleep(float(os.environ.get("NLD_SLEEP_SECONDS", 4)))
 
             except Exception as e:
                 print(f"  -> ERROR processing term '{term}': {e}")
                 terms_for_review.append({'Term': term, 'Error': str(e)})
 
-        print("\nProcessing complete. Saving results...")
+        print("\nProcessing complete.")
 
+        # Write final consolidated output (overwrites checkpoint file with clean version)
         output_dir = os.path.dirname(OUTPUT_FILE)
         if output_dir and not os.path.exists(output_dir):
             os.makedirs(output_dir)

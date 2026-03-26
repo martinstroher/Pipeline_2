@@ -143,11 +143,10 @@ def run_term_categorization():
             except json.JSONDecodeError:
                 print(f"  -> ERROR: LLM returned invalid JSON. Batch flagged for review.")
                 for item in batch_list:
-                    original_row = df_nlds.loc[df_nlds['Termo_Corrigido'] == item['term']].iloc[0]
                     classification_results.append({
                         'Term': item['term'],
+                        'RAG_Context_Used': '',
                         'Category': 'ERROR_INVALID_JSON',
-                        'Original_Label': original_row['Original_Label'],
                         'Reasoning': 'LLM response was not valid JSON.',
                         'NLD': item['nld']
                     })

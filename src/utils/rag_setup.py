@@ -167,31 +167,51 @@ def get_relevant_documents(
         print(f"Warning: Re-ranking failed ({e}). Returning raw results.")
         return [(doc, 1.0) for doc in initial_docs[:rerank_k]]
 
-def setup_rag(chunk_size: int = 1024, chunk_overlap: int = 100):
+def setup_rag(chunk_size: int = 1024, chunk_overlap: int = 100, force_rebuild: bool = False):
     """
-    Main setup function. 
+    Main setup function.
     Can be called by pipeline.py (default params) or optimize_rag.py (grid search).
+    When force_rebuild=False and a DB already exists, loads from disk instead of recreating.
+    BM25 is always rebuilt in-memory (not persistable).
     """
-    print(f"--- Setting up RAG (Chunk Size: {chunk_size}) ---")
+    print(f"--- Setting up RAG (Chunk Size: {chunk_size}, Force Rebuild: {force_rebuild}) ---")
     if not os.path.exists(DOCS_DIR):
         print(f"Error: {DOCS_DIR} not found.")
         return None, None
+
+    db_path = get_chroma_path(chunk_size)
+
+    # Check if we can reuse existing ChromaDB
+    if not force_rebuild and os.path.exists(db_path) and os.listdir(db_path):
+        print(f"Found existing ChromaDB at {db_path}. Loading from disk (use force_rebuild=True to recreate).")
+        vector_store = load_vector_store(chunk_size)
+
+        # BM25 must be rebuilt in-memory every time
+        documents = load_documents(DOCS_DIR)
+        if not documents:
+            print("No documents found for BM25.")
+            return vector_store, None
+        split_docs = split_documents(documents, chunk_size, chunk_overlap)
+        bm25 = get_bm25_retriever(split_docs)
+
+        print("RAG Setup Complete (ChromaDB from cache, BM25 rebuilt).")
+        return vector_store, bm25
 
     # Load
     documents = load_documents(DOCS_DIR)
     if not documents:
         print("No documents found.")
         return None, None
-    
+
     # Split
     split_docs = split_documents(documents, chunk_size, chunk_overlap)
-    
+
     # Index (Dense) - Returns Chroma Object
     vector_store = create_vector_store(split_docs, chunk_size)
-    
+
     # Index (Sparse) - Returns BM25 Object
     bm25 = get_bm25_retriever(split_docs)
-    
+
     print("RAG Setup Complete.")
     return vector_store, bm25
 
