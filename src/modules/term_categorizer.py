@@ -11,8 +11,7 @@ def run_term_categorization():
         genai.configure(api_key=os.environ["GEMINI_API_KEY"])
         print("Gemini API Key configured successfully.")
     except Exception as e:
-        print(f"ERROR configuring Gemini API: {e}")
-        exit()
+        raise RuntimeError(f"ERROR configuring Gemini API: {e}")
 
     BATCH_SIZE = int(os.environ.get("BATCH_SIZE", 1))
     MODEL_NAME = os.environ.get("LLM_GENERATION_MODEL", "gemini-2.5-pro")
@@ -47,7 +46,7 @@ def run_term_categorization():
     geocore_definitions = load_definitions_from_file(GEOCORE_DEFS_PATH)
     bfo_definitions = load_definitions_from_file(BFO_DEFS_PATH)
     if not geocore_definitions or not bfo_definitions:
-        exit()
+        raise RuntimeError("Required ontology definition files could not be loaded.")
 
 
     def load_nlds_from_csv(filepath):
@@ -152,6 +151,14 @@ def run_term_categorization():
                     })
             except Exception as e:
                 print(f"  -> ERROR classifying batch: {e}. Batch flagged for review.")
+                for item in batch_list:
+                    classification_results.append({
+                        'Term': item['term'],
+                        'RAG_Context_Used': '',
+                        'Category': 'ERROR_GENERAL',
+                        'Reasoning': f'Error: {str(e)}',
+                        'NLD': item['nld']
+                    })
 
             time.sleep(2)
 
@@ -163,8 +170,7 @@ def run_term_categorization():
                 os.makedirs(output_dir)
                 print(f"Created output directory: {output_dir}")
             except OSError as e:
-                print(f"ERROR creating directory {output_dir}: {e}")
-                exit()
+                raise RuntimeError(f"ERROR creating directory {output_dir}: {e}")
 
         try:
             final_df = pd.DataFrame(classification_results)

@@ -105,7 +105,7 @@ def run_test():
         full_path = os.path.join(root_dir, f)
         if os.path.exists(full_path):
             # Optional: Check size > 0
-            if os.path.getsize(f) > 0:
+            if os.path.getsize(full_path) > 0:
                 print(f"  [OK] Found {f}")
             else:
                 print(f"  [WARN] Found {f} but it is empty")

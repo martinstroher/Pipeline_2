@@ -10,8 +10,7 @@ def run_llm_term_extraction():
         genai.configure(api_key=os.environ["GEMINI_API_KEY"])
         print("Gemini API Key configured successfully.")
     except Exception as e:
-        print(f"ERROR configuring Gemini API: {e}")
-        exit()
+        raise RuntimeError(f"ERROR configuring Gemini API: {e}")
 
     LLM_MODEL_NAME = os.environ.get("LLM_EXTRACTION_MODEL", "gemini-2.5-flash")
     LLM_MODEL_TEMPERATURE=float(os.environ.get("LLM_EXTRACTION_TEMPERATURE", 0.0))

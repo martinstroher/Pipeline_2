@@ -5,26 +5,29 @@ import time
 from src.utils.rag_setup import get_relevant_documents, load_vector_store
 import google.generativeai as genai
 
-try:
-    genai.configure(api_key=os.environ["GEMINI_API_KEY"])
-    print("Gemini API Key configured successfully from environment variables.")
-except KeyError:
-    print("ERROR: The GEMINI_API_KEY environment variable was not found.")
-    print("Please set it.")
-    exit()
-except Exception as e:
-    print(f"ERROR configuring Gemini API: {e}")
-    exit()
+# Module-level state (configured lazily inside functions, not at import time)
+_genai_configured = False
+_MODEL_NAME = None
+_MODEL_TEMPERATURE = None
 
-MODEL_NAME = os.environ.get("LLM_GENERATION_MODEL", "gemini-2.5-pro")
-MODEL_TEMPERATURE = float(os.environ.get("LLM_GENERATION_TEMPERATURE", 0.0))
-INPUT_FILE = os.environ.get("FILTERED_TERMS_OUTPUT")
-OUTPUT_FILE = os.environ.get("CONSOLIDATED_LLM_RESULTS_WITH_NLDS")
-OUTPUT_FAILURE_FILE = os.environ.get("OUTPUT_FAILURE_FILE")
 
-generation_config = genai.GenerationConfig(
-    temperature=MODEL_TEMPERATURE,
-)
+def _ensure_genai_configured():
+    """Configure Gemini API once per process. Raises RuntimeError on failure."""
+    global _genai_configured, _MODEL_NAME, _MODEL_TEMPERATURE
+    if _genai_configured:
+        return
+    try:
+        genai.configure(api_key=os.environ["GEMINI_API_KEY"])
+        print("Gemini API Key configured successfully from environment variables.")
+    except KeyError:
+        raise RuntimeError("The GEMINI_API_KEY environment variable was not found. Please set it.")
+    except Exception as e:
+        raise RuntimeError(f"ERROR configuring Gemini API: {e}")
+
+    _MODEL_NAME = os.environ.get("LLM_GENERATION_MODEL", "gemini-2.5-pro")
+    _MODEL_TEMPERATURE = float(os.environ.get("LLM_GENERATION_TEMPERATURE", 0.0))
+    _genai_configured = True
+
 
 def format_docs_for_context(docs):
     """
@@ -45,14 +48,14 @@ def format_docs_for_context(docs):
         h2 = doc.metadata.get("Header 2", "")
         h3 = doc.metadata.get("Header 3", "")
         source = os.path.basename(doc.metadata.get("source", "Unknown"))
-        
+
         # Build a breadcrumb string
         breadcrumbs = f"[{source}"
         if h1: breadcrumbs += f" > {h1}"
         if h2: breadcrumbs += f" > {h2}"
         if h3: breadcrumbs += f" > {h3}"
         breadcrumbs += "]"
-        
+
         document_content = doc.page_content
 
         context_parts.append(f"{breadcrumbs}\n{document_content}")
@@ -60,33 +63,58 @@ def format_docs_for_context(docs):
     return "\n\n".join(context_parts)
 
 def generate_nld(term, context):
+    _ensure_genai_configured()
+
     system_instruction_definicao = "You are a senior geoscientist and ontology engineer. Your expertise is in oil and gas exploration geology, with a specific focus on the carbonate reservoirs of the Brazilian Pre-Salt."
+
     prompt_template_definicao = """Generate a concise and precise Natural Language Definition (NLD) for the provided geological term.
-    
+
     Mandatory Instructions:
     1. The definition must strictly follow the Aristotelian structure "X is a Y that Z" and be a maximum of three sentences.
-    2. Primary Knowledge Source: Base the definition PRIMARILY on the provided context, as it contains the most up-to-date and domain-specific knowledge. Use your internal knowledge of Brazilian Pre-Salt geology only to structure the definition correctly, fill in minor conceptual gaps, or if the provided context does not define the term geologically.
-    3. Output ONLY a valid JSON object with exactly two keys:
+    2. The definition MUST be written in English.
+    3. If a term is polysemous, define the sense most relevant to Pre-Salt petroleum geology.
+    4. Primary Knowledge Source: Base the definition PRIMARILY on the provided context, as it contains the most up-to-date and domain-specific knowledge. Use your internal knowledge of Brazilian Pre-Salt geology only to structure the definition correctly, fill in minor conceptual gaps, or if the provided context does not define the term geologically.
+    5. Output ONLY a valid JSON object with exactly two keys:
        - "Definition": strictly the string containing the generated NLD.
        - "Context_Used": boolean (true if the provided context was relevant and used as the primary source, false if you had to fallback entirely to internal knowledge).
-    
+
+    **EXAMPLES:**
+    Term: "Grainstone"
+    Context: [paper.md > Carbonate Classification] Grainstones are grain-supported carbonate rocks lacking mud matrix...
+    Output: {{"Definition": "Grainstone is a grain-supported sedimentary carbonate rock that is characterized by the absence of micrite matrix, with grains typically consisting of allochems such as bivalves, ostracods, gastropods, ooids, or intraclasts.", "Context_Used": true}}
+
+    Term: "Coquina"
+    Context: [paper.md > Reservoir Facies] Coquinas from the Santos Basin are bioclastic carbonates composed predominantly of bivalve shells...
+    Output: {{"Definition": "Coquina is a sedimentary rock that is primarily composed of accumulated mollusk shells (bivalves and gastropods) and their fragments, deposited in lacustrine environments of the Brazilian Pre-Salt and serving as significant reservoir facies.", "Context_Used": true}}
+
+    ---
     Term to be defined: "{term}"
-    
+
     Relevant context:
     {context}
     """
-    
+
     generation_config_json = genai.GenerationConfig(
-        temperature=MODEL_TEMPERATURE,
+        temperature=_MODEL_TEMPERATURE,
         response_mime_type="application/json"
     )
-    
-    model_definicao = genai.GenerativeModel(model_name=MODEL_NAME, generation_config=generation_config_json)
-    full_prompt = system_instruction_definicao + "\n\n" + prompt_template_definicao.format(term=term, context=context)
+
+    model_definicao = genai.GenerativeModel(
+        model_name=_MODEL_NAME,
+        system_instruction=system_instruction_definicao,
+        generation_config=generation_config_json
+    )
+    full_prompt = prompt_template_definicao.format(term=term, context=context)
     response_definicao = model_definicao.generate_content(full_prompt)
     return response_definicao.text.strip(), full_prompt
 
 def run_nld_generation(vector_store=None, bm25_retriever=None):
+    _ensure_genai_configured()
+
+    INPUT_FILE = os.environ.get("FILTERED_TERMS_OUTPUT")
+    OUTPUT_FILE = os.environ.get("CONSOLIDATED_LLM_RESULTS_WITH_NLDS")
+    OUTPUT_FAILURE_FILE = os.environ.get("OUTPUT_FAILURE_FILE")
+
     def load_terms_from_aggregator_csv(filepath):
         """Loads terms from the aggregator output CSV file."""
         if not os.path.exists(filepath):
@@ -143,15 +171,16 @@ def run_nld_generation(vector_store=None, bm25_retriever=None):
 
             try:
                 # Get relevant context using RAG (with BM25 if available)
+                # Use term-only query (no question-form noise for BM25)
                 relevant_docs_with_scores = get_relevant_documents(
-                    f"What is the definition of {term}?",
+                    term,
                     vector_store,
                     bm25_retriever=bm25_retriever
                 )
-                
+
                 # Format context using the shared helper function
                 context = format_docs_for_context(relevant_docs_with_scores)
-                
+
                 nld_json_str, _ = generate_nld(term, context)
 
                 try:
