@@ -37,6 +37,19 @@ def main():
         help="Generate expert evaluation spreadsheet from ablation results",
     )
     parser.add_argument(
+        "--layer2-analysis",
+        nargs="+",
+        default=None,
+        metavar="WORKBOOK",
+        help="Run Layer 2 analysis on completed expert workbooks (e.g., --layer2-analysis expert1.xlsx expert2.xlsx --layer2-key blinding_key_42.csv)",
+    )
+    parser.add_argument(
+        "--layer2-key",
+        type=str,
+        default=None,
+        help="Path to blinding key CSV (required with --layer2-analysis)",
+    )
+    parser.add_argument(
         "--taxonomy",
         type=str,
         default=None,
@@ -75,8 +88,16 @@ def main():
 
     # --- Expert evaluation spreadsheet ---
     if args.expert_eval:
-        from src.evaluation.expert_eval_generator import generate_expert_spreadsheet
-        generate_expert_spreadsheet()
+        from src.evaluation.expert_eval_generator import generate_expert_evaluation
+        generate_expert_evaluation()
+        return
+
+    # --- Layer 2 analysis ---
+    if args.layer2_analysis:
+        from src.evaluation.expert_eval_analyzer import run_layer2_analysis
+        if not args.layer2_key:
+            parser.error("--layer2-key is required with --layer2-analysis")
+        run_layer2_analysis(args.layer2_analysis, args.layer2_key)
         return
 
     # --- Taxonomy builder ---

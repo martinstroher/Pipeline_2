@@ -1,138 +1,360 @@
 """
 Expert Evaluation Spreadsheet Generator (Layer 2).
 
-Generates a blinded, randomized spreadsheet for expert evaluation:
-  - 50-80 terms (stratified by category and Context_Used flag)
-  - For each term: NLD-A vs NLD-B (random order), Category-A vs Category-B (random order)
-  - Expert tasks: NLD preference, NLD quality (1-5), category correctness
+Generates a blinded, multi-sheet Excel workbook for domain expert evaluation:
+  Sheet 1 — Instructions: guidelines, Likert scales, calibration examples
+  Sheet 2 — Term_Relevance: 100 terms, condition-independent relevance rating
+  Sheet 3 — NLD_Quality: 100 terms, blinded A-vs-B paired definition comparison
+  Sheet 4 — Category_Correct: deduplicated (Term, Category) pairs from all 4 conditions
 
-Output: Excel file ready to send to domain experts.
+Outputs:
+  - Excel workbook per expert (send to expert)
+  - Blinding key CSV (keep for analysis, never share with experts)
 """
 
 import os
 import random
+import hashlib
 
 import pandas as pd
 
 OUTPUT_DIR = os.environ.get("ABLATION_OUTPUT_DIR", "output/ablation")
 
 
-def generate_expert_spreadsheet(
-    n_terms: int = 60,
-    seed: int = 42,
-    output_path: str | None = None,
-) -> str:
-    """
-    Generate a blinded expert evaluation spreadsheet.
+# ---------------------------------------------------------------------------
+# Term Selection
+# ---------------------------------------------------------------------------
 
-    Args:
-        n_terms: Target number of terms to sample.
-        seed: Random seed for reproducibility.
-        output_path: Output Excel path (default: output/ablation/expert_evaluation.xlsx).
+def select_terms(n_terms: int = 100, seed: int = 42) -> list[str]:
+    """Select top-N terms by frequency from the filtered terms file.
+
+    Falls back to the first N terms if frequency column is flat.
+    Excludes terms where any condition produced an ERROR result.
+    """
+    terms_file = os.environ.get("FILTERED_TERMS_OUTPUT", "output/3_filtered_top_terms.csv")
+    df = pd.read_csv(terms_file, encoding="utf-8")
+    # Sort by frequency descending (should already be sorted, but ensure)
+    df = df.sort_values("Frequency", ascending=False).reset_index(drop=True)
+
+    # Filter out terms with errors in any condition
+    error_terms = set()
+    for cond in ["A", "B", "C", "D"]:
+        cat_path = os.path.join(OUTPUT_DIR, f"cat_{cond}.csv")
+        if os.path.exists(cat_path):
+            cat_df = pd.read_csv(cat_path, encoding="utf-8-sig")
+            err_mask = cat_df["Category"].str.startswith("ERROR", na=False)
+            error_terms.update(cat_df.loc[err_mask, "Term"].tolist())
+
+    candidates = df[~df["Readable_Term"].isin(error_terms)]
+    selected = candidates.head(n_terms)["Readable_Term"].tolist()
+
+    if len(selected) < n_terms:
+        print(f"  Warning: only {len(selected)} error-free terms available (requested {n_terms})")
+
+    return selected
+
+
+# ---------------------------------------------------------------------------
+# Data Loading
+# ---------------------------------------------------------------------------
+
+def load_all_conditions() -> dict:
+    """Load NLD and categorization CSVs for all 4 conditions.
 
     Returns:
-        Path to the generated file.
+        {
+            "nld": {"A": DataFrame, "B": DataFrame, ...},
+            "cat": {"A": DataFrame, "B": DataFrame, ...},
+        }
     """
-    random.seed(seed)
+    data = {"nld": {}, "cat": {}}
+    for cond in ["A", "B", "C", "D"]:
+        nld_path = os.path.join(OUTPUT_DIR, f"nld_{cond}.csv")
+        cat_path = os.path.join(OUTPUT_DIR, f"cat_{cond}.csv")
 
-    if output_path is None:
-        output_path = os.path.join(OUTPUT_DIR, "expert_evaluation.xlsx")
+        if os.path.exists(nld_path):
+            data["nld"][cond] = pd.read_csv(nld_path, encoding="utf-8-sig")
+        else:
+            print(f"  Warning: {nld_path} not found, skipping condition {cond}")
 
-    # Load condition A and B NLD outputs
-    nld_a = pd.read_csv(os.path.join(OUTPUT_DIR, "nld_A.csv"), encoding="utf-8-sig")
-    nld_b = pd.read_csv(os.path.join(OUTPUT_DIR, "nld_B.csv"), encoding="utf-8-sig")
-    cat_a = pd.read_csv(os.path.join(OUTPUT_DIR, "cat_A.csv"), encoding="utf-8-sig")
-    cat_b = pd.read_csv(os.path.join(OUTPUT_DIR, "cat_B.csv"), encoding="utf-8-sig")
+        if os.path.exists(cat_path):
+            data["cat"][cond] = pd.read_csv(cat_path, encoding="utf-8-sig")
+        else:
+            print(f"  Warning: {cat_path} not found, skipping condition {cond}")
 
-    # Merge A and B data per term
-    merged = nld_a[["Term", "NLD", "Context_Used"]].rename(
-        columns={"NLD": "NLD_A", "Context_Used": "Context_Used_A"}
-    )
-    merged = merged.merge(
-        nld_b[["Term", "NLD"]].rename(columns={"NLD": "NLD_B"}),
-        on="Term",
-        how="inner",
-    )
-    merged = merged.merge(
-        cat_a[["Term", "Category"]].rename(columns={"Category": "Cat_A"}),
-        on="Term",
-        how="left",
-    )
-    merged = merged.merge(
-        cat_b[["Term", "Category"]].rename(columns={"Category": "Cat_B"}),
-        on="Term",
-        how="left",
-    )
+    return data
 
-    # Filter out error rows
-    merged = merged[~merged["NLD_A"].str.startswith("ERROR", na=False)]
-    merged = merged[~merged["NLD_B"].str.startswith("ERROR", na=False)]
 
-    # Stratified sampling: balance by category and Context_Used
-    merged["Context_Used_A"] = merged["Context_Used_A"].astype(str)
-    strata_col = merged["Cat_A"].fillna("UNKNOWN") + "_" + merged["Context_Used_A"]
-    merged["strata"] = strata_col
+# ---------------------------------------------------------------------------
+# Sheet Builders
+# ---------------------------------------------------------------------------
 
-    # Sample proportionally from each stratum
-    sampled = merged.groupby("strata", group_keys=False).apply(
-        lambda x: x.sample(
-            n=max(1, round(len(x) / len(merged) * n_terms)),
-            random_state=seed,
-        )
-    )
-    # Trim or pad to target
-    if len(sampled) > n_terms:
-        sampled = sampled.sample(n=n_terms, random_state=seed)
+def build_term_relevance_sheet(terms: list[str]) -> pd.DataFrame:
+    """Sheet 2: Term relevance evaluation (condition-independent).
 
-    # Randomize order (blind: which is A vs B)
+    100 rows, sorted alphabetically.
+    """
     rows = []
-    for _, r in sampled.iterrows():
-        # Random assignment: Definition_1 / Definition_2
-        if random.random() < 0.5:
-            d1, d2 = r["NLD_A"], r["NLD_B"]
-            c1, c2 = r["Cat_A"], r["Cat_B"]
+    for term in sorted(terms):
+        rows.append({
+            "Term": term,
+            "Relevance (1-5)": "",
+            "Notes": "",
+        })
+    return pd.DataFrame(rows)
+
+
+def build_nld_quality_sheet(
+    terms: list[str],
+    nld_data: dict[str, pd.DataFrame],
+    seed: int = 42,
+) -> tuple[pd.DataFrame, pd.DataFrame]:
+    """Sheet 3: Blinded A-vs-B NLD quality comparison.
+
+    Returns (expert_sheet, key_sheet).
+    Only conditions A and B are included (C and D break blinding).
+    """
+    if "A" not in nld_data or "B" not in nld_data:
+        raise ValueError("NLD data for conditions A and B is required for NLD quality sheet")
+
+    nld_a = nld_data["A"].set_index("Term")
+    nld_b = nld_data["B"].set_index("Term")
+
+    rng = random.Random(seed)
+    expert_rows = []
+    key_rows = []
+
+    # Shuffle term order for blinding
+    shuffled_terms = list(terms)
+    rng.shuffle(shuffled_terms)
+
+    for idx, term in enumerate(shuffled_terms, 1):
+        row_id = f"NLD-{idx:03d}"
+
+        def_a = nld_a.loc[term, "NLD"] if term in nld_a.index else "N/A"
+        def_b = nld_b.loc[term, "NLD"] if term in nld_b.index else "N/A"
+        ctx_used = nld_a.loc[term, "Context_Used"] if term in nld_a.index else ""
+
+        # Coin flip: which definition goes first
+        if rng.random() < 0.5:
+            d1, d2 = def_a, def_b
             order = "A_first"
         else:
-            d1, d2 = r["NLD_B"], r["NLD_A"]
-            c1, c2 = r["Cat_B"], r["Cat_A"]
+            d1, d2 = def_b, def_a
             order = "B_first"
 
-        rows.append({
-            "Term": r["Term"],
+        expert_rows.append({
+            "Row_ID": row_id,
+            "Term": term,
             "Definition_1": d1,
             "Definition_2": d2,
-            "Category_1": c1,
-            "Category_2": c2,
-            # Hidden blinding key (in separate sheet)
-            "_order": order,
-            "_Context_Used": r["Context_Used_A"],
-            "_Cat_A": r["Cat_A"],
+            "Quality_1 (1-5)": "",
+            "Quality_2 (1-5)": "",
+            "Preference (1/2/Tie)": "",
+            "Notes": "",
         })
 
-    eval_df = pd.DataFrame(rows)
+        key_rows.append({
+            "Sheet": "NLD_Quality",
+            "Row_ID": row_id,
+            "Term": term,
+            "Order": order,
+            "Context_Used_A": ctx_used,
+            "NLD_A": def_a,
+            "NLD_B": def_b,
+        })
 
-    # Expert sheet (what they see)
-    expert_sheet = eval_df[["Term", "Definition_1", "Definition_2", "Category_1", "Category_2"]].copy()
-    expert_sheet["NLD_Preference (1/2/Tie)"] = ""
-    expert_sheet["NLD_1_Quality (1-5)"] = ""
-    expert_sheet["NLD_2_Quality (1-5)"] = ""
-    expert_sheet["Category_Correct (1/2/Both/Neither)"] = ""
-    expert_sheet["Notes"] = ""
+    return pd.DataFrame(expert_rows), pd.DataFrame(key_rows)
 
-    # Blinding key (hidden from experts, for analysis)
-    key_sheet = eval_df[["Term", "_order", "_Context_Used", "_Cat_A"]]
 
-    with pd.ExcelWriter(output_path, engine="openpyxl") as writer:
-        expert_sheet.to_excel(writer, sheet_name="Evaluation", index=False)
-        key_sheet.to_excel(writer, sheet_name="Blinding_Key", index=False)
+def build_category_sheet(
+    terms: list[str],
+    cat_data: dict[str, pd.DataFrame],
+    seed: int = 42,
+) -> tuple[pd.DataFrame, pd.DataFrame]:
+    """Sheet 4: Deduplicated category correctness evaluation (all 4 conditions).
 
-    print(f"Expert evaluation spreadsheet: {output_path}")
-    print(f"  {len(expert_sheet)} terms sampled (stratified by category + Context_Used)")
-    print(f"  Sheets: 'Evaluation' (send to experts), 'Blinding_Key' (keep for analysis)")
-    return output_path
+    For each term, collect the unique categories across A/B/C/D.
+    Experts evaluate each unique (Term, Category) pair once.
+    The blinding key maps each row back to the conditions that produced it.
 
+    Returns (expert_sheet, key_sheet).
+    """
+    rng = random.Random(seed + 100)  # Different seed from NLD sheet
+    expert_rows = []
+    key_rows = []
+    row_counter = 0
+
+    # Shuffle term order
+    shuffled_terms = list(terms)
+    rng.shuffle(shuffled_terms)
+
+    for term in shuffled_terms:
+        # Collect categories from each condition
+        term_categories: dict[str, list[str]] = {}  # category -> [conditions]
+        for cond in ["A", "B", "C", "D"]:
+            if cond not in cat_data:
+                continue
+            df = cat_data[cond]
+            match = df[df["Term"] == term]
+            if match.empty:
+                continue
+            cat = match.iloc[0]["Category"]
+            if pd.isna(cat) or str(cat).startswith("ERROR"):
+                continue
+            cat_str = str(cat)
+            if cat_str not in term_categories:
+                term_categories[cat_str] = []
+            term_categories[cat_str].append(cond)
+
+        # Create one row per unique category
+        for category, conditions in term_categories.items():
+            row_counter += 1
+            row_id = f"CAT-{row_counter:03d}"
+
+            expert_rows.append({
+                "Row_ID": row_id,
+                "Term": term,
+                "Assigned_Category": category,
+                "Correct (Yes/No/Partial)": "",
+                "Suggested_Category": "",
+                "Notes": "",
+            })
+
+            key_rows.append({
+                "Sheet": "Category_Correct",
+                "Row_ID": row_id,
+                "Term": term,
+                "Assigned_Category": category,
+                "Conditions": ",".join(conditions),
+            })
+
+    # Shuffle rows so terms aren't grouped together
+    combined = list(zip(expert_rows, key_rows))
+    rng.shuffle(combined)
+    expert_rows = [c[0] for c in combined]
+    key_rows = [c[1] for c in combined]
+
+    return pd.DataFrame(expert_rows), pd.DataFrame(key_rows)
+
+
+def build_instructions_sheet() -> pd.DataFrame:
+    """Sheet 1: Evaluation instructions with Likert scale definitions."""
+    instructions = [
+        ["EXPERT EVALUATION — PreSaltOntoLearn Pipeline", ""],
+        ["", ""],
+        ["PURPOSE", "Evaluate the quality of automatically generated definitions and ontological classifications for Pre-Salt petroleum geology terms. Your evaluations are BLINDED — do not attempt to identify which system produced which output."],
+        ["", ""],
+        ["=== SHEET 2: TERM RELEVANCE ===", ""],
+        ["Task", "Rate how relevant each term is to Brazilian Pre-Salt petroleum geology."],
+        ["Scale", ""],
+        ["1 = Not relevant", "Term has no connection to Pre-Salt petroleum geology"],
+        ["2 = Marginal", "Loosely related; general geology term with no Pre-Salt specificity"],
+        ["3 = Relevant", "Clearly geological, applicable to Pre-Salt context"],
+        ["4 = Important", "Commonly used in Pre-Salt studies"],
+        ["5 = Core concept", "Fundamental to Pre-Salt petroleum geology understanding"],
+        ["", ""],
+        ["=== SHEET 3: NLD QUALITY ===", ""],
+        ["Task", "For each term, two Natural Language Definitions (NLDs) are shown. Rate the quality of EACH definition independently, then indicate your overall preference."],
+        ["Scale", ""],
+        ["1 = Incorrect", "Definition contains fundamental geological errors or is incoherent"],
+        ["2 = Poor", "Major inaccuracies, severe imprecision, or missing essential properties"],
+        ["3 = Acceptable", "Broadly correct but with notable gaps or minor inaccuracies"],
+        ["4 = Good", "Accurate and precise, only minor issues"],
+        ["5 = Excellent", "Publication-quality definition; correctly captures the concept for Pre-Salt"],
+        ["Preference", "Choose 1, 2, or Tie based on which definition is better overall"],
+        ["", ""],
+        ["=== SHEET 4: CATEGORY CORRECTNESS ===", ""],
+        ["Task", "For each (Term, Category) pair, judge whether the assigned ontological category is correct. Categories come from BFO, GeoCore, and GeoReservoir ontologies."],
+        ["Correct", "The assigned category correctly classifies this term within the ontology"],
+        ["Partial", "The category is in the right direction but too broad, too narrow, or in the wrong ontology layer"],
+        ["No", "The assigned category is incorrect for this term"],
+        ["Suggested_Category", "If you chose No or Partial, suggest the correct category"],
+        ["", ""],
+        ["=== CALIBRATION EXAMPLES ===", ""],
+        ["Example 1", "Term: 'Grainstone' — A grain-supported sedimentary carbonate rock characterized by the absence of micrite matrix. This term is a Core concept (Relevance=5). A correct category would be GeoReservoir > SedimentaryRock or similar."],
+        ["Example 2", "Term: 'Coquina' — A sedimentary rock primarily composed of accumulated mollusk shells deposited in lacustrine environments. This term is a Core concept (Relevance=5). A correct category would be GeoReservoir > SedimentaryRock."],
+        ["", ""],
+        ["NOTES", "Use the Notes column to explain non-obvious judgments. Thank you for your expertise!"],
+    ]
+    return pd.DataFrame(instructions, columns=["Section", "Details"])
+
+
+# ---------------------------------------------------------------------------
+# Workbook Generation
+# ---------------------------------------------------------------------------
+
+def generate_expert_evaluation(
+    n_terms: int = 100,
+    seed: int = 42,
+    output_dir: str | None = None,
+) -> tuple[str, str]:
+    """Generate the expert evaluation workbook and blinding key.
+
+    Args:
+        n_terms: Number of terms to include.
+        seed: Random seed for reproducibility.
+        output_dir: Output directory (default: output/ablation/).
+
+    Returns:
+        (workbook_path, key_path)
+    """
+    if output_dir is None:
+        output_dir = OUTPUT_DIR
+
+    os.makedirs(output_dir, exist_ok=True)
+
+    # 1. Select terms
+    print(f"\nExpert Evaluation Generator (seed={seed})")
+    terms = select_terms(n_terms, seed)
+    print(f"  Selected {len(terms)} terms (top by frequency, error-free)")
+
+    # 2. Load ablation data
+    data = load_all_conditions()
+
+    # 3. Build sheets
+    instructions_df = build_instructions_sheet()
+    relevance_df = build_term_relevance_sheet(terms)
+
+    nld_expert_df, nld_key_df = build_nld_quality_sheet(terms, data["nld"], seed)
+    cat_expert_df, cat_key_df = build_category_sheet(terms, data["cat"], seed)
+
+    # 4. Write expert workbook
+    workbook_path = os.path.join(output_dir, "expert_evaluation.xlsx")
+
+    with pd.ExcelWriter(workbook_path, engine="openpyxl") as writer:
+        instructions_df.to_excel(writer, sheet_name="Instructions", index=False)
+        relevance_df.to_excel(writer, sheet_name="Term_Relevance", index=False)
+        nld_expert_df.to_excel(writer, sheet_name="NLD_Quality", index=False)
+        cat_expert_df.to_excel(writer, sheet_name="Category_Correct", index=False)
+
+    # 5. Write blinding key (separate file)
+    key_path = os.path.join(output_dir, f"blinding_key_{seed}.csv")
+    key_combined = pd.concat([nld_key_df, cat_key_df], ignore_index=True)
+    key_combined.to_csv(key_path, index=False, encoding="utf-8-sig")
+
+    # 6. Summary
+    print(f"\n  Workbook: {workbook_path}")
+    print(f"    Sheet 'Instructions': evaluation guidelines and Likert scales")
+    print(f"    Sheet 'Term_Relevance': {len(relevance_df)} terms")
+    print(f"    Sheet 'NLD_Quality': {len(nld_expert_df)} blinded A-vs-B comparisons")
+    print(f"    Sheet 'Category_Correct': {len(cat_expert_df)} deduplicated (Term, Category) pairs")
+    print(f"  Blinding key: {key_path} (DO NOT share with experts)")
+
+    return workbook_path, key_path
+
+
+# ---------------------------------------------------------------------------
+# CLI
+# ---------------------------------------------------------------------------
 
 if __name__ == "__main__":
+    import argparse
     from dotenv import load_dotenv
     load_dotenv()
-    generate_expert_spreadsheet()
+
+    parser = argparse.ArgumentParser(description="Generate expert evaluation spreadsheet")
+    parser.add_argument("--n-terms", type=int, default=100, help="Number of terms to sample")
+    parser.add_argument("--seed", type=int, default=42, help="Random seed")
+    args = parser.parse_args()
+    generate_expert_evaluation(n_terms=args.n_terms, seed=args.seed)

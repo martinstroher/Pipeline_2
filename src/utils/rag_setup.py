@@ -22,6 +22,10 @@ RERANK_MODEL = "BAAI/bge-reranker-v2-m3"
 # Default params (can be overridden)
 DEFAULT_SEARCH_K = 20
 DEFAULT_RERANK_K = 5
+# Hybrid retrieval weights: BM25 (sparse) vs Dense (semantic)
+# Equal weighting; the cross-encoder reranker corrects initial ranking differences
+BM25_WEIGHT = float(os.environ.get("BM25_WEIGHT", 0.5))
+DENSE_WEIGHT = float(os.environ.get("DENSE_WEIGHT", 0.5))
 
 _BM25_RETRIEVER = None
 _CROSS_ENCODER = None
@@ -134,17 +138,18 @@ def get_relevant_documents(
     if bm25_retriever:
         bm25_docs = bm25_retriever.invoke(query)
         dense_docs = chroma_retriever.invoke(query)
-        # Weighted rank fusion: assign reciprocal rank scores, combine
+        # Reciprocal Rank Fusion (Cormack et al., 2009): score = 1 / (k + rank)
+        RRF_K = 60  # Standard constant from Cormack et al.
         doc_scores: dict[str, tuple[float, object]] = {}
         for rank, doc in enumerate(bm25_docs):
-            score = 0.4 / (rank + 1)  # BM25 weight=0.4
+            score = BM25_WEIGHT / (RRF_K + rank)
             key = doc.page_content
             if key in doc_scores:
                 doc_scores[key] = (doc_scores[key][0] + score, doc_scores[key][1])
             else:
                 doc_scores[key] = (score, doc)
         for rank, doc in enumerate(dense_docs):
-            score = 0.6 / (rank + 1)  # Dense weight=0.6
+            score = DENSE_WEIGHT / (RRF_K + rank)
             key = doc.page_content
             if key in doc_scores:
                 doc_scores[key] = (doc_scores[key][0] + score, doc_scores[key][1])

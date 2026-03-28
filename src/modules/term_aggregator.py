@@ -1,10 +1,8 @@
 import pandas as pd
 from collections import Counter
-import nltk
 import os
 import sys
-# --- CHANGE 1: Import the correct stemmer ---
-from nltk.stem import SnowballStemmer
+import spacy
 from dotenv import load_dotenv
 
 load_dotenv()
@@ -36,9 +34,9 @@ def run_term_aggregation():
             return None
 
     try:
-        stemmer = SnowballStemmer("english")
-    except LookupError:
-        print("ERROR: NLTK Snowball stemmer resource not found. Run nltk.download('punkt') / 'wordnet'.")
+        nlp = spacy.load("en_core_web_sm")
+    except OSError:
+        print("ERROR: spaCy model 'en_core_web_sm' not found. Run: python -m spacy download en_core_web_sm")
         sys.exit(1)
 
     raw_terms_list = load_terms_from_csv(INPUT_FILE_PATH)
@@ -47,7 +45,7 @@ def run_term_aggregation():
         stemmed_terms = []
         stem_to_readable_map = {}
 
-        print("Starting normalization, stemming (English), and mapping...")  # Log updated
+        print("Starting normalization, lemmatization, and mapping...")
         for original_term in raw_terms_list:
             if not isinstance(original_term, str):
                 continue
@@ -57,15 +55,14 @@ def run_term_aggregation():
             if len(clean_original_term) < 3:
                 continue
 
-            words = clean_original_term.split()
-            stemmed_words = [stemmer.stem(p) for p in words]
-            final_stem = " ".join(stemmed_words)
+            doc = nlp(clean_original_term)
+            lemma_key = " ".join([token.lemma_ for token in doc])
 
-            stemmed_terms.append(final_stem)
+            stemmed_terms.append(lemma_key)
 
-            if final_stem not in stem_to_readable_map or len(clean_original_term) < len(
-                    stem_to_readable_map[final_stem]):
-                stem_to_readable_map[final_stem] = clean_original_term
+            if lemma_key not in stem_to_readable_map or len(clean_original_term) < len(
+                    stem_to_readable_map[lemma_key]):
+                stem_to_readable_map[lemma_key] = clean_original_term
 
         print("Processing complete.")
 

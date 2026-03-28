@@ -51,9 +51,10 @@ def run_llm_term_extraction():
                           This ontology's primary purpose is to assist geologists in describing and comparing analog reservoirs geological settings."""
 
     prompt_template = """**METHODOLOGY**
-    1.  **Identify Conceptual Entities:** Identify all terms or phrases representing geological concepts. 
+    1.  **Identify Conceptual Entities:** Identify all terms or phrases representing geological concepts.
     Focus on identifying *types* or *classes* of entities relevant to petroleum geology and pre-salt context.
-    2.  **Normalize Terms:** Return all extracted concepts translated to English and, where appropriate, in their singular, base form (e.g., "carbonates" -> "Carbonate", "faults" -> "Fault"). 
+    You MUST only extract terms that are explicitly mentioned in or directly derivable from the provided text. Do NOT generate terms from your own knowledge.
+    2.  **Normalize Terms:** Return all extracted concepts translated to English and, where appropriate, in their singular, base form (e.g., "carbonates" -> "Carbonate", "faults" -> "Fault").
     Use title case for concepts.
     3.  **Strict Filtering:** You MUST exclude:
         * Specific, non-conceptual proper nouns (e.g., individual well names like 'Well 1-BRSA-123', specific field names unless used generically, 
