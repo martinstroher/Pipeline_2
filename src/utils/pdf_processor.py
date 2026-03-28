@@ -347,39 +347,6 @@ def process_folder(pasta_textos):
     arquivo_final.close()
 
 #=============================================================================
-tudo_ok = False
-qtde_parametros = len(sys.argv)
-#print(qtde_parametros)
-
-
-if (qtde_parametros >= 2):
-    inicio = datetime.datetime.now()
-    print("Inicio:",inicio)
-
-    pasta_textos = sys.argv[1] #pasta corpus com / no final
-    lista_arquivos_pdf = []
-
-    if (qtde_parametros == 3):
-        print('Lendo arquivo especifico ...\n')
-        #Lendo um arquivo especifico
-        nome_arquivo = sys.argv[2]
-        lista_arquivos_pdf.append(nome_arquivo)
-    else:
-        print('Iniciando leitura dos arquivos da pasta ...\n')
-        for nome_arquivo in tqdm(sorted(os.listdir(pasta_textos))):
-            if nome_arquivo.endswith('.pdf'):
-                lista_arquivos_pdf.append(nome_arquivo)
-            #fim if
-        #fim for
-    #fim if
-    tudo_ok = True
-else:
-    print("Erro de sintaxe!")
-    print("Comande: python3 converte_pdf_to_ai_formats.py <pasta-de-arquivos-pdf>/ | <arquivo-pdf>")
-    print("\tExemplo: python3 converte_pdf_to_ai_formats.py /home/corpus/")
-    print("\tExemplo: python3 converte_pdf_to_ai_formats.py /home/corpus/ texto-especifico.pdf")
-    print("\tSaída: todos arquivos convertidos em MD (MarkDown)  TXT (Texto).\n")
-#fim if
 
 if __name__ == '__main__':
     if len(sys.argv) == 4 and sys.argv[1] == 'rag_test':

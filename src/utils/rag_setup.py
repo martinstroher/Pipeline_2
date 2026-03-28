@@ -7,7 +7,6 @@ from langchain_community.vectorstores import Chroma
 from langchain_community.embeddings import HuggingFaceEmbeddings
 
 from langchain_community.retrievers import BM25Retriever
-from langchain.retrievers import EnsembleRetriever
 from sentence_transformers import CrossEncoder
 
 DOCS_DIR = os.environ.get("DOCS_DIR", "inputs/")
@@ -131,13 +130,28 @@ def get_relevant_documents(
     # 1. Dense Retriever
     chroma_retriever = vector_store.as_retriever(search_kwargs={"k": search_k})
     
-    # 2. Hybrid Ensemble
+    # 2. Hybrid Ensemble (weighted merge of BM25 sparse + dense)
     if bm25_retriever:
-        ensemble_retriever = EnsembleRetriever(
-            retrievers=[bm25_retriever, chroma_retriever],
-            weights=[0.4, 0.6]  # 0.4 Sparse, 0.6 Semantic
-        )
-        initial_docs = ensemble_retriever.invoke(query)
+        bm25_docs = bm25_retriever.invoke(query)
+        dense_docs = chroma_retriever.invoke(query)
+        # Weighted rank fusion: assign reciprocal rank scores, combine
+        doc_scores: dict[str, tuple[float, object]] = {}
+        for rank, doc in enumerate(bm25_docs):
+            score = 0.4 / (rank + 1)  # BM25 weight=0.4
+            key = doc.page_content
+            if key in doc_scores:
+                doc_scores[key] = (doc_scores[key][0] + score, doc_scores[key][1])
+            else:
+                doc_scores[key] = (score, doc)
+        for rank, doc in enumerate(dense_docs):
+            score = 0.6 / (rank + 1)  # Dense weight=0.6
+            key = doc.page_content
+            if key in doc_scores:
+                doc_scores[key] = (doc_scores[key][0] + score, doc_scores[key][1])
+            else:
+                doc_scores[key] = (score, doc)
+        sorted_ensemble = sorted(doc_scores.values(), key=lambda x: x[0], reverse=True)
+        initial_docs = [doc for _, doc in sorted_ensemble]
     else:
         # Fallback to Dense only
         initial_docs = chroma_retriever.invoke(query)
