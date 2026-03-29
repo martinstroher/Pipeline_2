@@ -3,7 +3,7 @@ import os
 import pandas as pd
 import time
 from src.utils.rag_setup import get_relevant_documents, load_vector_store
-import google.generativeai as genai
+from src.utils.gemini_client import get_client, generate
 
 # Module-level state (configured lazily inside functions, not at import time)
 _genai_configured = False
@@ -12,18 +12,11 @@ _MODEL_TEMPERATURE = None
 
 
 def _ensure_genai_configured():
-    """Configure Gemini API once per process. Raises RuntimeError on failure."""
+    """Configure Gemini client once per process. Raises RuntimeError on failure."""
     global _genai_configured, _MODEL_NAME, _MODEL_TEMPERATURE
     if _genai_configured:
         return
-    try:
-        genai.configure(api_key=os.environ["GEMINI_API_KEY"])
-        print("Gemini API Key configured successfully from environment variables.")
-    except KeyError:
-        raise RuntimeError("The GEMINI_API_KEY environment variable was not found. Please set it.")
-    except Exception as e:
-        raise RuntimeError(f"ERROR configuring Gemini API: {e}")
-
+    get_client()  # triggers client init + prints confirmation
     _MODEL_NAME = os.environ.get("LLM_GENERATION_MODEL", "gemini-2.5-pro")
     _MODEL_TEMPERATURE = float(os.environ.get("LLM_GENERATION_TEMPERATURE", 0.0))
     _genai_configured = True
@@ -94,19 +87,15 @@ def generate_nld(term, context):
     {context}
     """
 
-    generation_config_json = genai.GenerationConfig(
-        temperature=_MODEL_TEMPERATURE,
-        response_mime_type="application/json"
-    )
-
-    model_definicao = genai.GenerativeModel(
-        model_name=_MODEL_NAME,
-        system_instruction=system_instruction_definicao,
-        generation_config=generation_config_json
-    )
     full_prompt = prompt_template_definicao.format(term=term, context=context)
-    response_definicao = model_definicao.generate_content(full_prompt)
-    return response_definicao.text.strip(), full_prompt
+    response_text = generate(
+        full_prompt,
+        model=_MODEL_NAME,
+        system_instruction=system_instruction_definicao,
+        temperature=_MODEL_TEMPERATURE,
+        response_mime_type="application/json",
+    )
+    return response_text.strip(), full_prompt
 
 def run_nld_generation(vector_store=None, bm25_retriever=None):
     _ensure_genai_configured()

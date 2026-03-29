@@ -19,9 +19,9 @@ EMBED_MODEL = "BAAI/bge-m3"
 # BGE-Reranker-v2-m3: Matches the embedding model distribution
 RERANK_MODEL = "BAAI/bge-reranker-v2-m3"
 
-# Default params (can be overridden)
-DEFAULT_SEARCH_K = 20
-DEFAULT_RERANK_K = 5
+# Default params (configurable via environment)
+DEFAULT_SEARCH_K = int(os.environ.get("RAG_SEARCH_K", 20))
+DEFAULT_RERANK_K = int(os.environ.get("RAG_RERANK_K", 5))
 # Hybrid retrieval weights: BM25 (sparse) vs Dense (semantic)
 # Equal weighting; the cross-encoder reranker corrects initial ranking differences
 BM25_WEIGHT = float(os.environ.get("BM25_WEIGHT", 0.5))

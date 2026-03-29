@@ -2,20 +2,15 @@ import json
 import os
 import time
 
-import google.generativeai as genai
 import pandas as pd
+
+from src.utils.gemini_client import generate
 
 
 def run_term_categorization():
-    try:
-        genai.configure(api_key=os.environ["GEMINI_API_KEY"])
-        print("Gemini API Key configured successfully.")
-    except Exception as e:
-        raise RuntimeError(f"ERROR configuring Gemini API: {e}")
-
     BATCH_SIZE = int(os.environ.get("BATCH_SIZE", 1))
     MODEL_NAME = os.environ.get("LLM_GENERATION_MODEL", "gemini-2.5-pro")
-    MODEL_TEMPERATURE=float(os.environ.get("LLM_GENERATION_TEMPERATURE", 0))
+    MODEL_TEMPERATURE = float(os.environ.get("LLM_GENERATION_TEMPERATURE", 0))
     INPUT_FILE_PATH = os.environ["CONSOLIDATED_LLM_RESULTS_WITH_NLDS"]
     OUTPUT_FILE_PATH = os.environ["CATEGORIZED_LLM_TERMS"]
     GEORESERVOIR_DEFS_PATH = os.environ["GEORESERVOIR_DEFS_PATH"]
@@ -23,11 +18,6 @@ def run_term_categorization():
     BFO_DEFS_PATH = os.environ["BFO_DEFS_PATH"]
 
     print(f"Processing in batches of {BATCH_SIZE} terms.")
-
-    generation_config = genai.GenerationConfig(
-        temperature=MODEL_TEMPERATURE,
-        response_mime_type="application/json"
-    )
 
 
     def load_definitions_from_file(filepath):
@@ -66,7 +56,7 @@ def run_term_categorization():
 
     system_instruction = "You are an expert ontology engineer specializing in foundational (BFO) and geological (GeoCore and GeoReservoir) ontologies. You process data in batches and your response format MUST be a valid JSON array of objects."
     prompt_template = """Your task is to classify a batch of geological terms based on their Natural Language Definitions (NLDs).
-    
+
     **METHODOLOGY (Follow Strictly for each item):**
     1.  **Analyze Data:** Read the Term and its NLD.
     2.  **Prioritize GeoReservoir:** First, attempt to classify the term into one of the `### GeoReservoir Categories`.
@@ -74,23 +64,23 @@ def run_term_categorization():
     4.  **Fallback to BFO:** If and only if no GeoCore category fits, then attempt to classify it into one of the `### BFO Categories`.
     5.  **Final Fallback:** If the term does not fit well into ANY of the provided categories (GeoReservoir, GeoCore, or BFO), you MUST use the string `NOT_CLASSIFIED`.
     6.  **Provide Reasoning:** In one short sentence, explain WHY you chose that category based on the NLD.
-    
+
     **INPUT/OUTPUT FORMAT:**
     -   **INPUT:** A JSON array of objects, where each object has an "term" and "nld" field.
     -   **OUTPUT:** Your response MUST BE a valid JSON array. Each object in the array must contain the "term", the assigned "category", and a "reasoning" string.
-    
+
     ---
     **ONTOLOGY CATEGORIES REFERENCE:**
-    
+
     ### GeoReservoir Categories:
     {georeservoir_definitions}
-    
+
     ### GeoCore Categories:
     {geocore_definitions}
-    
+
     ### BFO Categories:
     {bfo_definitions}
-    
+
     ---
     **DATA TO CLASSIFY:**
     {json_batch}
@@ -100,8 +90,6 @@ def run_term_categorization():
 
     if df_nlds is not None:
         classification_results = []
-        model = genai.GenerativeModel(model_name=MODEL_NAME, system_instruction=system_instruction,
-                                      generation_config=generation_config)
         total_terms = len(df_nlds)
 
         for i in range(0, total_terms, BATCH_SIZE):
@@ -121,8 +109,14 @@ def run_term_categorization():
                                                       bfo_definitions=bfo_definitions,
                                                       georeservoir_definitions= georeservoir_definitions,
                                                       json_batch=json_batch_str)
-                response = model.generate_content(final_prompt)
-                response_json = json.loads(response.text)
+                response_text = generate(
+                    final_prompt,
+                    model=MODEL_NAME,
+                    system_instruction=system_instruction,
+                    temperature=MODEL_TEMPERATURE,
+                    response_mime_type="application/json",
+                )
+                response_json = json.loads(response_text)
 
                 if len(response_json) != len(batch_df):
                     raise ValueError("LLM response length does not match batch size.")

@@ -1,39 +1,28 @@
 import json
 import os
 
-import google.generativeai as genai
 import pandas as pd
+
+from src.utils.gemini_client import generate
 
 
 def run_llm_term_extraction():
-    try:
-        genai.configure(api_key=os.environ["GEMINI_API_KEY"])
-        print("Gemini API Key configured successfully.")
-    except Exception as e:
-        raise RuntimeError(f"ERROR configuring Gemini API: {e}")
-
     LLM_MODEL_NAME = os.environ.get("LLM_EXTRACTION_MODEL", "gemini-2.5-flash")
-    LLM_MODEL_TEMPERATURE=float(os.environ.get("LLM_EXTRACTION_TEMPERATURE", 0.0))
-    # PAPER_END_DELIMITER = os.environ["PAPER_END_DELIMITER"] # Deprecated in favor of individual files
-    LLM_INPUT_DIR=os.environ["LLM_INPUT_DIR"]
-    LLM_OUTPUT_FILE=os.environ["LLM_OUTPUT_FILE"]
-
-    generation_config = genai.GenerationConfig(
-        temperature=LLM_MODEL_TEMPERATURE,
-        response_mime_type="application/json"
-    )
+    LLM_MODEL_TEMPERATURE = float(os.environ.get("LLM_EXTRACTION_TEMPERATURE", 0.0))
+    LLM_INPUT_DIR = os.environ["LLM_INPUT_DIR"]
+    LLM_OUTPUT_FILE = os.environ["LLM_OUTPUT_FILE"]
 
     def load_papers_from_dir(directory):
         papers = []
         if not os.path.exists(directory):
              print(f"ERROR: Directory '{directory}' not found.")
              return []
-        
+
         files = [f for f in os.listdir(directory) if f.endswith('.md')]
         if not files:
              print(f"ERROR: No .md files found in '{directory}'.")
              return []
-             
+
         for filename in files:
             filepath = os.path.join(directory, filename)
             try:
@@ -57,17 +46,17 @@ def run_llm_term_extraction():
     2.  **Normalize Terms:** Return all extracted concepts translated to English and, where appropriate, in their singular, base form (e.g., "carbonates" -> "Carbonate", "faults" -> "Fault").
     Use title case for concepts.
     3.  **Strict Filtering:** You MUST exclude:
-        * Specific, non-conceptual proper nouns (e.g., individual well names like 'Well 1-BRSA-123', specific field names unless used generically, 
+        * Specific, non-conceptual proper nouns (e.g., individual well names like 'Well 1-BRSA-123', specific field names unless used generically,
         basin names like 'Santos Basin', author names, company names).
         * Units of measure, numerical values, and codes (e.g., 'mD', 'API', '10%', 'SiO2').
     4.  **Focus:** Prioritize terms that represent reusable classes within an ontology framework. Do not rank or limit the number extracted from this snippet.
-    
+
     **OUTPUT FORMAT:**
     Your response MUST BE a valid JSON array of unique strings.
-    
+
     **Example of output array:**
     ["Microbial Carbonate", "Diagenesis", "Source Rock", "Structural Trap", "Porosity", "Lacustrine Environment", "Aptian"]
-    
+
     ---
     **TEXT SNIPPET TO ANALYZE:**
     {chunk_text}
@@ -76,15 +65,9 @@ def run_llm_term_extraction():
 
     print(f"Loading papers from {LLM_INPUT_DIR}...")
     papers = load_papers_from_dir(LLM_INPUT_DIR)
-    
+
     if papers:
         all_extracted_terms = []
-
-        model = genai.GenerativeModel(
-            model_name=LLM_MODEL_NAME,
-            system_instruction=system_instruction,
-            generation_config=generation_config
-        )
 
         num_papers = len(papers)
         print(f"\\nFound {num_papers} papers to process.")
@@ -96,14 +79,15 @@ def run_llm_term_extraction():
             try:
                 final_prompt = prompt_template.format(chunk_text=paper_text)
 
-                response = model.generate_content(final_prompt)
+                response_text = generate(
+                    final_prompt,
+                    model=LLM_MODEL_NAME,
+                    system_instruction=system_instruction,
+                    temperature=LLM_MODEL_TEMPERATURE,
+                    response_mime_type="application/json",
+                )
 
-                if not response.parts:
-                    print(
-                        f"  -> ERROR: API call for paper {paper_num} was blocked. Reason: {response.prompt_feedback.block_reason}")
-                    continue
-
-                terms_from_paper = json.loads(response.text)
+                terms_from_paper = json.loads(response_text)
                 all_extracted_terms.extend(terms_from_paper)
                 print(f"  -> Extracted {len(terms_from_paper)} terms from this paper.")
 

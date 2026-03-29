@@ -24,7 +24,7 @@ from src.modules.nld_generator import (
     format_docs_for_context,
     _ensure_genai_configured,
 )
-import google.generativeai as genai
+from src.utils.gemini_client import generate as gemini_generate
 
 
 # ---------------------------------------------------------------------------
@@ -126,16 +126,24 @@ def _build_categorizer_prompt(defs: dict, is_raw_rag: bool = False):
 
 def categorize_batch(
     batch_items: list[dict],
-    model: genai.GenerativeModel,
     prompt_template: str,
+    system_instruction: str,
+    model_name: str,
+    model_temperature: float,
 ) -> list[dict]:
     """Classify a batch of terms. Returns list of result dicts."""
     json_batch_str = json.dumps(batch_items, indent=2)
     final_prompt = prompt_template.format(json_batch=json_batch_str)
 
     try:
-        response = model.generate_content(final_prompt)
-        response_json = json.loads(response.text)
+        response_text = gemini_generate(
+            final_prompt,
+            model=model_name,
+            system_instruction=system_instruction,
+            temperature=model_temperature,
+            response_mime_type="application/json",
+        )
+        response_json = json.loads(response_text)
 
         if len(response_json) != len(batch_items):
             raise ValueError(
@@ -339,16 +347,6 @@ def run_categorization(
     MODEL_NAME = os.environ.get("LLM_GENERATION_MODEL", "gemini-2.5-pro")
     MODEL_TEMPERATURE = float(os.environ.get("LLM_GENERATION_TEMPERATURE", 0))
 
-    gen_config = genai.GenerationConfig(
-        temperature=MODEL_TEMPERATURE,
-        response_mime_type="application/json",
-    )
-    model = genai.GenerativeModel(
-        model_name=MODEL_NAME,
-        system_instruction=sys_instr,
-        generation_config=gen_config,
-    )
-
     # Filter to uncategorized terms
     remaining_df = nld_df[~nld_df["Term"].isin(completed)]
     total = len(remaining_df)
@@ -363,7 +361,7 @@ def run_categorization(
                 batch_items.append({"term": row["Term"], "nld": row["NLD"]})
 
         print(f"  Categorizing {i+1}-{min(i+batch_size, total)} of {total}...")
-        results = categorize_batch(batch_items, model, prompt_tmpl)
+        results = categorize_batch(batch_items, prompt_tmpl, sys_instr, MODEL_NAME, MODEL_TEMPERATURE)
 
         for result in results:
             # Enrich with NLD/context info from the nld_df

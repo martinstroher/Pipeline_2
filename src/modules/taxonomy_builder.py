@@ -16,9 +16,10 @@ import json
 import os
 import time
 
-import google.generativeai as genai
 import pandas as pd
 from dotenv import load_dotenv
+
+from src.utils.gemini_client import get_client, generate
 
 # Published OWL IRIs for upper-level ontology anchoring
 # Sources: BFO (http://purl.obolibrary.org/obo/bfo.owl)
@@ -84,15 +85,13 @@ UPPER_IRIS = {
 
 
 def _configure_genai():
-    """Configure Gemini API."""
-    try:
-        genai.configure(api_key=os.environ["GEMINI_API_KEY"])
-    except KeyError:
-        raise RuntimeError("GEMINI_API_KEY not set.")
+    """Configure Gemini client."""
+    get_client()
 
 
 def build_taxonomy_for_group(
-    category: str, terms_with_nlds: list[dict], model: genai.GenerativeModel
+    category: str, terms_with_nlds: list[dict],
+    model_name: str, model_temperature: float,
 ) -> list[dict]:
     """
     Build IS-A hierarchy for a group of terms within the same category.
@@ -142,8 +141,14 @@ Return ONLY the JSON array, nothing else.
 """
 
     try:
-        response = model.generate_content(prompt)
-        result = json.loads(response.text)
+        response_text = generate(
+            prompt,
+            model=model_name,
+            system_instruction=system_instruction,
+            temperature=model_temperature,
+            response_mime_type="application/json",
+        )
+        result = json.loads(response_text)
 
         rows = []
         for item in result:
@@ -200,15 +205,6 @@ def run_taxonomy_builder(categorized_csv: str, output_path: str | None = None):
     MODEL_NAME = os.environ.get("LLM_GENERATION_MODEL", "gemini-2.5-pro")
     MODEL_TEMPERATURE = float(os.environ.get("LLM_GENERATION_TEMPERATURE", 0))
 
-    gen_config = genai.GenerationConfig(
-        temperature=MODEL_TEMPERATURE,
-        response_mime_type="application/json",
-    )
-    model = genai.GenerativeModel(
-        model_name=MODEL_NAME,
-        generation_config=gen_config,
-    )
-
     all_taxonomy_rows = []
     categories = df_valid["Category"].unique()
 
@@ -228,11 +224,11 @@ def run_taxonomy_builder(categorized_csv: str, output_path: str | None = None):
             for chunk_start in range(0, len(terms_with_nlds), 50):
                 chunk = terms_with_nlds[chunk_start : chunk_start + 50]
                 print(f"    Processing chunk {chunk_start+1}-{chunk_start+len(chunk)}...")
-                rows = build_taxonomy_for_group(cat, chunk, model)
+                rows = build_taxonomy_for_group(cat, chunk, MODEL_NAME, MODEL_TEMPERATURE)
                 all_taxonomy_rows.extend(rows)
                 time.sleep(2)
         else:
-            rows = build_taxonomy_for_group(cat, terms_with_nlds, model)
+            rows = build_taxonomy_for_group(cat, terms_with_nlds, MODEL_NAME, MODEL_TEMPERATURE)
             all_taxonomy_rows.extend(rows)
             time.sleep(2)
 

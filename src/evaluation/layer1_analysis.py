@@ -265,7 +265,7 @@ def run_layer1_analysis(merged_path: str | None = None) -> dict:
     results["cochrans_q"] = cq_df
 
     # 3. Category migration
-    print("\n3. Category migration analysis:")
+    print("\n4. Category migration analysis:")
     cm = category_migration(df)
     cm.to_csv(os.path.join(ANALYSIS_DIR, "category_migration.csv"), index=False)
     pattern_counts = cm["Pattern"].value_counts()
@@ -273,15 +273,15 @@ def run_layer1_analysis(merged_path: str | None = None) -> dict:
         print(f"  {pat}: {count} terms ({count/len(cm)*100:.1f}%)")
     results["migration"] = cm
 
-    # 4. NOT_CLASSIFIED rates
-    print("\n4. NOT_CLASSIFIED rates:")
+    # 5. NOT_CLASSIFIED rates
+    print("\n5. NOT_CLASSIFIED rates:")
     nc = not_classified_rates(df)
     nc.to_csv(os.path.join(ANALYSIS_DIR, "not_classified_rates.csv"), index=False)
     print(nc.to_string(index=False))
     results["not_classified"] = nc
 
-    # 5. Context_Used subgroup
-    print("\n5. Context_Used subgroup analysis (A vs B):")
+    # 6. Context_Used subgroup
+    print("\n6. Context_Used subgroup analysis (A vs B):")
     cu = context_used_subgroup(df)
     if not cu.empty:
         cu.to_csv(os.path.join(ANALYSIS_DIR, "context_used_subgroup.csv"), index=False)
