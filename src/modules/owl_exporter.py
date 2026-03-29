@@ -17,6 +17,8 @@ import re
 import pandas as pd
 from rdflib import Graph, Namespace, Literal, URIRef, RDF, RDFS, OWL, XSD
 
+from src.utils import log
+
 # Ontology namespace
 ONTO_NS = Namespace("https://w3id.org/presalt-onto#")
 BFO_NS = Namespace("http://purl.obolibrary.org/obo/")
@@ -60,7 +62,7 @@ def run_owl_export(
         output_path = base.replace("6_taxonomy", "7_ontology") + ".ttl"
 
     df = pd.read_csv(taxonomy_csv, encoding="utf-8-sig")
-    print(f"OWL Export: {len(df)} taxonomy entries from {taxonomy_csv}")
+    log.info(f"OWL Export: {len(df)} taxonomy entries from {taxonomy_csv}")
 
     # Load NLDs if available
     nld_map = {}
@@ -131,10 +133,9 @@ def run_owl_export(
     n_individuals = len(list(g.subjects(RDF.type, OWL.NamedIndividual)))
     n_triples = len(g)
 
-    print(f"\nOWL ontology exported: {output_path}")
-    print(f"  Classes: {n_classes}, Individuals: {n_individuals}, Triples: {n_triples}")
-    print(f"  Format: Turtle (.ttl)")
-    print(f"  Open in Protege to verify.")
+    log.success(f"OWL ontology exported: {output_path}")
+    log.detail(f"Classes: {n_classes}, Individuals: {n_individuals}, Triples: {n_triples}")
+    log.detail(f"Format: Turtle (.ttl) — open in Protege to verify")
 
     return output_path
 

@@ -17,7 +17,7 @@ _DIM = "\033[2m"
 
 def banner(step_number: int | str, title: str) -> None:
     """Print a prominent step banner."""
-    line = f"\n{'═' * 3} Step {step_number}: {title} {'═' * 3}"
+    line = f"\n=== Step {step_number}: {title} ==="
     print(f"{_BOLD}{_CYAN}{line}{_RESET}")
 
 

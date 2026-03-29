@@ -18,8 +18,10 @@ import time
 
 import pandas as pd
 from dotenv import load_dotenv
+from tqdm import tqdm
 
 from src.utils.gemini_client import get_client, generate
+from src.utils import log
 
 # Published OWL IRIs for upper-level ontology anchoring
 # Sources: BFO (http://purl.obolibrary.org/obo/bfo.owl)
@@ -161,7 +163,7 @@ Return ONLY the JSON array, nothing else.
             })
         return rows
     except Exception as e:
-        print(f"  ERROR building taxonomy for '{category}': {e}")
+        log.error(f"Building taxonomy for '{category}': {e}")
         # Fallback: flat hierarchy (all terms directly under category)
         return [
             {
@@ -193,14 +195,14 @@ def run_taxonomy_builder(categorized_csv: str, output_path: str | None = None):
         ) + ".csv"
 
     df = pd.read_csv(categorized_csv, encoding="utf-8-sig")
-    print(f"Taxonomy builder: {len(df)} terms from {categorized_csv}")
+    log.info(f"Taxonomy builder: {len(df)} terms from {categorized_csv}")
 
     # Filter out errors and NOT_CLASSIFIED
     df_valid = df[
         ~df["Category"].str.startswith("ERROR", na=False)
         & (df["Category"] != "NOT_CLASSIFIED")
     ].copy()
-    print(f"  {len(df_valid)} valid terms (excluding errors and NOT_CLASSIFIED)")
+    log.detail(f"{len(df_valid)} valid terms (excluding errors and NOT_CLASSIFIED)")
 
     MODEL_NAME = os.environ.get("LLM_GENERATION_MODEL", "gemini-2.5-pro")
     MODEL_TEMPERATURE = float(os.environ.get("LLM_GENERATION_TEMPERATURE", 0))
@@ -208,9 +210,8 @@ def run_taxonomy_builder(categorized_csv: str, output_path: str | None = None):
     all_taxonomy_rows = []
     categories = df_valid["Category"].unique()
 
-    for cat in sorted(categories):
+    for cat in tqdm(sorted(categories), desc="Building taxonomy", unit="category"):
         group = df_valid[df_valid["Category"] == cat]
-        print(f"\n  Building taxonomy for '{cat}' ({len(group)} terms)...")
 
         terms_with_nlds = []
         for _, row in group.iterrows():
@@ -223,7 +224,6 @@ def run_taxonomy_builder(categorized_csv: str, output_path: str | None = None):
         if len(terms_with_nlds) > 50:
             for chunk_start in range(0, len(terms_with_nlds), 50):
                 chunk = terms_with_nlds[chunk_start : chunk_start + 50]
-                print(f"    Processing chunk {chunk_start+1}-{chunk_start+len(chunk)}...")
                 rows = build_taxonomy_for_group(cat, chunk, MODEL_NAME, MODEL_TEMPERATURE)
                 all_taxonomy_rows.extend(rows)
                 time.sleep(2)
@@ -253,9 +253,8 @@ def run_taxonomy_builder(categorized_csv: str, output_path: str | None = None):
     n_classes = len(taxonomy_df[taxonomy_df["Relationship_Type"] == "rdfs:subClassOf"])
     n_individuals = len(taxonomy_df[taxonomy_df["Relationship_Type"] == "rdf:type"])
     n_intermediate = len(taxonomy_df[taxonomy_df["Is_Intermediate"] == True])
-    print(f"\nTaxonomy built: {len(taxonomy_df)} entries")
-    print(f"  Classes: {n_classes}, Individuals: {n_individuals}, Intermediate: {n_intermediate}")
-    print(f"  Saved to: {output_path}")
+    log.success(f"Taxonomy built: {len(taxonomy_df)} entries (classes={n_classes}, individuals={n_individuals}, intermediate={n_intermediate})")
+    log.detail(f"Saved to: {output_path}")
 
     return taxonomy_df
 

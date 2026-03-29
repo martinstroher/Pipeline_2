@@ -70,9 +70,7 @@ def run_term_aggregation():
             readable_term = stem_to_readable_map.get(stem, stem)
             final_results.append((readable_term, count))
 
-        print("\n--- Most Common Terms ---")
-        for term, count in final_results[:15]:
-            print(f"Term: '{term}' | Count: {count}")
+        log.detail(f"Top terms: {', '.join(f'{t} ({c})' for t, c in final_results[:5])}")
 
         output_dir = os.path.dirname(OUTPUT_FILE_PATH)
         if output_dir and not os.path.exists(output_dir):
