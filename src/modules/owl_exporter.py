@@ -64,8 +64,15 @@ def run_owl_export(
     df = pd.read_csv(taxonomy_csv, encoding="utf-8-sig")
     log.info(f"OWL Export: {len(df)} taxonomy entries from {taxonomy_csv}")
 
-    # Load NLDs if available
+    # Load NLDs — primary source: NLD column in taxonomy CSV (added by taxonomy_builder)
     nld_map = {}
+    if "NLD" in df.columns:
+        for _, row in df.iterrows():
+            nld_val = row.get("NLD", "")
+            if nld_val and not pd.isna(nld_val):
+                nld_map[str(row["Term"])] = str(nld_val)
+
+    # Optional separate NLD CSV (fallback / override for backward compatibility)
     if nld_csv and os.path.exists(nld_csv):
         nld_df = pd.read_csv(nld_csv, encoding="utf-8-sig")
         for _, row in nld_df.iterrows():

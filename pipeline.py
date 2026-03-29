@@ -4,8 +4,8 @@ import warnings
 
 # Suppress noisy library warnings before any src/ imports (they trigger langchain)
 warnings.filterwarnings("ignore", message=".*Pydantic.*", category=UserWarning)
-warnings.filterwarnings("ignore", category=DeprecationWarning, module="langchain")
-warnings.filterwarnings("ignore", category=DeprecationWarning, module="pydantic")
+warnings.filterwarnings("ignore", message=r".*HuggingFaceEmbeddings.*was deprecated.*")
+warnings.filterwarnings("ignore", message=r".*class `Chroma`.*was deprecated.*")
 
 from dotenv import load_dotenv
 

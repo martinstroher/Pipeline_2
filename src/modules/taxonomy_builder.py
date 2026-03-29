@@ -112,12 +112,18 @@ def build_taxonomy_for_group(
         "You distinguish between classes (types/kinds) and named individuals (specific instances)."
     )
 
+    upper_vocab = ", ".join(sorted(UPPER_IRIS.keys()))
+
     prompt = f"""You are given a set of geological terms, all pre-classified under the ontology category "{category}".
 Your task is to arrange them into an IS-A hierarchy (taxonomy tree).
 
 **RULES:**
 1. Every term MUST have exactly one parent. The root parent is "{category}" (the category itself).
-2. Create intermediate classes if needed for a natural hierarchy (e.g., "CarbonateRock" between "Grainstone" and "Sedimentary Rock").
+2. Create intermediate classes if needed for a natural hierarchy.
+   - **NLD-guided naming:** If a term's NLD follows the Aristotelian pattern "X is a Y that Z",
+     use the genus Y as the intermediate class name
+     (e.g., NLD "Grainstone is a grain-supported carbonate rock that lacks mud matrix"
+     → intermediate class = "Carbonate Rock", not "CarbonateSubtype" or "GrainRock").
 3. **Class vs Individual distinction (CRITICAL):**
    - Named geological time periods (e.g., "Cretaceous", "Aptian", "Albian") are INDIVIDUALS, not classes.
      Use relationship_type = "rdf:type" (not "rdfs:subClassOf").
@@ -126,6 +132,9 @@ Your task is to arrange them into an IS-A hierarchy (taxonomy tree).
      Use relationship_type = "rdfs:subClassOf".
 4. Intermediate classes you create should use Title Case.
 5. Keep the hierarchy depth reasonable (2-4 levels below the category root).
+6. **Canonical vocabulary:** When one of the following established class names is the natural parent
+   for a term or intermediate node, use it verbatim (exact label, Title Case):
+   {upper_vocab}
 
 **INPUT (terms and their NLDs):**
 {json.dumps(terms_with_nlds, indent=2)}
@@ -220,15 +229,20 @@ def run_taxonomy_builder(categorized_csv: str, output_path: str | None = None):
                 "nld": row.get("NLD", ""),
             })
 
-        # For large groups, process in chunks of 50
-        if len(terms_with_nlds) > 50:
-            for chunk_start in range(0, len(terms_with_nlds), 50):
-                chunk = terms_with_nlds[chunk_start : chunk_start + 50]
+        # For large groups, process in chunks of 150
+        nld_lookup = {t["term"]: t.get("nld", "") for t in terms_with_nlds}
+        if len(terms_with_nlds) > 150:
+            for chunk_start in range(0, len(terms_with_nlds), 150):
+                chunk = terms_with_nlds[chunk_start : chunk_start + 150]
                 rows = build_taxonomy_for_group(cat, chunk, MODEL_NAME, MODEL_TEMPERATURE)
+                for row in rows:
+                    row["NLD"] = nld_lookup.get(row["Term"], "")
                 all_taxonomy_rows.extend(rows)
                 time.sleep(2)
         else:
             rows = build_taxonomy_for_group(cat, terms_with_nlds, MODEL_NAME, MODEL_TEMPERATURE)
+            for row in rows:
+                row["NLD"] = nld_lookup.get(row["Term"], "")
             all_taxonomy_rows.extend(rows)
             time.sleep(2)
 
