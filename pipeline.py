@@ -145,6 +145,19 @@ def main():
     log.banner(5, "Term Categorization")
     run_term_categorization()
 
+    log.banner(6, "Taxonomy Builder")
+    from src.modules.taxonomy_builder import run_taxonomy_builder
+    cat_csv = os.environ["CATEGORIZED_LLM_TERMS"]
+    run_taxonomy_builder(cat_csv)
+
+    log.banner(7, "OWL Export")
+    from src.modules.owl_exporter import run_owl_export
+    tax_csv = (
+        os.path.splitext(cat_csv)[0]
+        .replace("5_categorized_ontology", "6_taxonomy") + ".csv"
+    )
+    run_owl_export(tax_csv)
+
     log.success("\nPipeline complete.")
 
 

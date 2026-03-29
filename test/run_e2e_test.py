@@ -151,18 +151,51 @@ def run_test():
     # Ensure subprocess uses UTF-8 for ANSI escape codes in log output
     env["PYTHONIOENCODING"] = "utf-8"
 
-    # 4. Run Pipeline as subprocess from ROOT (--skip-pdf since we provide the .md directly)
-    print("\nRunning pipeline subprocess...")
+    # 4. Run Pipeline Steps 0-5 as subprocess from ROOT
+    print("\nRunning pipeline subprocess (Steps 0-5)...")
     result = subprocess.run(
         [sys.executable, "pipeline.py", "--skip-pdf"],
         env=env,
         cwd=root_dir,
         capture_output=False,
     )
-
     if result.returncode != 0:
-        print("\n[FAIL] Pipeline exited with non-zero return code!")
+        print("\n[FAIL] Pipeline (Steps 0-5) exited with non-zero return code!")
         sys.exit(result.returncode)
+
+    # Derive Step 6 and 7 paths from the categorized CSV path (mirrors taxonomy_builder logic)
+    cat_csv_relative = env.get("CATEGORIZED_LLM_TERMS", "test/output_test/5_categorized_ontology.csv")
+    taxonomy_csv_rel = (
+        os.path.splitext(cat_csv_relative)[0]
+        .replace("5_categorized_ontology", "6_taxonomy") + ".csv"
+    )
+    owl_ttl_rel = taxonomy_csv_rel.replace("6_taxonomy", "7_ontology").replace(".csv", ".ttl")
+    taxonomy_csv_abs = os.path.join(root_dir, taxonomy_csv_rel)
+    owl_ttl_abs = os.path.join(root_dir, owl_ttl_rel)
+
+    # 4b. Run Step 6: Taxonomy builder
+    print("\nRunning taxonomy builder (Step 6)...")
+    result6 = subprocess.run(
+        [sys.executable, "pipeline.py", "--taxonomy", cat_csv_relative],
+        env=env,
+        cwd=root_dir,
+        capture_output=False,
+    )
+    if result6.returncode != 0:
+        print("\n[FAIL] Taxonomy builder exited with non-zero return code!")
+        sys.exit(result6.returncode)
+
+    # 4c. Run Step 7: OWL export
+    print("\nRunning OWL exporter (Step 7)...")
+    result7 = subprocess.run(
+        [sys.executable, "pipeline.py", "--owl", taxonomy_csv_rel],
+        env=env,
+        cwd=root_dir,
+        capture_output=False,
+    )
+    if result7.returncode != 0:
+        print("\n[FAIL] OWL exporter exited with non-zero return code!")
+        sys.exit(result7.returncode)
 
     # 5. Assertions — file existence + content validation
     print("\nPipeline execution finished. Verifying artifacts...\n")
@@ -268,6 +301,60 @@ def run_test():
         print("  [FAIL] Step 5 (categorization): file missing")
         all_passed = False
 
+    # --- Step 6: Taxonomy CSV ---
+    if os.path.exists(taxonomy_csv_abs):
+        ok = validate_csv(
+            taxonomy_csv_abs,
+            expected_columns=["Term", "Parent_Term", "Relationship_Type", "Category", "Is_Intermediate", "NLD"],
+            min_rows=1,
+            label="Step 6 (taxonomy)",
+        )
+        if ok:
+            with open(taxonomy_csv_abs, "r", encoding="utf-8-sig") as f:
+                reader = csv.DictReader(f)
+                rows = list(reader)
+            classes = [r for r in rows if r.get("Relationship_Type") == "rdfs:subClassOf"]
+            individuals = [r for r in rows if r.get("Relationship_Type") == "rdf:type"]
+            intermediates = [r for r in rows if r.get("Is_Intermediate", "").strip().lower() == "true"]
+            with_nld = [r for r in rows if r.get("NLD", "").strip()]
+            print(f"  [OK]   Step 6: {len(classes)} classes, {len(individuals)} individuals, {len(intermediates)} intermediate nodes")
+            print(f"  [OK]   Step 6: {len(with_nld)}/{len(rows)} rows have NLDs")
+            # Non-intermediate terms should all have NLDs (warn if gap)
+            missing_nld = [r for r in rows if r.get("Is_Intermediate", "").strip().lower() != "true" and not r.get("NLD", "").strip()]
+            if missing_nld:
+                print(f"  [WARN] Step 6: {len(missing_nld)} non-intermediate terms missing NLD")
+        all_passed = all_passed and ok
+    else:
+        print("  [FAIL] Step 6 (taxonomy): file missing")
+        all_passed = False
+
+    # --- Step 7: OWL Turtle ---
+    if os.path.exists(owl_ttl_abs):
+        try:
+            from rdflib import Graph
+            from rdflib.namespace import OWL, RDF, RDFS
+            g = Graph()
+            g.parse(owl_ttl_abs, format="turtle")
+            n_classes = len(list(g.subjects(RDF.type, OWL.Class)))
+            n_individuals = len(list(g.subjects(RDF.type, OWL.NamedIndividual)))
+            n_comments = len(list(g.triples((None, RDFS.comment, None))))
+            n_labels = len(list(g.triples((None, RDFS.label, None))))
+            n_triples = len(g)
+            if n_classes > 0 and n_triples > 0:
+                print(f"  [OK]   Step 7 (OWL): {n_triples} triples — {n_classes} classes, {n_individuals} individuals")
+                print(f"  [OK]   Step 7: {n_labels} rdfs:label, {n_comments} rdfs:comment (NLDs)")
+                if n_comments == 0:
+                    print(f"  [WARN] Step 7: no rdfs:comment — NLDs not propagating to OWL")
+            else:
+                print(f"  [FAIL] Step 7 (OWL): parsed but empty ({n_triples} triples, {n_classes} classes)")
+                all_passed = False
+        except Exception as e:
+            print(f"  [FAIL] Step 7 (OWL): parse error: {e}")
+            all_passed = False
+    else:
+        print("  [FAIL] Step 7 (OWL): file missing")
+        all_passed = False
+
     # --- Cross-step validation: term counts should be consistent ---
     print("\n--- Cross-step consistency checks ---")
     try:
@@ -287,6 +374,18 @@ def run_test():
             print(f"  [OK]   Steps 4->5: NLD ({nld_count}) == categorized ({cat_count})")
         else:
             print(f"  [WARN] Steps 4->5: NLD ({nld_count}) != categorized ({cat_count})")
+
+        if os.path.exists(taxonomy_csv_abs):
+            with open(taxonomy_csv_abs, "r", encoding="utf-8-sig") as f:
+                tax_rows = list(csv.DictReader(f))
+            tax_input_count = sum(1 for r in tax_rows if r.get("Is_Intermediate", "").strip().lower() != "true")
+            with open(f5, "r", encoding="utf-8-sig") as f:
+                valid_cat_count = sum(
+                    1 for r in csv.DictReader(f)
+                    if not r.get("Category", "").startswith("ERROR") and r.get("Category") != "NOT_CLASSIFIED"
+                )
+            print(f"  [OK]   Steps 5->6: {valid_cat_count} valid categorized -> {tax_input_count} taxonomy input terms, +{len(tax_rows)-tax_input_count} intermediate nodes")
+
     except Exception as e:
         print(f"  [WARN] Could not run cross-step checks: {e}")
 
