@@ -151,8 +151,8 @@ def run_test():
     # Ensure subprocess uses UTF-8 for ANSI escape codes in log output
     env["PYTHONIOENCODING"] = "utf-8"
 
-    # 4. Run Pipeline Steps 0-5 as subprocess from ROOT
-    print("\nRunning pipeline subprocess (Steps 0-5)...")
+    # 4. Run full pipeline (Steps 0-7) as subprocess from ROOT
+    print("\nRunning pipeline subprocess (Steps 0-7)...")
     result = subprocess.run(
         [sys.executable, "pipeline.py", "--skip-pdf"],
         env=env,
@@ -160,7 +160,7 @@ def run_test():
         capture_output=False,
     )
     if result.returncode != 0:
-        print("\n[FAIL] Pipeline (Steps 0-5) exited with non-zero return code!")
+        print("\n[FAIL] Pipeline (Steps 0-7) exited with non-zero return code!")
         sys.exit(result.returncode)
 
     # Derive Step 6 and 7 paths from the categorized CSV path (mirrors taxonomy_builder logic)
@@ -172,30 +172,6 @@ def run_test():
     owl_ttl_rel = taxonomy_csv_rel.replace("6_taxonomy", "7_ontology").replace(".csv", ".ttl")
     taxonomy_csv_abs = os.path.join(root_dir, taxonomy_csv_rel)
     owl_ttl_abs = os.path.join(root_dir, owl_ttl_rel)
-
-    # 4b. Run Step 6: Taxonomy builder
-    print("\nRunning taxonomy builder (Step 6)...")
-    result6 = subprocess.run(
-        [sys.executable, "pipeline.py", "--taxonomy", cat_csv_relative],
-        env=env,
-        cwd=root_dir,
-        capture_output=False,
-    )
-    if result6.returncode != 0:
-        print("\n[FAIL] Taxonomy builder exited with non-zero return code!")
-        sys.exit(result6.returncode)
-
-    # 4c. Run Step 7: OWL export
-    print("\nRunning OWL exporter (Step 7)...")
-    result7 = subprocess.run(
-        [sys.executable, "pipeline.py", "--owl", taxonomy_csv_rel],
-        env=env,
-        cwd=root_dir,
-        capture_output=False,
-    )
-    if result7.returncode != 0:
-        print("\n[FAIL] OWL exporter exited with non-zero return code!")
-        sys.exit(result7.returncode)
 
     # 5. Assertions — file existence + content validation
     print("\nPipeline execution finished. Verifying artifacts...\n")
