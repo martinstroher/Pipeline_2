@@ -107,17 +107,22 @@ def run_owl_export(
         rel_type = row.get("Relationship_Type", "rdfs:subClassOf")
         is_intermediate = row.get("Is_Intermediate", False)
 
-        term_iri = _term_to_iri(term)
-        parent_iri = _term_to_iri(parent)
+        term_iri = _term_to_iri(str(term))
+        has_parent = parent and not (isinstance(parent, float) and pd.isna(parent)) and str(parent).strip()
 
-        if rel_type == "rdf:type":
-            # Named individual
-            g.add((term_iri, RDF.type, OWL.NamedIndividual))
-            g.add((term_iri, RDF.type, parent_iri))
+        if has_parent:
+            parent_iri = _term_to_iri(str(parent))
+            if rel_type == "rdf:type":
+                # Named individual
+                g.add((term_iri, RDF.type, OWL.NamedIndividual))
+                g.add((term_iri, RDF.type, parent_iri))
+            else:
+                # Class
+                g.add((term_iri, RDF.type, OWL.Class))
+                g.add((term_iri, RDFS.subClassOf, parent_iri))
         else:
-            # Class
+            # Root node — declare as class with no explicit parent
             g.add((term_iri, RDF.type, OWL.Class))
-            g.add((term_iri, RDFS.subClassOf, parent_iri))
 
         # Label
         g.add((term_iri, RDFS.label, Literal(term, lang="en")))

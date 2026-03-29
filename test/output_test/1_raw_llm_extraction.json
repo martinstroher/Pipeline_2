@@ -1,125 +1,44 @@
 ﻿Entity
 Carbonate Reservoir
-Petroleum Reservoir Rock
+Reservoir Rock
 Carbonate Mineral
 Calcite
 Dolomite
-Biological Precipitation
-Chemical Precipitation
-Marine Environment
-Lacustrine Environment
-Reservoir Lithology
-Hydrocarbon Accumulation
-Evaporite Seal
 Microbialite
 Sedimentary Rock
-Metabolic Activity
 Microbial Community
-Cyanobacteria
-Carbonate Precipitation
 Reservoir Facies
 Pre-Salt Sequence
-Primary Porosity
-Stromatolitic Growth Fabric
-Thrombolitic Growth Fabric
-Coquina
-Bioclastic Carbonate Rock
-Bivalve Shell
-Shell Fragment
-Lacustrine Shoreline Environment
-Rift Phase
-Basin Evolution
-Diagenesis
-Geological Process
-Physical Change
-Chemical Change
-Biological Change
-Sediment
-Deposition
-Metamorphism
-Reservoir Quality
-Cementation
-Dissolution
-Dolomitization
-Compaction
-Marine Cementation
-Secondary Porosity
 Porosity
-Physical Property Of Rock
+Physical Property
+Rock
 Void Space
-Rock Volume
-Porosity Type
-Interparticle Porosity
-Moldic Porosity
-Vuggy Porosity
-Fracture Porosity
-Replacement
+Dolomitization
+Diagenetic Process
 Permeability
-Intercrystalline Pore Space
 Structural Trap
 Petroleum Trap
-Deformation Of Rock Layer
+Deformation
+Rock Layer
 Tectonic Process
-Faulting
-Folding
-Play
-Normal Fault
-Horst-Graben Geometry
-Compartmentalization
 Fault
 Planar Fracture
 Displacement
 Migration Pathway
-Barrier To Fluid Flow
-Sealing Property
-Source Rock
-Geological Unit
-Organic Matter
-Hydrocarbon
-Thermal Maturation
-Lacustrine Shale
-Type I Kerogen
-Sag Phase
-Anoxic Lake Environment
-Thermal Maturity
-Burial
-Evaporite Sequence
-Charging
+Barrier
+Reservoir
+Lacustrine Environment
 Continental Depositional Setting
 Lake System
-Sedimentation
-Climate
-Tectonics
-Water Chemistry
-Rift Basin
-Carbonate Platform
-Siliciclastic Fan
-Organic-Rich Mudstone
-Sedimentary Facies
-Body Of Rock
-Grain Size
-Composition
-Sedimentary Structure
-Fossil Content
 Evaporite
 Chemical Sedimentary Rock
-Precipitation Of Dissolved Mineral
+Dissolved Mineral
 Evaporating Water Body
-Salt Layer
-Halite
 Regional Seal
-Trapping
+Play
 Rifting
 Extensional Deformation
-Thinning Of Lithosphere
-Crustal Stretching
-Accommodation Space
-Lacustrine Source Rock
-Carbonate Sequence
-Cretaceous Period
-Geological Property
-Capacity To Store And Transmit Fluid
-Depositional Facies
-Diagenetic History
-Structural Deformation
-Reservoir Interval
+Lithosphere
+Reservoir Quality
+Composite Property
+Fluid
