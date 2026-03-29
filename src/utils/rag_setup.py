@@ -9,6 +9,8 @@ from langchain_community.embeddings import HuggingFaceEmbeddings
 from langchain_community.retrievers import BM25Retriever
 from sentence_transformers import CrossEncoder
 
+from src.utils import log
+
 DOCS_DIR = os.environ.get("DOCS_DIR", "inputs/")
 # Dynamic DB Persistence: We will append parameters to this path if needed, but defaults here.
 CHROMA_DB_DIR = os.environ.get("CHROMA_DB_DIR", "chroma_db")
@@ -64,7 +66,7 @@ def split_documents(documents: List, chunk_size: int = 1024, chunk_overlap: int 
     )
     
     final_splits = text_splitter.split_documents(md_header_splits)
-    print(f"Split {len(documents)} docs -> {len(md_header_splits)} header sections -> {len(final_splits)} final chunks (Size: {chunk_size}).")
+    log.detail(f"Split {len(documents)} docs -> {len(md_header_splits)} header sections -> {len(final_splits)} chunks (size={chunk_size})")
     return final_splits
 
 def get_chroma_path(chunk_size: int) -> str:
@@ -79,7 +81,7 @@ def create_vector_store(documents: List, chunk_size: int) -> Chroma:
     if os.path.exists(db_path):
         shutil.rmtree(db_path)
         
-    print(f"Creating Index with BGE-M3 at {db_path}...")
+    log.info(f"Creating dense index (BGE-M3) at {db_path}...")
     embeddings = HuggingFaceEmbeddings(
         model_name=EMBED_MODEL,
         model_kwargs={'device': 'cpu', 'trust_remote_code': True}, # 'cuda' if GPU available
@@ -113,7 +115,7 @@ def get_bm25_retriever(docs_list: List = None):
 def get_cross_encoder():
     global _CROSS_ENCODER
     if _CROSS_ENCODER is None:
-        print(f"Loading Re-ranker: {RERANK_MODEL}...")
+        log.info(f"Loading re-ranker: {RERANK_MODEL}...")
         _CROSS_ENCODER = CrossEncoder(RERANK_MODEL, trust_remote_code=True)
     return _CROSS_ENCODER
 
@@ -183,7 +185,7 @@ def get_relevant_documents(
         return sorted_docs[:rerank_k]
         
     except Exception as e:
-        print(f"Warning: Re-ranking failed ({e}). Returning raw results.")
+        log.warn(f"Re-ranking failed ({e}). Using raw results.")
         return [(doc, 1.0) for doc in initial_docs[:rerank_k]]
 
 def setup_rag(chunk_size: int = 1024, chunk_overlap: int = 100, force_rebuild: bool = False):
@@ -193,33 +195,33 @@ def setup_rag(chunk_size: int = 1024, chunk_overlap: int = 100, force_rebuild: b
     When force_rebuild=False and a DB already exists, loads from disk instead of recreating.
     BM25 is always rebuilt in-memory (not persistable).
     """
-    print(f"--- Setting up RAG (Chunk Size: {chunk_size}, Force Rebuild: {force_rebuild}) ---")
+    log.info(f"Setting up RAG (chunk_size={chunk_size}, force_rebuild={force_rebuild})...")
     if not os.path.exists(DOCS_DIR):
-        print(f"Error: {DOCS_DIR} not found.")
+        log.error(f"Directory {DOCS_DIR} not found.")
         return None, None
 
     db_path = get_chroma_path(chunk_size)
 
     # Check if we can reuse existing ChromaDB
     if not force_rebuild and os.path.exists(db_path) and os.listdir(db_path):
-        print(f"Found existing ChromaDB at {db_path}. Loading from disk (use force_rebuild=True to recreate).")
+        log.info(f"Found cached ChromaDB at {db_path}. Loading from disk.")
         vector_store = load_vector_store(chunk_size)
 
         # BM25 must be rebuilt in-memory every time
         documents = load_documents(DOCS_DIR)
         if not documents:
-            print("No documents found for BM25.")
+            log.warn("No documents found for BM25.")
             return vector_store, None
         split_docs = split_documents(documents, chunk_size, chunk_overlap)
         bm25 = get_bm25_retriever(split_docs)
 
-        print("RAG Setup Complete (ChromaDB from cache, BM25 rebuilt).")
+        log.success("RAG setup complete (ChromaDB cached, BM25 rebuilt).")
         return vector_store, bm25
 
     # Load
     documents = load_documents(DOCS_DIR)
     if not documents:
-        print("No documents found.")
+        log.error("No documents found.")
         return None, None
 
     # Split
@@ -231,7 +233,7 @@ def setup_rag(chunk_size: int = 1024, chunk_overlap: int = 100, force_rebuild: b
     # Index (Sparse) - Returns BM25 Object
     bm25 = get_bm25_retriever(split_docs)
 
-    print("RAG Setup Complete.")
+    log.success("RAG setup complete.")
     return vector_store, bm25
 
 if __name__ == "__main__":

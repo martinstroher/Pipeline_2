@@ -2,8 +2,10 @@ import json
 import os
 import pandas as pd
 import time
+from tqdm import tqdm
 from src.utils.rag_setup import get_relevant_documents, load_vector_store
 from src.utils.gemini_client import get_client, generate
+from src.utils import log
 
 # Module-level state (configured lazily inside functions, not at import time)
 _genai_configured = False
@@ -107,17 +109,17 @@ def run_nld_generation(vector_store=None, bm25_retriever=None):
     def load_terms_from_aggregator_csv(filepath):
         """Loads terms from the aggregator output CSV file."""
         if not os.path.exists(filepath):
-            print(f"ERROR: The file '{filepath}' was not found.")
+            log.error(f"File '{filepath}' not found.")
             return None
         try:
             df = pd.read_csv(filepath, encoding='utf-8', delimiter=',', header=0, usecols=['Readable_Term'])
-            print(f"Success! {len(df)} terms loaded from '{filepath}'.")
+            log.info(f"{len(df)} terms loaded from '{filepath}'.")
             return df
         except ValueError as e:
-            print(f"ERROR reading CSV: Column 'Readable_Term' likely not found in '{filepath}'. {e}")
+            log.error(f"CSV column error in '{filepath}': {e}")
             return None
         except Exception as e:
-            print(f"ERROR reading the CSV file '{filepath}': {e}")
+            log.error(f"Reading CSV '{filepath}': {e}")
             return None
 
     df_termos = load_terms_from_aggregator_csv(INPUT_FILE)
@@ -131,7 +133,7 @@ def run_nld_generation(vector_store=None, bm25_retriever=None):
                 df_existing = pd.read_csv(OUTPUT_FILE, encoding='utf-8-sig')
                 completed_terms = set(df_existing['Term'].tolist())
                 results = df_existing.to_dict('records')
-                print(f"Resuming from checkpoint: {len(completed_terms)} terms already processed.")
+                log.info(f"Resuming: {len(completed_terms)} terms already processed.")
             except Exception:
                 pass
 
@@ -139,24 +141,25 @@ def run_nld_generation(vector_store=None, bm25_retriever=None):
 
         # Load vector store for RAG if not passed
         if vector_store is None:
-            print("Warning: No vector_store passed, loading from disk (dense-only, no BM25).")
+            log.warn("No vector_store passed, loading from disk (dense-only).")
             vector_store = load_vector_store()
 
         if bm25_retriever is not None:
-            print("BM25 hybrid retrieval is ACTIVE.")
+            log.info("BM25 hybrid retrieval is ACTIVE.")
         else:
-            print("Warning: BM25 not available, using dense-only retrieval.")
+            log.warn("BM25 not available, using dense-only retrieval.")
 
         total_terms = len(df_termos)
+        pbar = tqdm(total=total_terms, desc="Generating NLDs")
         for index, row in df_termos.iterrows():
             # Get the term directly
             term = row['Readable_Term']
+            pbar.set_postfix_str(term[:30])
 
             # Skip already checkpointed terms
             if term in completed_terms:
+                pbar.update(1)
                 continue
-
-            print(f"Processing term {index + 1}/{total_terms}: '{term}'...")
 
             try:
                 # Get relevant context using RAG (with BM25 if available)
@@ -177,11 +180,11 @@ def run_nld_generation(vector_store=None, bm25_retriever=None):
                     nld_generated = nld_data.get("Definition", "")
                     context_used = nld_data.get("Context_Used", True)
                 except json.JSONDecodeError:
-                    print(f"  -> ERROR: Failed to parse JSON response. Raw: {nld_json_str}")
+                    tqdm.write("")
+                    log.warn(f"JSON parse failed for '{term}': {nld_json_str[:80]}")
                     nld_generated = nld_json_str
                     context_used = "Error Parsing JSON"
 
-                print(f"  -> Definition generated successfully. Context Used: {context_used}")
                 result_row = {'Term': term, 'NLD': nld_generated, 'Context_Used': context_used, 'Context': context}
                 results.append(result_row)
 
@@ -192,10 +195,12 @@ def run_nld_generation(vector_store=None, bm25_retriever=None):
                 time.sleep(float(os.environ.get("NLD_SLEEP_SECONDS", 4)))
 
             except Exception as e:
-                print(f"  -> ERROR processing term '{term}': {e}")
+                tqdm.write("")
+                log.error(f"Term '{term}': {e}")
                 terms_for_review.append({'Term': term, 'Error': str(e)})
 
-        print("\nProcessing complete.")
+            pbar.update(1)
+        pbar.close()
 
         # Write final consolidated output (overwrites checkpoint file with clean version)
         output_dir = os.path.dirname(OUTPUT_FILE)
@@ -204,7 +209,7 @@ def run_nld_generation(vector_store=None, bm25_retriever=None):
 
         df_results = pd.DataFrame(results)
         df_results.to_csv(OUTPUT_FILE, index=False, encoding='utf-8-sig')
-        print(f"{len(df_results)} definitions saved to '{OUTPUT_FILE}'")
+        log.success(f"{len(df_results)} definitions saved to '{OUTPUT_FILE}'")
 
         if terms_for_review:
             failure_output_dir = os.path.dirname(OUTPUT_FAILURE_FILE)
@@ -213,4 +218,4 @@ def run_nld_generation(vector_store=None, bm25_retriever=None):
 
             df_review = pd.DataFrame(terms_for_review)
             df_review.to_csv(OUTPUT_FAILURE_FILE, index=False, encoding='utf-8-sig')
-            print(f"{len(df_review)} terms marked for manual review saved to '{OUTPUT_FAILURE_FILE}'")
+            log.warn(f"{len(df_review)} terms need manual review -> '{OUTPUT_FAILURE_FILE}'")

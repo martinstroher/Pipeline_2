@@ -2,6 +2,8 @@ import os
 
 import pandas as pd
 
+from src.utils import log
+
 INPUT_FILTERED_CSV= os.environ["AGGREGATOR_OUTPUT_FILE"]
 OUTPUT_FILTERED_CSV = os.environ["FILTERED_TERMS_OUTPUT"]
 MINIMUM_FREQUENCY = int(os.environ["MINIMUM_FREQUENCY_FILTER"])
@@ -14,12 +16,12 @@ def filter_top_terms():
 
         df_filtered.to_csv(OUTPUT_FILTERED_CSV, index=False, encoding='utf-8-sig')
 
-        print(f"Filtered terms (Frequency >= {MINIMUM_FREQUENCY}) saved to '{OUTPUT_FILTERED_CSV}'")
-        print(f"Number of terms reduced from {len(df_ranked)} to {len(df_filtered)}")
+        log.info(f"Filtered terms (Frequency >= {MINIMUM_FREQUENCY}) saved to '{OUTPUT_FILTERED_CSV}'")
+        log.detail(f"Reduced from {len(df_ranked)} to {len(df_filtered)} terms")
 
     except FileNotFoundError:
-        print(f"ERROR: Input file '{INPUT_FILTERED_CSV}' not found. Make sure the consolidation script ran successfully.")
+        log.error(f"Input file '{INPUT_FILTERED_CSV}' not found.")
     except KeyError:
-        print(f"ERROR: Column 'Frequency' not found in '{INPUT_FILTERED_CSV}'. Check the header.")
+        log.error(f"Column 'Frequency' not found in '{INPUT_FILTERED_CSV}'.")
     except Exception as e:
-        print(f"An error occurred: {e}")
+        log.error(f"{e}")

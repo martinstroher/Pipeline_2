@@ -10,6 +10,7 @@ import multiprocessing
 import json
 import ocrmypdf
 from multiprocessing import Pool
+from src.utils import log
 from tqdm import tqdm
 
 #=============================================================================
@@ -123,7 +124,7 @@ def extrai_texto_ocr(doc_pdf,pags):
                         #fim if
                     #fim for
                 except:
-                    print("\tErro de acesso ao arquivo!")
+                    log.error("File access error during OCR extraction")
                 #fim try
             #fim for
 
@@ -171,7 +172,7 @@ def processa_doc_pdf(pars):
         documento_pdf = pymupdf.open(pars[0]+pars[1])
     except:
         vetor_resultado["nc"].append(pars[1])
-        print("\tErro de conversão:",pars[1])
+        log.error(f"PDF conversion failed: {pars[1]}")
     else:
         paginas,total_paginas = calcula_total_paginas(documento_pdf)
         lista_imagens,total_imagens = calcula_total_imagens(documento_pdf,paginas)
@@ -260,11 +261,11 @@ def extract_text_for_rag_test(input_folder, output_folder):
             if texto_extraido:
                 with open(output_path, 'w', encoding='utf-8') as f:
                     f.write(texto_extraido)
-                print(f"Texto extraído com sucesso: {arquivo_pdf}")
+                log.detail(f"Extracted: {arquivo_pdf}")
             else:
-                print(f"Falha na extração de texto: {arquivo_pdf}")
+                log.warn(f"Text extraction failed: {arquivo_pdf}")
         except Exception as e:
-            print(f"Erro ao processar {arquivo_pdf}: {str(e)}")
+            log.error(f"Processing {arquivo_pdf}: {e}")
 #fim def
 #=============================================================================
 #=============================================================================
@@ -278,10 +279,10 @@ def process_folder(pasta_textos):
         pasta_textos += "/"
 
     if not os.path.exists(pasta_textos):
-        print(f"Error: Folder {pasta_textos} does not exist.")
+        log.error(f"Folder {pasta_textos} does not exist.")
         return
 
-    print('Iniciando leitura dos arquivos da pasta ...\n')
+    log.info("Scanning folder for PDF files...")
     lista_arquivos_pdf = []
     
     for nome_arquivo in sorted(os.listdir(pasta_textos)):
@@ -289,7 +290,7 @@ def process_folder(pasta_textos):
             lista_arquivos_pdf.append(nome_arquivo)
 
     total_arquivos_pdf = len(lista_arquivos_pdf)
-    print('Encontrados %s arquivos PDFs.' % total_arquivos_pdf)
+    log.info(f"Found {total_arquivos_pdf} PDF files.")
     
     if total_arquivos_pdf == 0:
         return
@@ -300,7 +301,7 @@ def process_folder(pasta_textos):
     lista_master = []
 
     numero_cpus = multiprocessing.cpu_count()
-    print("CPUs:",numero_cpus)
+    log.detail(f"Using {numero_cpus} CPU cores")
     indice_inicial = 0
     while indice_inicial <= total_arquivos_pdf:
         indice_final = indice_inicial + numero_cpus
@@ -339,7 +340,7 @@ def process_folder(pasta_textos):
             arquivo_parcial.close()
 
             contador_lista += 1
-        else: print("Sem nenhum arquivo OCR para converter.")
+        else: log.warn("No OCR files to convert.")
 
     str_final = "Convertidos:"+str(len(lista_arquivos_convertidos))+"\nNao Convertidos:"+str(len(lista_arquivos_erros))+"\nConvertidos OCR:"+str(len(lista_arquivos_imagens_ocr))+"\n"
     arquivo_final = open(pasta_textos+"resultado_final.dat", "a")
@@ -362,5 +363,5 @@ if __name__ == '__main__':
         else:
              process_folder(pasta_textos)
     else:
-        print("Erro de sintaxe!")
-        print("Comande: python3 text_converted.py <pasta-de-arquivos-pdf>/")
+        log.error("Invalid syntax!")
+        log.info("Usage: python pdf_processor.py <pdf-folder>/")

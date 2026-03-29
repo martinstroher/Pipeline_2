@@ -3,8 +3,10 @@ import os
 import time
 
 import pandas as pd
+from tqdm import tqdm
 
 from src.utils.gemini_client import generate
+from src.utils import log
 
 
 def run_term_categorization():
@@ -17,18 +19,18 @@ def run_term_categorization():
     GEOCORE_DEFS_PATH = os.environ["GEOCORE_DEFS_PATH"]
     BFO_DEFS_PATH = os.environ["BFO_DEFS_PATH"]
 
-    print(f"Processing in batches of {BATCH_SIZE} terms.")
+    log.info(f"Categorizing in batches of {BATCH_SIZE}.")
 
 
     def load_definitions_from_file(filepath):
         if not os.path.exists(filepath):
-            print(f"ERROR: Definition file not found at '{filepath}'")
+            log.error(f"Definition file not found: '{filepath}'")
             return None
         try:
             with open(filepath, 'r', encoding='utf-8') as f:
                 return f.read()
         except Exception as e:
-            print(f"ERROR reading definition file '{filepath}': {e}")
+            log.error(f"Reading definition file '{filepath}': {e}")
             return None
 
 
@@ -41,16 +43,16 @@ def run_term_categorization():
 
     def load_nlds_from_csv(filepath):
         if not os.path.exists(filepath):
-            print(f"ERROR: The file '{filepath}' was not found.")
+            log.error(f"File '{filepath}' not found.")
             return None
         try:
             df = pd.read_csv(filepath, encoding='utf-8', delimiter=',', header=0,
                              usecols=['Term', 'NLD', 'Context_Used'])
 
-            print(f"Success! {len(df)} terms, NLDs, and context flags loaded from '{filepath}'.")
+            log.info(f"{len(df)} terms loaded for categorization.")
             return df
         except Exception as e:
-            print(f"ERROR reading the CSV file: {e}")
+            log.error(f"Reading CSV: {e}")
             return None
 
 
@@ -92,6 +94,7 @@ def run_term_categorization():
         classification_results = []
         total_terms = len(df_nlds)
 
+        pbar = tqdm(total=total_terms, desc="Categorizing")
         for i in range(0, total_terms, BATCH_SIZE):
             batch_df = df_nlds.iloc[i:i + BATCH_SIZE]
 
@@ -103,7 +106,6 @@ def run_term_categorization():
                 })
             json_batch_str = json.dumps(batch_list, indent=2)
 
-            print(f"Classifying batch of terms {i + 1}-{min(i + BATCH_SIZE, total_terms)} of {total_terms}...")
             try:
                 final_prompt = prompt_template.format(geocore_definitions=geocore_definitions,
                                                       bfo_definitions=bfo_definitions,
@@ -131,10 +133,10 @@ def run_term_categorization():
                         'Reasoning': result_item['reasoning'],
                         'NLD': original_row['NLD']
                     })
-                print("  -> Batch classified and saved successfully.")
 
             except json.JSONDecodeError:
-                print(f"  -> ERROR: LLM returned invalid JSON. Batch flagged for review.")
+                tqdm.write("")
+                log.error("LLM returned invalid JSON. Batch flagged.")
                 for item in batch_list:
                     classification_results.append({
                         'Term': item['term'],
@@ -144,7 +146,8 @@ def run_term_categorization():
                         'NLD': item['nld']
                     })
             except Exception as e:
-                print(f"  -> ERROR classifying batch: {e}. Batch flagged for review.")
+                tqdm.write("")
+                log.error(f"Classifying batch: {e}")
                 for item in batch_list:
                     classification_results.append({
                         'Term': item['term'],
@@ -154,22 +157,23 @@ def run_term_categorization():
                         'NLD': item['nld']
                     })
 
+            pbar.update(len(batch_df))
             time.sleep(2)
 
-        print("\nClassification complete. Saving results...")
+        pbar.close()
 
         output_dir = os.path.dirname(OUTPUT_FILE_PATH)
         if output_dir and not os.path.exists(output_dir):
             try:
                 os.makedirs(output_dir)
-                print(f"Created output directory: {output_dir}")
+                log.detail(f"Created directory: {output_dir}")
             except OSError as e:
-                raise RuntimeError(f"ERROR creating directory {output_dir}: {e}")
+                raise RuntimeError(f"Creating directory {output_dir}: {e}")
 
         try:
             final_df = pd.DataFrame(classification_results)
 
             final_df.to_csv(OUTPUT_FILE_PATH, index=False, encoding='utf-8-sig')
-            print(f"Classification results successfully saved to '{OUTPUT_FILE_PATH}'")
+            log.success(f"{len(final_df)} terms categorized -> '{OUTPUT_FILE_PATH}'")
         except Exception as e:
-            print(f"ERROR saving results to CSV file '{OUTPUT_FILE_PATH}': {e}")
+            log.error(f"Saving CSV '{OUTPUT_FILE_PATH}': {e}")

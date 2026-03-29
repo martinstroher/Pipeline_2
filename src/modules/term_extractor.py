@@ -2,7 +2,9 @@ import json
 import os
 
 import pandas as pd
+from tqdm import tqdm
 
+from src.utils import log
 from src.utils.gemini_client import generate
 
 
@@ -15,12 +17,12 @@ def run_llm_term_extraction():
     def load_papers_from_dir(directory):
         papers = []
         if not os.path.exists(directory):
-             print(f"ERROR: Directory '{directory}' not found.")
+             log.error(f"Directory '{directory}' not found.")
              return []
 
         files = [f for f in os.listdir(directory) if f.endswith('.md')]
         if not files:
-             print(f"ERROR: No .md files found in '{directory}'.")
+             log.error(f"No .md files found in '{directory}'.")
              return []
 
         for filename in files:
@@ -30,9 +32,9 @@ def run_llm_term_extraction():
                     content = f.read()
                 if content.strip():
                     papers.append(content)
-                print(f"Loaded paper: {filename} ({len(content)} chars)")
+                log.detail(f"Loaded: {filename} ({len(content)} chars)")
             except Exception as e:
-                print(f"Error reading {filename}: {e}")
+                log.error(f"Reading {filename}: {e}")
         return papers
 
     system_instruction = """You are an expert geologist and ontology engineer specializing in South Atlantic Pre-Salt petroleum systems.
@@ -63,19 +65,14 @@ def run_llm_term_extraction():
     """
 
 
-    print(f"Loading papers from {LLM_INPUT_DIR}...")
+    log.info(f"Loading papers from {LLM_INPUT_DIR}...")
     papers = load_papers_from_dir(LLM_INPUT_DIR)
 
     if papers:
         all_extracted_terms = []
+        log.info(f"Found {len(papers)} papers to process.")
 
-        num_papers = len(papers)
-        print(f"\\nFound {num_papers} papers to process.")
-
-        for i, paper_text in enumerate(papers):
-            paper_num = i + 1
-            print(f"Processing paper {paper_num}/{num_papers}...")
-
+        for paper_text in tqdm(papers, desc="Extracting terms"):
             try:
                 final_prompt = prompt_template.format(chunk_text=paper_text)
 
@@ -89,15 +86,12 @@ def run_llm_term_extraction():
 
                 terms_from_paper = json.loads(response_text)
                 all_extracted_terms.extend(terms_from_paper)
-                print(f"  -> Extracted {len(terms_from_paper)} terms from this paper.")
 
             except Exception as e:
-                print(f"  -> An error occurred processing paper {paper_num}: {e}")
-
-        print("\nExtraction complete. Saving all extracted terms...")
+                tqdm.write("")
+                log.error(f"Processing paper: {e}")
 
         df_raw_results = pd.DataFrame(all_extracted_terms, columns=['Entity'])
         df_raw_results.to_csv(LLM_OUTPUT_FILE, index=False, encoding='utf-8-sig')
 
-        print(
-            f"\nSuccess! A total of {len(all_extracted_terms)} raw terms were extracted and saved to '{LLM_OUTPUT_FILE}'.")
+        log.success(f"{len(all_extracted_terms)} raw terms extracted -> '{LLM_OUTPUT_FILE}'")

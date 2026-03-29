@@ -1,9 +1,17 @@
 import argparse
 import os
+import warnings
+
+# Suppress noisy library warnings before any src/ imports (they trigger langchain)
+warnings.filterwarnings("ignore", message=".*Pydantic.*", category=UserWarning)
+warnings.filterwarnings("ignore", category=DeprecationWarning, module="langchain")
+warnings.filterwarnings("ignore", category=DeprecationWarning, module="pydantic")
+
 from dotenv import load_dotenv
 
 load_dotenv()
 
+from src.utils import log
 from src.modules.term_extractor import run_llm_term_extraction
 from src.modules import term_aggregator
 from src.modules.term_filter import filter_top_terms
@@ -114,25 +122,30 @@ def main():
 
     # --- Standard pipeline ---
     if not args.skip_pdf:
-        print(f"Running text extraction on {DOCS_DIR}...")
+        log.banner(0, "PDF Text Extraction")
         text_converted.process_folder(DOCS_DIR)
 
     # Set up RAG system
+    log.banner("R", "RAG Setup")
     vector_store, bm25 = setup_rag()
 
     if not args.skip_extraction:
-        # Run existing pipeline steps (Steps 1-3)
+        log.banner(1, "Term Extraction")
         run_llm_term_extraction()
+
+        log.banner(2, "Term Aggregation")
         term_aggregator.run_term_aggregation()
+
+        log.banner(3, "Term Filtering")
         filter_top_terms()
 
-    # Step 4: NLD generation with RAG
+    log.banner(4, "NLD Generation")
     run_nld_generation(vector_store=vector_store, bm25_retriever=bm25)
 
-    # Step 5: Term categorization
+    log.banner(5, "Term Categorization")
     run_term_categorization()
 
-    print("\nPipeline complete.")
+    log.success("\nPipeline complete.")
 
 
 if __name__ == "__main__":

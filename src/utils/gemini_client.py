@@ -1,16 +1,22 @@
 """
-Shared Gemini client — supports both AI Studio (API key) and Vertex AI.
+Shared Gemini client — supports Vertex AI (API key or ADC) and AI Studio.
 
 Configuration via environment variables:
-  GEMINI_API_KEY       — API key (AI Studio mode, default)
-  VERTEX_AI=true       — Enable Vertex AI mode (uses ADC for auth)
-  GCP_PROJECT          — GCP project ID (required for Vertex AI)
-  GCP_LOCATION         — GCP region (default: us-central1)
+  GEMINI_API_KEY       — API key
+  VERTEX_AI=true       — Route through Vertex AI endpoint
+  GCP_PROJECT          — GCP project ID (required for ADC, ignored with API key)
+  GCP_LOCATION         — GCP region (required for ADC, ignored with API key)
+
+Auth priority:
+  1. VERTEX_AI + API key  → Vertex AI express mode (api_key only, no project/location)
+  2. VERTEX_AI + ADC      → Vertex AI with project/location from env or ADC
+  3. API key alone         → AI Studio (generativelanguage.googleapis.com)
 """
 
 import os
 from google import genai
 from google.genai import types
+from src.utils import log
 
 _client = None
 
@@ -21,21 +27,30 @@ def get_client() -> genai.Client:
     if _client is not None:
         return _client
 
+    api_key = os.environ.get("GEMINI_API_KEY")
     use_vertex = os.environ.get("VERTEX_AI", "").lower() in ("true", "1", "yes")
 
-    if use_vertex:
+    if use_vertex and api_key:
+        # Vertex AI express mode: api_key routes through aiplatform.googleapis.com
+        # project/location must NOT be passed (SDK treats them as mutually exclusive)
+        _client = genai.Client(vertexai=True, api_key=api_key)
+        log.info("Gemini client: Vertex AI + API key")
+    elif use_vertex:
+        # Vertex AI with ADC
         project = os.environ.get("GCP_PROJECT")
         location = os.environ.get("GCP_LOCATION", "us-central1")
         if not project:
             raise RuntimeError("VERTEX_AI=true but GCP_PROJECT is not set.")
         _client = genai.Client(vertexai=True, project=project, location=location)
-        print(f"Gemini client configured (Vertex AI: {project} / {location})")
-    else:
-        api_key = os.environ.get("GEMINI_API_KEY")
-        if not api_key:
-            raise RuntimeError("GEMINI_API_KEY is not set.")
+        log.info(f"Gemini client: Vertex AI ADC ({project}/{location})")
+    elif api_key:
+        # AI Studio mode
         _client = genai.Client(api_key=api_key)
-        print("Gemini client configured (AI Studio API key)")
+        log.info("Gemini client: AI Studio API key")
+    else:
+        raise RuntimeError(
+            "No Gemini auth configured. Set GEMINI_API_KEY or VERTEX_AI=true with ADC."
+        )
 
     return _client
 
