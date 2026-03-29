@@ -7,10 +7,9 @@ Measures WHETHER conditions produce different outputs and HOW they diverge.
 Analyses:
   1. Cross-condition agreement matrix (6 pairwise agreement rates)
   2. Cochran's Q test (omnibus: do conditions differ at all?)
-  3. Chi-squared test on category frequency distributions
-  4. Category migration analysis (stable / RAG-sensitive / NLD-sensitive / compression-sensitive)
-  5. NOT_CLASSIFIED rate comparison
-  6. Context_Used subgroup analysis (within Condition A vs B)
+  3. Category migration analysis (stable / RAG-sensitive / NLD-sensitive / compression-sensitive)
+  4. NOT_CLASSIFIED rate comparison
+  5. Context_Used subgroup analysis (within Condition A vs B)
 """
 
 import os
@@ -116,26 +115,7 @@ def cochrans_q_test(df: pd.DataFrame, reference_category: str | None = None) -> 
 
 
 # ---------------------------------------------------------------------------
-# 3. Chi-squared on category frequency distributions
-# ---------------------------------------------------------------------------
-
-def chi_squared_category_distributions(df: pd.DataFrame) -> dict:
-    """Chi-squared test comparing category frequency distributions across conditions."""
-    conditions = sorted(df["Condition"].unique())
-    # Build contingency table: rows = categories, columns = conditions
-    contingency = pd.crosstab(df["Category"], df["Condition"])
-
-    chi2, p, dof, expected = stats.chi2_contingency(contingency)
-    return {
-        "chi2": round(chi2, 4),
-        "p_value": round(p, 6),
-        "dof": dof,
-        "contingency_table": contingency,
-    }
-
-
-# ---------------------------------------------------------------------------
-# 4. Category migration analysis
+# 3. Category migration analysis
 # ---------------------------------------------------------------------------
 
 def category_migration(df: pd.DataFrame) -> pd.DataFrame:
@@ -265,7 +245,7 @@ def run_layer1_analysis(merged_path: str | None = None) -> dict:
     results["cochrans_q"] = cq_df
 
     # 3. Category migration
-    print("\n4. Category migration analysis:")
+    print("\n3. Category migration analysis:")
     cm = category_migration(df)
     cm.to_csv(os.path.join(ANALYSIS_DIR, "category_migration.csv"), index=False)
     pattern_counts = cm["Pattern"].value_counts()
@@ -273,15 +253,15 @@ def run_layer1_analysis(merged_path: str | None = None) -> dict:
         print(f"  {pat}: {count} terms ({count/len(cm)*100:.1f}%)")
     results["migration"] = cm
 
-    # 5. NOT_CLASSIFIED rates
-    print("\n5. NOT_CLASSIFIED rates:")
+    # 4. NOT_CLASSIFIED rates
+    print("\n4. NOT_CLASSIFIED rates:")
     nc = not_classified_rates(df)
     nc.to_csv(os.path.join(ANALYSIS_DIR, "not_classified_rates.csv"), index=False)
     print(nc.to_string(index=False))
     results["not_classified"] = nc
 
-    # 6. Context_Used subgroup
-    print("\n6. Context_Used subgroup analysis (A vs B):")
+    # 5. Context_Used subgroup
+    print("\n5. Context_Used subgroup analysis (A vs B):")
     cu = context_used_subgroup(df)
     if not cu.empty:
         cu.to_csv(os.path.join(ANALYSIS_DIR, "context_used_subgroup.csv"), index=False)

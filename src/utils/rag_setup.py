@@ -109,7 +109,7 @@ def get_bm25_retriever(docs_list: List = None):
     """
     global _BM25_RETRIEVER
     if docs_list:
-        _BM25_RETRIEVER = BM25Retriever.from_documents(docs_list)
+        _BM25_RETRIEVER = BM25Retriever.from_documents(docs_list, k=DEFAULT_SEARCH_K)
     return _BM25_RETRIEVER
 
 def get_cross_encoder():
