@@ -1,6 +1,6 @@
 ﻿Entity
 Carbonate Reservoir
-Reservoir Rock
+Petroleum Reservoir Rock
 Carbonate Mineral
 Calcite
 Dolomite
@@ -8,7 +8,12 @@ Microbialite
 Sedimentary Rock
 Microbial Community
 Reservoir Facies
+Santos Basin Pre-Salt Sequence
 Porosity
+Physical Property
+Rock
+Void Space
+Rock Volume
 Dolomitization
 Diagenetic Process
 Permeability
@@ -20,6 +25,9 @@ Tectonic Process
 Fault
 Planar Fracture
 Displacement
+Migration Pathway
+Barrier
+Pre-Salt Reservoir
 Lacustrine Environment
 Continental Depositional Setting
 Lake System
@@ -29,6 +37,7 @@ Precipitation
 Dissolved Mineral
 Evaporating Water Body
 Regional Seal
+Pre-Salt Play
 Rifting
 Extensional Deformation
 Lithosphere

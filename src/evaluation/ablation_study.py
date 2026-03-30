@@ -99,11 +99,12 @@ def _build_categorizer_prompt(defs: dict, is_raw_rag: bool = False):
     3.  **Prioritize GeoReservoir:** First, attempt to classify the term into one of the `### GeoReservoir Categories`.
     4.  **Fallback to GeoCore:** If and only if no GeoReservoir category is a good fit, then attempt to classify it into one of the `### GeoCore Categories`.
     5.  **Fallback to BFO:** If and only if no GeoCore category fits, then attempt to classify it into one of the `### BFO Categories`.
-    6.  **Final Fallback:** If the term does not fit well into ANY of the provided categories (GeoReservoir, GeoCore, or BFO), you MUST use the string `NOT_CLASSIFIED`.
+    6.  **Final Fallback:** If the term does not fit well into ANY of the provided categories (GeoReservoir, GeoCore, or BFO), you MUST use the string `NOT_CLASSIFIED`. Reserve NOT_CLASSIFIED for physical analytical instruments treated as objects (e.g., 'Microscope'). Characterization methods and analytical processes that describe geological observations (e.g., 'Petrographic Analysis') may fit 'Geological Process' in GeoCore — prefer a real category when the NLD describes a geological action, observation, or property.
     7.  **Provide Reasoning:** In one short sentence, explain WHY you chose that category.
 
     **INPUT/OUTPUT FORMAT:**
     -   {data_description}
+    -   The value of "category" MUST exactly match one of the category name strings listed above, verbatim, including capitalization. The only exception is "NOT_CLASSIFIED".
 
     ---
     **ONTOLOGY CATEGORIES REFERENCE:**

@@ -119,19 +119,20 @@ Your task is to arrange them into an IS-A hierarchy (taxonomy tree).
 
 **RULES:**
 1. Every term MUST have exactly one parent. The root parent is "{category}" (the category itself).
-2. Create an intermediate class only when two or more terms share the same genus Y in their NLDs. Do not create a one-child intermediate node.
-   - **NLD-guided naming:** If a term's NLD follows the Aristotelian pattern "X is a Y that Z",
-     use the genus Y as the intermediate class name
-     (e.g., NLD "Grainstone is a grain-supported carbonate rock that lacks mud matrix"
-     → intermediate class = "Carbonate Rock", not "CarbonateSubtype" or "GrainRock";
-     NLD "Dolomitization is a diagenetic process that replaces calcite with dolomite"
-     → intermediate class = "Diagenetic Process", not "DolomiteProcess" or "CarbonateAlteration").
+2. Create an intermediate class only when **two or more** terms in this group share the same proximate genus Y in their NLDs. If only one term has a given genus, attach it directly to the parent — do NOT create a one-child intermediate node.
+   - **NLD-guided naming:** Use the shared genus Y as the intermediate class name (Title Case).
+     Example — given two terms in the group:
+       • "Dolomitization" NLD: "Dolomitization is a **diagenetic process** that replaces calcite..."
+       • "Dissolution" NLD: "Dissolution is a **diagenetic process** that removes carbonate..."
+     → Both share the genus "diagenetic process" → create "Diagenetic Process" as intermediate, with both as children.
+     → If only "Dolomitization" were in the group, attach it directly to "{category}" — do NOT create "Diagenetic Process" for a single term.
 3. **Class vs Individual distinction (CRITICAL):**
-   - Named geological time periods (e.g., "Cretaceous", "Aptian", "Albian") are INDIVIDUALS, not classes.
-     Use relationship_type = "rdf:type" (not "rdfs:subClassOf").
-   - Named locations, basins, formations are INDIVIDUALS.
-   - General types/kinds (e.g., "Grainstone", "Fault", "Porosity") are CLASSES.
-     Use relationship_type = "rdfs:subClassOf".
+   The following are INDIVIDUALS (named instances) → use relationship_type = "rdf:type":
+     - Named geological time periods (e.g., "Cretaceous", "Aptian", "Albian", "Pre-Salt")
+     - Named petroleum fields (e.g., "Lula Field", "Búzios Field", "Tupi")
+     - Named basins (e.g., "Santos Basin", "Campos Basin")
+     - Named geological formations (e.g., "Barra Velha Formation", "Itapema Formation")
+   General types/kinds (e.g., "Grainstone", "Fault", "Porosity", "Carbonate Reservoir") are CLASSES → use relationship_type = "rdfs:subClassOf".
 4. Intermediate classes you create should use Title Case.
    NOTE: BFO canonical labels are ALL LOWERCASE (e.g., "process", "quality", "entity"). GeoCore and GeoReservoir canonical labels use Title Case (e.g., "Geological Object"). Use the EXACT case as listed in the canonical vocabulary below; do NOT apply Title Case to BFO entries.
 5. Keep the hierarchy depth reasonable (2-4 levels below the category root).

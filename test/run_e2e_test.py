@@ -281,7 +281,7 @@ def run_test():
     if os.path.exists(taxonomy_csv_abs):
         ok = validate_csv(
             taxonomy_csv_abs,
-            expected_columns=["Term", "Parent_Term", "Relationship_Type", "Category", "Is_Intermediate", "NLD"],
+            expected_columns=["Term", "Parent_Term", "Relationship_Type", "Category", "Is_Intermediate", "FALLBACK", "NLD"],
             min_rows=1,
             label="Step 6 (taxonomy)",
         )
@@ -295,6 +295,10 @@ def run_test():
             with_nld = [r for r in rows if r.get("NLD", "").strip()]
             print(f"  [OK]   Step 6: {len(classes)} classes, {len(individuals)} individuals, {len(intermediates)} intermediate nodes")
             print(f"  [OK]   Step 6: {len(with_nld)}/{len(rows)} rows have NLDs")
+            # Report flat fallbacks
+            fallbacks = [r for r in rows if r.get("FALLBACK", "").strip().lower() == "true"]
+            if fallbacks:
+                print(f"  [WARN] Step 6: {len(fallbacks)} entries used flat fallback (LLM error) — check taxonomy quality")
             # Non-intermediate terms should all have NLDs (warn if gap)
             missing_nld = [r for r in rows if r.get("Is_Intermediate", "").strip().lower() != "true" and not r.get("NLD", "").strip()]
             if missing_nld:
@@ -321,6 +325,21 @@ def run_test():
                 print(f"  [OK]   Step 7: {n_labels} rdfs:label, {n_comments} rdfs:comment (NLDs)")
                 if n_comments == 0:
                     print(f"  [WARN] Step 7: no rdfs:comment — NLDs not propagating to OWL")
+
+                # Check ontology is anchored to upper ontologies (BFO / GeoCore / GeoReservoir)
+                _BFO_PREFIX = "http://purl.obolibrary.org/obo/"
+                _ONTO_PREFIX = "https://www.inf.ufrgs.br/bdi/ontologies/"
+                upper_iris_used = set(
+                    str(o) for _, _, o in g
+                    if str(o).startswith(_BFO_PREFIX) or str(o).startswith(_ONTO_PREFIX)
+                )
+                # Exclude the owl:imports declaration itself (that's the ontology header, not a class link)
+                upper_iris_used.discard("http://purl.obolibrary.org/obo/bfo.owl")
+                if upper_iris_used:
+                    print(f"  [OK]   Step 7 upper ontology anchoring: {len(upper_iris_used)} distinct BFO/GeoCore/GeoReservoir IRIs referenced in OWL")
+                else:
+                    print(f"  [FAIL] Step 7: no triples reference BFO/GeoCore/GeoReservoir IRIs — ontology not anchored to upper ontologies")
+                    all_passed = False
             else:
                 print(f"  [FAIL] Step 7 (OWL): parsed but empty ({n_triples} triples, {n_classes} classes)")
                 all_passed = False

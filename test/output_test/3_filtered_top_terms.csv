@@ -1,6 +1,6 @@
 ﻿Readable_Term,Frequency
 carbonate reservoir,1
-reservoir rock,1
+petroleum reservoir rock,1
 carbonate mineral,1
 calcite,1
 dolomite,1
@@ -8,7 +8,12 @@ microbialite,1
 sedimentary rock,1
 microbial community,1
 reservoir facies,1
+santos basin pre-salt sequence,1
 porosity,1
+physical property,1
+rock,1
+void space,1
+rock volume,1
 dolomitization,1
 diagenetic process,1
 permeability,1
@@ -20,6 +25,9 @@ tectonic process,1
 fault,1
 planar fracture,1
 displacement,1
+migration pathway,1
+barrier,1
+pre-salt reservoir,1
 lacustrine environment,1
 continental depositional setting,1
 lake system,1
@@ -29,6 +37,7 @@ precipitation,1
 dissolved mineral,1
 evaporating water body,1
 regional seal,1
+pre-salt play,1
 rifting,1
 extensional deformation,1
 lithosphere,1

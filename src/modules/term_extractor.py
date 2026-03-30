@@ -48,9 +48,10 @@ def run_llm_term_extraction():
     2.  **Normalize Terms:** Return all extracted concepts translated to English and, where appropriate, in their singular, base form (e.g., "carbonates" -> "Carbonate", "faults" -> "Fault").
     Use title case for concepts.
     3.  **Strict Filtering:** You MUST exclude:
-        * Specific, non-conceptual proper nouns (e.g., individual well names like 'Well 1-BRSA-123', all named petroleum fields (e.g., 'Lula Field', 'Búzios'), basin names like 'Santos Basin', author names, company names).
+        * Highly specific identifiers with no ontological value: individual well names (e.g., 'Well 1-BRSA-123'), author names, company names.
         * Units of measure, numerical values, and codes (e.g., 'mD', 'API', '10%', 'SiO2').
         * Analytical methods, laboratory techniques, or observational instruments (e.g., 'Thin Section', 'Core Plug', 'Seismic Survey', 'Well Log').
+        Note: Named petroleum fields (e.g., 'Lula Field', 'Búzios'), basin names (e.g., 'Santos Basin'), and named geological formations ARE valid — extract them. They will be classified as OWL named individuals downstream.
     4.  **Focus:** Prioritize terms that represent reusable classes within an ontology framework. Be selective — it is better to miss a marginal term than to include noise. Note: named geological time periods (e.g., Aptian, Cretaceous) are valid and should be extracted — they will be classified as OWL individuals downstream.
 
     **OUTPUT FORMAT:**

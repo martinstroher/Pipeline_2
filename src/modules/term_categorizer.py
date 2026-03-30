@@ -82,7 +82,7 @@ def run_term_categorization():
     2.  **Prioritize GeoReservoir:** First, attempt to classify the term into one of the `### GeoReservoir Categories`.
     3.  **Fallback to GeoCore:** If and only if no GeoReservoir category is a good fit, then attempt to classify it into one of the `### GeoCore Categories`.
     4.  **Fallback to BFO:** If and only if no GeoCore category fits, then attempt to classify it into one of the `### BFO Categories`.
-    5.  **Final Fallback:** If the term does not fit well into ANY of the provided categories (GeoReservoir, GeoCore, or BFO), you MUST use the string `NOT_CLASSIFIED`. Use NOT_CLASSIFIED for: analytical instruments, laboratory techniques, data types, or any term that describes HOW geologists work rather than WHAT geological entities, processes, or qualities exist.
+    5.  **Final Fallback:** If the term does not fit well into ANY of the provided categories (GeoReservoir, GeoCore, or BFO), you MUST use the string `NOT_CLASSIFIED`. Reserve NOT_CLASSIFIED for physical analytical instruments treated as objects (e.g., 'Microscope'). Characterization methods and analytical processes that describe geological observations or workflows (e.g., 'Petrographic Analysis', 'Core Analysis') may fit 'Geological Process' in GeoCore — prefer a real category over NOT_CLASSIFIED when the NLD describes a geological action, observation, or property.
     6.  **Provide Reasoning:** In one short sentence, explain WHY you chose that category based on the NLD.
 
     **INPUT/OUTPUT FORMAT:**
