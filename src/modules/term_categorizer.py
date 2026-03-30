@@ -9,6 +9,18 @@ from src.utils.gemini_client import generate
 from src.utils import log
 
 
+def _extract_category_names(text: str) -> set:
+    """Extract category names from definition file (format: 'Name: description')."""
+    names = set()
+    for line in text.strip().splitlines():
+        line = line.strip()
+        if line and ':' in line:
+            name = line.split(':')[0].strip()
+            if name:
+                names.add(name)
+    return names
+
+
 def run_term_categorization():
     BATCH_SIZE = int(os.environ.get("BATCH_SIZE", 1))
     MODEL_NAME = os.environ.get("LLM_GENERATION_MODEL", "gemini-2.5-pro")
@@ -40,6 +52,12 @@ def run_term_categorization():
     if not geocore_definitions or not bfo_definitions:
         raise RuntimeError("Required ontology definition files could not be loaded.")
 
+    valid_categories = (
+        _extract_category_names(georeservoir_definitions or "")
+        | _extract_category_names(geocore_definitions or "")
+        | _extract_category_names(bfo_definitions or "")
+    )
+
 
     def load_nlds_from_csv(filepath):
         if not os.path.exists(filepath):
@@ -60,16 +78,17 @@ def run_term_categorization():
     prompt_template = """Your task is to classify a batch of geological terms based on their Natural Language Definitions (NLDs).
 
     **METHODOLOGY (Follow Strictly for each item):**
-    1.  **Analyze Data:** Read the Term and its NLD.
+    1.  **Analyze Data:** Read the Term and, if present, its NLD.
     2.  **Prioritize GeoReservoir:** First, attempt to classify the term into one of the `### GeoReservoir Categories`.
     3.  **Fallback to GeoCore:** If and only if no GeoReservoir category is a good fit, then attempt to classify it into one of the `### GeoCore Categories`.
     4.  **Fallback to BFO:** If and only if no GeoCore category fits, then attempt to classify it into one of the `### BFO Categories`.
-    5.  **Final Fallback:** If the term does not fit well into ANY of the provided categories (GeoReservoir, GeoCore, or BFO), you MUST use the string `NOT_CLASSIFIED`.
+    5.  **Final Fallback:** If the term does not fit well into ANY of the provided categories (GeoReservoir, GeoCore, or BFO), you MUST use the string `NOT_CLASSIFIED`. Use NOT_CLASSIFIED for: analytical instruments, laboratory techniques, data types, or any term that describes HOW geologists work rather than WHAT geological entities, processes, or qualities exist.
     6.  **Provide Reasoning:** In one short sentence, explain WHY you chose that category based on the NLD.
 
     **INPUT/OUTPUT FORMAT:**
-    -   **INPUT:** A JSON array of objects, where each object has an "term" and "nld" field.
+    -   **INPUT:** A JSON array of objects, where each object has a "term" and optionally an "nld" field.
     -   **OUTPUT:** Your response MUST BE a valid JSON array. Each object in the array must contain the "term", the assigned "category", and a "reasoning" string.
+    -   The value of "category" MUST exactly match one of the category name strings listed above, verbatim, including capitalization (e.g., "Sedimentary Rock" not "sedimentary rock" or "Sedimentary Rocks"). The only exception is "NOT_CLASSIFIED".
 
     ---
     **ONTOLOGY CATEGORIES REFERENCE:**
@@ -82,6 +101,26 @@ def run_term_categorization():
 
     ### BFO Categories:
     {bfo_definitions}
+
+    ---
+    **EXAMPLES:**
+
+    Input:  [{{"term": "Grainstone",
+              "nld": "Grainstone is a grain-supported sedimentary carbonate rock that lacks micrite matrix, with allochems typically consisting of bivalves, ostracods, or ooids."}}]
+    Output: [{{"term": "Grainstone",
+              "category": "Sedimentary Rock",
+              "reasoning": "Directly describes a type of sedimentary rock classified under GeoReservoir."}}]
+
+    Input:  [{{"term": "Normal Fault",
+              "nld": "Normal Fault is a geological structure formed by extensional tectonics where the hanging wall moves down relative to the footwall along a dip-slip fault plane."}}]
+    Output: [{{"term": "Normal Fault",
+              "category": "Geological Structure",
+              "reasoning": "Describes the internal structural arrangement of a geological object, fitting GeoCore."}}]
+
+    Input:  [{{"term": "Core Sample"}}]
+    Output: [{{"term": "Core Sample",
+              "category": "NOT_CLASSIFIED",
+              "reasoning": "Analytical instrument used to characterize formations, not an ontological geological concept."}}]
 
     ---
     **DATA TO CLASSIFY:**
@@ -125,12 +164,17 @@ def run_term_categorization():
 
                 for idx, result_item in enumerate(response_json):
                     original_row = batch_df.iloc[idx]
+                    category = result_item.get('category', 'ERROR_PARSE')
+                    if (category not in valid_categories
+                            and category != "NOT_CLASSIFIED"
+                            and not category.startswith("ERROR")):
+                        log.warn(f"Unknown category '{category}' for '{original_row['Term']}' — may break IRI lookup")
 
                     classification_results.append({
                         'Term': original_row['Term'],
                         'RAG_Context_Used': original_row['Context_Used'],
-                        'Category': result_item['category'],
-                        'Reasoning': result_item['reasoning'],
+                        'Category': category,
+                        'Reasoning': result_item.get('reasoning', ''),
                         'NLD': original_row['NLD']
                     })
 

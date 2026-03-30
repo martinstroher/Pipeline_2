@@ -112,18 +112,20 @@ def build_taxonomy_for_group(
         "You distinguish between classes (types/kinds) and named individuals (specific instances)."
     )
 
-    upper_vocab = ", ".join(sorted(UPPER_IRIS.keys()))
+    upper_vocab = "\n   ".join(f"- {k}" for k in sorted(UPPER_IRIS.keys()))
 
     prompt = f"""You are given a set of geological terms, all pre-classified under the ontology category "{category}".
 Your task is to arrange them into an IS-A hierarchy (taxonomy tree).
 
 **RULES:**
 1. Every term MUST have exactly one parent. The root parent is "{category}" (the category itself).
-2. Create intermediate classes if needed for a natural hierarchy.
+2. Create an intermediate class only when two or more terms share the same genus Y in their NLDs. Do not create a one-child intermediate node.
    - **NLD-guided naming:** If a term's NLD follows the Aristotelian pattern "X is a Y that Z",
      use the genus Y as the intermediate class name
      (e.g., NLD "Grainstone is a grain-supported carbonate rock that lacks mud matrix"
-     → intermediate class = "Carbonate Rock", not "CarbonateSubtype" or "GrainRock").
+     → intermediate class = "Carbonate Rock", not "CarbonateSubtype" or "GrainRock";
+     NLD "Dolomitization is a diagenetic process that replaces calcite with dolomite"
+     → intermediate class = "Diagenetic Process", not "DolomiteProcess" or "CarbonateAlteration").
 3. **Class vs Individual distinction (CRITICAL):**
    - Named geological time periods (e.g., "Cretaceous", "Aptian", "Albian") are INDIVIDUALS, not classes.
      Use relationship_type = "rdf:type" (not "rdfs:subClassOf").
@@ -131,10 +133,12 @@ Your task is to arrange them into an IS-A hierarchy (taxonomy tree).
    - General types/kinds (e.g., "Grainstone", "Fault", "Porosity") are CLASSES.
      Use relationship_type = "rdfs:subClassOf".
 4. Intermediate classes you create should use Title Case.
+   NOTE: BFO canonical labels are ALL LOWERCASE (e.g., "process", "quality", "entity"). GeoCore and GeoReservoir canonical labels use Title Case (e.g., "Geological Object"). Use the EXACT case as listed in the canonical vocabulary below; do NOT apply Title Case to BFO entries.
 5. Keep the hierarchy depth reasonable (2-4 levels below the category root).
 6. **Canonical vocabulary:** When one of the following established class names is the natural parent
-   for a term or intermediate node, use it verbatim (exact label, Title Case):
+   for a term or intermediate node, use it verbatim (exact label and case as listed):
    {upper_vocab}
+7. **Cross-batch consistency:** Use ONLY intermediate class names derivable from NLD genera or from the canonical vocabulary above. Do not invent novel intermediate class names, as this list may be one of several batches from the same category — consistent naming is essential.
 
 **INPUT (terms and their NLDs):**
 {json.dumps(terms_with_nlds, indent=2)}
@@ -164,23 +168,25 @@ Return ONLY the JSON array, nothing else.
         rows = []
         for item in result:
             rows.append({
-                "Term": item["term"],
-                "Parent_Term": item["parent_term"],
+                "Term": item.get("term", ""),
+                "Parent_Term": item.get("parent_term", category),
                 "Relationship_Type": item.get("relationship_type", "rdfs:subClassOf"),
                 "Category": category,
                 "Is_Intermediate": item.get("is_intermediate", False),
+                "FALLBACK": False,
             })
         return rows
     except Exception as e:
-        log.error(f"Building taxonomy for '{category}': {e}")
+        log.warn(f"Flat fallback for '{category}' ({len(terms_with_nlds)} terms): {e}")
         # Fallback: flat hierarchy (all terms directly under category)
         return [
             {
-                "Term": t["term"],
+                "Term": t.get("term", ""),
                 "Parent_Term": category,
                 "Relationship_Type": "rdfs:subClassOf",
                 "Category": category,
                 "Is_Intermediate": False,
+                "FALLBACK": True,
             }
             for t in terms_with_nlds
         ]
@@ -268,6 +274,9 @@ def run_taxonomy_builder(categorized_csv: str, output_path: str | None = None):
     n_individuals = len(taxonomy_df[taxonomy_df["Relationship_Type"] == "rdf:type"])
     n_intermediate = len(taxonomy_df[taxonomy_df["Is_Intermediate"] == True])
     log.success(f"Taxonomy built: {len(taxonomy_df)} entries (classes={n_classes}, individuals={n_individuals}, intermediate={n_intermediate})")
+    n_fallback = int(taxonomy_df["FALLBACK"].sum()) if "FALLBACK" in taxonomy_df.columns else 0
+    if n_fallback:
+        log.warn(f"{n_fallback} entries used flat fallback (LLM error) — FALLBACK=True in CSV marks affected rows")
     log.detail(f"Saved to: {output_path}")
 
     return taxonomy_df

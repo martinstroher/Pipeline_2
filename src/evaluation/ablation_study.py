@@ -4,7 +4,7 @@ Ablation Study Runner — 4-condition ablation for PreSaltOntoLearn pipeline.
 Runs Steps 4-5 (NLD generation + categorization) under 4 conditions on the SAME term set:
   A: Full pipeline    — RAG context -> NLD -> categorizer (Term + NLD)
   B: No RAG           — "No additional context available." -> NLD -> categorizer (Term + NLD)
-  C: No NLD           — Skip NLD, categorizer receives (Term + "No definition available.")
+  C: No NLD           — Skip NLD, categorizer receives only (Term), no "nld" field
   D: Raw RAG          — Skip NLD, categorizer receives (Term + raw RAG chunks)
 """
 
@@ -88,7 +88,7 @@ def _build_categorizer_prompt(defs: dict, is_raw_rag: bool = False):
             'must contain the "term", the assigned "category", and a "reasoning" string.'
         )
         data_instruction = (
-            "1.  **Analyze Data:** Read the Term and its NLD.\n"
+            "1.  **Analyze Data:** Read the Term and, if present, its NLD.\n"
             "    2.  **Classify** the term based on its Natural Language Definition."
         )
 
@@ -290,7 +290,7 @@ def run_condition_b(terms: list[str]) -> pd.DataFrame:
 def run_condition_c(terms: list[str]) -> pd.DataFrame:
     """No NLD: categorizer receives 'No definition available.'"""
     print("\n=== Condition C: No NLD (Term only) ===")
-    rows = [{"Term": t, "NLD": "No definition available.", "Context_Used": False, "Context": ""} for t in terms]
+    rows = [{"Term": t, "NLD": "", "Context_Used": False, "Context": ""} for t in terms]
     df = pd.DataFrame(rows)
     path = _checkpoint_path("C")
     df.to_csv(path, index=False, encoding="utf-8-sig")
@@ -357,6 +357,8 @@ def run_categorization(
         for _, row in batch_df.iterrows():
             if is_raw_rag:
                 batch_items.append({"term": row["Term"], "context": row["NLD"]})
+            elif condition == "C":
+                batch_items.append({"term": row["Term"]})  # No "nld" field — true term-only
             else:
                 batch_items.append({"term": row["Term"], "nld": row["NLD"]})
 

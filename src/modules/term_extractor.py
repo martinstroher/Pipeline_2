@@ -44,25 +44,25 @@ def run_llm_term_extraction():
     prompt_template = """**METHODOLOGY**
     1.  **Identify Conceptual Entities:** Identify all terms or phrases representing geological concepts.
     Focus on identifying *types* or *classes* of entities relevant to petroleum geology and pre-salt context.
-    You MUST only extract terms that are explicitly mentioned in or directly derivable from the provided text. Do NOT generate terms from your own knowledge.
+    You MUST only extract terms that are explicitly mentioned in the provided text. Do NOT generate terms from your own knowledge.
     2.  **Normalize Terms:** Return all extracted concepts translated to English and, where appropriate, in their singular, base form (e.g., "carbonates" -> "Carbonate", "faults" -> "Fault").
     Use title case for concepts.
     3.  **Strict Filtering:** You MUST exclude:
-        * Specific, non-conceptual proper nouns (e.g., individual well names like 'Well 1-BRSA-123', specific field names unless used generically,
-        basin names like 'Santos Basin', author names, company names).
+        * Specific, non-conceptual proper nouns (e.g., individual well names like 'Well 1-BRSA-123', all named petroleum fields (e.g., 'Lula Field', 'Búzios'), basin names like 'Santos Basin', author names, company names).
         * Units of measure, numerical values, and codes (e.g., 'mD', 'API', '10%', 'SiO2').
-    4.  **Focus:** Prioritize terms that represent reusable classes within an ontology framework. Do not rank or limit the number extracted from this snippet.
+        * Analytical methods, laboratory techniques, or observational instruments (e.g., 'Thin Section', 'Core Plug', 'Seismic Survey', 'Well Log').
+    4.  **Focus:** Prioritize terms that represent reusable classes within an ontology framework. Be selective — it is better to miss a marginal term than to include noise. Note: named geological time periods (e.g., Aptian, Cretaceous) are valid and should be extracted — they will be classified as OWL individuals downstream.
 
     **OUTPUT FORMAT:**
     Your response MUST BE a valid JSON array of unique strings.
 
     **Example of output array:**
-    ["Microbial Carbonate", "Diagenesis", "Source Rock", "Structural Trap", "Porosity", "Lacustrine Environment", "Aptian"]
+    ["Microbial Carbonate", "Diagenesis", "Source Rock", "Structural Trap", "Porosity", "Lacustrine Environment", "Diagenetic Alteration"]
 
     ---
-    **TEXT SNIPPET TO ANALYZE:**
+    **TEXT TO ANALYZE:**
     {chunk_text}
-    """
+"""
 
 
     log.info(f"Loading papers from {LLM_INPUT_DIR}...")
