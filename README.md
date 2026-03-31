@@ -90,11 +90,11 @@ python pipeline.py --taxonomy output/ablation/cat_A.csv
 python pipeline.py --owl output/ablation/6_taxonomy_A.csv
 ```
 
-**Ablation conditions:**
-- **A** (Full): RAG context + NLD-informed categorization
-- **B** (NoRAG): No retrieval context, NLD generated from LLM knowledge only
-- **C** (NoNLD): No NLD generation, categorization from term alone
-- **D** (RawRAG): Raw retrieved chunks as context (no structured NLD)
+**Ablation conditions and what each comparison tests:**
+- **A** (Full): RAG context + NLD-informed categorization ← baseline (the full system)
+- **B** (NoRAG): NLD generated from LLM knowledge only, no retrieval ← **A vs B isolates RAG contribution**
+- **C** (NoNLD): Categorization from term string alone, no NLD ← **A vs C isolates NLD contribution**
+- **D** (RawRAG): Raw retrieved chunks passed directly, no structured NLD ← **A vs D isolates NLD structuring**
 
 ---
 
@@ -117,11 +117,11 @@ Self-contained test that:
 pipeline.py               # Main orchestrator + CLI
 src/
   modules/
-    term_extractor.py     # Step 1: LLM-based term extraction (Gemini 2.5 Flash)
+    term_extractor.py     # Step 1: LLM-based term extraction (Gemini 2.5 Pro)
     term_aggregator.py    # Step 2: Frequency aggregation + spaCy lemmatization
     term_filter.py        # Step 3: Frequency threshold filter
     nld_generator.py      # Step 4: RAG-grounded NLD generation (Gemini 2.5 Pro)
-    term_categorizer.py   # Step 5: Waterffall categorization (GeoReservoir→GeoCore→BFO)
+    term_categorizer.py   # Step 5: Waterfall categorization (GeoReservoir→GeoCore→BFO)
     taxonomy_builder.py   # Step 6: Group-based LLM hierarchy builder, UPPER_IRIS anchoring
     owl_exporter.py       # Step 7: rdflib Turtle export, Protege-compatible
   utils/

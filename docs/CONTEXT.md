@@ -20,6 +20,28 @@ graph TD
     C -.->|retrieval context| H
 ```
 
+## Theoretical Grounding
+
+The core contribution of this pipeline — using Natural Language Definitions (NLDs) to classify domain entities into upper ontology concepts — is grounded in:
+
+> Lopes Junior, A.G. (2024) *"Automatic Classification of Domain Entities into Top-Level Ontology Concepts Using Natural Language Definitions"* (PhD thesis, PPGC/UFRGS)
+
+Key validated findings that justify our design choices:
+
+- **NLDs outperform all other textual representations** (term-alone, raw definition, example sentences) for classifying entities into BFO and DOLCE-Lite-Plus concepts, achieving >90% macro-F1 in best-case conditions.
+- **Aristotelian form ("X is a Y that Z")** produces tighter semantic embedding clusters than free-form text, reducing polysemy and explicitly anchoring the proximate genus (Y) — the same genus used to name intermediate taxonomy nodes.
+- The thesis used pre-existing human-curated NLDs from OBO Foundry and BabelNet. **This pipeline extends the approach** by RAG-augmenting an LLM to *generate* domain-specific NLDs from the Pre-Salt petroleum geology literature, then using those NLDs for classification.
+
+**Ablation study mapping to thesis findings:**
+
+| This pipeline | Thesis Study Case 1 |
+|---|---|
+| Condition A vs C (NLD contribution) | NLD > definiendum (term-alone) |
+| Condition A vs B (RAG contribution) | Domain-specific NLD > generic NLD |
+| Condition A vs D (NLD structuring) | Structured Aristotelian NLD > raw context |
+
+---
+
 ## Module Responsibilities
 
 ### `src/utils/pdf_processor.py` — Step 0: Ingestion
@@ -45,8 +67,8 @@ graph TD
 - Output: `output/2_aggregated_counts.csv`
 
 ### `src/modules/term_filter.py` — Step 3: Quality Control
-- Applies a minimum frequency threshold (default: >1 occurrence).
-- No stopword list — frequency is the only filter criterion.
+- Applies a minimum frequency threshold (`MINIMUM_FREQUENCY_FILTER`, default: ≥ 3 source documents). For an 80-paper corpus, 3 = 3.75% cross-document consensus — a threshold consistent with Frantzi et al.'s C-value method and Kageura & Umino's terminology extraction conventions, which establish cross-document co-occurrence as the standard quality signal for domain terminology.
+- No stopword list; frequency across documents is the only filter criterion.
 - Output: `output/3_filtered_top_terms.csv`
 
 ### `src/modules/nld_generator.py` — Step 4: Definition Generation
@@ -62,8 +84,8 @@ graph TD
   1. **GeoReservoir** (domain-specific petroleum geology)
   2. **GeoCore** (general geological science)
   3. **BFO** (Basic Formal Ontology — abstract/process/quality)
-  4. **NOT_CLASSIFIED** (fallback)
-- Class vs. individual distinction is made at this step.
+  4. **NOT_CLASSIFIED** (fallback for instruments or out-of-scope terms)
+- Waterfall priority ensures each term maps to the most domain-specific applicable namespace: petroleum-specific terms to GeoReservoir first, general geological terms to GeoCore, and foundational abstractions to BFO.
 - Output: `output/5_categorized_ontology.csv`
 
 ### `src/modules/taxonomy_builder.py` — Step 6: Taxonomy Construction
@@ -71,15 +93,17 @@ graph TD
 - Builds a hierarchical taxonomy per ontology group (GeoReservoir, GeoCore, BFO) using NLDs for naming.
 - Processes terms in chunks of up to 150 per LLM call to avoid cross-chunk inconsistency.
 - Prompt anchors intermediate node names to canonical UPPER_IRIS vocabulary (52 published IRIs from BFO/GeoCore/GeoReservoir), and instructs the LLM to use the Aristotelian genus from NLDs ("X is a Y that Z" → use Y as intermediate node name).
+- **Class vs. individual distinction is resolved here:** named geological time periods (Aptian, Cretaceous), petroleum fields (Lula Field, Búzios), basins (Santos Basin), and formations are assigned `rdf:type` (OWL individuals); generic types/kinds (Grainstone, Fault, Porosity) are assigned `rdfs:subClassOf` (OWL classes).
 - NLDs are carried forward into the output CSV as a column for OWL annotation.
 - Output: `output/6_taxonomy.csv`
 
 ### `src/modules/owl_exporter.py` — Step 7: OWL Export
 - **Tech**: `rdflib`
 - Converts the taxonomy CSV to a Protege-compatible OWL Turtle file.
-- `owl:Class` entries get `rdfs:label`, `rdfs:comment` (from the NLD column), and `rdfs:subClassOf` triples.
-- `owl:NamedIndividual` entries get typed with their parent class.
+- `owl:Class` entries get `rdfs:label`, `rdfs:comment` (NLD, from the taxonomy CSV NLD column), and `rdfs:subClassOf` triples pointing to published BFO/GeoCore/GeoReservoir IRIs.
+- `owl:NamedIndividual` entries (named fields, basins, formations, time periods) get `rdf:type` triples pointing to their parent class.
 - Intermediate (synthesised) nodes get `rdfs:label` only (no NLD comment).
+- The ontology header declares `owl:imports <http://purl.obolibrary.org/obo/bfo.owl>`.
 - Output: `output/7_ontology.ttl`
 
 ---
