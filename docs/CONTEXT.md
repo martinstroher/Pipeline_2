@@ -131,4 +131,9 @@ test/                     # E2E test runner + isolated test environment
 The pipeline supports a two-layer evaluation framework for thesis validation:
 
 - **Layer 1** (`layer1_analysis.py`): Fully automated. Computes cross-condition agreement matrices, Cochran's Q significance tests, category migration patterns, and NOT_CLASSIFIED rates across all 4 ablation conditions.
-- **Layer 2** (`expert_eval_generator.py` + `expert_eval_analyzer.py`): Expert-in-the-loop. Generates a blinded 4-sheet Excel workbook for domain experts to score term relevance, NLD quality (A vs B), and category correctness. Results analysed with Wilcoxon signed-rank, Friedman, ICC, Fleiss' kappa.
+- **Layer 2** (`expert_eval_generator.py` + `expert_eval_analyzer.py`): Expert-in-the-loop. Generates a blinded **5-sheet** Excel workbook for 3 domain experts to evaluate **200 terms**:
+  - **Term Relevance** (1-5 Likert)
+  - **NLD Quality** (blinded A vs B, 1-5 + preference)
+  - **Category Correctness** (stratified by ontology tier — GeoReservoir with full descriptions, GeoCore/BFO simplified)
+  - **Taxonomy Correctness** (~80 parent-child IS-A pairs)
+  - Results analysed with Wilcoxon signed-rank (gated by Friedman omnibus significance), ICC, Fleiss' kappa. Taxonomy analysis includes per-category accuracy and inter-rater agreement.

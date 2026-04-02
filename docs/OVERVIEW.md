@@ -109,8 +109,15 @@ This directly replicates the core comparison from Lopes Junior (2024): the thesi
 
 ### Two evaluation layers
 
-- **Layer 1 — Automated:** Cross-condition agreement matrices, Cochran's Q significance test, NOT_CLASSIFIED rates, category migration analysis.
-- **Layer 2 — Expert-in-the-loop:** Domain experts evaluate (blinded) term relevance, NLD quality, and category correctness. Analysed with Wilcoxon signed-rank, Friedman, ICC, and Fleiss' kappa.
+- **Layer 1 — Automated:** Cross-condition agreement matrices, Cochran's Q significance test, NOT_CLASSIFIED rates, category migration analysis. Runs on all terms with no expert effort.
+- **Layer 2 — Expert-in-the-loop:** A blinded 5-sheet Excel workbook is generated for 3 domain experts (geologists) to evaluate 200 terms:
+  - **Sheet 2 — Term Relevance** (1-5 Likert, condition-independent)
+  - **Sheet 3 — NLD Quality** (blinded A-vs-B comparison, 1-5 + preference)
+  - **Sheet 4 — Category Correctness** (stratified by ontology tier: GeoReservoir categories get full binary validation with descriptions; GeoCore/BFO categories get simplified evaluation — see note below)
+  - **Sheet 5 — Taxonomy Correctness** (~80 parent-child IS-A pairs: "Is X a type of Y?")
+  - Analysed with Wilcoxon signed-rank (with Friedman omnibus gate for post-hoc), ICC, and Fleiss' kappa.
+
+**Stratified expert evaluation by ontology tier:** Following NeOn methodology and OntoClean best practices, the category evaluation is stratified. Geologists validate GeoReservoir assignments with full confidence (their domain). GeoCore/BFO assignments receive simplified evaluation, and formal ontological alignment is validated separately by the thesis author. This separates domain plausibility (expert task) from formal correctness (engineering task).
 
 The winning ablation condition is then used to build the final taxonomy and OWL export.
 
