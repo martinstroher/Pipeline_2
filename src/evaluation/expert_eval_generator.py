@@ -3,9 +3,11 @@ Expert Evaluation Spreadsheet Generator (Layer 2).
 
 Generates a blinded, multi-sheet Excel workbook for domain expert evaluation:
   Sheet 1 — Instructions: guidelines, Likert scales, calibration examples
-  Sheet 2 — Term_Relevance: 100 terms, condition-independent relevance rating
-  Sheet 3 — NLD_Quality: 100 terms, blinded A-vs-B paired definition comparison
-  Sheet 4 — Category_Correct: deduplicated (Term, Category) pairs from all 4 conditions
+  Sheet 2 — Term_Relevance: 200 terms, condition-independent relevance rating
+  Sheet 3 — NLD_Quality: 200 terms, blinded A-vs-B paired definition comparison
+  Sheet 4 — Category_Correct: stratified by ontology tier (GeoReservoir binary
+            + GeoCore/BFO simplified 3-way), deduplicated across 4 conditions
+  Sheet 5 — Taxonomy_Correct: parent-child IS-A pairs for hierarchy validation
 
 Outputs:
   - Excel workbook per expert (send to expert)
@@ -20,12 +22,32 @@ import pandas as pd
 
 OUTPUT_DIR = os.environ.get("ABLATION_OUTPUT_DIR", "output/ablation")
 
+# Ontology tier classification for stratified evaluation
+GEORESERVOIR_CATEGORIES = {
+    "Sedimentary Geological Object", "Depositional Unit", "Channel Unit",
+    "Lobe Unit", "Levee Unit", "Mound Unit", "Overbank Unit",
+    "Sedimentary Rock", "Sediment", "Depositional System", "Channel Surface",
+    "Dimension", "Length", "Thickness", "Geometry", "Geometry Value",
+    "Channel Geometry", "Lobe Geometry", "Mound Geometry", "Wedge Geometry",
+    "Sinuosity", "Facies", "Sedimentary Facies", "Facies Association",
+    "Sedimentary Structure", "Sedimentary Environment", "Lithology",
+    "Formation", "Stratigraphic Unit", "Fossil",
+}
+
+GEOCORE_CATEGORIES = {
+    "Geological Object", "Earth Material", "Rock", "Earth Fluid",
+    "Geological Boundary", "Geological Structure", "Geological Contact",
+    "Geological Process", "Geological Time Interval", "Geological Age",
+}
+
+# Everything else falls to BFO tier
+
 
 # ---------------------------------------------------------------------------
 # Term Selection
 # ---------------------------------------------------------------------------
 
-def select_terms(n_terms: int = 100, seed: int = 42) -> list[str]:
+def select_terms(n_terms: int = 200, seed: int = 42) -> list[str]:
     """Select top-N terms by frequency from the filtered terms file.
 
     Falls back to the first N terms if frequency column is flat.
@@ -167,31 +189,58 @@ def build_nld_quality_sheet(
     return pd.DataFrame(expert_rows), pd.DataFrame(key_rows)
 
 
+def _classify_tier(category: str) -> str:
+    """Classify a category into its ontology tier."""
+    if category in GEORESERVOIR_CATEGORIES:
+        return "GeoReservoir"
+    elif category in GEOCORE_CATEGORIES:
+        return "GeoCore"
+    else:
+        return "BFO"
+
+
+def _load_category_descriptions() -> dict[str, str]:
+    """Load one-line descriptions for GeoReservoir categories."""
+    defs = {}
+    path = os.environ.get("GEORESERVOIR_DEFS_PATH", "resources/georeservoir-definitions.txt")
+    if os.path.exists(path):
+        with open(path, "r", encoding="utf-8") as f:
+            for line in f:
+                line = line.strip()
+                if ":" in line:
+                    name, desc = line.split(":", 1)
+                    defs[name.strip()] = desc.strip()
+    return defs
+
+
 def build_category_sheet(
     terms: list[str],
     cat_data: dict[str, pd.DataFrame],
     seed: int = 42,
 ) -> tuple[pd.DataFrame, pd.DataFrame]:
-    """Sheet 4: Deduplicated category correctness evaluation (all 4 conditions).
+    """Sheet 4: Stratified category correctness evaluation (all 4 conditions).
 
-    For each term, collect the unique categories across A/B/C/D.
-    Experts evaluate each unique (Term, Category) pair once.
-    The blinding key maps each row back to the conditions that produced it.
+    Evaluation is stratified by ontology tier:
+      - GeoReservoir terms: binary validation ("Does this term fit this category?")
+        with full category description shown. If No/Partial, expert picks from
+        GeoReservoir alternatives only.
+      - GeoCore/BFO terms: simplified 3-way question ("Is this best understood as
+        a physical thing, a process, or a property?") plus binary validation of
+        the assigned category with its description.
 
     Returns (expert_sheet, key_sheet).
     """
-    rng = random.Random(seed + 100)  # Different seed from NLD sheet
+    rng = random.Random(seed + 100)
+    geores_defs = _load_category_descriptions()
     expert_rows = []
     key_rows = []
     row_counter = 0
 
-    # Shuffle term order
     shuffled_terms = list(terms)
     rng.shuffle(shuffled_terms)
 
     for term in shuffled_terms:
-        # Collect categories from each condition
-        term_categories: dict[str, list[str]] = {}  # category -> [conditions]
+        term_categories: dict[str, list[str]] = {}
         for cond in ["A", "B", "C", "D"]:
             if cond not in cat_data:
                 continue
@@ -207,25 +256,42 @@ def build_category_sheet(
                 term_categories[cat_str] = []
             term_categories[cat_str].append(cond)
 
-        # Create one row per unique category
         for category, conditions in term_categories.items():
             row_counter += 1
-            row_id = f"CAT-{row_counter:03d}"
+            row_id = f"CAT-{row_counter:04d}"
+            tier = _classify_tier(category)
 
-            expert_rows.append({
-                "Row_ID": row_id,
-                "Term": term,
-                "Assigned_Category": category,
-                "Correct (Yes/No/Partial)": "",
-                "Suggested_Category": "",
-                "Notes": "",
-            })
+            if tier == "GeoReservoir":
+                cat_desc = geores_defs.get(category, "")
+                expert_rows.append({
+                    "Row_ID": row_id,
+                    "Term": term,
+                    "Tier": "GeoReservoir",
+                    "Assigned_Category": category,
+                    "Category_Description": cat_desc,
+                    "Correct (Yes/No/Partial)": "",
+                    "Suggested_Category": "",
+                    "Notes": "",
+                })
+            else:
+                # GeoCore/BFO: show assigned category + simplified 3-way
+                expert_rows.append({
+                    "Row_ID": row_id,
+                    "Term": term,
+                    "Tier": tier,
+                    "Assigned_Category": category,
+                    "Category_Description": "",
+                    "Correct (Yes/No/Partial)": "",
+                    "Suggested_Category": "",
+                    "Notes": "",
+                })
 
             key_rows.append({
                 "Sheet": "Category_Correct",
                 "Row_ID": row_id,
                 "Term": term,
                 "Assigned_Category": category,
+                "Tier": tier,
                 "Conditions": ",".join(conditions),
             })
 
@@ -238,12 +304,122 @@ def build_category_sheet(
     return pd.DataFrame(expert_rows), pd.DataFrame(key_rows)
 
 
+# ---------------------------------------------------------------------------
+# Sheet 5: Taxonomy Correctness
+# ---------------------------------------------------------------------------
+
+def build_taxonomy_sheet(
+    terms: list[str],
+    seed: int = 42,
+    n_pairs: int = 80,
+) -> tuple[pd.DataFrame, pd.DataFrame]:
+    """Sheet 5: Parent-child IS-A pair validation from the taxonomy.
+
+    Loads the taxonomy CSV, filters to edges involving the selected terms,
+    stratifies across categories and depths, and asks experts:
+    'Is [Term] a type of [Parent]?'
+
+    Args:
+        terms: List of selected terms for evaluation.
+        seed: Random seed for reproducibility.
+        n_pairs: Target number of parent-child pairs to include.
+
+    Returns (expert_sheet, key_sheet).
+    """
+    rng = random.Random(seed + 200)
+
+    # Load taxonomy
+    taxonomy_path = os.environ.get("TAXONOMY_OUTPUT", "output/6_taxonomy.csv")
+    if not os.path.exists(taxonomy_path):
+        print(f"  Warning: {taxonomy_path} not found, skipping taxonomy sheet")
+        return pd.DataFrame(), pd.DataFrame()
+
+    tax_df = pd.read_csv(taxonomy_path, encoding="utf-8-sig")
+
+    # Filter to IS-A relationships (rdfs:subClassOf and rdf:type)
+    isa_mask = tax_df["Relationship_Type"].isin(["rdfs:subClassOf", "rdf:type"])
+    isa_df = tax_df[isa_mask].copy()
+
+    if isa_df.empty:
+        print("  Warning: No IS-A relationships found in taxonomy")
+        return pd.DataFrame(), pd.DataFrame()
+
+    # Prefer edges involving the selected terms, but also include
+    # intermediate-node edges for hierarchy depth coverage
+    term_set = set(terms)
+    involves_selected = isa_df["Term"].isin(term_set) | isa_df["Parent_Term"].isin(term_set)
+
+    # Split: edges involving selected terms vs. intermediate-only
+    primary = isa_df[involves_selected]
+    intermediate = isa_df[~involves_selected]
+
+    # Stratify primary by category to ensure broad coverage
+    selected_pairs = []
+    if not primary.empty:
+        categories = primary["Category"].unique()
+        per_cat = max(1, n_pairs * 3 // (4 * len(categories)))  # ~75% from primary
+        for cat in categories:
+            cat_edges = primary[primary["Category"] == cat]
+            sample_n = min(per_cat, len(cat_edges))
+            selected_pairs.extend(
+                cat_edges.sample(n=sample_n, random_state=seed).to_dict("records")
+            )
+
+    # Fill remaining slots from intermediate edges
+    remaining = n_pairs - len(selected_pairs)
+    if remaining > 0 and not intermediate.empty:
+        fill_n = min(remaining, len(intermediate))
+        selected_pairs.extend(
+            intermediate.sample(n=fill_n, random_state=seed).to_dict("records")
+        )
+
+    # Trim to target
+    if len(selected_pairs) > n_pairs:
+        rng.shuffle(selected_pairs)
+        selected_pairs = selected_pairs[:n_pairs]
+
+    # Build sheets
+    expert_rows = []
+    key_rows = []
+    rng.shuffle(selected_pairs)
+
+    for idx, pair in enumerate(selected_pairs, 1):
+        row_id = f"TAX-{idx:04d}"
+        term = pair["Term"]
+        parent = pair["Parent_Term"]
+        category = pair.get("Category", "")
+        rel_type = pair.get("Relationship_Type", "")
+        is_intermediate = pair.get("Is_Intermediate", False)
+
+        expert_rows.append({
+            "Row_ID": row_id,
+            "Term": term,
+            "Parent_Term": parent,
+            "Question": f"Is '{term}' a type of '{parent}'?",
+            "Correct (Yes/No/Partial)": "",
+            "Suggested_Parent": "",
+            "Notes": "",
+        })
+
+        key_rows.append({
+            "Sheet": "Taxonomy_Correct",
+            "Row_ID": row_id,
+            "Term": term,
+            "Parent_Term": parent,
+            "Category": category,
+            "Relationship_Type": rel_type,
+            "Is_Intermediate": is_intermediate,
+        })
+
+    return pd.DataFrame(expert_rows), pd.DataFrame(key_rows)
+
+
 def build_instructions_sheet() -> pd.DataFrame:
     """Sheet 1: Evaluation instructions with Likert scale definitions."""
     instructions = [
         ["EXPERT EVALUATION — PreSaltOntoLearn Pipeline", ""],
         ["", ""],
-        ["PURPOSE", "Evaluate the quality of automatically generated definitions and ontological classifications for Pre-Salt petroleum geology terms. Your evaluations are BLINDED — do not attempt to identify which system produced which output."],
+        ["PURPOSE", "Evaluate the quality of automatically generated definitions, ontological classifications, and taxonomic hierarchy for Pre-Salt petroleum geology terms. Your evaluations are BLINDED — do not attempt to identify which system produced which output."],
         ["", ""],
         ["=== SHEET 2: TERM RELEVANCE ===", ""],
         ["Task", "Rate how relevant each term is to Brazilian Pre-Salt petroleum geology."],
@@ -265,15 +441,30 @@ def build_instructions_sheet() -> pd.DataFrame:
         ["Preference", "Choose 1, 2, or Tie based on which definition is better overall"],
         ["", ""],
         ["=== SHEET 4: CATEGORY CORRECTNESS ===", ""],
-        ["Task", "For each (Term, Category) pair, judge whether the assigned ontological category is correct. Categories come from BFO, GeoCore, and GeoReservoir ontologies."],
-        ["Correct", "The assigned category correctly classifies this term within the ontology"],
-        ["Partial", "The category is in the right direction but too broad, too narrow, or in the wrong ontology layer"],
+        ["Task", "For each (Term, Category) pair, judge whether the assigned ontological category is correct."],
+        ["", ""],
+        ["Tier column", "Shows which ontology level the category comes from: GeoReservoir (domain-specific), GeoCore (mid-level geological), or BFO (abstract foundational). Focus your effort on GeoReservoir categories — those are directly in your area of expertise."],
+        ["Category_Description", "For GeoReservoir categories, the formal description is provided for reference."],
+        ["", ""],
+        ["Correct", "The assigned category correctly classifies this term"],
+        ["Partial", "The category is in the right direction but too broad, too narrow, or in the wrong layer"],
         ["No", "The assigned category is incorrect for this term"],
         ["Suggested_Category", "If you chose No or Partial, suggest the correct category"],
         ["", ""],
+        ["NOTE on GeoCore/BFO tiers", "For terms classified into abstract categories (GeoCore or BFO), a simplified judgment is sufficient: does the category broadly make sense? You are NOT expected to know BFO formal definitions — use your geological intuition."],
+        ["", ""],
+        ["=== SHEET 5: TAXONOMY CORRECTNESS ===", ""],
+        ["Task", "Evaluate parent-child relationships in the generated taxonomy. For each pair, judge: 'Is [Term] a type of [Parent]?'"],
+        ["", ""],
+        ["Yes", "The IS-A relationship is geologically correct (e.g., Grainstone IS-A Carbonate Rock)"],
+        ["No", "The IS-A relationship is geologically incorrect"],
+        ["Partial", "Broadly reasonable but imprecise (e.g., too broad or too narrow)"],
+        ["Suggested_Parent", "If No or Partial, suggest a better parent term"],
+        ["", ""],
         ["=== CALIBRATION EXAMPLES ===", ""],
-        ["Example 1", "Term: 'Grainstone' — A grain-supported sedimentary carbonate rock characterized by the absence of micrite matrix. This term is a Core concept (Relevance=5). A correct category would be GeoReservoir > SedimentaryRock or similar."],
-        ["Example 2", "Term: 'Coquina' — A sedimentary rock primarily composed of accumulated mollusk shells deposited in lacustrine environments. This term is a Core concept (Relevance=5). A correct category would be GeoReservoir > SedimentaryRock."],
+        ["Example 1 (Relevance)", "Term: 'Grainstone' — Core concept (Relevance=5). A correct category would be GeoReservoir > Sedimentary Rock."],
+        ["Example 2 (Relevance)", "Term: 'Coquina' — Core concept (Relevance=5). A correct category would be GeoReservoir > Sedimentary Rock."],
+        ["Example 3 (Taxonomy)", "'Grainstone' IS-A 'Carbonate Rock' → Yes. 'Grainstone' IS-A 'Geological Process' → No."],
         ["", ""],
         ["NOTES", "Use the Notes column to explain non-obvious judgments. Thank you for your expertise!"],
     ]
@@ -285,7 +476,7 @@ def build_instructions_sheet() -> pd.DataFrame:
 # ---------------------------------------------------------------------------
 
 def generate_expert_evaluation(
-    n_terms: int = 100,
+    n_terms: int = 200,
     seed: int = 42,
     output_dir: str | None = None,
 ) -> tuple[str, str]:
@@ -318,6 +509,7 @@ def generate_expert_evaluation(
 
     nld_expert_df, nld_key_df = build_nld_quality_sheet(terms, data["nld"], seed)
     cat_expert_df, cat_key_df = build_category_sheet(terms, data["cat"], seed)
+    tax_expert_df, tax_key_df = build_taxonomy_sheet(terms, seed)
 
     # 4. Write expert workbook
     workbook_path = os.path.join(output_dir, "expert_evaluation.xlsx")
@@ -327,18 +519,27 @@ def generate_expert_evaluation(
         relevance_df.to_excel(writer, sheet_name="Term_Relevance", index=False)
         nld_expert_df.to_excel(writer, sheet_name="NLD_Quality", index=False)
         cat_expert_df.to_excel(writer, sheet_name="Category_Correct", index=False)
+        if not tax_expert_df.empty:
+            tax_expert_df.to_excel(writer, sheet_name="Taxonomy_Correct", index=False)
 
     # 5. Write blinding key (separate file)
     key_path = os.path.join(output_dir, f"blinding_key_{seed}.csv")
-    key_combined = pd.concat([nld_key_df, cat_key_df], ignore_index=True)
+    key_parts = [nld_key_df, cat_key_df]
+    if not tax_key_df.empty:
+        key_parts.append(tax_key_df)
+    key_combined = pd.concat(key_parts, ignore_index=True)
     key_combined.to_csv(key_path, index=False, encoding="utf-8-sig")
 
     # 6. Summary
+    n_geores = len(cat_expert_df[cat_expert_df["Tier"] == "GeoReservoir"]) if "Tier" in cat_expert_df.columns else 0
+    n_upper = len(cat_expert_df) - n_geores if not cat_expert_df.empty else 0
     print(f"\n  Workbook: {workbook_path}")
     print(f"    Sheet 'Instructions': evaluation guidelines and Likert scales")
     print(f"    Sheet 'Term_Relevance': {len(relevance_df)} terms")
     print(f"    Sheet 'NLD_Quality': {len(nld_expert_df)} blinded A-vs-B comparisons")
-    print(f"    Sheet 'Category_Correct': {len(cat_expert_df)} deduplicated (Term, Category) pairs")
+    print(f"    Sheet 'Category_Correct': {len(cat_expert_df)} pairs ({n_geores} GeoReservoir, {n_upper} GeoCore/BFO)")
+    if not tax_expert_df.empty:
+        print(f"    Sheet 'Taxonomy_Correct': {len(tax_expert_df)} parent-child IS-A pairs")
     print(f"  Blinding key: {key_path} (DO NOT share with experts)")
 
     return workbook_path, key_path
@@ -354,7 +555,7 @@ if __name__ == "__main__":
     load_dotenv()
 
     parser = argparse.ArgumentParser(description="Generate expert evaluation spreadsheet")
-    parser.add_argument("--n-terms", type=int, default=100, help="Number of terms to sample")
+    parser.add_argument("--n-terms", type=int, default=200, help="Number of terms to sample")
     parser.add_argument("--seed", type=int, default=42, help="Random seed")
     args = parser.parse_args()
     generate_expert_evaluation(n_terms=args.n_terms, seed=args.seed)

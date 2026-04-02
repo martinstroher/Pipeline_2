@@ -44,11 +44,14 @@ def load_expert_responses(workbook_paths: list[str]) -> dict:
     for i, path in enumerate(workbook_paths):
         expert_id = f"expert_{i + 1}"
         xl = pd.ExcelFile(path, engine="openpyxl")
-        experts[expert_id] = {
+        expert_data = {
             "relevance": pd.read_excel(xl, sheet_name="Term_Relevance"),
             "nld_quality": pd.read_excel(xl, sheet_name="NLD_Quality"),
             "category": pd.read_excel(xl, sheet_name="Category_Correct"),
         }
+        if "Taxonomy_Correct" in xl.sheet_names:
+            expert_data["taxonomy"] = pd.read_excel(xl, sheet_name="Taxonomy_Correct")
+        experts[expert_id] = expert_data
     return experts
 
 
@@ -380,28 +383,33 @@ def analyze_category_correctness(experts: dict, key_df: pd.DataFrame) -> dict:
             "df": k - 1,
         }
 
-    # Post-hoc Wilcoxon pairwise (A vs B, A vs C, A vs D)
+    # Post-hoc Wilcoxon pairwise — only if Friedman omnibus is significant
     posthoc = []
-    comparisons = [("A", "B"), ("A", "C"), ("A", "D")]
-    bonferroni_alpha = 0.05 / len(comparisons)
+    friedman_significant = results.get("friedman", {}).get("p_value", 1.0) < 0.05
 
-    for c1, c2 in comparisons:
-        if c1 not in wide.columns or c2 not in wide.columns:
-            continue
-        diff = wide[c1].values - wide[c2].values
-        nonzero = diff[diff != 0]
-        if len(nonzero) > 0:
-            w_stat, w_p = stats.wilcoxon(nonzero)
-        else:
-            w_stat, w_p = 0, 1.0
+    if friedman_significant:
+        comparisons = [("A", "B"), ("A", "C"), ("A", "D")]
+        bonferroni_alpha = 0.05 / len(comparisons)
 
-        posthoc.append({
-            "comparison": f"{c1} vs {c2}",
-            "W": float(w_stat),
-            "p_value": round(float(w_p), 6),
-            "significant_bonferroni": w_p < bonferroni_alpha,
-            "mean_diff": round(float(np.mean(diff)), 4),
-        })
+        for c1, c2 in comparisons:
+            if c1 not in wide.columns or c2 not in wide.columns:
+                continue
+            diff = wide[c1].values - wide[c2].values
+            nonzero = diff[diff != 0]
+            if len(nonzero) > 0:
+                w_stat, w_p = stats.wilcoxon(nonzero)
+            else:
+                w_stat, w_p = 0, 1.0
+
+            posthoc.append({
+                "comparison": f"{c1} vs {c2}",
+                "W": float(w_stat),
+                "p_value": round(float(w_p), 6),
+                "significant_bonferroni": w_p < bonferroni_alpha,
+                "mean_diff": round(float(np.mean(diff)), 4),
+            })
+    else:
+        posthoc = [{"note": "Omnibus Friedman test not significant (p >= 0.05); post-hoc tests not performed."}]
 
     results["posthoc_wilcoxon"] = posthoc
 
@@ -458,6 +466,111 @@ def _compute_fleiss_kappa(merged: pd.DataFrame) -> dict:
     )
 
     return {"kappa": round(float(kappa), 4), "interpretation": interpretation}
+
+
+# ---------------------------------------------------------------------------
+# Taxonomy Correctness Analysis
+# ---------------------------------------------------------------------------
+
+def analyze_taxonomy_correctness(experts: dict, key_df: pd.DataFrame) -> dict:
+    """Descriptive stats and inter-annotator agreement for taxonomy IS-A pairs."""
+    results = {}
+
+    # Collect all taxonomy judgments
+    all_judgments = []
+    for expert_id, data in experts.items():
+        if "taxonomy" not in data:
+            continue
+        tax_df = data["taxonomy"]
+        for _, row in tax_df.iterrows():
+            correct_raw = str(row.get("Correct (Yes/No/Partial)", "")).strip().lower()
+            if correct_raw in ("yes", "no", "partial"):
+                if correct_raw == "yes":
+                    score = 1.0
+                elif correct_raw == "partial":
+                    score = 0.5
+                else:
+                    score = 0.0
+                all_judgments.append({
+                    "Row_ID": row.get("Row_ID", ""),
+                    "Term": row.get("Term", ""),
+                    "Parent_Term": row.get("Parent_Term", ""),
+                    "Expert": expert_id,
+                    "Correct_Raw": correct_raw,
+                    "Correct_Score": score,
+                })
+
+    if not all_judgments:
+        return {"error": "No taxonomy judgments found"}
+
+    merged = pd.DataFrame(all_judgments)
+
+    # Overall accuracy
+    overall_scores = merged["Correct_Score"].values
+    results["descriptive"] = {
+        "n_pairs_evaluated": len(merged["Row_ID"].unique()),
+        "n_experts": len(merged["Expert"].unique()),
+        "n_judgments": len(merged),
+        "mean_score": round(float(np.mean(overall_scores)), 4),
+        "proportion_correct": round(float(np.mean(overall_scores >= 0.9)), 4),
+        "proportion_partial_or_correct": round(float(np.mean(overall_scores >= 0.4)), 4),
+        "proportion_incorrect": round(float(np.mean(overall_scores < 0.1)), 4),
+    }
+
+    # Per-pair agreement across experts (Fleiss' kappa on Yes/Partial/No)
+    expert_ids = sorted(merged["Expert"].unique())
+    if len(expert_ids) >= 2:
+        subjects = merged.groupby("Row_ID").agg(
+            ratings=("Correct_Raw", list)
+        ).reset_index()
+
+        categories = ["yes", "partial", "no"]
+        rating_matrix = []
+        for _, row in subjects.iterrows():
+            raw = [str(r).strip().lower() for r in row["ratings"]]
+            counts = [raw.count(c) for c in categories]
+            if sum(counts) >= 2:
+                rating_matrix.append(counts)
+
+        if rating_matrix:
+            matrix = np.array(rating_matrix)
+            n_subj, _ = matrix.shape
+            N_per = matrix.sum(axis=1)
+            n_raters = int(N_per[0]) if len(N_per) > 0 else 0
+
+            if n_raters >= 2:
+                p_j = matrix.sum(axis=0) / (n_subj * n_raters)
+                P_i = (np.sum(matrix ** 2, axis=1) - n_raters) / (n_raters * (n_raters - 1))
+                P_bar = np.mean(P_i)
+                P_e = np.sum(p_j ** 2)
+                kappa = (P_bar - P_e) / (1 - P_e) if (1 - P_e) != 0 else 0
+
+                interpretation = (
+                    "almost perfect" if kappa > 0.8 else
+                    "substantial" if kappa > 0.6 else
+                    "moderate" if kappa > 0.4 else
+                    "fair" if kappa > 0.2 else
+                    "slight"
+                )
+                results["fleiss_kappa"] = {
+                    "kappa": round(float(kappa), 4),
+                    "interpretation": interpretation,
+                }
+
+    # Stratify by taxonomy key metadata (if available)
+    tax_key = key_df[key_df["Sheet"] == "Taxonomy_Correct"]
+    if not tax_key.empty and "Category" in tax_key.columns:
+        key_map = tax_key.set_index("Row_ID")["Category"].to_dict()
+        merged["Category"] = merged["Row_ID"].map(key_map)
+
+        per_cat = merged.groupby("Category")["Correct_Score"].agg(
+            ["mean", "count"]
+        ).reset_index()
+        per_cat.columns = ["Category", "Mean_Score", "N_Judgments"]
+        per_cat["Mean_Score"] = per_cat["Mean_Score"].round(4)
+        results["per_category"] = per_cat.to_dict("records")
+
+    return results
 
 
 # ---------------------------------------------------------------------------
@@ -598,8 +711,25 @@ def run_layer2_analysis(
             print(f"   {cond}: mean_score={stats_dict['mean_score']}, "
                   f"correct={stats_dict['proportion_correct']}")
 
-    # 4. Cross-layer
-    print("\n4. Cross-Layer Correlations:")
+    # 4. Taxonomy Correctness
+    has_taxonomy = any("taxonomy" in data for data in experts.values())
+    if has_taxonomy:
+        print("\n4. Taxonomy Correctness Analysis:")
+        tax = analyze_taxonomy_correctness(experts, key_df)
+        results["taxonomy_correctness"] = tax
+        if "descriptive" in tax:
+            d = tax["descriptive"]
+            print(f"   {d['n_pairs_evaluated']} pairs evaluated by {d['n_experts']} experts")
+            print(f"   Mean score={d['mean_score']}, correct={d['proportion_correct']}, "
+                  f"partial+correct={d['proportion_partial_or_correct']}")
+        if "fleiss_kappa" in tax:
+            print(f"   Fleiss' kappa={tax['fleiss_kappa']['kappa']} "
+                  f"({tax['fleiss_kappa']['interpretation']})")
+    else:
+        print("\n4. Taxonomy Correctness: Skipped (no taxonomy sheet in workbooks)")
+
+    # 5. Cross-layer
+    print("\n5. Cross-Layer Correlations:")
     cross = analyze_cross_layer(experts, key_df)
     results["cross_layer"] = cross
     if "nld_vs_category" in cross:

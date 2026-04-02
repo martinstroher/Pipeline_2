@@ -26,10 +26,11 @@ RED        = RGBColor(0xC0, 0x39, 0x2B)
 # ── Slide dimensions (widescreen 16:9) ──────────────────────────────────────
 W = Inches(13.33)
 H = Inches(7.5)
-HEADER_H  = Inches(1.15)
+HEADER_H  = Inches(1.0)
 ACCENT_H  = Inches(0.06)
+RULE_H    = Inches(0.022)
 MARGIN_X  = Inches(0.45)
-CONTENT_Y = HEADER_H + ACCENT_H + Inches(0.15)
+CONTENT_Y = Inches(1.12)
 CONTENT_H = H - CONTENT_Y - Inches(0.2)
 
 
@@ -114,19 +115,21 @@ def add_bullets(slide, x, y, w, h, items, size=15, color=NEAR_BLACK,
 
 # ── Slide template header ────────────────────────────────────────────────────
 def add_header(slide, title, subtitle=None):
-    # Background header bar
-    add_rect(slide, 0, 0, W, HEADER_H, DARK_BLUE)
-    # Orange accent line
-    add_rect(slide, 0, HEADER_H, W, ACCENT_H, ORANGE)
-    # Title
-    add_text(slide, MARGIN_X, Inches(0.12), W - MARGIN_X * 2, Inches(0.75),
-             title, size=26, bold=True, color=WHITE, align=PP_ALIGN.LEFT)
+    # Title in deep blue — no colored background banner
+    add_text(slide, MARGIN_X, Inches(0.1), W - MARGIN_X * 2, Inches(0.65),
+             title, size=26, bold=True, color=DARK_BLUE, align=PP_ALIGN.LEFT)
     if subtitle:
-        add_text(slide, MARGIN_X, Inches(0.82), W - MARGIN_X * 2, Inches(0.3),
-                 subtitle, size=14, italic=True, color=PALE_BLUE, align=PP_ALIGN.LEFT)
+        add_text(slide, MARGIN_X, Inches(0.72), W - MARGIN_X * 2, Inches(0.27),
+                 subtitle, size=13, italic=True, color=MED_GRAY, align=PP_ALIGN.LEFT)
+    # Thin rule: full width in mid-blue, short orange lead accent
+    rule_y = Inches(0.98)
+    add_rect(slide, MARGIN_X, rule_y, W - MARGIN_X * 2, RULE_H, MID_BLUE)
+    add_rect(slide, MARGIN_X, rule_y, Inches(0.6), RULE_H, ORANGE)
 
 
 def add_footer(slide, text="ICEIS 2026"):
+    # Thin rule + page label
+    add_rect(slide, MARGIN_X, H - Inches(0.38), W - MARGIN_X * 2, RULE_H, LIGHT_GRAY)
     add_text(slide, Inches(0.3), H - Inches(0.35), W - Inches(0.6), Inches(0.3),
              text, size=9, color=MED_GRAY, align=PP_ALIGN.RIGHT)
 
@@ -134,41 +137,47 @@ def add_footer(slide, text="ICEIS 2026"):
 # ── SLIDE 1 — Title ──────────────────────────────────────────────────────────
 def slide_title(prs):
     slide = _blank_slide(prs)
-    # Full dark-blue background
-    add_rect(slide, 0, 0, W, H, DARK_BLUE)
-    # Orange stripe (decorative)
-    add_rect(slide, 0, Inches(5.05), W, Inches(0.07), ORANGE)
-    # Pale blue bottom strip
-    add_rect(slide, 0, Inches(5.12), W, H - Inches(5.12), RGBColor(0x16, 0x22, 0x40))
 
-    # Title
-    add_text(slide, MARGIN_X, Inches(1.2), W - MARGIN_X * 2, Inches(1.5),
-             "LLM-Driven Ontology Learning", size=40, bold=True, color=WHITE,
+    # Thin top border strip
+    add_rect(slide, 0, 0, W, Inches(0.07), DARK_BLUE)
+
+    # Paper title
+    add_text(slide, MARGIN_X, Inches(0.85), W - MARGIN_X * 2, Inches(1.3),
+             "LLM-Driven Ontology Learning", size=40, bold=True, color=DARK_BLUE,
              align=PP_ALIGN.CENTER)
-    add_text(slide, MARGIN_X, Inches(2.65), W - MARGIN_X * 2, Inches(0.7),
+    add_text(slide, MARGIN_X, Inches(2.1), W - MARGIN_X * 2, Inches(0.6),
              "From Term Extraction to Upper-Level Categorization", size=26,
-             color=PALE_BLUE, align=PP_ALIGN.CENTER)
-    add_text(slide, MARGIN_X, Inches(3.25), W - MARGIN_X * 2, Inches(0.55),
+             color=MID_BLUE, align=PP_ALIGN.CENTER)
+    add_text(slide, MARGIN_X, Inches(2.65), W - MARGIN_X * 2, Inches(0.5),
              "for Building Information System Models", size=22,
-             color=PALE_BLUE, align=PP_ALIGN.CENTER)
+             color=MID_BLUE, align=PP_ALIGN.CENTER)
+
+    # Separator: double rule
+    add_rect(slide, MARGIN_X, Inches(3.3), W - MARGIN_X * 2, Inches(0.022), DARK_BLUE)
+    add_rect(slide, MARGIN_X, Inches(3.36), W - MARGIN_X * 2, Inches(0.022), ORANGE)
 
     # Authors
-    add_text(slide, MARGIN_X, Inches(4.2), W - MARGIN_X * 2, Inches(0.5),
+    add_text(slide, MARGIN_X, Inches(3.55), W - MARGIN_X * 2, Inches(0.45),
              "Martin Ströher  ·  Thaís Schäfer Luiz  ·  Eduardo Roemers-Oliveira  ·  Lucas Valadares Vieira",
-             size=14, color=WHITE, align=PP_ALIGN.CENTER)
-    add_text(slide, MARGIN_X, Inches(4.65), W - MARGIN_X * 2, Inches(0.45),
+             size=14, color=NEAR_BLACK, align=PP_ALIGN.CENTER)
+    add_text(slide, MARGIN_X, Inches(3.97), W - MARGIN_X * 2, Inches(0.4),
              "Fábio Herbert Jones  ·  Luiz Fernando De Ros  ·  Mara Abel",
-             size=14, color=WHITE, align=PP_ALIGN.CENTER)
+             size=14, color=NEAR_BLACK, align=PP_ALIGN.CENTER)
 
     # Institutions
-    add_text(slide, MARGIN_X, Inches(5.25), W - MARGIN_X * 2, Inches(0.45),
+    add_text(slide, MARGIN_X, Inches(4.5), W - MARGIN_X * 2, Inches(0.38),
              "UFRGS  ·  UFRJ  ·  Petrobras Research Center  ·  Colorado State University",
-             size=13, color=PALE_BLUE, align=PP_ALIGN.CENTER)
+             size=13, italic=True, color=MED_GRAY, align=PP_ALIGN.CENTER)
 
-    # Conference
-    add_text(slide, MARGIN_X, Inches(6.6), W - MARGIN_X * 2, Inches(0.5),
+    # Conference badge — light filled rect
+    add_rect(slide, (W - Inches(7.0)) / 2, Inches(5.3), Inches(7.0), Inches(0.65), PALE_BLUE)
+    add_rect(slide, (W - Inches(7.0)) / 2, Inches(5.3), Inches(7.0), RULE_H, DARK_BLUE)
+    add_text(slide, (W - Inches(7.0)) / 2 + Inches(0.15), Inches(5.38), Inches(6.7), Inches(0.5),
              "ICEIS 2026  —  International Conference on Enterprise Information Systems",
-             size=13, bold=True, color=AMBER, align=PP_ALIGN.CENTER)
+             size=14, bold=True, color=DARK_BLUE, align=PP_ALIGN.CENTER)
+
+    # Thin bottom border strip
+    add_rect(slide, 0, H - Inches(0.07), W, Inches(0.07), DARK_BLUE)
 
 
 # ── SLIDE 2 — Context: The Bottleneck ────────────────────────────────────────
@@ -911,14 +920,15 @@ def slide_conclusion(prs):
 
     # Bottom thank you
     TY = H - Inches(1.05)
-    add_rect(slide, 0, TY, W, Inches(1.05), DARK_BLUE)
-    add_rect(slide, 0, TY, W, Inches(0.05), ORANGE)
-    add_text(slide, MARGIN_X, TY + Inches(0.12), W - MARGIN_X * 2, Inches(0.45),
+    add_rect(slide, MARGIN_X, TY, W - MARGIN_X * 2, RULE_H, DARK_BLUE)
+    add_rect(slide, MARGIN_X, TY, Inches(0.6), RULE_H, ORANGE)
+    add_rect(slide, MARGIN_X, TY + Inches(0.04), W - MARGIN_X * 2, Inches(1.0), PALE_BLUE)
+    add_text(slide, MARGIN_X, TY + Inches(0.1), W - MARGIN_X * 2, Inches(0.45),
              "Thank you!   Questions welcome.", size=22, bold=True,
-             color=WHITE, align=PP_ALIGN.CENTER)
-    add_text(slide, MARGIN_X, TY + Inches(0.57), W - MARGIN_X * 2, Inches(0.38),
+             color=DARK_BLUE, align=PP_ALIGN.CENTER)
+    add_text(slide, MARGIN_X, TY + Inches(0.55), W - MARGIN_X * 2, Inches(0.38),
              "github.com/BDI-UFRGS/PreSaltOntology  ·  Funded by CAPES, CNPq, Petrobras",
-             size=13, color=PALE_BLUE, align=PP_ALIGN.CENTER)
+             size=13, italic=True, color=MID_BLUE, align=PP_ALIGN.CENTER)
 
 
 # ── Build & save ─────────────────────────────────────────────────────────────
