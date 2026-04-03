@@ -10,7 +10,7 @@ MINIMUM_FREQUENCY = int(os.environ["MINIMUM_FREQUENCY_FILTER"])
 
 def filter_top_terms():
     try:
-        df_ranked = pd.read_csv(INPUT_FILTERED_CSV)
+        df_ranked = pd.read_csv(INPUT_FILTERED_CSV, encoding='utf-8-sig')
 
         df_filtered = df_ranked[df_ranked['Frequency'] >= MINIMUM_FREQUENCY]
 

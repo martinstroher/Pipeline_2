@@ -23,7 +23,7 @@ def run_term_aggregation():
             log.error(f"File '{filepath}' not found.")
             return None
         try:
-            df = pd.read_csv(filepath, encoding='utf-8', delimiter=',', header=0, usecols=['Entity'])
+            df = pd.read_csv(filepath, encoding='utf-8-sig', delimiter=',', header=0, usecols=['Entity'])
             terms_list = df['Entity'].squeeze().tolist()
             log.info(f"{len(terms_list)} raw terms loaded from '{filepath}'.")
             return terms_list
