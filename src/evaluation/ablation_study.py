@@ -359,7 +359,7 @@ def run_categorization(
             if is_raw_rag:
                 batch_items.append({"term": row["Term"], "context": row["NLD"]})
             elif condition == "C":
-                batch_items.append({"term": row["Term"]})  # No "nld" field — true term-only
+                batch_items.append({"term": row["Term"], "nld": ""})  # Empty NLD — term-only condition
             else:
                 batch_items.append({"term": row["Term"], "nld": row["NLD"]})
 
@@ -373,7 +373,7 @@ def run_categorization(
             result["Context_Used"] = nld_row.get("Context_Used", "")
             result["Condition"] = condition
             cat_rows.append(result)
-            _append_row(cat_path, result, len(cat_rows) == len(results) and i == 0)
+            _append_row(cat_path, result, not os.path.exists(cat_path))
 
         time.sleep(2)
 
@@ -404,7 +404,7 @@ def run_ablation(conditions: list[str] | None = None):
 
     # Load terms (Steps 1-3 output)
     terms_file = os.environ.get("FILTERED_TERMS_OUTPUT", "output/3_filtered_top_terms.csv")
-    df_terms = pd.read_csv(terms_file, encoding="utf-8")
+    df_terms = pd.read_csv(terms_file, encoding="utf-8-sig")
     terms = df_terms["Readable_Term"].tolist()
     print(f"\nAblation study: {len(terms)} terms, conditions: {conditions}")
 

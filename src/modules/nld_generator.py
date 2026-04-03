@@ -110,13 +110,20 @@ def run_nld_generation(vector_store=None, bm25_retriever=None):
     OUTPUT_FILE = os.environ.get("CONSOLIDATED_LLM_RESULTS_WITH_NLDS")
     OUTPUT_FAILURE_FILE = os.environ.get("OUTPUT_FAILURE_FILE")
 
+    if not INPUT_FILE:
+        raise RuntimeError("Environment variable FILTERED_TERMS_OUTPUT is not set.")
+    if not OUTPUT_FILE:
+        raise RuntimeError("Environment variable CONSOLIDATED_LLM_RESULTS_WITH_NLDS is not set.")
+    if not OUTPUT_FAILURE_FILE:
+        raise RuntimeError("Environment variable OUTPUT_FAILURE_FILE is not set.")
+
     def load_terms_from_aggregator_csv(filepath):
         """Loads terms from the aggregator output CSV file."""
         if not os.path.exists(filepath):
             log.error(f"File '{filepath}' not found.")
             return None
         try:
-            df = pd.read_csv(filepath, encoding='utf-8', delimiter=',', header=0, usecols=['Readable_Term'])
+            df = pd.read_csv(filepath, encoding='utf-8-sig', delimiter=',', header=0, usecols=['Readable_Term'])
             log.info(f"{len(df)} terms loaded from '{filepath}'.")
             return df
         except ValueError as e:
@@ -187,7 +194,7 @@ def run_nld_generation(vector_store=None, bm25_retriever=None):
                     tqdm.write("")
                     log.warn(f"JSON parse failed for '{term}': {nld_json_str[:80]}")
                     nld_generated = nld_json_str
-                    context_used = "Error Parsing JSON"
+                    context_used = False
 
                 result_row = {'Term': term, 'NLD': nld_generated, 'Context_Used': context_used, 'Context': context}
                 results.append(result_row)

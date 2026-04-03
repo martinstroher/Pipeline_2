@@ -28,15 +28,19 @@ GEORESERVOIR_NS = Namespace("https://www.inf.ufrgs.br/bdi/ontologies/")
 # Import the IRI mapping from taxonomy_builder
 from src.modules.taxonomy_builder import UPPER_IRIS
 
+# Build case-insensitive lookup for UPPER_IRIS
+_UPPER_IRIS_LOWER = {k.lower(): v for k, v in UPPER_IRIS.items()}
+
 
 def _term_to_iri(term: str) -> URIRef:
     """Convert a term string to a valid OWL IRI in the ontology namespace."""
-    # Check if it's a known upper-level term
-    if term in UPPER_IRIS:
-        return URIRef(UPPER_IRIS[term])
+    # Case-insensitive check against known upper-level terms
+    term_lower = term.strip().lower()
+    if term_lower in _UPPER_IRIS_LOWER:
+        return URIRef(_UPPER_IRIS_LOWER[term_lower])
 
-    # Generate local IRI: CamelCase, no special chars
-    local = re.sub(r"[^a-zA-Z0-9]", "_", term.strip())
+    # Generate local IRI: CamelCase from lowercased input to avoid case collisions
+    local = re.sub(r"[^a-zA-Z0-9]", "_", term.strip().lower())
     local = re.sub(r"_+", "_", local).strip("_")
     # CamelCase
     parts = local.split("_")
@@ -116,10 +120,13 @@ def run_owl_export(
                 # Named individual
                 g.add((term_iri, RDF.type, OWL.NamedIndividual))
                 g.add((term_iri, RDF.type, parent_iri))
-            else:
-                # Class
+            elif term_iri != parent_iri:
+                # Class — guard against self-referential subClassOf
                 g.add((term_iri, RDF.type, OWL.Class))
                 g.add((term_iri, RDFS.subClassOf, parent_iri))
+            else:
+                # Self-reference detected (case collision) — declare as class only
+                g.add((term_iri, RDF.type, OWL.Class))
         else:
             # Root node — declare as class with no explicit parent
             g.add((term_iri, RDF.type, OWL.Class))

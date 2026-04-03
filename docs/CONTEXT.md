@@ -57,7 +57,7 @@ Key validated findings that justify our design choices:
 - Provides retrieval context to Steps 4 (NLD generation) and 5 (categorization).
 
 ### `src/modules/term_extractor.py` — Step 1: Extraction
-- **Tech**: Gemini 2.5 Flash (default; configurable via `LLM_EXTRACTION_MODEL`)
+- **Tech**: Gemini 2.5 Pro (default; configurable via `LLM_EXTRACTION_MODEL`)
 - Reads Markdown files and extracts candidate geological terms via a structured LLM prompt.
 - Output: `output/1_raw_llm_extraction.json`
 
@@ -76,6 +76,7 @@ Key validated findings that justify our design choices:
 - For each filtered term, retrieves the top-5 most relevant corpus chunks via hybrid search.
 - Generates an Aristotelian NLD ("X is a Y that Z") grounded in the retrieved context.
 - Few-shot examples and an English-language/polysemy instruction are included in the system prompt.
+- **Robustness:** Required environment variables (`FILTERED_TERMS_OUTPUT`, `CONSOLIDATED_LLM_RESULTS_WITH_NLDS`, `OUTPUT_FAILURE_FILE`) are validated at startup with clear error messages. JSON parse failures set `Context_Used = false` (boolean) rather than a string sentinel. All CSV reads use `utf-8-sig` encoding for BOM-safe interoperability.
 - Output: `output/4_nld_generated_definitions.csv`
 
 ### `src/modules/term_categorizer.py` — Step 5: Ontology Classification
@@ -92,6 +93,7 @@ Key validated findings that justify our design choices:
 - **Tech**: Gemini 2.5 Pro
 - Builds a hierarchical taxonomy per ontology group (GeoReservoir, GeoCore, BFO) using NLDs for naming.
 - Processes terms in chunks of up to 150 per LLM call to avoid cross-chunk inconsistency.
+- **Cycle detection:** After each LLM response, parent-chain walks detect any cycles (A→B→A). Cyclic terms are re-parented to the category root with a warning log.
 - Prompt anchors intermediate node names to canonical UPPER_IRIS vocabulary (52 published IRIs from BFO/GeoCore/GeoReservoir), and instructs the LLM to use the Aristotelian genus from NLDs ("X is a Y that Z" → use Y as intermediate node name).
 - **Class vs. individual distinction is resolved here:** named geological time periods (Aptian, Cretaceous), petroleum fields (Lula Field, Búzios), basins (Santos Basin), and formations are assigned `rdf:type` (OWL individuals); generic types/kinds (Grainstone, Fault, Porosity) are assigned `rdfs:subClassOf` (OWL classes).
 - NLDs are carried forward into the output CSV as a column for OWL annotation.
@@ -104,6 +106,10 @@ Key validated findings that justify our design choices:
 - `owl:NamedIndividual` entries (named fields, basins, formations, time periods) get `rdf:type` triples pointing to their parent class.
 - Intermediate (synthesised) nodes get `rdfs:label` only (no NLD comment).
 - The ontology header declares `owl:imports <http://purl.obolibrary.org/obo/bfo.owl>`.
+- **Robustness guards:**
+  - IRI generation normalises terms to lowercase before CamelCase conversion, preventing case-collision duplicates (e.g., "Carbonate Mineral" and "carbonate mineral" map to the same IRI).
+  - UPPER_IRIS lookup is case-insensitive, so BFO/GeoCore/GeoReservoir terms are matched regardless of capitalisation.
+  - Self-referential `rdfs:subClassOf` triples (term IRI = parent IRI) are detected and suppressed.
 - Output: `output/7_ontology.ttl`
 
 ---

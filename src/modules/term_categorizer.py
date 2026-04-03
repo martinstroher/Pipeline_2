@@ -64,7 +64,7 @@ def run_term_categorization():
             log.error(f"File '{filepath}' not found.")
             return None
         try:
-            df = pd.read_csv(filepath, encoding='utf-8', delimiter=',', header=0,
+            df = pd.read_csv(filepath, encoding='utf-8-sig', delimiter=',', header=0,
                              usecols=['Term', 'NLD', 'Context_Used'])
 
             log.info(f"{len(df)} terms loaded for categorization.")

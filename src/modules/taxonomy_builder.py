@@ -176,6 +176,22 @@ Return ONLY the JSON array, nothing else.
                 "Is_Intermediate": item.get("is_intermediate", False),
                 "FALLBACK": False,
             })
+
+        # --- Cycle detection: break any cycles by re-parenting to category root ---
+        child_to_parent = {r["Term"]: r["Parent_Term"] for r in rows}
+        for row in rows:
+            visited = set()
+            node = row["Term"]
+            while node in child_to_parent:
+                if node in visited:
+                    # Cycle detected — break it by re-parenting this row
+                    log.warn(f"Cycle detected involving '{row['Term']}' in category '{category}' — re-parenting to root")
+                    row["Parent_Term"] = category
+                    child_to_parent[row["Term"]] = category
+                    break
+                visited.add(node)
+                node = child_to_parent.get(node)
+
         return rows
     except Exception as e:
         log.warn(f"Flat fallback for '{category}' ({len(terms_with_nlds)} terms): {e}")

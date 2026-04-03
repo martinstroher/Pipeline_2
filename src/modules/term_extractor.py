@@ -9,7 +9,7 @@ from src.utils.gemini_client import generate
 
 
 def run_llm_term_extraction():
-    LLM_MODEL_NAME = os.environ.get("LLM_EXTRACTION_MODEL", "gemini-2.5-flash")
+    LLM_MODEL_NAME = os.environ.get("LLM_EXTRACTION_MODEL", "gemini-2.5-pro")
     LLM_MODEL_TEMPERATURE = float(os.environ.get("LLM_EXTRACTION_TEMPERATURE", 0.0))
     LLM_INPUT_DIR = os.environ["LLM_INPUT_DIR"]
     LLM_OUTPUT_FILE = os.environ["LLM_OUTPUT_FILE"]

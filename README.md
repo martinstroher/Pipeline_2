@@ -60,7 +60,7 @@ The full pipeline runs Steps 0-7 and writes a Turtle OWL file (`output/7_ontolog
 | `--ablation` | Run 4-condition ablation study instead of the standard pipeline |
 | `--conditions A,B,C,D` | Select ablation conditions to run (default: all four) |
 | `--analysis` | Run Layer 1 automated analysis on ablation output |
-| `--expert-eval` | Generate expert evaluation spreadsheet (4-sheet Excel) from ablation output |
+| `--expert-eval` | Generate expert evaluation spreadsheet (5-sheet Excel) from ablation output |
 | `--layer2-analysis W1.xlsx W2.xlsx` | Run Layer 2 statistical analysis on completed expert workbooks |
 | `--layer2-key KEY.csv` | Blinding key CSV (required with `--layer2-analysis`) |
 | `--taxonomy CSV` | Build taxonomy from a specific categorized CSV (ablation post-processing) |
@@ -130,10 +130,10 @@ src/
     log.py                # ANSI colour logging helpers
     gemini_client.py      # Gemini API wrapper (AI Studio + Vertex AI express mode)
   evaluation/
-    ablation_study.py     # 4-condition ablation runner with checkpointing
+    ablation_study.py     # 4-condition ablation runner with checkpointing and encoding-safe I/O
     layer1_analysis.py    # Automated analysis: agreement, Cochran's Q, migration, NOT_CLASSIFIED
-    expert_eval_generator.py  # 4-sheet Excel generator for expert review
-    expert_eval_analyzer.py   # Layer 2 statistics: Wilcoxon, Friedman, ICC, kappa
+    expert_eval_generator.py  # 5-sheet Excel generator for expert review (200 terms, stratified tiers)
+    expert_eval_analyzer.py   # Layer 2 statistics: Wilcoxon (Friedman-gated), ICC, kappa, taxonomy
 inputs/                   # Source PDFs (and generated .md files)
 output/                   # Step outputs (1_raw → 7_ontology.ttl)
   ablation/               # Ablation condition outputs (cat_A.csv … cat_D.csv)
