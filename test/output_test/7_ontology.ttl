@@ -4,14 +4,9 @@
 @prefix presalt: <https://w3id.org/presalt-onto#> .
 @prefix rdfs: <http://www.w3.org/2000/01/rdf-schema#> .
 
-presalt:Barrier a owl:Class ;
-    rdfs:label "barrier"@en ;
-    rdfs:comment "Barrier is a geological impediment that restricts or prevents the movement of fluids, such as hydrocarbons or water, within a subsurface petroleum system. In Pre-Salt reservoirs, faults can function as barriers, compartmentalizing hydrocarbon accumulations by juxtaposing permeable reservoir rocks against impermeable strata or by creating sealing zones through fault gouge or diagenetic cementation."@en ;
-    rdfs:subClassOf bfo:BFO_0000019 .
-
 presalt:Calcite a owl:Class ;
     rdfs:label "calcite"@en ;
-    rdfs:comment "Calcite is a carbonate mineral that is a primary constituent of carbonate reservoir rocks and can be replaced by dolomite during diagenesis. Its replacement by dolomite during dolomitization is a significant diagenetic process that often enhances reservoir porosity and permeability."@en ;
+    rdfs:comment "Calcite is a carbonate mineral that is a primary component of carbonate reservoir rocks. It can be replaced by dolomite during diagenesis, a process that often enhances reservoir porosity and permeability."@en ;
     rdfs:subClassOf presalt:CarbonateMineral .
 
 presalt:CarbonateReservoir a owl:Class ;
@@ -27,7 +22,7 @@ presalt:Deformation a owl:Class ;
 presalt:Displacement a owl:Class ;
     rdfs:label "displacement"@en ;
     rdfs:comment "Displacement is a geological offset that occurs along a planar fracture in rock, known as a fault. This offset results from tectonic forces and can significantly impact the integrity of petroleum traps and fluid migration pathways within Pre-Salt reservoirs."@en ;
-    rdfs:subClassOf bfo:BFO_0000019 .
+    rdfs:subClassOf georeservoir:GEOCORE_0000002 .
 
 presalt:DissolvedMineral a owl:Class ;
     rdfs:label "dissolved mineral"@en ;
@@ -62,7 +57,7 @@ presalt:ExtensionalDeformation a owl:Class ;
 presalt:Fault a owl:Class ;
     rdfs:label "fault"@en ;
     rdfs:comment "Fault is a planar fracture in rock along which displacement has occurred. In Pre-Salt reservoirs, faults can serve as both migration pathways for hydrocarbons and as barriers, influencing fluid flow and trap integrity."@en ;
-    rdfs:subClassOf presalt:PlanarFracture .
+    rdfs:subClassOf georeservoir:GEOCORE_0000004 .
 
 presalt:Fluid a owl:Class ;
     rdfs:label "fluid"@en ;
@@ -81,8 +76,8 @@ presalt:LakeSystem a owl:Class ;
 
 presalt:Lithosphere a owl:Class ;
     rdfs:label "lithosphere"@en ;
-    rdfs:comment "Lithosphere is a rigid outermost layer of a planetary body that undergoes extensional deformation during tectonic processes such as rifting. It comprises the Earth's crust and the uppermost part of the mantle, playing a crucial role in plate tectonics and the formation of sedimentary basins."@en ;
-    rdfs:subClassOf georeservoir:GEOCORE_0000006 .
+    rdfs:comment "Lithosphere is a rigid outermost shell of a terrestrial planet that comprises the Earth's crust and the uppermost part of the mantle, behaving as a brittle solid. It is involved in tectonic processes such as rifting, where it undergoes extensional deformation, leading to the formation of sedimentary basins like those hosting Pre-Salt reservoirs."@en ;
+    rdfs:subClassOf georeservoir:GEOCORE_0000001 .
 
 presalt:MicrobialCommunity a owl:Class ;
     rdfs:label "microbial community"@en ;
@@ -101,12 +96,17 @@ presalt:MigrationPathway a owl:Class ;
 
 presalt:Permeability a owl:Class ;
     rdfs:label "permeability"@en ;
-    rdfs:comment "Permeability is a physical property of rock that describes its capacity to transmit fluids. It is a primary control on reservoir quality, alongside porosity, and can be enhanced by diagenetic processes such as dolomitization in Pre-Salt reservoirs."@en ;
+    rdfs:comment "Permeability is a physical property of a rock that describes its capacity to transmit fluids. It is a primary control on reservoir quality, often enhanced by diagenetic processes such as dolomitization in Pre-Salt reservoirs."@en ;
     rdfs:subClassOf presalt:PhysicalProperty .
+
+presalt:PlanarFracture a owl:Class ;
+    rdfs:label "planar fracture"@en ;
+    rdfs:comment "Planar fracture is a discontinuity in a rock mass that exhibits a relatively flat or planar surface. In Pre-Salt petroleum geology, a significant type of planar fracture is a fault, which is characterized by displacement along the fracture plane and can act as both a fluid migration pathway and a barrier within reservoirs."@en ;
+    rdfs:subClassOf georeservoir:GEOCORE_0000004 .
 
 presalt:Porosity a owl:Class ;
     rdfs:label "porosity"@en ;
-    rdfs:comment "Porosity is a physical property of rock that is defined as the ratio of void space to total rock volume. It is a primary control on reservoir quality, influencing a rock's capacity to store fluids, and can be enhanced by diagenetic processes such as dolomitization."@en ;
+    rdfs:comment "Porosity is a physical property of rock that is defined as the ratio of void space to total rock volume. It is a primary control on reservoir quality, influencing a rock's capacity to store and transmit fluids. In Pre-Salt reservoirs, porosity can be enhanced by diagenetic processes such as dolomitization."@en ;
     rdfs:subClassOf presalt:PhysicalProperty .
 
 presalt:PreSaltOntoLearn a owl:Ontology ;
@@ -114,10 +114,10 @@ presalt:PreSaltOntoLearn a owl:Ontology ;
     rdfs:comment "A RAG-augmented LLM-generated ontology for Brazilian Pre-Salt petroleum geology. Generated by the PreSaltOntoLearn pipeline." ;
     owl:imports bfo:bfo.owl .
 
-presalt:PreSaltPlay a owl:NamedIndividual,
-        georeservoir:GEOCORE_0000001 ;
+presalt:PreSaltPlay a owl:Class ;
     rdfs:label "pre-salt play"@en ;
-    rdfs:comment "Pre-Salt play is a petroleum play that encompasses a specific combination of geological elements and processes leading to hydrocarbon accumulation, situated beneath a thick, regional evaporite seal in the Brazilian offshore basins. This play is characterized by lacustrine carbonate reservoirs (e.g., microbialites, coquinas) and associated siliciclastics, charged by lacustrine source rocks, and developed during the rift and sag phases of the South Atlantic opening."@en .
+    rdfs:comment "Pre-salt play is a petroleum play that targets hydrocarbon accumulations situated beneath a thick layer of Aptian evaporites, primarily in the offshore basins of Brazil. These accumulations are typically hosted in carbonate reservoirs, predominantly microbialites, deposited during the rift and sag phases of the South Atlantic opening. The overlying evaporite layer acts as a regional seal, contributing to the preservation of these significant oil and gas reserves."@en ;
+    rdfs:subClassOf bfo:BFO_0000006 .
 
 presalt:PreSaltReservoir a owl:Class ;
     rdfs:label "pre-salt reservoir"@en ;
@@ -126,18 +126,18 @@ presalt:PreSaltReservoir a owl:Class ;
 
 presalt:Precipitation a owl:Class ;
     rdfs:label "precipitation"@en ;
-    rdfs:comment "Precipitation is a geological process that involves the formation of solid minerals from dissolved ions in a solution, often occurring in evaporating water bodies. In the Pre-Salt play, this process is crucial for the formation of evaporite rocks, which serve as the regional seal."@en ;
+    rdfs:comment "Precipitation is a geochemical process by which dissolved minerals form a solid from a solution. In the context of Pre-Salt petroleum geology, this process is fundamental to the formation of evaporite rocks, which serve as regional seals."@en ;
     rdfs:subClassOf georeservoir:GEOCORE_0000002 .
 
 presalt:RegionalSeal a owl:Class ;
     rdfs:label "regional seal"@en ;
-    rdfs:comment "A regional seal is a geological seal that functions as an impermeable barrier, preventing the vertical migration of hydrocarbons across a broad geographic area. In the Brazilian Pre-Salt play, this critical role is primarily performed by thick evaporite sequences, which are chemical sedimentary rocks formed by the precipitation of dissolved minerals from evaporating water bodies."@en ;
-    rdfs:subClassOf georeservoir:GEOCORE_0000001 .
+    rdfs:comment "A regional seal is a geological barrier that prevents the vertical and lateral migration of hydrocarbons over a large geographic area. In the Brazilian Pre-Salt play, this function is primarily performed by thick evaporite sequences, which are chemical sedimentary rocks formed by the precipitation of dissolved minerals from evaporating water bodies."@en ;
+    rdfs:subClassOf presalt:Barrier .
 
 presalt:ReservoirFacies a owl:Class ;
     rdfs:label "reservoir facies"@en ;
     rdfs:comment "Reservoir facies is a geological facies that possesses the capacity to store and transmit hydrocarbons. In the Santos Basin Pre-Salt sequences, microbialite is a primary example of a reservoir facies, formed by the metabolic activity of microbial communities."@en ;
-    rdfs:subClassOf georeservoir:GEORES_0000029 .
+    rdfs:subClassOf georeservoir:GEORES_0000028 .
 
 presalt:ReservoirQuality a owl:Class ;
     rdfs:label "reservoir quality"@en ;
@@ -146,13 +146,13 @@ presalt:ReservoirQuality a owl:Class ;
 
 presalt:Rifting a owl:Class ;
     rdfs:label "rifting"@en ;
-    rdfs:comment "Rifting is a tectonic process that involves extensional deformation of the lithosphere. This process is fundamental to the formation of sedimentary basins, such as those hosting the Brazilian Pre-Salt petroleum systems, by creating accommodation space for subsequent deposition."@en ;
+    rdfs:comment "Rifting is a tectonic process that involves extensional deformation of the lithosphere. This process is fundamental to the initial formation of sedimentary basins, such as those hosting the Brazilian Pre-Salt reservoirs, through continental crustal thinning and subsidence."@en ;
     rdfs:subClassOf presalt:TectonicProcess .
 
 presalt:RockLayer a owl:Class ;
     rdfs:label "rock layer"@en ;
-    rdfs:comment "A rock layer is a geological unit that is a distinct, typically tabular body of rock within a stratigraphic sequence. These layers are subject to deformation by tectonic processes, which can create structural traps essential for hydrocarbon accumulation in Pre-Salt reservoirs. Specific rock layers, such as microbialites, function as primary reservoir facies, while evaporite layers serve as regional seals within the Pre-Salt play."@en ;
-    rdfs:subClassOf georeservoir:GEORES_0000002 .
+    rdfs:comment "A rock layer is a geological unit that is characterized by a distinct lithology, age, or other physical properties, and is typically deposited in a planar or sub-planar fashion. In petroleum geology, the deformation of these layers by tectonic processes is crucial for the formation of structural traps."@en ;
+    rdfs:subClassOf georeservoir:GEOCORE_0000008 .
 
 presalt:RockVolume a owl:Class ;
     rdfs:label "rock volume"@en ;
@@ -174,6 +174,11 @@ presalt:VoidSpace a owl:Class ;
     rdfs:comment "Void space is a volume within a rock that is not occupied by solid material. It represents the portion of the rock that can store fluids such as hydrocarbons and water, directly contributing to the rock's porosity and reservoir potential."@en ;
     rdfs:subClassOf bfo:BFO_0000006 .
 
+presalt:Barrier a owl:Class ;
+    rdfs:label "barrier"@en ;
+    rdfs:comment "Barrier is a geological feature that impedes or prevents the migration or flow of fluids within a reservoir system. In Pre-Salt reservoirs, faults can act as such barriers, compartmentalizing hydrocarbon accumulations."@en ;
+    rdfs:subClassOf georeservoir:GEOCORE_0000004 .
+
 presalt:ChemicalSedimentaryRock a owl:Class ;
     rdfs:label "chemical sedimentary rock"@en ;
     rdfs:comment "Chemical sedimentary rock is a sedimentary rock that forms from the precipitation of minerals from aqueous solutions. These rocks, exemplified by evaporites in the Pre-Salt play, are typically formed as dissolved minerals precipitate from evaporating water bodies, often serving as important seals in petroleum systems."@en ;
@@ -189,63 +194,53 @@ presalt:PetroleumTrap a owl:Class ;
     rdfs:comment "Petroleum trap is a geological configuration that prevents the upward or lateral migration of hydrocarbons, leading to their accumulation in a reservoir rock. These traps can be structural, formed by tectonic deformation, or stratigraphic, and are typically sealed by impermeable layers such as the evaporites found in the Pre-Salt play."@en ;
     rdfs:subClassOf georeservoir:GEOCORE_0000004 .
 
-presalt:PlanarFracture a owl:Class ;
-    rdfs:label "planar fracture"@en ;
-    rdfs:comment "A planar fracture is a fracture in rock that exhibits a generally flat or planar geometry. Faults are a specific type of planar fracture characterized by measurable displacement along the fracture plane. In Pre-Salt reservoirs, these fractures, particularly faults, are significant structural features that can influence fluid flow by acting as either migration pathways or barriers."@en ;
-    rdfs:subClassOf georeservoir:GEOCORE_0000004 .
-
 presalt:TectonicProcess a owl:Class ;
     rdfs:label "tectonic process"@en ;
-    rdfs:comment "Tectonic process is a geological process that involves the deformation of the Earth's lithosphere. Such processes, like rifting, are fundamental in basin formation and can lead to the development of structural traps critical for petroleum accumulation."@en ;
+    rdfs:comment "Tectonic process is a geological process that involves the deformation of the Earth's lithosphere. These processes, such as rifting, are fundamental to basin formation and the creation of structural traps for hydrocarbon accumulation in Pre-Salt reservoirs."@en ;
     rdfs:subClassOf georeservoir:GEOCORE_0000002 .
 
-georeservoir:GEOCORE_0000008 a owl:Class ;
-    rdfs:label "rock"@en ;
-    rdfs:comment "Rock is a naturally occurring solid material that is typically composed of one or more minerals or mineraloids, forming the Earth's crust. In petroleum systems, rocks serve as the fundamental medium for hydrocarbon reservoirs, seals, and traps, with properties such as porosity and permeability dictating their capacity to store and transmit fluids."@en .
-
-georeservoir:GEORES_0000021 a owl:Class ;
-    rdfs:label "Sedimentary Environment"@en ;
+georeservoir:GEORES_0000020 a owl:Class ;
+    rdfs:label "Depositional System"@en ;
     rdfs:subClassOf bfo:BFO_0000006 .
 
-georeservoir:GEORES_0000029 a owl:Class ;
-    rdfs:label "Sedimentary Facies"@en ;
-    rdfs:subClassOf georeservoir:GEORES_0000028 .
-
-bfo:BFO_0000006 a owl:Class ;
-    rdfs:label "spatial region"@en ;
-    rdfs:subClassOf bfo:BFO_0000029 .
-
 presalt:CarbonateMineral a owl:Class ;
-    rdfs:label "carbonate mineral"@en ;
+    rdfs:label "Carbonate Mineral"@en,
+        "carbonate mineral"@en ;
     rdfs:comment "Carbonate mineral is a mineral that contains the carbonate ion (CO3^2-) as its fundamental anionic group. Common examples relevant to Pre-Salt petroleum geology include calcite (CaCO3) and dolomite (CaMg(CO3)2), which are the primary constituents of carbonate reservoir rocks."@en ;
     rdfs:subClassOf georeservoir:GEOCORE_0000006 .
 
 presalt:ContinentalDepositionalSetting a owl:Class ;
-    rdfs:label "Continental Depositional Setting"@en ;
-    rdfs:subClassOf georeservoir:GEORES_0000021 .
+    rdfs:label "continental depositional setting"@en ;
+    rdfs:comment "A continental depositional setting is a depositional setting that is characterized by the accumulation of sediments on land or in bodies of water entirely surrounded by land. These environments include lacustrine (lake systems), fluvial (river systems), eolian (wind-dominated deserts), and glacial environments, which are critical for understanding the formation of Pre-Salt reservoirs."@en ;
+    rdfs:subClassOf georeservoir:GEORES_0000020 .
 
 presalt:PetroleumReservoirRock a owl:Class ;
-    rdfs:label "petroleum reservoir rock"@en ;
+    rdfs:label "Petroleum Reservoir Rock"@en,
+        "petroleum reservoir rock"@en ;
     rdfs:comment "Petroleum reservoir rock is a geological formation that possesses sufficient porosity and permeability to store and transmit hydrocarbons. In the Brazilian Pre-Salt, these rocks are predominantly carbonates, such as microbialites, where diagenetic processes like dolomitization often enhance their storage and flow capacity."@en ;
     rdfs:subClassOf georeservoir:GEOCORE_0000008 .
 
-georeservoir:GEORES_0000002 a owl:Class ;
-    rdfs:label "Stratigraphic Unit"@en ;
-    rdfs:subClassOf georeservoir:GEOCORE_0000001 .
+georeservoir:GEOCORE_0000008 a owl:Class ;
+    rdfs:label "rock"@en ;
+    rdfs:comment "Rock is a natural aggregate of minerals that forms the Earth's crust and can be characterized by physical properties such as porosity and permeability. In Pre-Salt petroleum geology, rocks serve as reservoir facies, seals, and structural elements that define petroleum traps."@en .
 
 georeservoir:GEORES_0000032 a owl:Class ;
     rdfs:label "sedimentary rock"@en ;
     rdfs:comment "Sedimentary rock is a type of rock that is formed from the accumulation and compaction of sediments, or by the precipitation of minerals from solution. In the Pre-Salt, significant examples include microbialites, formed by microbial activity, which serve as primary reservoir facies, and evaporites, formed by mineral precipitation from evaporating waters, which act as regional seals."@en .
 
-presalt:PhysicalProperty a owl:Class ;
-    rdfs:label "Physical Property"@en ;
-    rdfs:subClassOf bfo:BFO_0000019 .
-
-georeservoir:GEOCORE_0000004 a owl:Class ;
-    rdfs:label "Geological Structure"@en ;
+bfo:BFO_0000006 a owl:Class ;
+    rdfs:label "spatial region"@en ;
     rdfs:subClassOf bfo:BFO_0000029 .
 
-georeservoir:GEOCORE_0000006 a owl:Class ;
-    rdfs:label "Earth Material"@en ;
-    rdfs:subClassOf georeservoir:GEOCORE_0000001 .
+presalt:PhysicalProperty a owl:Class ;
+    rdfs:label "Physical Property"@en,
+        "physical property"@en ;
+    rdfs:comment "Physical property is a characteristic of matter that can be observed or measured without changing the substance's chemical composition. In Pre-Salt petroleum geology, key physical properties of reservoir rocks, such as porosity and permeability, are crucial for evaluating their capacity to store and transmit hydrocarbons."@en ;
+    rdfs:subClassOf bfo:BFO_0000019 .
+
+georeservoir:GEOCORE_0000004 a owl:Class .
+
+georeservoir:GEOCORE_0000002 a owl:Class ;
+    rdfs:label "Geological Process"@en ;
+    rdfs:subClassOf bfo:BFO_0000015 .
 

@@ -16,6 +16,7 @@ graph TD
     G -->|term_categorizer.py + RAG| H(Categorized Ontology CSV)
     H -->|taxonomy_builder.py| I(Taxonomy CSV)
     I -->|owl_exporter.py| J[OWL Turtle .ttl]
+    J -->|ontology_verifier.py| K[Verification Report JSON]
     C -.->|retrieval context| G
     C -.->|retrieval context| H
 ```
@@ -111,6 +112,16 @@ Key validated findings that justify our design choices:
   - UPPER_IRIS lookup is case-insensitive, so BFO/GeoCore/GeoReservoir terms are matched regardless of capitalisation.
   - Self-referential `rdfs:subClassOf` triples (term IRI = parent IRI) are detected and suppressed.
 - Output: `output/7_ontology.ttl`
+
+### `src/modules/ontology_verifier.py` — Step 7b: Ontology Verification
+- **Tech**: `rdflib`, OOPS! REST API (optional)
+- Post-export verification of the OWL artifact. No LLM repair — verification-only.
+- **Layer 1 — Syntax**: Parses the Turtle file with RDFLib; reports parse errors with diagnostics.
+- **Layer 2 — Structure**: Checks for self-referential `rdfs:subClassOf`, orphan classes (no parent), missing `rdfs:label`, missing `rdfs:comment` (NLD not propagated), and upper-ontology anchoring (BFO/GeoCore/GeoReservoir IRI count).
+- **Layer 3 — OOPS! Pitfalls** (optional): Calls the OOPS! REST API if `OOPS_URL` env var is configured. Works with the remote API (`https://oops.linkeddata.es/rest`), a local Docker instance (`docker run -p 8080:8080 mpovedavillalon/oops:v1`), or any compatible endpoint.
+- Issues are classified by severity: CRITICAL, IMPORTANT, MINOR.
+- **Robustness:** Docker absence, container startup failures, and API errors are caught and reported as warnings, never crashing the pipeline.
+- Output: `output/7b_verification_report.json`
 
 ---
 

@@ -1,0 +1,49 @@
+{
+  "input": "test/output_test/7_ontology.ttl",
+  "layers": {
+    "syntax": {
+      "layer": "syntax",
+      "status": "PASS",
+      "errors": [],
+      "triple_count": 191
+    },
+    "structure": {
+      "layer": "structure",
+      "status": "PASS",
+      "classes": 47,
+      "individuals": 1,
+      "triples": 191,
+      "upper_iris_referenced": 15,
+      "upper_iris_list": [
+        "http://purl.obolibrary.org/obo/BFO_0000006",
+        "http://purl.obolibrary.org/obo/BFO_0000015",
+        "http://purl.obolibrary.org/obo/BFO_0000019",
+        "http://purl.obolibrary.org/obo/BFO_0000027",
+        "http://purl.obolibrary.org/obo/BFO_0000029",
+        "https://www.inf.ufrgs.br/bdi/ontologies/GEOCORE_0000001",
+        "https://www.inf.ufrgs.br/bdi/ontologies/GEOCORE_0000002",
+        "https://www.inf.ufrgs.br/bdi/ontologies/GEOCORE_0000004",
+        "https://www.inf.ufrgs.br/bdi/ontologies/GEOCORE_0000006",
+        "https://www.inf.ufrgs.br/bdi/ontologies/GEOCORE_0000008",
+        "https://www.inf.ufrgs.br/bdi/ontologies/GEOCORE_0000009",
+        "https://www.inf.ufrgs.br/bdi/ontologies/GEORES_0000002",
+        "https://www.inf.ufrgs.br/bdi/ontologies/GEORES_0000020",
+        "https://www.inf.ufrgs.br/bdi/ontologies/GEORES_0000028",
+        "https://www.inf.ufrgs.br/bdi/ontologies/GEORES_0000032"
+      ],
+      "issues": [],
+      "issue_summary": {}
+    },
+    "oops_pitfalls": {
+      "layer": "oops_pitfalls",
+      "status": "SKIP",
+      "pitfalls": [],
+      "pitfall_summary": {},
+      "errors": [
+        "OOPS_URL not configured. Set OOPS_URL env var to enable (e.g. https://oops.linkeddata.es/rest or http://localhost:8080/OOPS/rest)"
+      ],
+      "oops_url": ""
+    }
+  },
+  "overall_status": "PASS"
+}

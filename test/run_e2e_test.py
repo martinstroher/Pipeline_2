@@ -1,5 +1,6 @@
 import csv
 import glob
+import json
 import os
 import shutil
 import subprocess
@@ -349,6 +350,28 @@ def run_test():
     else:
         print("  [FAIL] Step 7 (OWL): file missing")
         all_passed = False
+
+    # --- Step 7b: Verification report ---
+    verify_report = os.path.join(output_dir, "7b_verification_report.json")
+    if os.path.exists(verify_report):
+        try:
+            with open(verify_report, "r", encoding="utf-8") as f:
+                vr = json.load(f)
+            overall = vr.get("overall_status", "UNKNOWN")
+            syntax_status = vr.get("layers", {}).get("syntax", {}).get("status", "UNKNOWN")
+            struct = vr.get("layers", {}).get("structure", {})
+            struct_status = struct.get("status", "UNKNOWN")
+            n_issues = len(struct.get("issues", []))
+            summary = struct.get("issue_summary", {})
+            print(f"  [OK]   Step 7b (verification): overall={overall}, syntax={syntax_status}, structure={struct_status}")
+            if summary:
+                print(f"  [OK]   Step 7b issues: {summary}")
+            if overall == "FAIL":
+                print(f"  [WARN] Step 7b: verification FAILED — {n_issues} issue(s) found")
+        except Exception as e:
+            print(f"  [WARN] Step 7b: could not parse report: {e}")
+    else:
+        print("  [WARN] Step 7b (verification): report missing")
 
     # --- Cross-step validation: term counts should be consistent ---
     print("\n--- Cross-step consistency checks ---")

@@ -4,8 +4,9 @@
 
 - **What:** An LLM-driven ontology learning pipeline for Brazilian Pre-Salt petroleum geology (master's thesis).
 - **Core claim:** RAG-augmented Aristotelian NLDs improve upper-ontology classification over term-only, parametric-NLD, and raw-RAG baselines. This replicates and extends Lopes Junior (2024) on a new domain with a new architecture.
-- **Pipeline:** 7 steps — PDF → Markdown → RAG Index → Extract → Aggregate → Filter → NLD → Categorize → Taxonomy → OWL.
+- **Pipeline:** 7 steps — PDF → Markdown → RAG Index → Extract → Aggregate → Filter → NLD → Categorize → Taxonomy → OWL → Verify.
 - **Evaluation:** 4-condition ablation (A/B/C/D) + 2-layer analysis (automated + 3-expert blinded workbook).
+- **OOPS! verification** uses a local Docker container (`mpovedavillalon/oops:v1`) to avoid dependence on the remote API. Override with `OOPS_URL` env var.
 
 ---
 
@@ -160,5 +161,6 @@ When helping write or review thesis text:
 | 5 | `5_categorized_ontology.csv` | `Term`, `Category`, `Reasoning`, `NLD`, `RAG_Context_Used` |
 | 6 | `6_taxonomy.csv` | `Term`, `Parent_Term`, `Relationship_Type`, `Category`, `Is_Intermediate`, `NLD`, `FALLBACK` |
 | 7 | `7_ontology.ttl` | OWL Turtle format — loadable in Protégé |
+| 7b | `7b_verification_report.json` | `layers.syntax.status`, `layers.structure.{classes,individuals,issues}`, `layers.oops_pitfalls`, `overall_status` |
 
 Renaming or removing any of these columns is a **breaking change** that requires updating all downstream consumers.

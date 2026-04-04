@@ -70,6 +70,17 @@ def main():
         help="Export OWL from taxonomy CSV (e.g., output/ablation/6_taxonomy_A.csv)",
     )
     parser.add_argument(
+        "--verify",
+        type=str,
+        default=None,
+        help="Verify an OWL .ttl file (e.g., output/7_ontology.ttl)",
+    )
+    parser.add_argument(
+        "--skip-oops",
+        action="store_true",
+        help="Skip OOPS! API call during verification (offline mode)",
+    )
+    parser.add_argument(
         "--skip-extraction",
         action="store_true",
         help="Skip Steps 1-3 (use existing filtered terms)",
@@ -120,6 +131,12 @@ def main():
         run_owl_export(args.owl)
         return
 
+    # --- Ontology verification ---
+    if args.verify:
+        from src.modules.ontology_verifier import run_ontology_verification
+        run_ontology_verification(args.verify, skip_oops=args.skip_oops)
+        return
+
     # --- Standard pipeline ---
     if not args.skip_pdf:
         log.banner(0, "PDF Text Extraction")
@@ -156,7 +173,11 @@ def main():
         os.path.splitext(cat_csv)[0]
         .replace("5_categorized_ontology", "6_taxonomy") + ".csv"
     )
-    run_owl_export(tax_csv)
+    owl_path = run_owl_export(tax_csv)
+
+    # Step 7b: Ontology Verification
+    from src.modules.ontology_verifier import run_ontology_verification
+    run_ontology_verification(owl_path, skip_oops=args.skip_oops)
 
     log.success("\nPipeline complete.")
 

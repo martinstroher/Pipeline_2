@@ -65,6 +65,8 @@ The full pipeline runs Steps 0-7 and writes a Turtle OWL file (`output/7_ontolog
 | `--layer2-key KEY.csv` | Blinding key CSV (required with `--layer2-analysis`) |
 | `--taxonomy CSV` | Build taxonomy from a specific categorized CSV (ablation post-processing) |
 | `--owl CSV` | Export OWL from a specific taxonomy CSV (ablation post-processing) |
+| `--verify TTL` | Verify an OWL .ttl file (syntax + structure + optional OOPS! pitfalls) |
+| `--skip-oops` | Skip OOPS! API call during verification (offline mode) |
 
 ---
 
@@ -124,6 +126,7 @@ src/
     term_categorizer.py   # Step 5: Waterfall categorization (GeoReservoir→GeoCore→BFO)
     taxonomy_builder.py   # Step 6: Group-based LLM hierarchy builder, UPPER_IRIS anchoring
     owl_exporter.py       # Step 7: rdflib Turtle export, Protege-compatible
+    ontology_verifier.py  # Step 7b: Post-export verification (syntax, structure, OOPS!)
   utils/
     rag_setup.py          # RAG infrastructure: BGE-M3 dense + BM25 sparse + BGE-Reranker RRF
     pdf_processor.py      # PDF→Markdown conversion (pymupdf4llm)
