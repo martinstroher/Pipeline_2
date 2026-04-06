@@ -14,11 +14,17 @@ Auth priority:
 """
 
 import os
+import time
 from google import genai
 from google.genai import types
 from src.utils import log
 
 _client = None
+
+# Retry configuration
+_MAX_RETRIES = int(os.environ.get("LLM_MAX_RETRIES", 5))
+_RETRY_BASE_DELAY = float(os.environ.get("LLM_RETRY_BASE_DELAY", 2.0))
+_RETRYABLE_STATUS_CODES = {429, 500, 502, 503, 504}
 
 
 def get_client() -> genai.Client:
@@ -78,9 +84,25 @@ def generate(
         response_mime_type=response_mime_type,
     )
 
-    response = client.models.generate_content(
-        model=model,
-        contents=prompt,
-        config=config,
-    )
-    return response.text
+    last_error = None
+    for attempt in range(1, _MAX_RETRIES + 1):
+        try:
+            response = client.models.generate_content(
+                model=model,
+                contents=prompt,
+                config=config,
+            )
+            return response.text
+        except Exception as e:
+            last_error = e
+            error_str = str(e)
+            # Check if retryable (rate limit or server error)
+            is_retryable = any(str(code) in error_str for code in _RETRYABLE_STATUS_CODES)
+            if not is_retryable or attempt == _MAX_RETRIES:
+                raise
+            delay = _RETRY_BASE_DELAY * (2 ** (attempt - 1))
+            log.warn(f"API error (attempt {attempt}/{_MAX_RETRIES}): {error_str}. "
+                      f"Retrying in {delay:.0f}s...")
+            time.sleep(delay)
+
+    raise last_error  # unreachable, but satisfies type checker

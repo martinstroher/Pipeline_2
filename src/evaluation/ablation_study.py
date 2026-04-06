@@ -355,6 +355,7 @@ def run_condition_d(terms: list[str], vector_store, bm25_retriever) -> pd.DataFr
 
     pending = [t for t in terms if t not in completed]
     total = len(terms)
+    checkpoint_lock = threading.Lock()
 
     for i, term in enumerate(pending):
         try:
@@ -365,9 +366,10 @@ def run_condition_d(terms: list[str], vector_store, bm25_retriever) -> pd.DataFr
             context = f"ERROR: {e}"
 
         row = {"Term": term, "NLD": context, "Context_Used": True, "Context": context}
-        nld_rows.append(row)
-        completed.add(term)
-        _append_row(nld_path, row, len(nld_rows) == 1)
+        with checkpoint_lock:
+            nld_rows.append(row)
+            completed.add(term)
+            _append_row(nld_path, row, len(nld_rows) == 1)
         if (i + 1) % 20 == 0:
             print(f"  [{len(completed)}/{total}] D: RAG retrieval...")
 
