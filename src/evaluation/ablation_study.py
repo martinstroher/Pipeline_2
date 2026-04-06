@@ -526,6 +526,25 @@ def run_ablation(conditions: list[str] | None = None):
                     print(f"  ERROR categorizing condition {cond}: {e}")
 
     # --- Merge all results into a single analysis-ready file ---
+    # Auto-include Condition A from pipeline output or checkpoint if not already in cat_results
+    if "A" not in cat_results:
+        cat_a_path = _cat_checkpoint_path("A")
+        pipeline_cat = os.environ.get("CATEGORIZED_OUTPUT", "output/5_categorized_ontology.csv")
+        if os.path.exists(cat_a_path):
+            cat_results["A"] = pd.read_csv(cat_a_path, encoding="utf-8-sig")
+            print(f"\n  Auto-included Condition A from checkpoint: {cat_a_path}")
+        elif os.path.exists(pipeline_cat):
+            pcat = pd.read_csv(pipeline_cat, encoding="utf-8-sig")
+            cat_a = pd.DataFrame({
+                "Term": pcat["Term"], "Category": pcat["Category"],
+                "Reasoning": pcat["Reasoning"], "NLD": pcat["NLD"],
+                "Context_Used": pcat.get("RAG_Context_Used", ""),
+                "Condition": "A",
+            })
+            cat_a.to_csv(cat_a_path, index=False, encoding="utf-8-sig")
+            cat_results["A"] = cat_a
+            print(f"\n  Auto-included Condition A from pipeline output: {pipeline_cat}")
+
     all_cat = []
     for cond, df in cat_results.items():
         df_copy = df.copy()
@@ -539,7 +558,8 @@ def run_ablation(conditions: list[str] | None = None):
         print(f"\n=== Ablation complete. Merged results: {merged_path} ===")
 
         # Quick summary
-        for cond in conditions:
+        all_conds = sorted(cat_results.keys())
+        for cond in all_conds:
             df_c = merged[merged["Condition"] == cond]
             n_classified = len(df_c[~df_c["Category"].str.startswith("ERROR")])
             n_not = len(df_c[df_c["Category"] == "NOT_CLASSIFIED"])
