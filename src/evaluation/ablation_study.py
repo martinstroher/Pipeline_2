@@ -12,6 +12,8 @@ import json
 import os
 import time
 import argparse
+import threading
+from concurrent.futures import ThreadPoolExecutor, as_completed
 
 import pandas as pd
 from dotenv import load_dotenv
@@ -40,7 +42,8 @@ CONDITION_LABELS = {
 }
 
 OUTPUT_DIR = os.environ.get("ABLATION_OUTPUT_DIR", "output/ablation")
-SLEEP_SECONDS = float(os.environ.get("NLD_SLEEP_SECONDS", 4))
+SLEEP_SECONDS = float(os.environ.get("NLD_SLEEP_SECONDS", 0))
+MAX_CONCURRENT_NLD = int(os.environ.get("MAX_CONCURRENT_NLD", 5))
 
 
 # ---------------------------------------------------------------------------
@@ -229,31 +232,48 @@ def run_condition_a(terms: list[str], vector_store, bm25_retriever) -> pd.DataFr
     if completed:
         print(f"  Resuming: {len(completed)} terms already done.")
 
+    pending = [t for t in terms if t not in completed]
+    if not pending:
+        return pd.DataFrame(nld_rows)
+
     total = len(terms)
-    for i, term in enumerate(terms):
-        if term in completed:
-            continue
-        print(f"  [{i+1}/{total}] A: NLD for '{term}'...")
+    checkpoint_lock = threading.Lock()
+
+    def _process_a(term):
+        docs = get_relevant_documents(term, vector_store, bm25_retriever=bm25_retriever)
+        context = format_docs_for_context(docs)
+        nld_json_str, _ = generate_nld(term, context)
         try:
-            docs = get_relevant_documents(term, vector_store, bm25_retriever=bm25_retriever)
-            context = format_docs_for_context(docs)
-            nld_json_str, _ = generate_nld(term, context)
             nld_data = json.loads(nld_json_str)
             nld = nld_data.get("Definition", nld_json_str)
             ctx_used = nld_data.get("Context_Used", True)
         except json.JSONDecodeError:
             nld = nld_json_str
             ctx_used = "Error"
-        except Exception as e:
-            print(f"    ERROR: {e}")
-            nld = f"ERROR: {e}"
-            ctx_used = "Error"
+        if SLEEP_SECONDS > 0:
+            time.sleep(SLEEP_SECONDS)
+        return {"Term": term, "NLD": nld, "Context_Used": ctx_used, "Context": context}
 
-        row = {"Term": term, "NLD": nld, "Context_Used": ctx_used, "Context": context if 'context' in dir() else ""}
-        nld_rows.append(row)
-        completed.add(term)
-        _append_row(nld_path, row, len(nld_rows) == 1)
-        time.sleep(SLEEP_SECONDS)
+    max_workers = min(MAX_CONCURRENT_NLD, len(pending))
+    print(f"  Concurrent NLD: {max_workers} workers, {len(pending)} pending")
+    with ThreadPoolExecutor(max_workers=max_workers) as executor:
+        future_to_term = {executor.submit(_process_a, t): t for t in pending}
+        for future in as_completed(future_to_term):
+            term = future_to_term[future]
+            try:
+                row = future.result()
+                with checkpoint_lock:
+                    nld_rows.append(row)
+                    completed.add(term)
+                    _append_row(nld_path, row, len(nld_rows) == 1)
+                print(f"  [{len(completed)}/{total}] A: '{term}' done")
+            except Exception as e:
+                print(f"    ERROR: {e}")
+                row = {"Term": term, "NLD": f"ERROR: {e}", "Context_Used": "Error", "Context": ""}
+                with checkpoint_lock:
+                    nld_rows.append(row)
+                    completed.add(term)
+                    _append_row(nld_path, row, len(nld_rows) == 1)
 
     df = pd.DataFrame(nld_rows)
     df.to_csv(nld_path, index=False, encoding="utf-8-sig")
@@ -269,29 +289,44 @@ def run_condition_b(terms: list[str]) -> pd.DataFrame:
     if completed:
         print(f"  Resuming: {len(completed)} terms already done.")
 
+    pending = [t for t in terms if t not in completed]
+    if not pending:
+        return pd.DataFrame(nld_rows)
+
     total = len(terms)
-    for i, term in enumerate(terms):
-        if term in completed:
-            continue
-        print(f"  [{i+1}/{total}] B: NLD for '{term}'...")
+    checkpoint_lock = threading.Lock()
+
+    def _process_b(term):
+        nld_json_str, _ = generate_nld(term, "No additional context available.")
         try:
-            nld_json_str, _ = generate_nld(term, "No additional context available.")
             nld_data = json.loads(nld_json_str)
             nld = nld_data.get("Definition", nld_json_str)
-            ctx_used = False
         except json.JSONDecodeError:
             nld = nld_json_str
-            ctx_used = "Error"
-        except Exception as e:
-            print(f"    ERROR: {e}")
-            nld = f"ERROR: {e}"
-            ctx_used = "Error"
+        if SLEEP_SECONDS > 0:
+            time.sleep(SLEEP_SECONDS)
+        return {"Term": term, "NLD": nld, "Context_Used": False, "Context": ""}
 
-        row = {"Term": term, "NLD": nld, "Context_Used": ctx_used, "Context": ""}
-        nld_rows.append(row)
-        completed.add(term)
-        _append_row(nld_path, row, len(nld_rows) == 1)
-        time.sleep(SLEEP_SECONDS)
+    max_workers = min(MAX_CONCURRENT_NLD, len(pending))
+    print(f"  Concurrent NLD: {max_workers} workers, {len(pending)} pending")
+    with ThreadPoolExecutor(max_workers=max_workers) as executor:
+        future_to_term = {executor.submit(_process_b, t): t for t in pending}
+        for future in as_completed(future_to_term):
+            term = future_to_term[future]
+            try:
+                row = future.result()
+                with checkpoint_lock:
+                    nld_rows.append(row)
+                    completed.add(term)
+                    _append_row(nld_path, row, len(nld_rows) == 1)
+                print(f"  [{len(completed)}/{total}] B: '{term}' done")
+            except Exception as e:
+                print(f"    ERROR: {e}")
+                row = {"Term": term, "NLD": f"ERROR: {e}", "Context_Used": "Error", "Context": ""}
+                with checkpoint_lock:
+                    nld_rows.append(row)
+                    completed.add(term)
+                    _append_row(nld_path, row, len(nld_rows) == 1)
 
     df = pd.DataFrame(nld_rows)
     df.to_csv(nld_path, index=False, encoding="utf-8-sig")
@@ -318,11 +353,10 @@ def run_condition_d(terms: list[str], vector_store, bm25_retriever) -> pd.DataFr
     if completed:
         print(f"  Resuming: {len(completed)} terms already done.")
 
+    pending = [t for t in terms if t not in completed]
     total = len(terms)
-    for i, term in enumerate(terms):
-        if term in completed:
-            continue
-        print(f"  [{i+1}/{total}] D: Retrieving RAG for '{term}'...")
+
+    for i, term in enumerate(pending):
         try:
             docs = get_relevant_documents(term, vector_store, bm25_retriever=bm25_retriever)
             context = format_docs_for_context(docs)
@@ -330,11 +364,12 @@ def run_condition_d(terms: list[str], vector_store, bm25_retriever) -> pd.DataFr
             print(f"    ERROR: {e}")
             context = f"ERROR: {e}"
 
-        # For condition D, the "NLD" column stores raw RAG context (used as categorizer input)
         row = {"Term": term, "NLD": context, "Context_Used": True, "Context": context}
         nld_rows.append(row)
         completed.add(term)
         _append_row(nld_path, row, len(nld_rows) == 1)
+        if (i + 1) % 20 == 0:
+            print(f"  [{len(completed)}/{total}] D: RAG retrieval...")
 
     df = pd.DataFrame(nld_rows)
     df.to_csv(nld_path, index=False, encoding="utf-8-sig")
@@ -444,28 +479,51 @@ def run_ablation(conditions: list[str] | None = None):
     defs = _load_definitions()
     batch_size = int(os.environ.get("BATCH_SIZE", 5))
 
-    # --- Run NLD generation per condition ---
+    # --- Run NLD generation per condition (parallel where possible) ---
     nld_results = {}
 
     if "A" in conditions:
         nld_results["A"] = run_condition_a(terms, vector_store, bm25)
 
-    if "B" in conditions:
-        nld_results["B"] = run_condition_b(terms)
-
+    # C is instant (no LLM calls), run it immediately
     if "C" in conditions:
         nld_results["C"] = run_condition_c(terms)
 
+    # B and D are independent — run them in parallel threads
+    # B = parametric NLD (LLM only), D = RAG retrieval (local only)
+    parallel_nld = {}
+    if "B" in conditions:
+        parallel_nld["B"] = lambda: run_condition_b(terms)
     if "D" in conditions:
-        nld_results["D"] = run_condition_d(terms, vector_store, bm25)
+        parallel_nld["D"] = lambda: run_condition_d(terms, vector_store, bm25)
 
-    # --- Run categorization per condition ---
+    if parallel_nld:
+        print(f"\n  Running NLD generation for conditions {list(parallel_nld.keys())} in parallel...")
+        with ThreadPoolExecutor(max_workers=len(parallel_nld)) as cond_executor:
+            cond_futures = {cond_executor.submit(fn): cond for cond, fn in parallel_nld.items()}
+            for future in as_completed(cond_futures):
+                cond = cond_futures[future]
+                try:
+                    nld_results[cond] = future.result()
+                except Exception as e:
+                    print(f"  ERROR in condition {cond}: {e}")
+
+    # --- Run categorization per condition (parallel for all) ---
     cat_results = {}
-    for cond in conditions:
-        if cond in nld_results:
-            cat_results[cond] = run_categorization(
-                cond, nld_results[cond], defs, batch_size
-            )
+    cat_conditions = [c for c in conditions if c in nld_results]
+    if cat_conditions:
+        print(f"\n  Running categorization for conditions {cat_conditions} in parallel...")
+        with ThreadPoolExecutor(max_workers=len(cat_conditions)) as cat_executor:
+            cat_futures = {
+                cat_executor.submit(run_categorization, cond, nld_results[cond], defs, batch_size): cond
+                for cond in cat_conditions
+            }
+            for future in as_completed(cat_futures):
+                cond = cat_futures[future]
+                try:
+                    cat_results[cond] = future.result()
+                except Exception as e:
+                    print(f"  ERROR categorizing condition {cond}: {e}")
 
     # --- Merge all results into a single analysis-ready file ---
     all_cat = []

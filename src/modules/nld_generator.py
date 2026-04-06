@@ -2,10 +2,13 @@ import json
 import os
 import pandas as pd
 import time
+from concurrent.futures import ThreadPoolExecutor, as_completed
 from tqdm import tqdm
 from src.utils.rag_setup import get_relevant_documents, load_vector_store
 from src.utils.gemini_client import get_client, generate
 from src.utils import log
+
+MAX_CONCURRENT_NLD = int(os.environ.get("MAX_CONCURRENT_NLD", 5))
 
 # Module-level state (configured lazily inside functions, not at import time)
 _genai_configured = False
@@ -160,57 +163,53 @@ def run_nld_generation(vector_store=None, bm25_retriever=None):
         else:
             log.warn("BM25 not available, using dense-only retrieval.")
 
+        # Filter to terms not yet completed
+        pending_terms = [
+            row['Readable_Term'] for _, row in df_termos.iterrows()
+            if row['Readable_Term'] not in completed_terms
+        ]
+
         total_terms = len(df_termos)
-        pbar = tqdm(total=total_terms, desc="Generating NLDs")
-        for index, row in df_termos.iterrows():
-            # Get the term directly
-            term = row['Readable_Term']
-            pbar.set_postfix_str(term[:30])
+        sleep_seconds = float(os.environ.get("NLD_SLEEP_SECONDS", 0))
+        max_workers = min(MAX_CONCURRENT_NLD, len(pending_terms)) if pending_terms else 1
+        log.info(f"Concurrent NLD generation: {max_workers} workers, {len(pending_terms)} pending / {total_terms} total")
 
-            # Skip already checkpointed terms
-            if term in completed_terms:
-                pbar.update(1)
-                continue
+        import threading
+        _checkpoint_lock = threading.Lock()
 
+        def _process_single_term(term):
+            """Process one term: RAG retrieval + NLD generation. Thread-safe."""
+            docs = get_relevant_documents(term, vector_store, bm25_retriever=bm25_retriever)
+            context = format_docs_for_context(docs)
+            nld_json_str, _ = generate_nld(term, context)
             try:
-                # Get relevant context using RAG (with BM25 if available)
-                # Use term-only query (no question-form noise for BM25)
-                relevant_docs_with_scores = get_relevant_documents(
-                    term,
-                    vector_store,
-                    bm25_retriever=bm25_retriever
-                )
+                nld_data = json.loads(nld_json_str)
+                nld_generated = nld_data.get("Definition", "")
+                context_used = nld_data.get("Context_Used", True)
+            except json.JSONDecodeError:
+                nld_generated = nld_json_str
+                context_used = False
+            if sleep_seconds > 0:
+                time.sleep(sleep_seconds)
+            return {'Term': term, 'NLD': nld_generated, 'Context_Used': context_used, 'Context': context}
 
-                # Format context using the shared helper function
-                context = format_docs_for_context(relevant_docs_with_scores)
-
-                nld_json_str, _ = generate_nld(term, context)
-
+        pbar = tqdm(total=total_terms, desc="Generating NLDs", initial=total_terms - len(pending_terms))
+        with ThreadPoolExecutor(max_workers=max_workers) as executor:
+            future_to_term = {executor.submit(_process_single_term, t): t for t in pending_terms}
+            for future in as_completed(future_to_term):
+                term = future_to_term[future]
                 try:
-                    nld_data = json.loads(nld_json_str)
-                    nld_generated = nld_data.get("Definition", "")
-                    context_used = nld_data.get("Context_Used", True)
-                except json.JSONDecodeError:
+                    result_row = future.result()
+                    with _checkpoint_lock:
+                        results.append(result_row)
+                        single_row_df = pd.DataFrame([result_row])
+                        single_row_df.to_csv(OUTPUT_FILE, mode='a', header=not os.path.exists(OUTPUT_FILE) or len(results) == 1, index=False, encoding='utf-8-sig')
+                    pbar.set_postfix_str(term[:30])
+                except Exception as e:
                     tqdm.write("")
-                    log.warn(f"JSON parse failed for '{term}': {nld_json_str[:80]}")
-                    nld_generated = nld_json_str
-                    context_used = False
-
-                result_row = {'Term': term, 'NLD': nld_generated, 'Context_Used': context_used, 'Context': context}
-                results.append(result_row)
-
-                # Checkpoint: atomic append to CSV
-                single_row_df = pd.DataFrame([result_row])
-                single_row_df.to_csv(OUTPUT_FILE, mode='a', header=not os.path.exists(OUTPUT_FILE) or len(results) == 1, index=False, encoding='utf-8-sig')
-
-                time.sleep(float(os.environ.get("NLD_SLEEP_SECONDS", 4)))
-
-            except Exception as e:
-                tqdm.write("")
-                log.error(f"Term '{term}': {e}")
-                terms_for_review.append({'Term': term, 'Error': str(e)})
-
-            pbar.update(1)
+                    log.error(f"Term '{term}': {e}")
+                    terms_for_review.append({'Term': term, 'Error': str(e)})
+                pbar.update(1)
         pbar.close()
 
         # Write final consolidated output (overwrites checkpoint file with clean version)
