@@ -211,9 +211,20 @@ def _append_row(path: str, row: dict, is_first: bool):
 
 
 def run_condition_a(terms: list[str], vector_store, bm25_retriever) -> pd.DataFrame:
-    """Full pipeline: RAG context -> NLD -> categorize(term + NLD)."""
+    """Full pipeline: RAG context -> NLD -> categorize(term + NLD).
+    Reuses existing pipeline Step 4 output if available and complete."""
     print("\n=== Condition A: Full Pipeline (RAG + NLD) ===")
     nld_path = _checkpoint_path("A")
+
+    # Reuse main pipeline NLD output if Condition A checkpoint doesn't exist yet
+    pipeline_nld = os.environ.get("NLD_OUTPUT", "output/4_nld_generated_definitions.csv")
+    if not os.path.exists(nld_path) and os.path.exists(pipeline_nld):
+        pipeline_df = pd.read_csv(pipeline_nld, encoding="utf-8-sig")
+        if set(terms).issubset(set(pipeline_df["Term"].tolist())):
+            pipeline_df.to_csv(nld_path, index=False, encoding="utf-8-sig")
+            print(f"  Reused pipeline output ({pipeline_nld}) as Condition A NLD.")
+            return pipeline_df
+
     completed, nld_rows = _load_checkpoint(nld_path)
     if completed:
         print(f"  Resuming: {len(completed)} terms already done.")
@@ -338,6 +349,22 @@ def run_categorization(
     print(f"\n--- Categorizing Condition {condition} ({CONDITION_LABELS[condition]}) ---")
 
     cat_path = _cat_checkpoint_path(condition)
+
+    # Reuse main pipeline categorization output for Condition A if available
+    if condition == "A" and not os.path.exists(cat_path):
+        pipeline_cat = os.environ.get("CATEGORIZED_OUTPUT", "output/5_categorized_ontology.csv")
+        if os.path.exists(pipeline_cat):
+            pcat = pd.read_csv(pipeline_cat, encoding="utf-8-sig")
+            cat_a = pd.DataFrame({
+                "Term": pcat["Term"], "Category": pcat["Category"],
+                "Reasoning": pcat["Reasoning"], "NLD": pcat["NLD"],
+                "Context_Used": pcat.get("RAG_Context_Used", ""),
+                "Condition": "A",
+            })
+            cat_a.to_csv(cat_path, index=False, encoding="utf-8-sig")
+            print(f"  Reused pipeline output ({pipeline_cat}) as Condition A categorization.")
+            return cat_a
+
     completed, cat_rows = _load_checkpoint(cat_path)
     if completed:
         print(f"  Resuming: {len(completed)} terms already categorized.")

@@ -33,7 +33,8 @@ _BM25_RETRIEVER = None
 _CROSS_ENCODER = None
 
 def load_documents(docs_dir: str) -> List:
-    loader = DirectoryLoader(docs_dir, glob="**/*.md", loader_cls=TextLoader)
+    loader = DirectoryLoader(docs_dir, glob="**/*.md", loader_cls=TextLoader,
+                             loader_kwargs={"encoding": "utf-8"})
     documents = loader.load()
     return documents
 

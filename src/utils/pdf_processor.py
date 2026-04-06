@@ -93,7 +93,7 @@ def extrai_texto(doc_pdf,pags):
 #fim def
 #=============================================================================
 def salva_texto_final(local,nome,txt):
-    arquivo_texto_final = open(local+nome+".txt.ia", "w")
+    arquivo_texto_final = open(local+nome+".txt.ia", "w", encoding="utf-8")
     arquivo_texto_final.write(txt)
     arquivo_texto_final.close()
 #fim def
@@ -182,7 +182,11 @@ def processa_doc_pdf(pars):
         if (total_paginas == total_imagens):
             vetor_resultado["ocrs"].append(pars[1])
             texto_extraido = ""
-            texto_extraido = extrai_texto_ocr(documento_pdf,paginas)
+            try:
+                texto_extraido = extrai_texto_ocr(documento_pdf,paginas)
+            except RuntimeError:
+                # Tesseract not installed — fall back to text extraction
+                texto_extraido = extrai_texto(documento_pdf,paginas)
         else:
             texto_extraido = ""
             texto_extraido = extrai_texto(documento_pdf,paginas)
@@ -326,16 +330,16 @@ def process_folder(pasta_textos):
                         lista_arquivos_imagens_ocr.append(ocr)
 
             # Logging results...
-            with open(pasta_textos+"arquivos_convertidos_"+str(contador_lista)+".json", "w") as final:
+            with open(pasta_textos+"arquivos_convertidos_"+str(contador_lista)+".json", "w", encoding="utf-8") as final:
                 json.dump(lista_arquivos_convertidos, final)
-            with open(pasta_textos+"arquivos_nao_convertidos_"+str(contador_lista)+".json", "w") as final:
+            with open(pasta_textos+"arquivos_nao_convertidos_"+str(contador_lista)+".json", "w", encoding="utf-8") as final:
                 json.dump(lista_arquivos_erros, final)
-            with open(pasta_textos+"arquivos_convertidos_ocr_"+str(contador_lista)+".json", "w") as final:
+            with open(pasta_textos+"arquivos_convertidos_ocr_"+str(contador_lista)+".json", "w", encoding="utf-8") as final:
                 json.dump(lista_arquivos_imagens_ocr, final)
 
             final = datetime.datetime.now()
             str_parcial = "Convertidos:"+str(len(lista_arquivos_convertidos))+"\nNao Convertidos:"+str(len(lista_arquivos_erros))+"\nConvertidos OCR:"+str(len(lista_arquivos_imagens_ocr))+"\nTempo Parcial:"+str(final)+"\n"
-            arquivo_parcial = open(pasta_textos+"resultado_parcial_"+str(contador_lista)+".dat", "a")
+            arquivo_parcial = open(pasta_textos+"resultado_parcial_"+str(contador_lista)+".dat", "a", encoding="utf-8")
             arquivo_parcial.write(str_parcial)
             arquivo_parcial.close()
 
@@ -343,7 +347,7 @@ def process_folder(pasta_textos):
         else: log.warn("No OCR files to convert.")
 
     str_final = "Convertidos:"+str(len(lista_arquivos_convertidos))+"\nNao Convertidos:"+str(len(lista_arquivos_erros))+"\nConvertidos OCR:"+str(len(lista_arquivos_imagens_ocr))+"\n"
-    arquivo_final = open(pasta_textos+"resultado_final.dat", "a")
+    arquivo_final = open(pasta_textos+"resultado_final.dat", "a", encoding="utf-8")
     arquivo_final.write(str_final)
     arquivo_final.close()
 

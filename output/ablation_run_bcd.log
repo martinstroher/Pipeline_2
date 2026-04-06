@@ -1,0 +1,15 @@
+C:\Users\marandrade\VSCode\Pipeline_2\src\utils\rag_setup.py:97: LangChainDeprecationWarning: The class `HuggingFaceEmbeddings` was deprecated in LangChain 0.2.2 and will be removed in 1.0. An updated version of the class exists in the `langchain-huggingface package and should be used instead. To use it run `pip install -U `langchain-huggingface` and import as `from `langchain_huggingface import HuggingFaceEmbeddings``.
+  embeddings = HuggingFaceEmbeddings(
+Warning: You are sending unauthenticated requests to the HF Hub. Please set a HF_TOKEN to enable higher rate limits and faster downloads.
+Gemini client: Vertex AI + API key
+
+Ablation study: 186 terms, conditions: ['B', 'C', 'D']
+
+Setting up RAG infrastructure...
+Setting up RAG (chunk_size=1024, force_rebuild=False)...
+Found cached ChromaDB at chroma_db_1024. Loading from disk.
+
+Loading weights:   0%|          | 0/391 [00:00<?, ?it/s]
+Loading weights: 100%|##########| 391/391 [00:00<00:00, 19630.75it/s]
+C:\Users\marandrade\VSCode\Pipeline_2\src\utils\rag_setup.py:102: LangChainDeprecationWarning: The class `Chroma` was deprecated in LangChain 0.2.9 and will be removed in 1.0. An updated version of the class exists in the `langchain-chroma package and should be used instead. To use it run `pip install -U `langchain-chroma` and import as `from `langchain_chroma import Chroma``.
+  vector_store = Chroma(persist_directory=db_path, embedding_function=embeddings)
