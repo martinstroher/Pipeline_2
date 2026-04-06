@@ -19,6 +19,9 @@ import random
 import hashlib
 
 import pandas as pd
+from openpyxl.styles import Font, PatternFill, Alignment, Border, Side
+from openpyxl.utils import get_column_letter
+from openpyxl.worksheet.datavalidation import DataValidation
 
 OUTPUT_DIR = os.environ.get("ABLATION_OUTPUT_DIR", "output/ablation")
 
@@ -200,16 +203,21 @@ def _classify_tier(category: str) -> str:
 
 
 def _load_category_descriptions() -> dict[str, str]:
-    """Load one-line descriptions for GeoReservoir categories."""
+    """Load descriptions from all three ontology definition files."""
     defs = {}
-    path = os.environ.get("GEORESERVOIR_DEFS_PATH", "resources/georeservoir-definitions.txt")
-    if os.path.exists(path):
-        with open(path, "r", encoding="utf-8") as f:
-            for line in f:
-                line = line.strip()
-                if ":" in line:
-                    name, desc = line.split(":", 1)
-                    defs[name.strip()] = desc.strip()
+    paths = [
+        os.environ.get("GEORESERVOIR_DEFS_PATH", "resources/georeservoir-definitions.txt"),
+        os.environ.get("GEOCORE_DEFS_PATH", "resources/geocore-definitions.txt"),
+        os.environ.get("BFO_DEFS_PATH", "resources/bfo-definitions.txt"),
+    ]
+    for path in paths:
+        if os.path.exists(path):
+            with open(path, "r", encoding="utf-8") as f:
+                for line in f:
+                    line = line.strip()
+                    if ":" in line:
+                        name, desc = line.split(":", 1)
+                        defs[name.strip()] = desc.strip()
     return defs
 
 
@@ -260,31 +268,18 @@ def build_category_sheet(
             row_counter += 1
             row_id = f"CAT-{row_counter:04d}"
             tier = _classify_tier(category)
+            cat_desc = geores_defs.get(category, "")
 
-            if tier == "GeoReservoir":
-                cat_desc = geores_defs.get(category, "")
-                expert_rows.append({
-                    "Row_ID": row_id,
-                    "Term": term,
-                    "Tier": "GeoReservoir",
-                    "Assigned_Category": category,
-                    "Category_Description": cat_desc,
-                    "Correct (Yes/No/Partial)": "",
-                    "Suggested_Category": "",
-                    "Notes": "",
-                })
-            else:
-                # GeoCore/BFO: show assigned category + simplified 3-way
-                expert_rows.append({
-                    "Row_ID": row_id,
-                    "Term": term,
-                    "Tier": tier,
-                    "Assigned_Category": category,
-                    "Category_Description": "",
-                    "Correct (Yes/No/Partial)": "",
-                    "Suggested_Category": "",
-                    "Notes": "",
-                })
+            expert_rows.append({
+                "Row_ID": row_id,
+                "Term": term,
+                "Tier": tier,
+                "Assigned_Category": category,
+                "Category_Description": cat_desc,
+                "Correct (Yes/No/Partial)": "",
+                "Suggested_Category": "",
+                "Notes": "",
+            })
 
             key_rows.append({
                 "Sheet": "Category_Correct",
@@ -414,61 +409,232 @@ def build_taxonomy_sheet(
     return pd.DataFrame(expert_rows), pd.DataFrame(key_rows)
 
 
-def build_instructions_sheet() -> pd.DataFrame:
-    """Sheet 1: Evaluation instructions with Likert scale definitions."""
-    instructions = [
+def build_instructions_sheet() -> list[list[str]]:
+    """Sheet 1: Evaluation instructions with Likert scale definitions.
+
+    Returns raw rows (list of [section, details]) for custom formatting.
+    """
+    return [
         ["EXPERT EVALUATION — PreSaltOntoLearn Pipeline", ""],
         ["", ""],
-        ["PURPOSE", "Evaluate the quality of automatically generated definitions, ontological classifications, and taxonomic hierarchy for Pre-Salt petroleum geology terms. Your evaluations are BLINDED — do not attempt to identify which system produced which output."],
+        ["PURPOSE", "Evaluate the quality of automatically generated definitions, "
+         "ontological classifications, and taxonomic hierarchy for Pre-Salt "
+         "petroleum geology terms. Your evaluations are BLINDED — do not "
+         "attempt to identify which system produced which output."],
         ["", ""],
-        ["=== SHEET 2: TERM RELEVANCE ===", ""],
+        # --- Sheet 2 ---
+        ["SHEET 2: TERM RELEVANCE", ""],
         ["Task", "Rate how relevant each term is to Brazilian Pre-Salt petroleum geology."],
-        ["Scale", ""],
-        ["1 = Not relevant", "Term has no connection to Pre-Salt petroleum geology"],
-        ["2 = Marginal", "Loosely related; general geology term with no Pre-Salt specificity"],
-        ["3 = Relevant", "Clearly geological, applicable to Pre-Salt context"],
-        ["4 = Important", "Commonly used in Pre-Salt studies"],
-        ["5 = Core concept", "Fundamental to Pre-Salt petroleum geology understanding"],
         ["", ""],
-        ["=== SHEET 3: NLD QUALITY ===", ""],
-        ["Task", "For each term, two Natural Language Definitions (NLDs) are shown. Rate the quality of EACH definition independently, then indicate your overall preference."],
-        ["Scale", ""],
-        ["1 = Incorrect", "Definition contains fundamental geological errors or is incoherent"],
-        ["2 = Poor", "Major inaccuracies, severe imprecision, or missing essential properties"],
-        ["3 = Acceptable", "Broadly correct but with notable gaps or minor inaccuracies"],
-        ["4 = Good", "Accurate and precise, only minor issues"],
-        ["5 = Excellent", "Publication-quality definition; correctly captures the concept for Pre-Salt"],
-        ["Preference", "Choose 1, 2, or Tie based on which definition is better overall"],
+        ["1 — Not relevant", "Term has no connection to Pre-Salt petroleum geology."],
+        ["2 — Marginal", "Loosely related; general geology term with no Pre-Salt specificity."],
+        ["3 — Relevant", "Clearly geological, applicable to Pre-Salt context."],
+        ["4 — Important", "Commonly used in Pre-Salt studies."],
+        ["5 — Core concept", "Fundamental to Pre-Salt petroleum geology understanding."],
         ["", ""],
-        ["=== SHEET 4: CATEGORY CORRECTNESS ===", ""],
-        ["Task", "For each (Term, Category) pair, judge whether the assigned ontological category is correct."],
+        # --- Sheet 3 ---
+        ["SHEET 3: NLD QUALITY", ""],
+        ["Task", "For each term, two Natural Language Definitions (NLDs) are shown. "
+         "Rate the quality of EACH definition independently (1–5), "
+         "then indicate your overall preference (1, 2, or Tie)."],
         ["", ""],
-        ["Tier column", "Shows which ontology level the category comes from: GeoReservoir (domain-specific), GeoCore (mid-level geological), or BFO (abstract foundational). Focus your effort on GeoReservoir categories — those are directly in your area of expertise."],
-        ["Category_Description", "For GeoReservoir categories, the formal description is provided for reference."],
+        ["1 — Incorrect", "Definition contains fundamental geological errors or is incoherent."],
+        ["2 — Poor", "Major inaccuracies, severe imprecision, or missing essential properties."],
+        ["3 — Acceptable", "Broadly correct but with notable gaps or minor inaccuracies."],
+        ["4 — Good", "Accurate and precise, only minor issues."],
+        ["5 — Excellent", "Publication-quality definition; correctly captures the concept for Pre-Salt."],
+        ["Preference", "Choose 1, 2, or Tie based on which definition is better overall."],
         ["", ""],
-        ["Correct", "The assigned category correctly classifies this term"],
-        ["Partial", "The category is in the right direction but too broad, too narrow, or in the wrong layer"],
-        ["No", "The assigned category is incorrect for this term"],
-        ["Suggested_Category", "If you chose No or Partial, suggest the correct category"],
+        # --- Sheet 4 ---
+        ["SHEET 4: CATEGORY CORRECTNESS", ""],
+        ["Task", "For each (Term, Category) pair, judge whether the assigned "
+         "ontological category is correct: Yes, No, or Partial."],
         ["", ""],
-        ["NOTE on GeoCore/BFO tiers", "For terms classified into abstract categories (GeoCore or BFO), a simplified judgment is sufficient: does the category broadly make sense? You are NOT expected to know BFO formal definitions — use your geological intuition."],
+        ["Tier column", "Shows the ontology level: GeoReservoir (domain-specific), "
+         "GeoCore (mid-level geological), or BFO (abstract foundational)."],
+        ["GeoReservoir", "Focus your effort here — these are directly in your area of expertise. "
+         "Full category description is provided."],
+        ["GeoCore / BFO", "A simplified judgment is sufficient: does the category broadly "
+         "make sense? Use your geological intuition."],
         ["", ""],
-        ["=== SHEET 5: TAXONOMY CORRECTNESS ===", ""],
-        ["Task", "Evaluate parent-child relationships in the generated taxonomy. For each pair, judge: 'Is [Term] a type of [Parent]?'"],
+        ["Yes", "The assigned category correctly classifies this term."],
+        ["Partial", "Right direction but too broad, too narrow, or wrong layer."],
+        ["No", "The assigned category is incorrect for this term."],
+        ["Suggested_Category", "If No or Partial, suggest the correct category."],
         ["", ""],
-        ["Yes", "The IS-A relationship is geologically correct (e.g., Grainstone IS-A Carbonate Rock)"],
-        ["No", "The IS-A relationship is geologically incorrect"],
-        ["Partial", "Broadly reasonable but imprecise (e.g., too broad or too narrow)"],
-        ["Suggested_Parent", "If No or Partial, suggest a better parent term"],
+        # --- Sheet 5 ---
+        ["SHEET 5: TAXONOMY CORRECTNESS", ""],
+        ["Task", "Evaluate IS-A parent–child relationships. "
+         "For each pair, judge: 'Is [Term] a type of [Parent]?'"],
         ["", ""],
-        ["=== CALIBRATION EXAMPLES ===", ""],
-        ["Example 1 (Relevance)", "Term: 'Grainstone' — Core concept (Relevance=5). A correct category would be GeoReservoir > Sedimentary Rock."],
-        ["Example 2 (Relevance)", "Term: 'Coquina' — Core concept (Relevance=5). A correct category would be GeoReservoir > Sedimentary Rock."],
-        ["Example 3 (Taxonomy)", "'Grainstone' IS-A 'Carbonate Rock' → Yes. 'Grainstone' IS-A 'Geological Process' → No."],
+        ["Yes", "The IS-A relationship is geologically correct."],
+        ["Partial", "Broadly reasonable but imprecise (e.g., too broad or narrow)."],
+        ["No", "The IS-A relationship is geologically incorrect."],
+        ["Suggested_Parent", "If No or Partial, suggest a better parent term."],
         ["", ""],
-        ["NOTES", "Use the Notes column to explain non-obvious judgments. Thank you for your expertise!"],
+        # --- Calibration ---
+        ["CALIBRATION EXAMPLES", ""],
+        ["Relevance", "'Grainstone' → 5 (Core concept). 'Coquina' → 5 (Core concept)."],
+        ["Category", "'Grainstone' assigned to Sedimentary Rock → Yes."],
+        ["Taxonomy", "'Grainstone' IS-A 'Carbonate Rock' → Yes. "
+         "'Grainstone' IS-A 'Geological Process' → No."],
+        ["", ""],
+        ["NOTES", "Use the Notes column to explain non-obvious judgments. "
+         "Thank you for your expertise!"],
     ]
-    return pd.DataFrame(instructions, columns=["Section", "Details"])
+
+
+# ---------------------------------------------------------------------------
+# Excel Formatting
+# ---------------------------------------------------------------------------
+
+# Reusable styles
+_HEADER_FONT = Font(bold=True, size=11)
+_HEADER_FILL = PatternFill(start_color="4472C4", end_color="4472C4", fill_type="solid")
+_HEADER_FONT_WHITE = Font(bold=True, size=11, color="FFFFFF")
+_SECTION_FONT = Font(bold=True, size=12, color="1F4E79")
+_TITLE_FONT = Font(bold=True, size=14, color="1F4E79")
+_WRAP_ALIGN = Alignment(wrap_text=True, vertical="top")
+_CENTER_ALIGN = Alignment(horizontal="center", vertical="center")
+_INPUT_FILL = PatternFill(start_color="FFF2CC", end_color="FFF2CC", fill_type="solid")  # light yellow
+_THIN_BORDER = Border(
+    left=Side(style="thin"), right=Side(style="thin"),
+    top=Side(style="thin"), bottom=Side(style="thin"),
+)
+
+
+def _style_header_row(ws, ncols: int):
+    """Apply blue header with white bold font to row 1."""
+    for col in range(1, ncols + 1):
+        cell = ws.cell(row=1, column=col)
+        cell.font = _HEADER_FONT_WHITE
+        cell.fill = _HEADER_FILL
+        cell.alignment = Alignment(wrap_text=True, vertical="center", horizontal="center")
+        cell.border = _THIN_BORDER
+
+
+def _highlight_input_cells(ws, col_letters: list[str], data_rows: int):
+    """Highlight input columns with light yellow and add thin borders."""
+    for col_letter in col_letters:
+        for row in range(2, data_rows + 2):
+            cell = ws[f"{col_letter}{row}"]
+            cell.fill = _INPUT_FILL
+            cell.alignment = _CENTER_ALIGN
+            cell.border = _THIN_BORDER
+
+
+def _set_column_widths(ws, widths: dict[str, int]):
+    """Set column widths. Keys are column letters, values are character widths."""
+    for col_letter, width in widths.items():
+        ws.column_dimensions[col_letter].width = width
+
+
+def _add_data_validation(ws, col_letter: str, formula: str, data_rows: int):
+    """Add a dropdown data validation to a column."""
+    dv = DataValidation(
+        type="list", formula1=f'"{formula}"', allow_blank=True,
+        showErrorMessage=True, errorTitle="Invalid input",
+        error=f"Please select from: {formula}",
+    )
+    dv.add(f"{col_letter}2:{col_letter}{data_rows + 1}")
+    ws.add_data_validation(dv)
+
+
+def _freeze_and_filter(ws, freeze_cell: str = "A2"):
+    """Freeze top row and enable auto-filter."""
+    ws.freeze_panes = freeze_cell
+    ws.auto_filter.ref = ws.dimensions
+
+
+def _format_workbook(wb, relevance_df, nld_df, cat_df, tax_df):
+    """Apply formatting, data validation, and styling to all sheets."""
+
+    # --- Instructions sheet ---
+    ws = wb["Instructions"]
+    ws.column_dimensions["A"].width = 28
+    ws.column_dimensions["B"].width = 90
+    for row in ws.iter_rows(min_row=1, max_row=ws.max_row, max_col=2):
+        for cell in row:
+            cell.alignment = _WRAP_ALIGN
+            cell.border = _THIN_BORDER
+        section_text = str(row[0].value or "")
+        if section_text.startswith("SHEET") or section_text in (
+            "PURPOSE", "CALIBRATION EXAMPLES", "NOTES",
+            "EXPERT EVALUATION — PreSaltOntoLearn Pipeline",
+        ):
+            row[0].font = _SECTION_FONT
+            if section_text.startswith("EXPERT"):
+                row[0].font = _TITLE_FONT
+        elif section_text.startswith(("1 ", "2 ", "3 ", "4 ", "5 ")):
+            row[0].font = Font(bold=True, size=11)
+
+    # --- Term Relevance ---
+    ws = wb["Term_Relevance"]
+    n_rel = len(relevance_df)
+    _style_header_row(ws, 3)
+    _set_column_widths(ws, {"A": 35, "B": 16, "C": 40})
+    _add_data_validation(ws, "B", "1,2,3,4,5", n_rel)
+    _highlight_input_cells(ws, ["B", "C"], n_rel)
+    _freeze_and_filter(ws)
+    for row in range(2, n_rel + 2):
+        ws.cell(row=row, column=1).alignment = _WRAP_ALIGN
+        ws.cell(row=row, column=1).border = _THIN_BORDER
+
+    # --- NLD Quality ---
+    ws = wb["NLD_Quality"]
+    n_nld = len(nld_df)
+    _style_header_row(ws, 8)
+    _set_column_widths(ws, {
+        "A": 12, "B": 30, "C": 65, "D": 65,
+        "E": 16, "F": 16, "G": 18, "H": 35,
+    })
+    _add_data_validation(ws, "E", "1,2,3,4,5", n_nld)
+    _add_data_validation(ws, "F", "1,2,3,4,5", n_nld)
+    _add_data_validation(ws, "G", "1,2,Tie", n_nld)
+    _highlight_input_cells(ws, ["E", "F", "G", "H"], n_nld)
+    _freeze_and_filter(ws)
+    # Wrap definition text
+    for row in range(2, n_nld + 2):
+        for col in (1, 2, 3, 4):
+            cell = ws.cell(row=row, column=col)
+            cell.alignment = _WRAP_ALIGN
+            cell.border = _THIN_BORDER
+    ws.sheet_properties.defaultRowHeight = 80
+
+    # --- Category Correct ---
+    ws = wb["Category_Correct"]
+    n_cat = len(cat_df)
+    _style_header_row(ws, 8)
+    _set_column_widths(ws, {
+        "A": 12, "B": 30, "C": 14, "D": 30,
+        "E": 50, "F": 18, "G": 30, "H": 35,
+    })
+    _add_data_validation(ws, "F", "Yes,No,Partial", n_cat)
+    _highlight_input_cells(ws, ["F", "G", "H"], n_cat)
+    _freeze_and_filter(ws)
+    for row in range(2, n_cat + 2):
+        for col in range(1, 9):
+            cell = ws.cell(row=row, column=col)
+            cell.alignment = _WRAP_ALIGN
+            cell.border = _THIN_BORDER
+
+    # --- Taxonomy Correct ---
+    if "Taxonomy_Correct" in wb.sheetnames:
+        ws = wb["Taxonomy_Correct"]
+        n_tax = len(tax_df)
+        _style_header_row(ws, 7)
+        _set_column_widths(ws, {
+            "A": 12, "B": 30, "C": 30, "D": 50,
+            "E": 20, "F": 30, "G": 35,
+        })
+        _add_data_validation(ws, "E", "Yes,No,Partial", n_tax)
+        _highlight_input_cells(ws, ["E", "F", "G"], n_tax)
+        _freeze_and_filter(ws)
+        for row in range(2, n_tax + 2):
+            for col in range(1, 8):
+                cell = ws.cell(row=row, column=col)
+                cell.alignment = _WRAP_ALIGN
+                cell.border = _THIN_BORDER
 
 
 # ---------------------------------------------------------------------------
@@ -504,23 +670,31 @@ def generate_expert_evaluation(
     data = load_all_conditions()
 
     # 3. Build sheets
-    instructions_df = build_instructions_sheet()
+    instructions_data = build_instructions_sheet()
     relevance_df = build_term_relevance_sheet(terms)
 
     nld_expert_df, nld_key_df = build_nld_quality_sheet(terms, data["nld"], seed)
     cat_expert_df, cat_key_df = build_category_sheet(terms, data["cat"], seed)
     tax_expert_df, tax_key_df = build_taxonomy_sheet(terms, seed)
 
-    # 4. Write expert workbook
+    # 4. Write expert workbook with formatting
     workbook_path = os.path.join(output_dir, "expert_evaluation.xlsx")
 
+    # Write raw data first, then apply formatting
     with pd.ExcelWriter(workbook_path, engine="openpyxl") as writer:
-        instructions_df.to_excel(writer, sheet_name="Instructions", index=False)
+        # Instructions — write as raw rows
+        instr_rows = instructions_data
+        instr_df = pd.DataFrame(instr_rows, columns=["Section", "Details"])
+        instr_df.to_excel(writer, sheet_name="Instructions", index=False)
+
         relevance_df.to_excel(writer, sheet_name="Term_Relevance", index=False)
         nld_expert_df.to_excel(writer, sheet_name="NLD_Quality", index=False)
         cat_expert_df.to_excel(writer, sheet_name="Category_Correct", index=False)
         if not tax_expert_df.empty:
             tax_expert_df.to_excel(writer, sheet_name="Taxonomy_Correct", index=False)
+
+        wb = writer.book
+        _format_workbook(wb, relevance_df, nld_expert_df, cat_expert_df, tax_expert_df)
 
     # 5. Write blinding key (separate file)
     key_path = os.path.join(output_dir, f"blinding_key_{seed}.csv")

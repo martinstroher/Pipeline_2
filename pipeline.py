@@ -95,8 +95,12 @@ def main():
     # --- Ablation mode ---
     if args.ablation:
         from src.evaluation.ablation_study import run_ablation
+        from src.evaluation.layer1_analysis import run_layer1_analysis
+        from src.evaluation.expert_eval_generator import generate_expert_evaluation
         conds = [c.strip().upper() for c in args.conditions.split(",")]
         run_ablation(conditions=conds)
+        run_layer1_analysis()
+        generate_expert_evaluation()
         return
 
     # --- Layer 1 analysis ---

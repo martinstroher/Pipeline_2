@@ -152,5 +152,5 @@ The pipeline supports a two-layer evaluation framework for thesis validation:
   - **Term Relevance** (1-5 Likert)
   - **NLD Quality** (blinded A vs B, 1-5 + preference)
   - **Category Correctness** (stratified by ontology tier — GeoReservoir with full descriptions, GeoCore/BFO simplified)
-  - **Taxonomy Correctness** (~80 parent-child IS-A pairs)
+  - **Taxonomy Correctness** (~80 parent-child IS-A pairs, stratified by category). Selection: only IS-A edges (`rdfs:subClassOf` / `rdf:type`); ~75 % from edges involving the selected terms (equal samples per category), ~25 % from intermediate-node edges for hierarchy-depth coverage; trimmed to 80, shuffled with seed=42.
   - Results analysed with Wilcoxon signed-rank (gated by Friedman omnibus significance), ICC, Fleiss' kappa. Taxonomy analysis includes per-category accuracy and inter-rater agreement.
