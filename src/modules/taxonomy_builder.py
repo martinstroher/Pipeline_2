@@ -86,9 +86,7 @@ UPPER_IRIS = {
 }
 
 
-def _configure_genai():
-    """Configure Gemini client."""
-    get_client()
+
 
 
 def build_taxonomy_for_group(
@@ -218,7 +216,7 @@ def run_taxonomy_builder(categorized_csv: str, output_path: str | None = None):
         output_path: Output path (default: derived from input)
     """
     load_dotenv()
-    _configure_genai()
+    get_client()
 
     if output_path is None:
         base = os.path.splitext(categorized_csv)[0]
@@ -252,18 +250,11 @@ def run_taxonomy_builder(categorized_csv: str, output_path: str | None = None):
                 "nld": row.get("NLD", ""),
             })
 
-        # For large groups, process in chunks of 150
         nld_lookup = {t["term"]: t.get("nld", "") for t in terms_with_nlds}
-        if len(terms_with_nlds) > 150:
-            for chunk_start in range(0, len(terms_with_nlds), 150):
-                chunk = terms_with_nlds[chunk_start : chunk_start + 150]
-                rows = build_taxonomy_for_group(cat, chunk, MODEL_NAME, MODEL_TEMPERATURE)
-                for row in rows:
-                    row["NLD"] = nld_lookup.get(row["Term"], "")
-                all_taxonomy_rows.extend(rows)
-                time.sleep(2)
-        else:
-            rows = build_taxonomy_for_group(cat, terms_with_nlds, MODEL_NAME, MODEL_TEMPERATURE)
+        # Process in chunks of 150 for large groups
+        for chunk_start in range(0, len(terms_with_nlds), 150):
+            chunk = terms_with_nlds[chunk_start : chunk_start + 150]
+            rows = build_taxonomy_for_group(cat, chunk, MODEL_NAME, MODEL_TEMPERATURE)
             for row in rows:
                 row["NLD"] = nld_lookup.get(row["Term"], "")
             all_taxonomy_rows.extend(rows)

@@ -1,2 +1,8 @@
 .env
 .env-test
+.idea/
+__pycache__/
+*.pyc
+chroma_db*/
+output/
+.DS_Store

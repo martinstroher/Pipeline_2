@@ -1,11 +1,12 @@
 # Core pipeline
-google-generativeai>=0.8.0
+google-genai>=1.0.0
 pandas>=2.0.0
 python-dotenv>=1.0.0
+tqdm>=4.60.0
 
 # NLP
 spacy>=3.7.0
-# Post-install: python -m pip install en_core_web_sm@https://github.com/explosion/spacy-models/releases/download/en_core_web_sm-3.8.0/en_core_web_sm-3.8.0.tar.gz
+# Post-install: python -m spacy download en_core_web_sm
 
 # RAG infrastructure
 langchain>=0.2.0
@@ -15,25 +16,15 @@ chromadb>=0.5.0
 sentence-transformers>=3.0.0
 rank-bm25>=0.2.0
 
-# Embeddings
-langchain-google-genai>=1.0.0
-
 # PDF processing
 PyMuPDF>=1.24.0
 pymupdf4llm>=0.0.5
-ocrmypdf>=16.0.0
-unidecode>=1.3.0
-tqdm>=4.60.0
 
 # OWL export
 rdflib>=7.0.0
 
-# Evaluation
+# Evaluation & statistics
 scipy>=1.11.0
 numpy>=1.24.0
 openpyxl>=3.1.0
 scikit-learn>=1.3.0
-
-# Optional: RAGAS evaluation (for optimize_rag.py)
-# ragas>=0.1.0
-# datasets>=2.0.0

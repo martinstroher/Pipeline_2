@@ -192,7 +192,7 @@ def get_relevant_documents(
 def setup_rag(chunk_size: int = 1024, chunk_overlap: int = 100, force_rebuild: bool = False):
     """
     Main setup function.
-    Can be called by pipeline.py (default params) or optimize_rag.py (grid search).
+    Can be called by pipeline.py (default params) or with custom params for testing.
     When force_rebuild=False and a DB already exists, loads from disk instead of recreating.
     BM25 is always rebuilt in-memory (not persistable).
     """

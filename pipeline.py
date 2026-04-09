@@ -18,7 +18,7 @@ from src.modules.term_filter import filter_top_terms
 from src.modules.nld_generator import run_nld_generation
 from src.modules.term_categorizer import run_term_categorization
 from src.utils.rag_setup import setup_rag, DOCS_DIR
-from src.utils import pdf_processor as text_converted
+from src.utils.pdf_processor import process_folder as convert_pdfs
 
 
 def main():
@@ -144,7 +144,7 @@ def main():
     # --- Standard pipeline ---
     if not args.skip_pdf:
         log.banner(0, "PDF Text Extraction")
-        text_converted.process_folder(DOCS_DIR)
+        convert_pdfs(DOCS_DIR)
 
     # Set up RAG system
     log.banner("R", "RAG Setup")

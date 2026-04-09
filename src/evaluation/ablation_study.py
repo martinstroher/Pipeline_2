@@ -11,9 +11,9 @@ Runs Steps 4-5 (NLD generation + categorization) under 4 conditions on the SAME 
 import json
 import os
 import time
-import argparse
 import threading
 from concurrent.futures import ThreadPoolExecutor, as_completed
+from typing import Callable
 
 import pandas as pd
 from dotenv import load_dotenv
@@ -21,12 +21,8 @@ from dotenv import load_dotenv
 load_dotenv()
 
 from src.utils.rag_setup import setup_rag, get_relevant_documents
-from src.modules.nld_generator import (
-    generate_nld,
-    format_docs_for_context,
-    _ensure_genai_configured,
-)
-from src.utils.gemini_client import generate as gemini_generate
+from src.modules.nld_generator import generate_nld, format_docs_for_context
+from src.utils.gemini_client import get_client, generate as gemini_generate
 
 
 # ---------------------------------------------------------------------------
@@ -47,21 +43,164 @@ MAX_CONCURRENT_NLD = int(os.environ.get("MAX_CONCURRENT_NLD", 5))
 
 
 # ---------------------------------------------------------------------------
+# Checkpoint helpers
+# ---------------------------------------------------------------------------
+
+def _nld_path(condition: str) -> str:
+    return os.path.join(OUTPUT_DIR, f"nld_{condition}.csv")
+
+
+def _cat_path(condition: str) -> str:
+    return os.path.join(OUTPUT_DIR, f"cat_{condition}.csv")
+
+
+def _load_checkpoint(path: str) -> tuple[set, list[dict]]:
+    if os.path.exists(path):
+        try:
+            df = pd.read_csv(path, encoding="utf-8-sig")
+            return set(df["Term"].tolist()), df.to_dict("records")
+        except Exception:
+            pass
+    return set(), []
+
+
+def _append_row(path: str, row: dict, is_first: bool):
+    pd.DataFrame([row]).to_csv(
+        path, mode="a", header=is_first, index=False, encoding="utf-8-sig"
+    )
+
+
+# ---------------------------------------------------------------------------
+# Generic NLD runner (shared by conditions A, B, D)
+# ---------------------------------------------------------------------------
+
+def _run_nld_generation(
+    condition: str,
+    terms: list[str],
+    process_fn: Callable[[str], dict],
+) -> pd.DataFrame:
+    """Run NLD generation with checkpoint/resume and concurrent workers."""
+    print(f"\n=== Condition {condition}: {CONDITION_LABELS[condition]} ===")
+    path = _nld_path(condition)
+    completed, rows = _load_checkpoint(path)
+    if completed:
+        print(f"  Resuming: {len(completed)} terms already done.")
+
+    pending = [t for t in terms if t not in completed]
+    if not pending:
+        return pd.DataFrame(rows)
+
+    total = len(terms)
+    lock = threading.Lock()
+    max_workers = min(MAX_CONCURRENT_NLD, len(pending))
+    print(f"  Concurrent NLD: {max_workers} workers, {len(pending)} pending")
+
+    with ThreadPoolExecutor(max_workers=max_workers) as executor:
+        futures = {executor.submit(process_fn, t): t for t in pending}
+        for future in as_completed(futures):
+            term = futures[future]
+            try:
+                row = future.result()
+            except Exception as e:
+                print(f"    ERROR: {e}")
+                row = {"Term": term, "NLD": f"ERROR: {e}", "Context_Used": "Error", "Context": ""}
+            with lock:
+                rows.append(row)
+                completed.add(term)
+                _append_row(path, row, len(rows) == 1)
+            print(f"  [{len(completed)}/{total}] {condition}: '{term}' done")
+
+    df = pd.DataFrame(rows)
+    df.to_csv(path, index=False, encoding="utf-8-sig")
+    print(f"  Condition {condition} NLD: {len(df)} terms -> {path}")
+    return df
+
+
+def _parse_nld_response(nld_json_str: str, with_context: bool = False) -> tuple[str, object]:
+    """Parse LLM NLD JSON response into (nld_text, context_used)."""
+    try:
+        nld_data = json.loads(nld_json_str)
+        nld = nld_data.get("Definition", nld_json_str)
+        ctx_used = nld_data.get("Context_Used", with_context)
+    except json.JSONDecodeError:
+        nld = nld_json_str
+        ctx_used = "Error" if with_context else False
+    return nld, ctx_used
+
+
+# ---------------------------------------------------------------------------
+# Per-condition NLD runners
+# ---------------------------------------------------------------------------
+
+def run_condition_a(terms: list[str], vector_store, bm25_retriever) -> pd.DataFrame:
+    """Full pipeline: RAG context -> NLD."""
+    path = _nld_path("A")
+    pipeline_nld = os.environ.get("NLD_OUTPUT", "output/4_nld_generated_definitions.csv")
+    if not os.path.exists(path) and os.path.exists(pipeline_nld):
+        pipeline_df = pd.read_csv(pipeline_nld, encoding="utf-8-sig")
+        if set(terms).issubset(set(pipeline_df["Term"].tolist())):
+            pipeline_df.to_csv(path, index=False, encoding="utf-8-sig")
+            print(f"  Reused pipeline output ({pipeline_nld}) as Condition A NLD.")
+            return pipeline_df
+
+    def _process(term):
+        docs = get_relevant_documents(term, vector_store, bm25_retriever=bm25_retriever)
+        context = format_docs_for_context(docs)
+        nld_json_str, _ = generate_nld(term, context)
+        nld, ctx_used = _parse_nld_response(nld_json_str, with_context=True)
+        if SLEEP_SECONDS > 0:
+            time.sleep(SLEEP_SECONDS)
+        return {"Term": term, "NLD": nld, "Context_Used": ctx_used, "Context": context}
+
+    return _run_nld_generation("A", terms, _process)
+
+
+def run_condition_b(terms: list[str]) -> pd.DataFrame:
+    """No RAG: generate NLD with parametric knowledge only."""
+    def _process(term):
+        nld_json_str, _ = generate_nld(term, "No additional context available.")
+        nld, _ = _parse_nld_response(nld_json_str)
+        if SLEEP_SECONDS > 0:
+            time.sleep(SLEEP_SECONDS)
+        return {"Term": term, "NLD": nld, "Context_Used": False, "Context": ""}
+
+    return _run_nld_generation("B", terms, _process)
+
+
+def run_condition_c(terms: list[str]) -> pd.DataFrame:
+    """No NLD: placeholder rows (no LLM calls)."""
+    print("\n=== Condition C: No NLD (Term only) ===")
+    rows = [{"Term": t, "NLD": "", "Context_Used": False, "Context": ""} for t in terms]
+    df = pd.DataFrame(rows)
+    df.to_csv(_nld_path("C"), index=False, encoding="utf-8-sig")
+    print(f"  Condition C placeholder NLDs: {len(df)} terms -> {_nld_path('C')}")
+    return df
+
+
+def run_condition_d(terms: list[str], vector_store, bm25_retriever) -> pd.DataFrame:
+    """Raw RAG: retrieve context chunks (no NLD generation)."""
+    def _process(term):
+        try:
+            docs = get_relevant_documents(term, vector_store, bm25_retriever=bm25_retriever)
+            context = format_docs_for_context(docs)
+        except Exception as e:
+            context = f"ERROR: {e}"
+        return {"Term": term, "NLD": context, "Context_Used": True, "Context": context}
+
+    return _run_nld_generation("D", terms, _process)
+
+
+# ---------------------------------------------------------------------------
 # Categorizer (self-contained, supports all 4 conditions)
 # ---------------------------------------------------------------------------
 
-def _load_definitions():
-    """Load ontology definition files."""
+def _load_definitions() -> dict:
     paths = {
         "georeservoir": os.environ["GEORESERVOIR_DEFS_PATH"],
         "geocore": os.environ["GEOCORE_DEFS_PATH"],
         "bfo": os.environ["BFO_DEFS_PATH"],
     }
-    defs = {}
-    for key, path in paths.items():
-        with open(path, "r", encoding="utf-8") as f:
-            defs[key] = f.read()
-    return defs
+    return {key: open(path, "r", encoding="utf-8").read() for key, path in paths.items()}
 
 
 def _build_categorizer_prompt(defs: dict, is_raw_rag: bool = False):
@@ -128,7 +267,7 @@ def _build_categorizer_prompt(defs: dict, is_raw_rag: bool = False):
     return system_instruction, prompt_template
 
 
-def categorize_batch(
+def _categorize_batch(
     batch_items: list[dict],
     prompt_template: str,
     system_instruction: str,
@@ -154,229 +293,25 @@ def categorize_batch(
                 f"LLM response length ({len(response_json)}) != batch size ({len(batch_items)})"
             )
 
-        results = []
-        for idx, result_item in enumerate(response_json):
-            results.append({
+        return [
+            {
                 "Term": batch_items[idx]["term"],
-                "Category": result_item.get("category", "ERROR_PARSE"),
-                "Reasoning": result_item.get("reasoning", ""),
-            })
-        return results
+                "Category": item.get("category", "ERROR_PARSE"),
+                "Reasoning": item.get("reasoning", ""),
+            }
+            for idx, item in enumerate(response_json)
+        ]
 
     except json.JSONDecodeError:
         return [
-            {
-                "Term": item["term"],
-                "Category": "ERROR_INVALID_JSON",
-                "Reasoning": "LLM response was not valid JSON.",
-            }
-            for item in batch_items
+            {"Term": i["term"], "Category": "ERROR_INVALID_JSON", "Reasoning": "LLM response was not valid JSON."}
+            for i in batch_items
         ]
     except Exception as e:
         return [
-            {
-                "Term": item["term"],
-                "Category": "ERROR_GENERAL",
-                "Reasoning": f"Error: {str(e)}",
-            }
-            for item in batch_items
+            {"Term": i["term"], "Category": "ERROR_GENERAL", "Reasoning": f"Error: {e}"}
+            for i in batch_items
         ]
-
-
-# ---------------------------------------------------------------------------
-# Per-condition runners
-# ---------------------------------------------------------------------------
-
-def _checkpoint_path(condition: str) -> str:
-    return os.path.join(OUTPUT_DIR, f"nld_{condition}.csv")
-
-
-def _cat_checkpoint_path(condition: str) -> str:
-    return os.path.join(OUTPUT_DIR, f"cat_{condition}.csv")
-
-
-def _load_checkpoint(path: str) -> tuple[set, list[dict]]:
-    """Load checkpoint CSV if it exists. Returns (completed_terms, rows)."""
-    if os.path.exists(path):
-        try:
-            df = pd.read_csv(path, encoding="utf-8-sig")
-            return set(df["Term"].tolist()), df.to_dict("records")
-        except Exception:
-            pass
-    return set(), []
-
-
-def _append_row(path: str, row: dict, is_first: bool):
-    """Atomic single-row append to CSV."""
-    pd.DataFrame([row]).to_csv(
-        path, mode="a", header=is_first, index=False, encoding="utf-8-sig"
-    )
-
-
-def run_condition_a(terms: list[str], vector_store, bm25_retriever) -> pd.DataFrame:
-    """Full pipeline: RAG context -> NLD -> categorize(term + NLD).
-    Reuses existing pipeline Step 4 output if available and complete."""
-    print("\n=== Condition A: Full Pipeline (RAG + NLD) ===")
-    nld_path = _checkpoint_path("A")
-
-    # Reuse main pipeline NLD output if Condition A checkpoint doesn't exist yet
-    pipeline_nld = os.environ.get("NLD_OUTPUT", "output/4_nld_generated_definitions.csv")
-    if not os.path.exists(nld_path) and os.path.exists(pipeline_nld):
-        pipeline_df = pd.read_csv(pipeline_nld, encoding="utf-8-sig")
-        if set(terms).issubset(set(pipeline_df["Term"].tolist())):
-            pipeline_df.to_csv(nld_path, index=False, encoding="utf-8-sig")
-            print(f"  Reused pipeline output ({pipeline_nld}) as Condition A NLD.")
-            return pipeline_df
-
-    completed, nld_rows = _load_checkpoint(nld_path)
-    if completed:
-        print(f"  Resuming: {len(completed)} terms already done.")
-
-    pending = [t for t in terms if t not in completed]
-    if not pending:
-        return pd.DataFrame(nld_rows)
-
-    total = len(terms)
-    checkpoint_lock = threading.Lock()
-
-    def _process_a(term):
-        docs = get_relevant_documents(term, vector_store, bm25_retriever=bm25_retriever)
-        context = format_docs_for_context(docs)
-        nld_json_str, _ = generate_nld(term, context)
-        try:
-            nld_data = json.loads(nld_json_str)
-            nld = nld_data.get("Definition", nld_json_str)
-            ctx_used = nld_data.get("Context_Used", True)
-        except json.JSONDecodeError:
-            nld = nld_json_str
-            ctx_used = "Error"
-        if SLEEP_SECONDS > 0:
-            time.sleep(SLEEP_SECONDS)
-        return {"Term": term, "NLD": nld, "Context_Used": ctx_used, "Context": context}
-
-    max_workers = min(MAX_CONCURRENT_NLD, len(pending))
-    print(f"  Concurrent NLD: {max_workers} workers, {len(pending)} pending")
-    with ThreadPoolExecutor(max_workers=max_workers) as executor:
-        future_to_term = {executor.submit(_process_a, t): t for t in pending}
-        for future in as_completed(future_to_term):
-            term = future_to_term[future]
-            try:
-                row = future.result()
-                with checkpoint_lock:
-                    nld_rows.append(row)
-                    completed.add(term)
-                    _append_row(nld_path, row, len(nld_rows) == 1)
-                print(f"  [{len(completed)}/{total}] A: '{term}' done")
-            except Exception as e:
-                print(f"    ERROR: {e}")
-                row = {"Term": term, "NLD": f"ERROR: {e}", "Context_Used": "Error", "Context": ""}
-                with checkpoint_lock:
-                    nld_rows.append(row)
-                    completed.add(term)
-                    _append_row(nld_path, row, len(nld_rows) == 1)
-
-    df = pd.DataFrame(nld_rows)
-    df.to_csv(nld_path, index=False, encoding="utf-8-sig")
-    print(f"  Condition A NLD: {len(df)} terms -> {nld_path}")
-    return df
-
-
-def run_condition_b(terms: list[str]) -> pd.DataFrame:
-    """No RAG: generate NLD with 'No additional context available.'"""
-    print("\n=== Condition B: No RAG (Parametric NLD only) ===")
-    nld_path = _checkpoint_path("B")
-    completed, nld_rows = _load_checkpoint(nld_path)
-    if completed:
-        print(f"  Resuming: {len(completed)} terms already done.")
-
-    pending = [t for t in terms if t not in completed]
-    if not pending:
-        return pd.DataFrame(nld_rows)
-
-    total = len(terms)
-    checkpoint_lock = threading.Lock()
-
-    def _process_b(term):
-        nld_json_str, _ = generate_nld(term, "No additional context available.")
-        try:
-            nld_data = json.loads(nld_json_str)
-            nld = nld_data.get("Definition", nld_json_str)
-        except json.JSONDecodeError:
-            nld = nld_json_str
-        if SLEEP_SECONDS > 0:
-            time.sleep(SLEEP_SECONDS)
-        return {"Term": term, "NLD": nld, "Context_Used": False, "Context": ""}
-
-    max_workers = min(MAX_CONCURRENT_NLD, len(pending))
-    print(f"  Concurrent NLD: {max_workers} workers, {len(pending)} pending")
-    with ThreadPoolExecutor(max_workers=max_workers) as executor:
-        future_to_term = {executor.submit(_process_b, t): t for t in pending}
-        for future in as_completed(future_to_term):
-            term = future_to_term[future]
-            try:
-                row = future.result()
-                with checkpoint_lock:
-                    nld_rows.append(row)
-                    completed.add(term)
-                    _append_row(nld_path, row, len(nld_rows) == 1)
-                print(f"  [{len(completed)}/{total}] B: '{term}' done")
-            except Exception as e:
-                print(f"    ERROR: {e}")
-                row = {"Term": term, "NLD": f"ERROR: {e}", "Context_Used": "Error", "Context": ""}
-                with checkpoint_lock:
-                    nld_rows.append(row)
-                    completed.add(term)
-                    _append_row(nld_path, row, len(nld_rows) == 1)
-
-    df = pd.DataFrame(nld_rows)
-    df.to_csv(nld_path, index=False, encoding="utf-8-sig")
-    print(f"  Condition B NLD: {len(df)} terms -> {nld_path}")
-    return df
-
-
-def run_condition_c(terms: list[str]) -> pd.DataFrame:
-    """No NLD: categorizer receives 'No definition available.'"""
-    print("\n=== Condition C: No NLD (Term only) ===")
-    rows = [{"Term": t, "NLD": "", "Context_Used": False, "Context": ""} for t in terms]
-    df = pd.DataFrame(rows)
-    path = _checkpoint_path("C")
-    df.to_csv(path, index=False, encoding="utf-8-sig")
-    print(f"  Condition C placeholder NLDs: {len(df)} terms -> {path}")
-    return df
-
-
-def run_condition_d(terms: list[str], vector_store, bm25_retriever) -> pd.DataFrame:
-    """Raw RAG: skip NLD, feed raw chunks to categorizer."""
-    print("\n=== Condition D: Raw RAG (no NLD) ===")
-    nld_path = _checkpoint_path("D")
-    completed, nld_rows = _load_checkpoint(nld_path)
-    if completed:
-        print(f"  Resuming: {len(completed)} terms already done.")
-
-    pending = [t for t in terms if t not in completed]
-    total = len(terms)
-    checkpoint_lock = threading.Lock()
-
-    for i, term in enumerate(pending):
-        try:
-            docs = get_relevant_documents(term, vector_store, bm25_retriever=bm25_retriever)
-            context = format_docs_for_context(docs)
-        except Exception as e:
-            print(f"    ERROR: {e}")
-            context = f"ERROR: {e}"
-
-        row = {"Term": term, "NLD": context, "Context_Used": True, "Context": context}
-        with checkpoint_lock:
-            nld_rows.append(row)
-            completed.add(term)
-            _append_row(nld_path, row, len(nld_rows) == 1)
-        if (i + 1) % 20 == 0:
-            print(f"  [{len(completed)}/{total}] D: RAG retrieval...")
-
-    df = pd.DataFrame(nld_rows)
-    df.to_csv(nld_path, index=False, encoding="utf-8-sig")
-    print(f"  Condition D RAG context: {len(df)} terms -> {nld_path}")
-    return df
 
 
 def run_categorization(
@@ -384,11 +319,10 @@ def run_categorization(
 ) -> pd.DataFrame:
     """Run categorization for a given condition's NLD output."""
     print(f"\n--- Categorizing Condition {condition} ({CONDITION_LABELS[condition]}) ---")
-
-    cat_path = _cat_checkpoint_path(condition)
+    cat_csv = _cat_path(condition)
 
     # Reuse main pipeline categorization output for Condition A if available
-    if condition == "A" and not os.path.exists(cat_path):
+    if condition == "A" and not os.path.exists(cat_csv):
         pipeline_cat = os.environ.get("CATEGORIZED_OUTPUT", "output/5_categorized_ontology.csv")
         if os.path.exists(pipeline_cat):
             pcat = pd.read_csv(pipeline_cat, encoding="utf-8-sig")
@@ -398,52 +332,49 @@ def run_categorization(
                 "Context_Used": pcat.get("RAG_Context_Used", ""),
                 "Condition": "A",
             })
-            cat_a.to_csv(cat_path, index=False, encoding="utf-8-sig")
+            cat_a.to_csv(cat_csv, index=False, encoding="utf-8-sig")
             print(f"  Reused pipeline output ({pipeline_cat}) as Condition A categorization.")
             return cat_a
 
-    completed, cat_rows = _load_checkpoint(cat_path)
+    completed, cat_rows = _load_checkpoint(cat_csv)
     if completed:
         print(f"  Resuming: {len(completed)} terms already categorized.")
 
     is_raw_rag = condition == "D"
     sys_instr, prompt_tmpl = _build_categorizer_prompt(defs, is_raw_rag=is_raw_rag)
+    model_name = os.environ.get("LLM_GENERATION_MODEL", "gemini-2.5-pro")
+    model_temp = float(os.environ.get("LLM_GENERATION_TEMPERATURE", 0))
 
-    MODEL_NAME = os.environ.get("LLM_GENERATION_MODEL", "gemini-2.5-pro")
-    MODEL_TEMPERATURE = float(os.environ.get("LLM_GENERATION_TEMPERATURE", 0))
-
-    # Filter to uncategorized terms
-    remaining_df = nld_df[~nld_df["Term"].isin(completed)]
-    total = len(remaining_df)
+    remaining = nld_df[~nld_df["Term"].isin(completed)]
+    total = len(remaining)
 
     for i in range(0, total, batch_size):
-        batch_df = remaining_df.iloc[i : i + batch_size]
+        batch_df = remaining.iloc[i : i + batch_size]
         batch_items = []
         for _, row in batch_df.iterrows():
             if is_raw_rag:
                 batch_items.append({"term": row["Term"], "context": row["NLD"]})
             elif condition == "C":
-                batch_items.append({"term": row["Term"], "nld": ""})  # Empty NLD — term-only condition
+                batch_items.append({"term": row["Term"], "nld": ""})
             else:
                 batch_items.append({"term": row["Term"], "nld": row["NLD"]})
 
         print(f"  Categorizing {i+1}-{min(i+batch_size, total)} of {total}...")
-        results = categorize_batch(batch_items, prompt_tmpl, sys_instr, MODEL_NAME, MODEL_TEMPERATURE)
+        results = _categorize_batch(batch_items, prompt_tmpl, sys_instr, model_name, model_temp)
 
         for result in results:
-            # Enrich with NLD/context info from the nld_df
             nld_row = nld_df[nld_df["Term"] == result["Term"]].iloc[0]
             result["NLD"] = nld_row["NLD"]
             result["Context_Used"] = nld_row.get("Context_Used", "")
             result["Condition"] = condition
             cat_rows.append(result)
-            _append_row(cat_path, result, not os.path.exists(cat_path))
+            _append_row(cat_csv, result, not os.path.exists(cat_csv))
 
         time.sleep(2)
 
     df = pd.DataFrame(cat_rows)
-    df.to_csv(cat_path, index=False, encoding="utf-8-sig")
-    print(f"  Condition {condition} categorized: {len(df)} terms -> {cat_path}")
+    df.to_csv(cat_csv, index=False, encoding="utf-8-sig")
+    print(f"  Condition {condition} categorized: {len(df)} terms -> {cat_csv}")
     return df
 
 
@@ -452,24 +383,16 @@ def run_categorization(
 # ---------------------------------------------------------------------------
 
 def run_ablation(conditions: list[str] | None = None):
-    """
-    Run the full ablation study.
-
-    Args:
-        conditions: list of condition letters to run (default: all 4).
-                    Useful for resuming specific conditions.
-    """
+    """Run the full ablation study."""
     if conditions is None:
         conditions = CONDITIONS
 
-    _ensure_genai_configured()
-
+    get_client()
     os.makedirs(OUTPUT_DIR, exist_ok=True)
 
     # Load terms (Steps 1-3 output)
     terms_file = os.environ.get("FILTERED_TERMS_OUTPUT", "output/3_filtered_top_terms.csv")
-    df_terms = pd.read_csv(terms_file, encoding="utf-8-sig")
-    terms = df_terms["Readable_Term"].tolist()
+    terms = pd.read_csv(terms_file, encoding="utf-8-sig")["Readable_Term"].tolist()
     print(f"\nAblation study: {len(terms)} terms, conditions: {conditions}")
 
     # Setup RAG (needed for A and D)
@@ -481,18 +404,17 @@ def run_ablation(conditions: list[str] | None = None):
     defs = _load_definitions()
     batch_size = int(os.environ.get("BATCH_SIZE", 5))
 
-    # --- Run NLD generation per condition (parallel where possible) ---
+    # --- NLD generation per condition ---
     nld_results = {}
 
     if "A" in conditions:
         nld_results["A"] = run_condition_a(terms, vector_store, bm25)
 
-    # C is instant (no LLM calls), run it immediately
+    # C is instant (no LLM calls)
     if "C" in conditions:
         nld_results["C"] = run_condition_c(terms)
 
-    # B and D are independent — run them in parallel threads
-    # B = parametric NLD (LLM only), D = RAG retrieval (local only)
+    # B and D are independent — run in parallel
     parallel_nld = {}
     if "B" in conditions:
         parallel_nld["B"] = lambda: run_condition_b(terms)
@@ -501,40 +423,39 @@ def run_ablation(conditions: list[str] | None = None):
 
     if parallel_nld:
         print(f"\n  Running NLD generation for conditions {list(parallel_nld.keys())} in parallel...")
-        with ThreadPoolExecutor(max_workers=len(parallel_nld)) as cond_executor:
-            cond_futures = {cond_executor.submit(fn): cond for cond, fn in parallel_nld.items()}
-            for future in as_completed(cond_futures):
-                cond = cond_futures[future]
+        with ThreadPoolExecutor(max_workers=len(parallel_nld)) as executor:
+            futures = {executor.submit(fn): cond for cond, fn in parallel_nld.items()}
+            for future in as_completed(futures):
+                cond = futures[future]
                 try:
                     nld_results[cond] = future.result()
                 except Exception as e:
                     print(f"  ERROR in condition {cond}: {e}")
 
-    # --- Run categorization per condition (parallel for all) ---
+    # --- Categorization per condition (parallel for all) ---
     cat_results = {}
     cat_conditions = [c for c in conditions if c in nld_results]
     if cat_conditions:
         print(f"\n  Running categorization for conditions {cat_conditions} in parallel...")
-        with ThreadPoolExecutor(max_workers=len(cat_conditions)) as cat_executor:
-            cat_futures = {
-                cat_executor.submit(run_categorization, cond, nld_results[cond], defs, batch_size): cond
+        with ThreadPoolExecutor(max_workers=len(cat_conditions)) as executor:
+            futures = {
+                executor.submit(run_categorization, cond, nld_results[cond], defs, batch_size): cond
                 for cond in cat_conditions
             }
-            for future in as_completed(cat_futures):
-                cond = cat_futures[future]
+            for future in as_completed(futures):
+                cond = futures[future]
                 try:
                     cat_results[cond] = future.result()
                 except Exception as e:
                     print(f"  ERROR categorizing condition {cond}: {e}")
 
-    # --- Merge all results into a single analysis-ready file ---
-    # Auto-include Condition A from pipeline output or checkpoint if not already in cat_results
+    # --- Auto-include Condition A from pipeline output or checkpoint ---
     if "A" not in cat_results:
-        cat_a_path = _cat_checkpoint_path("A")
+        cat_a_csv = _cat_path("A")
         pipeline_cat = os.environ.get("CATEGORIZED_OUTPUT", "output/5_categorized_ontology.csv")
-        if os.path.exists(cat_a_path):
-            cat_results["A"] = pd.read_csv(cat_a_path, encoding="utf-8-sig")
-            print(f"\n  Auto-included Condition A from checkpoint: {cat_a_path}")
+        if os.path.exists(cat_a_csv):
+            cat_results["A"] = pd.read_csv(cat_a_csv, encoding="utf-8-sig")
+            print(f"\n  Auto-included Condition A from checkpoint: {cat_a_csv}")
         elif os.path.exists(pipeline_cat):
             pcat = pd.read_csv(pipeline_cat, encoding="utf-8-sig")
             cat_a = pd.DataFrame({
@@ -543,10 +464,11 @@ def run_ablation(conditions: list[str] | None = None):
                 "Context_Used": pcat.get("RAG_Context_Used", ""),
                 "Condition": "A",
             })
-            cat_a.to_csv(cat_a_path, index=False, encoding="utf-8-sig")
+            cat_a.to_csv(cat_a_csv, index=False, encoding="utf-8-sig")
             cat_results["A"] = cat_a
             print(f"\n  Auto-included Condition A from pipeline output: {pipeline_cat}")
 
+    # --- Merge all results ---
     all_cat = []
     for cond, df in cat_results.items():
         df_copy = df.copy()
@@ -559,9 +481,7 @@ def run_ablation(conditions: list[str] | None = None):
         merged.to_csv(merged_path, index=False, encoding="utf-8-sig")
         print(f"\n=== Ablation complete. Merged results: {merged_path} ===")
 
-        # Quick summary
-        all_conds = sorted(cat_results.keys())
-        for cond in all_conds:
+        for cond in sorted(cat_results.keys()):
             df_c = merged[merged["Condition"] == cond]
             n_classified = len(df_c[~df_c["Category"].str.startswith("ERROR")])
             n_not = len(df_c[df_c["Category"] == "NOT_CLASSIFIED"])
@@ -574,17 +494,12 @@ def run_ablation(conditions: list[str] | None = None):
     return cat_results
 
 
-# ---------------------------------------------------------------------------
-# CLI
-# ---------------------------------------------------------------------------
-
 if __name__ == "__main__":
-    parser = argparse.ArgumentParser(description="Run ablation study")
+    import argparse
+    parser = argparse.ArgumentParser(description="Ablation Study Runner")
     parser.add_argument(
-        "--conditions",
-        type=str,
-        default="A,B,C,D",
-        help="Comma-separated list of conditions to run (default: A,B,C,D)",
+        "--conditions", type=str, default="A,B,C,D",
+        help="Comma-separated conditions to run (default: A,B,C,D)",
     )
     args = parser.parse_args()
     conds = [c.strip().upper() for c in args.conditions.split(",")]
