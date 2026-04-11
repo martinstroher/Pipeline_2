@@ -23,6 +23,7 @@ load_dotenv()
 from src.utils.rag_setup import setup_rag, get_relevant_documents
 from src.modules.nld_generator import generate_nld, format_docs_for_context
 from src.utils.gemini_client import get_client, generate as gemini_generate
+from src.utils.prompt_loader import load_prompt
 
 
 # ---------------------------------------------------------------------------
@@ -205,65 +206,14 @@ def _load_definitions() -> dict:
 
 def _build_categorizer_prompt(defs: dict, is_raw_rag: bool = False):
     """Return (system_instruction, prompt_template) for the categorizer."""
-    system_instruction = (
-        "You are an expert ontology engineer specializing in foundational (BFO) "
-        "and geological (GeoCore and GeoReservoir) ontologies. "
-        "You process data in batches and your response format MUST be a valid JSON array of objects."
+    filename = "ablation_categorization_rag.txt" if is_raw_rag else "ablation_categorization_nld.txt"
+    system_instruction, prompt_template = load_prompt(filename)
+    prompt_template = prompt_template.format(
+        georeservoir_definitions=defs["georeservoir"],
+        geocore_definitions=defs["geocore"],
+        bfo_definitions=defs["bfo"],
+        json_batch="{json_batch}",
     )
-
-    if is_raw_rag:
-        data_description = (
-            '**INPUT:** A JSON array of objects, where each object has a "term" and '
-            '"context" field (raw corpus passages retrieved via RAG).\n'
-            "    -   **OUTPUT:** Your response MUST BE a valid JSON array. Each object "
-            'must contain the "term", the assigned "category", and a "reasoning" string.'
-        )
-        data_instruction = (
-            "1.  **Analyze Data:** Read the Term and its retrieved corpus context.\n"
-            "    2.  **Classify** the term based on the corpus context provided."
-        )
-    else:
-        data_description = (
-            '**INPUT:** A JSON array of objects, where each object has a "term" and '
-            '"nld" field.\n'
-            "    -   **OUTPUT:** Your response MUST BE a valid JSON array. Each object "
-            'must contain the "term", the assigned "category", and a "reasoning" string.'
-        )
-        data_instruction = (
-            "1.  **Analyze Data:** Read the Term and, if present, its NLD.\n"
-            "    2.  **Classify** the term based on its Natural Language Definition."
-        )
-
-    prompt_template = f"""Your task is to classify a batch of geological terms.
-
-    **METHODOLOGY (Follow Strictly for each item):**
-    {data_instruction}
-    3.  **Prioritize GeoReservoir:** First, attempt to classify the term into one of the `### GeoReservoir Categories`.
-    4.  **Fallback to GeoCore:** If and only if no GeoReservoir category is a good fit, then attempt to classify it into one of the `### GeoCore Categories`.
-    5.  **Fallback to BFO:** If and only if no GeoCore category fits, then attempt to classify it into one of the `### BFO Categories`.
-    6.  **Final Fallback:** If the term does not fit well into ANY of the provided categories (GeoReservoir, GeoCore, or BFO), you MUST use the string `NOT_CLASSIFIED`. Reserve NOT_CLASSIFIED for physical analytical instruments treated as objects (e.g., 'Microscope'). Characterization methods and analytical processes that describe geological observations (e.g., 'Petrographic Analysis') may fit 'Geological Process' in GeoCore — prefer a real category when the NLD describes a geological action, observation, or property.
-    7.  **Provide Reasoning:** In one short sentence, explain WHY you chose that category.
-
-    **INPUT/OUTPUT FORMAT:**
-    -   {data_description}
-    -   The value of "category" MUST exactly match one of the category name strings listed above, verbatim, including capitalization. The only exception is "NOT_CLASSIFIED".
-
-    ---
-    **ONTOLOGY CATEGORIES REFERENCE:**
-
-    ### GeoReservoir Categories:
-    {defs["georeservoir"]}
-
-    ### GeoCore Categories:
-    {defs["geocore"]}
-
-    ### BFO Categories:
-    {defs["bfo"]}
-
-    ---
-    **DATA TO CLASSIFY:**
-    {{json_batch}}
-    """
     return system_instruction, prompt_template
 
 

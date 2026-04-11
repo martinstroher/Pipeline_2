@@ -17,47 +17,12 @@ from tqdm import tqdm
 
 from src.utils import log
 from src.utils.gemini_client import generate
+from src.utils.prompt_loader import load_prompt
 from src.utils.rag_setup import get_relevant_documents, load_vector_store
 
 MAX_CONCURRENT = int(os.environ.get("MAX_CONCURRENT_NLD", 5))
 
-_SYSTEM_INSTRUCTION = (
-    "You are a senior geoscientist and ontology engineer. Your expertise spans "
-    "oil and gas exploration geology, structural geology, stratigraphy, and "
-    "petroleum systems, with a specific focus on the carbonate reservoirs of "
-    "the Brazilian Pre-Salt."
-)
-
-_PROMPT_TEMPLATE = """Generate a concise and precise Natural Language Definition (NLD) for the provided geological term.
-
-Mandatory Instructions:
-1. The FIRST sentence MUST follow the Aristotelian pattern "X is a Y that Z", where Y is the proximate genus and Z is the differentia. Up to two additional sentences may provide domain-specific elaboration. Minimum two sentences total.
-2. The definition MUST be written in English.
-3. If a term is polysemous, define the sense most relevant to Pre-Salt petroleum geology.
-4. Primary Knowledge Source: Base the definition PRIMARILY on the provided context, as it contains the most up-to-date and domain-specific knowledge. Use your internal knowledge of Brazilian Pre-Salt geology only to structure the definition correctly, fill in minor conceptual gaps, or if the provided context does not define the term geologically. If the context section contains no geologically relevant information about the term (including when it reads 'No additional context available.'), rely entirely on your domain expertise and set Context_Used to false.
-5. Output ONLY a valid JSON object with exactly two keys:
-   - "Definition": strictly the string containing the generated NLD.
-   - "Context_Used": boolean (true if the provided context was relevant and used as the primary source, false if you had to fallback entirely to internal knowledge).
-
-**EXAMPLES:**
-Term: "Grainstone"
-Context: [paper.md > Carbonate Classification] Grainstones are grain-supported carbonate rocks lacking mud matrix...
-Output: {{"Definition": "Grainstone is a grain-supported sedimentary carbonate rock that is characterized by the absence of micrite matrix, with grains typically consisting of allochems such as bivalves, ostracods, gastropods, ooids, or intraclasts.", "Context_Used": true}}
-
-Term: "Coquina"
-Context: [paper.md > Reservoir Facies] Coquinas from the Santos Basin are bioclastic carbonates composed predominantly of bivalve shells...
-Output: {{"Definition": "Coquina is a sedimentary rock that is primarily composed of accumulated mollusk shells (bivalves and gastropods) and their fragments, deposited in brackish to saline lacustrine environments, commonly occurring as fragmented shell beds and serving as a significant reservoir rock type.", "Context_Used": true}}
-
-Term: "Dolomitization"
-Context: No additional context available.
-Output: {{"Definition": "Dolomitization is a diagenetic process that replaces calcium carbonate minerals with dolomite through the substitution of calcium ions by magnesium ions from Mg-rich fluids, commonly occurring in burial or hydrothermal settings and frequently enhancing reservoir porosity and permeability.", "Context_Used": false}}
-
----
-Term to be defined: "{term}"
-
-Relevant context:
-{context}
-"""
+_SYSTEM_INSTRUCTION, _PROMPT_TEMPLATE = load_prompt("nld_generation.txt")
 
 
 def format_docs_for_context(docs) -> str:

@@ -7,6 +7,7 @@ from tqdm import tqdm
 
 from src.utils.gemini_client import generate
 from src.utils import log
+from src.utils.prompt_loader import load_prompt
 
 
 def _extract_category_names(text: str) -> set:
@@ -74,58 +75,7 @@ def run_term_categorization():
             return None
 
 
-    system_instruction = "You are an expert ontology engineer specializing in foundational (BFO) and geological (GeoCore and GeoReservoir) ontologies. You process data in batches and your response format MUST be a valid JSON array of objects."
-    prompt_template = """Your task is to classify a batch of geological terms based on their Natural Language Definitions (NLDs).
-
-    **METHODOLOGY (Follow Strictly for each item):**
-    1.  **Analyze Data:** Read the Term and, if present, its NLD.
-    2.  **Prioritize GeoReservoir:** First, attempt to classify the term into one of the `### GeoReservoir Categories`.
-    3.  **Fallback to GeoCore:** If and only if no GeoReservoir category is a good fit, then attempt to classify it into one of the `### GeoCore Categories`.
-    4.  **Fallback to BFO:** If and only if no GeoCore category fits, then attempt to classify it into one of the `### BFO Categories`.
-    5.  **Final Fallback:** If the term does not fit well into ANY of the provided categories (GeoReservoir, GeoCore, or BFO), you MUST use the string `NOT_CLASSIFIED`. Reserve NOT_CLASSIFIED for physical analytical instruments treated as objects (e.g., 'Microscope'). Characterization methods and analytical processes that describe geological observations or workflows (e.g., 'Petrographic Analysis', 'Core Analysis') may fit 'Geological Process' in GeoCore — prefer a real category over NOT_CLASSIFIED when the NLD describes a geological action, observation, or property.
-    6.  **Provide Reasoning:** In one short sentence, explain WHY you chose that category based on the NLD.
-
-    **INPUT/OUTPUT FORMAT:**
-    -   **INPUT:** A JSON array of objects, where each object has a "term" and optionally an "nld" field.
-    -   **OUTPUT:** Your response MUST BE a valid JSON array. Each object in the array must contain the "term", the assigned "category", and a "reasoning" string.
-    -   The value of "category" MUST exactly match one of the category name strings listed above, verbatim, including capitalization (e.g., "Sedimentary Rock" not "sedimentary rock" or "Sedimentary Rocks"). The only exception is "NOT_CLASSIFIED".
-
-    ---
-    **ONTOLOGY CATEGORIES REFERENCE:**
-
-    ### GeoReservoir Categories:
-    {georeservoir_definitions}
-
-    ### GeoCore Categories:
-    {geocore_definitions}
-
-    ### BFO Categories:
-    {bfo_definitions}
-
-    ---
-    **EXAMPLES:**
-
-    Input:  [{{"term": "Grainstone",
-              "nld": "Grainstone is a grain-supported sedimentary carbonate rock that lacks micrite matrix, with allochems typically consisting of bivalves, ostracods, or ooids."}}]
-    Output: [{{"term": "Grainstone",
-              "category": "Sedimentary Rock",
-              "reasoning": "Directly describes a type of sedimentary rock classified under GeoReservoir."}}]
-
-    Input:  [{{"term": "Normal Fault",
-              "nld": "Normal Fault is a geological structure formed by extensional tectonics where the hanging wall moves down relative to the footwall along a dip-slip fault plane."}}]
-    Output: [{{"term": "Normal Fault",
-              "category": "Geological Structure",
-              "reasoning": "Describes the internal structural arrangement of a geological object, fitting GeoCore."}}]
-
-    Input:  [{{"term": "Core Sample"}}]
-    Output: [{{"term": "Core Sample",
-              "category": "NOT_CLASSIFIED",
-              "reasoning": "Analytical instrument used to characterize formations, not an ontological geological concept."}}]
-
-    ---
-    **DATA TO CLASSIFY:**
-    {json_batch}
-    """
+    system_instruction, prompt_template = load_prompt("term_categorization.txt")
 
     df_nlds = load_nlds_from_csv(INPUT_FILE_PATH)
 
