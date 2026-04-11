@@ -15,7 +15,7 @@ Step 5:  term_categorizer.py
 Step 6:  taxonomy_builder.py
                                       Step 6b: relation_extractor.py  ← NEW MODULE
 Step 7:  owl_exporter.py              Step 7:  owl_exporter.py        ← MODIFIED (add restrictions)
-Step 7b: ontology_verifier.py         Step 7b: ontology_verifier.py   ← MODIFIED (add Layer 4)
+Step 7b: ontology_verifier.py         Step 7b: ontology_verifier.py
                                       Step 7c: self_correction loop   ← NEW (in pipeline.py)
 ```
 
@@ -76,15 +76,7 @@ def run_owl_export(
   "layers": {
     "syntax": { ... },
     "structure": { ... },
-    "oops_pitfalls": { ... },
-    "reasoner": {                        // ← NEW Layer 4
-      "layer": "reasoner",
-      "status": "PASS|FAIL|SKIP",
-      "reasoner_name": "HermiT",
-      "is_consistent": true,
-      "unsatisfiable_classes": [],
-      "errors": []
-    }
+    "oops_pitfalls": { ... }
   }
 }
 ```
@@ -126,8 +118,7 @@ flowchart TD
         S7b -->|"Layer 1: Syntax"| L1["RDFLib parse"]
         S7b -->|"Layer 2: Structure"| L2["Structural checks"]
         S7b -->|"Layer 3: OOPS!"| L3["Pitfall scan"]
-        S7b -->|"Layer 4: Reasoner"| L4["Owlready2 + HermiT"]
-        L4 --> RPT["7b_verification_report.json"]
+        L3 --> RPT["7b_verification_report.json"]
     end
 
     subgraph "Step 7c — Self-Correction Loop"
@@ -360,113 +351,6 @@ if is_individual:
     g.add((term_iri, prop_iri, filler_iri))
 else:
     _add_restriction(g, term_iri, prop_iri, filler_iri)
-```
-
----
-
-## 6. Ontology Verifier Modifications (Step 7b)
-
-### 6.1 Layer 4: Reasoner-Based Consistency Check
-
-```python
-def _verify_reasoner(ttl_path: str) -> dict:
-    """Run OWL DL reasoner to check consistency and satisfiability."""
-    result = {
-        "layer": "reasoner",
-        "status": "SKIP",
-        "reasoner_name": "HermiT",
-        "is_consistent": None,
-        "unsatisfiable_classes": [],
-        "errors": [],
-    }
-
-    try:
-        import owlready2
-    except ImportError:
-        result["errors"].append(
-            "owlready2 not installed. Install with: pip install owlready2"
-        )
-        return result
-
-    try:
-        onto = owlready2.get_ontology(f"file://{ttl_path}").load()
-    except Exception as e:
-        result["errors"].append(f"Failed to load ontology: {e}")
-        return result
-
-    try:
-        with onto:
-            owlready2.sync_reasoner_hermit(infer_property_values=False)
-
-        # Check for unsatisfiable classes (equivalent to owl:Nothing)
-        unsat = list(onto.inconsistent_classes())
-        result["is_consistent"] = len(unsat) == 0
-        result["unsatisfiable_classes"] = [str(c.iri) for c in unsat if hasattr(c, "iri")]
-        result["status"] = "PASS" if result["is_consistent"] else "FAIL"
-
-    except owlready2.OwlReadyInconsistentOntologyError:
-        result["is_consistent"] = False
-        result["status"] = "FAIL"
-        result["errors"].append("Ontology is globally inconsistent.")
-
-    except Exception as e:
-        result["errors"].append(f"Reasoner error: {e}")
-
-    return result
-```
-
-### 6.2 Java Dependency Handling
-
-HermiT (bundled with owlready2) requires Java. If Java is unavailable:
-
-```python
-try:
-    import subprocess
-    subprocess.run(["java", "-version"], capture_output=True, check=True)
-except (FileNotFoundError, subprocess.CalledProcessError):
-    result["errors"].append(
-        "Java not found. HermiT reasoner requires Java Runtime. "
-        "Install JRE or set JAVA_HOME. Layer 4 skipped."
-    )
-    return result
-```
-
-### 6.3 Integration in `run_ontology_verification()`
-
-New parameter and layer:
-
-```python
-def run_ontology_verification(
-    ttl_path: str,
-    output_path: str | None = None,
-    skip_oops: bool = False,
-    skip_reasoner: bool = False,    # ← NEW
-) -> dict:
-```
-
-Added after Layer 3 block:
-
-```python
-# ── Layer 4: Reasoner ──
-if skip_reasoner:
-    log.info("Layer 4: Reasoner consistency check — SKIPPED")
-    report["layers"]["reasoner"] = {"layer": "reasoner", "status": "SKIP"}
-else:
-    log.info("Layer 4: Reasoner consistency check (HermiT)...")
-    reasoner = _verify_reasoner(ttl_path)
-    report["layers"]["reasoner"] = reasoner
-
-    if reasoner["errors"]:
-        log.warn(f"  Reasoner: {reasoner['errors'][0]}")
-    elif reasoner["is_consistent"]:
-        log.success("  Reasoner: CONSISTENT — no unsatisfiable classes")
-    else:
-        n_unsat = len(reasoner["unsatisfiable_classes"])
-        log.error(f"  Reasoner: INCONSISTENT — {n_unsat} unsatisfiable classes")
-        for iri in reasoner["unsatisfiable_classes"][:10]:
-            log.error(f"    ⊥ {iri}")
-        if n_unsat > 10:
-            log.error(f"    ... and {n_unsat - 10} more")
 ```
 
 ---

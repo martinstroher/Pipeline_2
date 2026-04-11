@@ -111,6 +111,7 @@ Key validated findings that justify our design choices:
   - IRI generation normalises terms to lowercase before CamelCase conversion, preventing case-collision duplicates (e.g., "Carbonate Mineral" and "carbonate mineral" map to the same IRI).
   - UPPER_IRIS lookup is case-insensitive, so BFO/GeoCore/GeoReservoir terms are matched regardless of capitalisation.
   - Self-referential `rdfs:subClassOf` triples (term IRI = parent IRI) are detected and suppressed.
+  - Upper→upper triple suppression: triples where both subject and object resolve to upper-level IRIs (BFO/GeoCore/GeoReservoir) are skipped. Only triples where at least one side is a presalt: entity are emitted — the pipeline does not alter published upper ontologies.
 - Output: `output/7_ontology.ttl`
 
 ### `src/modules/ontology_verifier.py` — Step 7b: Ontology Verification

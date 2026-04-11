@@ -406,6 +406,7 @@ def run_test():
                 print(f"  [OK]   Step 7b issues: {summary}")
             if overall == "FAIL":
                 print(f"  [WARN] Step 7b: verification FAILED — {n_issues} issue(s) found")
+
         except Exception as e:
             print(f"  [WARN] Step 7b: could not parse report: {e}")
     else:

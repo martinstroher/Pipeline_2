@@ -52,7 +52,7 @@ PDFs  →  [Step 0]  →  Markdown files
 | **4 — Define (NLD)** | For each term, the system retrieves the 5 most relevant passages from the corpus and asks the LLM to write a **Natural Language Definition (NLD)** in strict Aristotelian form: *"X is a Y that Z"* — where Y is the proximate genus and Z is the differentiating characteristic. |
 | **5 — Classify** | Each term + its NLD is fed to the LLM, which classifies it into the most specific applicable upper ontology namespace using a waterfall: GeoReservoir → GeoCore → BFO. |
 | **6 — Taxonomy** | Terms within each namespace are arranged into a parent-child hierarchy by an LLM that uses the genus Y from each NLD to propose intermediate class names. Cycle detection prevents circular hierarchies (A→B→A) by re-parenting cyclic terms to the category root. |
-| **7 — Export** | The taxonomy is serialised as an OWL/Turtle file with `rdfs:subClassOf` links, `rdfs:label`, `rdfs:comment` (the NLD), and `owl:imports` for the BFO upper ontology. Case-insensitive IRI matching and self-reference guards prevent duplicate/invalid OWL triples. |
+| **7 — Export** | The taxonomy is serialised as an OWL/Turtle file with `rdfs:subClassOf` links, `rdfs:label`, `rdfs:comment` (the NLD), and `owl:imports` for the BFO upper ontology. Case-insensitive IRI matching, self-reference guards, and upper→upper triple suppression (never emits triples between two published upper-level IRIs) prevent duplicate/invalid OWL triples. |
 | **7b — Verify** | The exported ontology is verified post-hoc: RDFLib syntax parsing, structural analysis (orphan classes, missing labels/comments, self-references, upper-ontology anchoring), and optionally OOPS! pitfall scanning via REST API. Results are saved as a JSON report. |
 
 ---

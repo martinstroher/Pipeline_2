@@ -31,21 +31,129 @@ from src.modules.taxonomy_builder import UPPER_IRIS
 # Build case-insensitive lookup for UPPER_IRIS
 _UPPER_IRIS_LOWER = {k.lower(): v for k, v in UPPER_IRIS.items()}
 
+# Set of IRI values for quick "is upper-level?" checks
+_UPPER_IRI_VALUES = set(UPPER_IRIS.values())
+
+
+def _is_upper_iri(iri: URIRef) -> bool:
+    """Return True if the IRI belongs to an upper-level ontology (BFO/GeoCore/GeoReservoir)."""
+    return str(iri) in _UPPER_IRI_VALUES
+
 
 def _term_to_iri(term: str) -> URIRef:
-    """Convert a term string to a valid OWL IRI in the ontology namespace."""
-    # Case-insensitive check against known upper-level terms
+    """Convert a term string to a valid OWL IRI in the ontology namespace.
+
+    If the term matches a known upper-level concept (BFO, GeoCore, GeoReservoir),
+    returns the published IRI.  Otherwise mints a local presalt: IRI.
+    """
     term_lower = term.strip().lower()
+
     if term_lower in _UPPER_IRIS_LOWER:
         return URIRef(_UPPER_IRIS_LOWER[term_lower])
 
-    # Generate local IRI: CamelCase from lowercased input to avoid case collisions
+    return _mint_presalt_iri(term)
+
+
+def _mint_presalt_iri(term: str) -> URIRef:
+    """Generate a local presalt: CamelCase IRI from a term string."""
     local = re.sub(r"[^a-zA-Z0-9]", "_", term.strip().lower())
     local = re.sub(r"_+", "_", local).strip("_")
-    # CamelCase
     parts = local.split("_")
     camel = "".join(p.capitalize() for p in parts if p)
     return ONTO_NS[camel]
+
+
+# ── Upper-ontology backbone ────────────────────────────────────────────
+# Caches the subClassOf chain from published OWL files so that every
+# GeoCore/GeoReservoir class referenced in the graph gets its parent
+# links up to BFO.
+
+_UPPER_PARENT_MAP: dict[str, str] | None = None
+_UPPER_LABEL_FROM_OWL: dict[str, str] | None = None
+
+
+def _load_upper_parent_map() -> dict[str, str]:
+    """Parse reference OWL files and return {child_IRI: parent_IRI} for named classes.
+
+    Also populates _UPPER_LABEL_FROM_OWL with rdfs:label from the same files.
+    """
+    global _UPPER_PARENT_MAP, _UPPER_LABEL_FROM_OWL
+    if _UPPER_PARENT_MAP is not None:
+        return _UPPER_PARENT_MAP
+
+    _UPPER_PARENT_MAP = {}
+    _UPPER_LABEL_FROM_OWL = {}
+    owl_dir = os.path.join(os.path.dirname(__file__), "..", "..", "resources")
+    owl_files = ["bfo-core.owl", "geocore-full.owl", "geores-full.owl"]
+
+    for fname in owl_files:
+        fpath = os.path.join(owl_dir, fname)
+        if not os.path.exists(fpath):
+            continue
+        try:
+            ref_g = Graph()
+            ref_g.parse(fpath)
+            for s, _, o in ref_g.triples((None, RDFS.subClassOf, None)):
+                s_str, o_str = str(s), str(o)
+                if s_str.startswith("http") and o_str.startswith("http"):
+                    _UPPER_PARENT_MAP[s_str] = o_str
+            for s, _, o in ref_g.triples((None, RDFS.label, None)):
+                s_str = str(s)
+                if s_str.startswith("http"):
+                    _UPPER_LABEL_FROM_OWL[s_str] = str(o)
+        except Exception:
+            pass
+
+    return _UPPER_PARENT_MAP
+
+
+def _add_upper_backbone(g: Graph, referenced_upper_iris: set[str]) -> int:
+    """Add rdfs:subClassOf chain for every referenced upper-level IRI.
+
+    Walks up the published hierarchy (GeoCore → BFO) and adds class
+    declarations, labels, and subClassOf triples for each intermediate.
+    Returns the number of backbone triples added.
+    """
+    parent_map = _load_upper_parent_map()
+    # Merge labels: UPPER_IRIS names take priority, then OWL-sourced labels
+    label_map: dict[str, str] = dict(_UPPER_LABEL_FROM_OWL or {})
+    label_map.update({v: k for k, v in UPPER_IRIS.items()})
+    added = 0
+
+    # For each referenced upper IRI, walk up its chain
+    to_process = set(referenced_upper_iris)
+    processed = set()
+
+    while to_process:
+        iri_str = to_process.pop()
+        if iri_str in processed:
+            continue
+        processed.add(iri_str)
+
+        # Add label for this IRI if we know it and it's missing
+        if iri_str in label_map:
+            iri_uri = URIRef(iri_str)
+            if not list(g.objects(iri_uri, RDFS.label)):
+                g.add((iri_uri, RDF.type, OWL.Class))
+                g.add((iri_uri, RDFS.label, Literal(label_map[iri_str], lang="en")))
+
+        parent_str = parent_map.get(iri_str)
+        if not parent_str:
+            continue
+
+        child_uri = URIRef(iri_str)
+        parent_uri = URIRef(parent_str)
+
+        # Add subClassOf if not already present
+        if (child_uri, RDFS.subClassOf, parent_uri) not in g:
+            g.add((child_uri, RDF.type, OWL.Class))
+            g.add((child_uri, RDFS.subClassOf, parent_uri))
+            added += 1
+
+        # Continue walking up
+        to_process.add(parent_str)
+
+    return added
 
 
 def run_owl_export(
@@ -113,10 +221,20 @@ def run_owl_export(
         is_intermediate = row.get("Is_Intermediate", False)
 
         term_iri = _term_to_iri(str(term))
+        parent_iri = None
         has_parent = parent and not (isinstance(parent, float) and pd.isna(parent)) and str(parent).strip()
 
         if has_parent:
             parent_iri = _term_to_iri(str(parent))
+
+            # Never create triples between two upper-level entities.
+            # We only create triples where at least one side is a presalt: entity.
+            if _is_upper_iri(term_iri) and _is_upper_iri(parent_iri):
+                log.detail(
+                    f"Skipped upper→upper triple: '{term}' → '{parent}'"
+                )
+                continue
+
             if rel_type == "rdf:type":
                 # Named individual
                 g.add((term_iri, RDF.type, OWL.NamedIndividual))
@@ -141,24 +259,24 @@ def run_owl_export(
             g.add((term_iri, RDFS.comment, Literal(str(nld), lang="en")))
 
         # Ensure parent class is also declared
-        if parent not in UPPER_IRIS and not is_intermediate:
+        if has_parent and parent_iri is not None and parent not in UPPER_IRIS and not is_intermediate:
             g.add((parent_iri, RDF.type, OWL.Class))
 
-    # Add rdfs:label for all upper-level IRIs referenced in the graph
-    _upper_label_map = {v: k for k, v in UPPER_IRIS.items()}
-    _labeled_uppers = set()
-    for _, _, o in list(g.triples((None, RDFS.subClassOf, None))):
+    # ── Upper-ontology backbone: add subClassOf chains + labels ──
+    # Collect all upper-level IRIs referenced in subClassOf and rdf:type triples
+    referenced_uppers = set()
+    for _, _, o in g.triples((None, RDFS.subClassOf, None)):
         o_str = str(o)
-        if o_str in _upper_label_map and o_str not in _labeled_uppers:
-            g.add((URIRef(o_str), RDF.type, OWL.Class))
-            g.add((URIRef(o_str), RDFS.label, Literal(_upper_label_map[o_str], lang="en")))
-            _labeled_uppers.add(o_str)
-    for _, _, o in list(g.triples((None, RDF.type, None))):
+        if o_str in _UPPER_IRI_VALUES:
+            referenced_uppers.add(o_str)
+    for _, _, o in g.triples((None, RDF.type, None)):
         o_str = str(o)
-        if o_str in _upper_label_map and o_str not in _labeled_uppers:
-            g.add((URIRef(o_str), RDF.type, OWL.Class))
-            g.add((URIRef(o_str), RDFS.label, Literal(_upper_label_map[o_str], lang="en")))
-            _labeled_uppers.add(o_str)
+        if o_str in _UPPER_IRI_VALUES:
+            referenced_uppers.add(o_str)
+
+    n_backbone = _add_upper_backbone(g, referenced_uppers)
+    if n_backbone:
+        log.detail(f"Added {n_backbone} upper-ontology backbone triples (GeoCore/GeoReservoir → BFO)")
 
     # ── Relation restrictions (Step 6b) ──
     n_restrictions = 0
@@ -187,6 +305,10 @@ def run_owl_export(
                 continue
 
             prop_uri = URIRef(prop_iri_str)
+
+            # Never create restrictions between two upper-level entities
+            if _is_upper_iri(term_iri) and _is_upper_iri(filler_iri):
+                continue
 
             # Ensure filler is declared as a class
             g.add((filler_iri, RDF.type, OWL.Class))

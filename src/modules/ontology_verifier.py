@@ -251,6 +251,7 @@ def _verify_oops(ttl_path: str) -> dict:
     return result
 
 
+
 # ── Main Entry Point ────────────────────────────────────────────────────
 
 def run_ontology_verification(

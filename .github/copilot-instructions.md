@@ -91,6 +91,7 @@
 - UPPER_IRIS lookups must be case-insensitive (use `_UPPER_IRIS_LOWER` dict).
 - OWL IRI generation must normalise to lowercase before CamelCase conversion to prevent case-collision duplicates.
 - Self-referential `rdfs:subClassOf` triples (term IRI = parent IRI) must be detected and suppressed.
+- Upper→upper triple suppression: never emit triples where both subject and object resolve to upper-level IRIs. The pipeline only creates triples where at least one side is a `presalt:` entity — it does not alter published upper ontologies.
 - Taxonomy outputs must pass cycle detection before being written. Cyclic terms are re-parented to category root.
 - Class vs. individual distinction: named entities (fields, basins, formations, time periods) → `rdf:type`; generic types/kinds → `rdfs:subClassOf`.
 - Waterfall priority: GeoReservoir → GeoCore → BFO → NOT_CLASSIFIED. Always classify at the most specific level.
