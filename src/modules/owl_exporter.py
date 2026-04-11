@@ -15,7 +15,7 @@ import os
 import re
 
 import pandas as pd
-from rdflib import Graph, Namespace, Literal, URIRef, RDF, RDFS, OWL, XSD
+from rdflib import BNode, Graph, Namespace, Literal, URIRef, RDF, RDFS, OWL, XSD
 
 from src.utils import log
 
@@ -52,6 +52,7 @@ def run_owl_export(
     taxonomy_csv: str,
     nld_csv: str | None = None,
     output_path: str | None = None,
+    relations_csv: str | None = None,
 ):
     """
     Export taxonomy to OWL Turtle format.
@@ -143,6 +144,74 @@ def run_owl_export(
         if parent not in UPPER_IRIS and not is_intermediate:
             g.add((parent_iri, RDF.type, OWL.Class))
 
+    # Add rdfs:label for all upper-level IRIs referenced in the graph
+    _upper_label_map = {v: k for k, v in UPPER_IRIS.items()}
+    _labeled_uppers = set()
+    for _, _, o in list(g.triples((None, RDFS.subClassOf, None))):
+        o_str = str(o)
+        if o_str in _upper_label_map and o_str not in _labeled_uppers:
+            g.add((URIRef(o_str), RDF.type, OWL.Class))
+            g.add((URIRef(o_str), RDFS.label, Literal(_upper_label_map[o_str], lang="en")))
+            _labeled_uppers.add(o_str)
+    for _, _, o in list(g.triples((None, RDF.type, None))):
+        o_str = str(o)
+        if o_str in _upper_label_map and o_str not in _labeled_uppers:
+            g.add((URIRef(o_str), RDF.type, OWL.Class))
+            g.add((URIRef(o_str), RDFS.label, Literal(_upper_label_map[o_str], lang="en")))
+            _labeled_uppers.add(o_str)
+
+    # ── Relation restrictions (Step 6b) ──
+    n_restrictions = 0
+    if relations_csv and os.path.exists(relations_csv):
+        rel_df = pd.read_csv(relations_csv, encoding="utf-8-sig")
+        accepted = rel_df[rel_df["Validation_Status"] == "ACCEPTED"]
+        log.info(f"Adding {len(accepted)} relation restrictions from {relations_csv}")
+
+        # Declare used object properties
+        declared_props = set()
+        for _, rel in accepted.iterrows():
+            prop_iri_str = rel.get("Property_IRI", "")
+            prop_name = rel.get("Property", "")
+            if prop_iri_str and prop_iri_str not in declared_props:
+                prop_uri = URIRef(prop_iri_str)
+                g.add((prop_uri, RDF.type, OWL.ObjectProperty))
+                g.add((prop_uri, RDFS.label, Literal(prop_name.replace("_", " "), lang="en")))
+                declared_props.add(prop_iri_str)
+
+        # Add existential restrictions: Class ⊑ ∃property.Filler
+        for _, rel in accepted.iterrows():
+            term_iri = _term_to_iri(str(rel["Term"]))
+            filler_iri = _term_to_iri(str(rel["Filler"]))
+            prop_iri_str = rel.get("Property_IRI", "")
+            if not prop_iri_str:
+                continue
+
+            prop_uri = URIRef(prop_iri_str)
+
+            # Ensure filler is declared as a class
+            g.add((filler_iri, RDF.type, OWL.Class))
+
+            # BNode restriction: term ⊑ ∃property.filler
+            restriction = BNode()
+            g.add((restriction, RDF.type, OWL.Restriction))
+            g.add((restriction, OWL.onProperty, prop_uri))
+            g.add((restriction, OWL.someValuesFrom, filler_iri))
+            g.add((term_iri, RDFS.subClassOf, restriction))
+            n_restrictions += 1
+
+    # ── BFO disjointness axioms (safe only) ──
+    _BFO_DISJOINT = [
+        ("http://purl.obolibrary.org/obo/BFO_0000002", "http://purl.obolibrary.org/obo/BFO_0000003"),  # Continuant ⊥ Occurrent
+        ("http://purl.obolibrary.org/obo/BFO_0000004", "http://purl.obolibrary.org/obo/BFO_0000020"),  # IC ⊥ SDC
+        ("http://purl.obolibrary.org/obo/BFO_0000004", "http://purl.obolibrary.org/obo/BFO_0000031"),  # IC ⊥ GDC
+        ("http://purl.obolibrary.org/obo/BFO_0000020", "http://purl.obolibrary.org/obo/BFO_0000031"),  # SDC ⊥ GDC
+        ("http://purl.obolibrary.org/obo/BFO_0000040", "http://purl.obolibrary.org/obo/BFO_0000141"),  # MaterialEntity ⊥ ImmaterialEntity
+    ]
+    if n_restrictions > 0:
+        for iri_a, iri_b in _BFO_DISJOINT:
+            g.add((URIRef(iri_a), OWL.disjointWith, URIRef(iri_b)))
+        log.detail(f"Added {len(_BFO_DISJOINT)} BFO disjointness axioms")
+
     # Serialize
     os.makedirs(os.path.dirname(output_path) or ".", exist_ok=True)
     g.serialize(destination=output_path, format="turtle")
@@ -154,6 +223,8 @@ def run_owl_export(
 
     log.success(f"OWL ontology exported: {output_path}")
     log.detail(f"Classes: {n_classes}, Individuals: {n_individuals}, Triples: {n_triples}")
+    if n_restrictions > 0:
+        log.detail(f"Existential restrictions: {n_restrictions}")
     log.detail(f"Format: Turtle (.ttl) — open in Protege to verify")
 
     return output_path
@@ -165,5 +236,6 @@ if __name__ == "__main__":
     parser.add_argument("taxonomy_csv", help="Path to taxonomy CSV")
     parser.add_argument("--nld", default=None, help="Path to NLD CSV for adding definitions")
     parser.add_argument("--output", default=None, help="Output .ttl path")
+    parser.add_argument("--relations", default=None, help="Path to 6b_relations.csv")
     args = parser.parse_args()
-    run_owl_export(args.taxonomy_csv, args.nld, args.output)
+    run_owl_export(args.taxonomy_csv, args.nld, args.output, args.relations)

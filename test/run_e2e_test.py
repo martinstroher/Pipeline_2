@@ -309,6 +309,41 @@ def run_test():
         print("  [FAIL] Step 6 (taxonomy): file missing")
         all_passed = False
 
+    # --- Step 6b: Relation Extraction ---
+    f6b = os.path.join(output_dir, "6b_relations.csv")
+    if os.path.exists(f6b):
+        ok = validate_csv(
+            f6b,
+            expected_columns=["Term", "Category", "Property", "Property_IRI", "Filler",
+                              "Filler_Source", "Confidence", "Evidence",
+                              "Validation_Status", "Validation_Reason"],
+            min_rows=1,
+            label="Step 6b (relations)",
+        )
+        if ok:
+            with open(f6b, "r", encoding="utf-8-sig") as f:
+                reader = csv.DictReader(f)
+                rel_rows = list(reader)
+            accepted = [r for r in rel_rows if r.get("Validation_Status") == "ACCEPTED"]
+            rejected = [r for r in rel_rows if r.get("Validation_Status") == "REJECTED"]
+            errors = [r for r in rel_rows if r.get("Validation_Status") == "ERROR"]
+            # Property distribution
+            prop_counts = {}
+            for r in accepted:
+                prop = r.get("Property", "")
+                prop_counts[prop] = prop_counts.get(prop, 0) + 1
+            print(f"  [OK]   Step 6b: {len(accepted)} accepted, {len(rejected)} rejected, {len(errors)} errors")
+            if prop_counts:
+                top_props = sorted(prop_counts.items(), key=lambda x: -x[1])[:5]
+                print(f"  [OK]   Step 6b top properties: {', '.join(f'{p}={c}' for p, c in top_props)}")
+            # Filler source distribution
+            domain_fillers = sum(1 for r in accepted if r.get("Filler_Source") == "domain_term")
+            external_fillers = sum(1 for r in accepted if r.get("Filler_Source") == "external")
+            print(f"  [OK]   Step 6b fillers: {domain_fillers} domain, {external_fillers} external")
+        all_passed = all_passed and ok
+    else:
+        print("  [WARN] Step 6b (relations): file missing — relation extraction may have been skipped")
+
     # --- Step 7: OWL Turtle ---
     if os.path.exists(owl_ttl_abs):
         try:
@@ -320,10 +355,13 @@ def run_test():
             n_individuals = len(list(g.subjects(RDF.type, OWL.NamedIndividual)))
             n_comments = len(list(g.triples((None, RDFS.comment, None))))
             n_labels = len(list(g.triples((None, RDFS.label, None))))
+            n_restrictions = len(list(g.subjects(RDF.type, OWL.Restriction)))
             n_triples = len(g)
             if n_classes > 0 and n_triples > 0:
                 print(f"  [OK]   Step 7 (OWL): {n_triples} triples — {n_classes} classes, {n_individuals} individuals")
                 print(f"  [OK]   Step 7: {n_labels} rdfs:label, {n_comments} rdfs:comment (NLDs)")
+                if n_restrictions > 0:
+                    print(f"  [OK]   Step 7: {n_restrictions} owl:Restriction nodes (from relation extraction)")
                 if n_comments == 0:
                     print(f"  [WARN] Step 7: no rdfs:comment — NLDs not propagating to OWL")
 

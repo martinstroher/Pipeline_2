@@ -1,0 +1,2130 @@
+<?xml version="1.0"?>
+<rdf:RDF xmlns="https://www.inf.ufrgs.br/bdi/ontologies/geores/geores-full.owl#"
+     xml:base="https://www.inf.ufrgs.br/bdi/ontologies/geores/geores-full.owl"
+     xmlns:dce="http://purl.org/dc/elements/1.1/"
+     xmlns:obo="http://purl.obolibrary.org/obo/"
+     xmlns:owl="http://www.w3.org/2002/07/owl#"
+     xmlns:rdf="http://www.w3.org/1999/02/22-rdf-syntax-ns#"
+     xmlns:xml="http://www.w3.org/XML/1998/namespace"
+     xmlns:xsd="http://www.w3.org/2001/XMLSchema#"
+     xmlns:rdfs="http://www.w3.org/2000/01/rdf-schema#"
+     xmlns:skos="http://www.w3.org/2004/02/skos/core#"
+     xmlns:dcterms="http://purl.org/dc/terms/"
+     xmlns:ontologies="https://www.inf.ufrgs.br/bdi/ontologies/">
+    <owl:Ontology rdf:about="https://www.inf.ufrgs.br/bdi/ontologies/geores/geores-full.owl">
+        <owl:versionIRI rdf:resource="https://www.inf.ufrgs.br/bdi/ontologies/geores/releases/2024-04-07/geores-full.owl"/>
+        <dce:contributor>Alcides Lopes</dce:contributor>
+        <dce:contributor>Fabrício Henrique Rodrigues</dce:contributor>
+        <dce:contributor>Fernando Cicconeto</dce:contributor>
+        <dce:contributor>Joel Luis Carbonera</dce:contributor>
+        <dce:contributor>Luan Fonseca Garcia</dce:contributor>
+        <dce:contributor>Lucas Valadares Vieira</dce:contributor>
+        <dce:contributor>Mara Abel</dce:contributor>
+        <dce:contributor>Renata dos Santos Alvarenga</dce:contributor>
+        <dce:contributor>Tiago Agne de Oliveira</dce:contributor>
+        <dce:contributor>Yuanwei Qu</dce:contributor>
+        <dcterms:description xml:lang="en">GeoReservoir is an ontology to support the description of the geometry and the lithology of deep-marine deposits. The GeoReservoir ontology provides formal and clear definitions of deep-marine depositional system entities, creating an unambiguous terminology for geometrical and lithological properties of the deposits in the scale of outcrop and seismic sections. These definitions are independent of tasks, geological interpretations, and process inferences. We created this language to make it possible to formally and uniformly describe any deep-marine occurrence in the world with an adequate level of detail for sedimentological studies and computer processing.</dcterms:description>
+        <dcterms:license>https://creativecommons.org/licenses/by-nc/4.0/</dcterms:license>
+        <dcterms:title>GeoReservoir Ontology</dcterms:title>
+        <rdfs:comment xml:lang="en">Cited references:
+
+1. Abel, M., Perrin, M., Carbonera, J.L.: Ontological analysis for information integration in geomodeling. Earth Science Informatics 8, 21–36 (2015)
+2. Carbonera, J.L., Abel, M., Scherer, C.M.S.: Visual interpretation of events in petroleum exploration: An approach supported by well-founded ontologies. Expert Systems With Applications 42, 2749–2763 (2015)
+3. Cullis, S., Colombera, L., Patacci, M., McCaffrey, W.D.: Hierarchical classifications of the sedimentary architecture of deep-marine depositional systems. Earth-Science Reviews 179, 38–71 (2018)
+4. De Ros, L.F., Goldberg, K.: Reservoir petrofacies: A tool for quality characterization and prediction. In: AAPG Annual Conference and Exhibition. Long Beach (2007)
+5. Garcia, L.F., Carbonera, J.L., Rodrigues, F.H., Antunes, C.R., Abel, M.: What rocks are made of: Towards an ontological pattern for material constitution in the geological domain. In: Laender, A.H.F., Pernici, B., Lim, E.P., Oliveira, J.P.M. (eds.) ER: 38th International Conference on Conceptual Modeling. pp. 275–286. Springer, Cham (2019)
+6. Guarino, N., Welty, C.A.: An overview of ontoclean. In: Staab, S., Studer, R. (eds.) Handbook on Ontologies, pp. 151–171. Springer, Berlin, Heidelberg (2004)
+7. McHargue, T., Pyrcz, M.J., Sullivan, M.D., Clark, J.D., Fildani, A., Romans, B.W., Covault, J.A., Levy, M., Posamentier, H.W., Drinkwater, N.J.: Architecture of turbidite channel systems on the continental slope: Patterns and predictions. Marine and Petroleum Geology 28, 728–743 (2011)
+8. Middleton, G.V.: Johannes walther’s law of the correlation of facies. Bulletin of the Geological Society of America 84, 979–988 (1973)
+9. Nichols, G.: Sedimentology and Stratigraphy. Wiley-Blackwell, Chichester, 2nd edn. (2009)
+10. Rovetto, R.: The shape of shapes: An ontological exploration. In: Hastings, J., Kutz, O., Bhatt, M., Borgo, S. (eds.) Proceedings of the First Interdisciplinary Workshop on SHAPES. Karlsruhe (2011), http://ceur-ws.org/Vol-812/
+11. Walker, R.G., James, N.P.: Facies Models: Response to Sea Level Change. Geological Association of Canada, St. John’s (1992)</rdfs:comment>
+        <rdfs:comment xml:lang="en">We acknowledge the Brazilian funding agencies CNPq and CAPES for financing this work and the Research Centre of Petrobras (CENPES) for collaborating on this project.</rdfs:comment>
+        <owl:versionInfo>2024-04-07</owl:versionInfo>
+    </owl:Ontology>
+    
+
+
+    <!-- 
+    ///////////////////////////////////////////////////////////////////////////////////////
+    //
+    // Annotation properties
+    //
+    ///////////////////////////////////////////////////////////////////////////////////////
+     -->
+
+    
+
+
+    <!-- http://purl.obolibrary.org/obo/IAO_0000112 -->
+
+    <owl:AnnotationProperty rdf:about="http://purl.obolibrary.org/obo/IAO_0000112"/>
+    
+
+
+    <!-- http://purl.obolibrary.org/obo/IAO_0000115 -->
+
+    <owl:AnnotationProperty rdf:about="http://purl.obolibrary.org/obo/IAO_0000115"/>
+    
+
+
+    <!-- http://purl.obolibrary.org/obo/IAO_0000116 -->
+
+    <owl:AnnotationProperty rdf:about="http://purl.obolibrary.org/obo/IAO_0000116"/>
+    
+
+
+    <!-- http://purl.obolibrary.org/obo/IAO_0000118 -->
+
+    <owl:AnnotationProperty rdf:about="http://purl.obolibrary.org/obo/IAO_0000118"/>
+    
+
+
+    <!-- http://purl.obolibrary.org/obo/IAO_0000119 -->
+
+    <owl:AnnotationProperty rdf:about="http://purl.obolibrary.org/obo/IAO_0000119"/>
+    
+
+
+    <!-- http://purl.org/dc/elements/1.1/contributor -->
+
+    <owl:AnnotationProperty rdf:about="http://purl.org/dc/elements/1.1/contributor"/>
+    
+
+
+    <!-- http://purl.org/dc/elements/1.1/identifier -->
+
+    <owl:AnnotationProperty rdf:about="http://purl.org/dc/elements/1.1/identifier"/>
+    
+
+
+    <!-- http://purl.org/dc/elements/1.1/license -->
+
+    <owl:AnnotationProperty rdf:about="http://purl.org/dc/elements/1.1/license"/>
+    
+
+
+    <!-- http://purl.org/dc/elements/1.1/source -->
+
+    <owl:AnnotationProperty rdf:about="http://purl.org/dc/elements/1.1/source"/>
+    
+
+
+    <!-- http://purl.org/dc/terms/description -->
+
+    <owl:AnnotationProperty rdf:about="http://purl.org/dc/terms/description"/>
+    
+
+
+    <!-- http://purl.org/dc/terms/license -->
+
+    <owl:AnnotationProperty rdf:about="http://purl.org/dc/terms/license"/>
+    
+
+
+    <!-- http://purl.org/dc/terms/title -->
+
+    <owl:AnnotationProperty rdf:about="http://purl.org/dc/terms/title"/>
+    
+
+
+    <!-- http://www.w3.org/2004/02/skos/core#altLabel -->
+
+    <owl:AnnotationProperty rdf:about="http://www.w3.org/2004/02/skos/core#altLabel"/>
+    
+
+
+    <!-- http://www.w3.org/2004/02/skos/core#definition -->
+
+    <owl:AnnotationProperty rdf:about="http://www.w3.org/2004/02/skos/core#definition"/>
+    
+
+
+    <!-- http://www.w3.org/2004/02/skos/core#example -->
+
+    <owl:AnnotationProperty rdf:about="http://www.w3.org/2004/02/skos/core#example"/>
+    
+
+
+    <!-- http://www.w3.org/2004/02/skos/core#scopeNote -->
+
+    <owl:AnnotationProperty rdf:about="http://www.w3.org/2004/02/skos/core#scopeNote"/>
+    
+
+
+    <!-- https://www.inf.ufrgs.br/bdi/ontologies/GEORES_0000050 -->
+
+    <owl:AnnotationProperty rdf:about="https://www.inf.ufrgs.br/bdi/ontologies/GEORES_0000050">
+        <obo:IAO_0000115 xml:lang="en">For metaproperties, we use the following notation (Guarino and Welty, 2004; Abel et al., 2015):
+
+– R+ / R- / R~: rigid / not rigid / anti-rigid;
+– I+ / I-: carries / does not carry identity;
+– O+ / O-: provides / does not provide identity;
+– U+ / U-: carries / does not carry unity;
+– ED+ / ED-: existentially dependent / independent.</obo:IAO_0000115>
+        <rdfs:label xml:lang="en">metaproperties</rdfs:label>
+    </owl:AnnotationProperty>
+    
+
+
+    <!-- 
+    ///////////////////////////////////////////////////////////////////////////////////////
+    //
+    // Object Properties
+    //
+    ///////////////////////////////////////////////////////////////////////////////////////
+     -->
+
+    
+
+
+    <!-- http://purl.obolibrary.org/obo/BFO_0000084 -->
+
+    <owl:ObjectProperty rdf:about="http://purl.obolibrary.org/obo/BFO_0000084">
+        <owl:inverseOf rdf:resource="http://purl.obolibrary.org/obo/BFO_0000101"/>
+        <rdfs:domain rdf:resource="http://purl.obolibrary.org/obo/BFO_0000031"/>
+        <rdfs:range>
+            <owl:Class>
+                <owl:intersectionOf rdf:parseType="Collection">
+                    <rdf:Description rdf:about="http://purl.obolibrary.org/obo/BFO_0000004"/>
+                    <owl:Class>
+                        <owl:complementOf rdf:resource="http://purl.obolibrary.org/obo/BFO_0000006"/>
+                    </owl:Class>
+                </owl:intersectionOf>
+            </owl:Class>
+        </rdfs:range>
+        <dce:identifier>252-BFO</dce:identifier>
+        <rdfs:label xml:lang="en">generically depends on</rdfs:label>
+        <skos:altLabel xml:lang="en">g-depends on</skos:altLabel>
+        <skos:definition xml:lang="en">b generically depends on c =Def b is a generically dependent continuant &amp; c is an independent continuant that is not a spatial region &amp; at some time t there inheres in c a specifically dependent continuant which concretizes b at t</skos:definition>
+        <skos:scopeNote xml:lang="en">Users that require more sophisticated representations of time are encouraged to import a temporal extension of BFO-Core provided by the BFO development team. See documentation for guidance: &lt;Link&gt;</skos:scopeNote>
+    </owl:ObjectProperty>
+    
+
+
+    <!-- http://purl.obolibrary.org/obo/BFO_0000101 -->
+
+    <owl:ObjectProperty rdf:about="http://purl.obolibrary.org/obo/BFO_0000101">
+        <rdfs:domain>
+            <owl:Class>
+                <owl:intersectionOf rdf:parseType="Collection">
+                    <rdf:Description rdf:about="http://purl.obolibrary.org/obo/BFO_0000004"/>
+                    <owl:Class>
+                        <owl:complementOf rdf:resource="http://purl.obolibrary.org/obo/BFO_0000006"/>
+                    </owl:Class>
+                </owl:intersectionOf>
+            </owl:Class>
+        </rdfs:domain>
+        <rdfs:range rdf:resource="http://purl.obolibrary.org/obo/BFO_0000031"/>
+        <dce:identifier>254-BFO</dce:identifier>
+        <rdfs:label xml:lang="en">is carrier of</rdfs:label>
+        <skos:definition xml:lang="en">b is carrier of c =Def there is some time t such that c generically depends on b at t</skos:definition>
+        <skos:scopeNote xml:lang="en">Users that require more sophisticated representations of time are encouraged to import a temporal extension of BFO-Core provided by the BFO development team. See documentation for guidance: &lt;Link&gt;</skos:scopeNote>
+    </owl:ObjectProperty>
+    
+
+
+    <!-- http://purl.obolibrary.org/obo/BFO_0000115 -->
+
+    <owl:ObjectProperty rdf:about="http://purl.obolibrary.org/obo/BFO_0000115">
+        <rdfs:subPropertyOf rdf:resource="http://purl.obolibrary.org/obo/BFO_0000178"/>
+        <owl:inverseOf rdf:resource="http://purl.obolibrary.org/obo/BFO_0000129"/>
+        <rdfs:domain rdf:resource="http://purl.obolibrary.org/obo/BFO_0000040"/>
+        <rdfs:range rdf:resource="http://purl.obolibrary.org/obo/BFO_0000040"/>
+        <dce:identifier>230-BFO</dce:identifier>
+        <rdfs:label xml:lang="en">has member part</rdfs:label>
+        <skos:definition xml:lang="en">b has member part c =Def c member part of b</skos:definition>
+        <skos:scopeNote xml:lang="en">Users that require more sophisticated representations of time are encouraged to import a temporal extension of BFO-Core provided by the BFO development team. See documentation for guidance: &lt;Link&gt;</skos:scopeNote>
+    </owl:ObjectProperty>
+    
+
+
+    <!-- http://purl.obolibrary.org/obo/BFO_0000129 -->
+
+    <owl:ObjectProperty rdf:about="http://purl.obolibrary.org/obo/BFO_0000129">
+        <rdfs:subPropertyOf rdf:resource="http://purl.obolibrary.org/obo/BFO_0000176"/>
+        <rdfs:domain rdf:resource="http://purl.obolibrary.org/obo/BFO_0000040"/>
+        <rdfs:range rdf:resource="http://purl.obolibrary.org/obo/BFO_0000040"/>
+        <dce:identifier>228-BFO</dce:identifier>
+        <rdfs:label xml:lang="en">member part of</rdfs:label>
+        <skos:definition xml:lang="en">b member part of c =Def b is an object &amp; c is a material entity &amp; there is some time t such that b continuant part of c at t &amp; there is a mutually exhaustive and pairwise disjoint partition of c into objects x1, ..., xn (for some n ≠ 1) with b = xi (for some 1 &lt;= i &lt;= n)</skos:definition>
+        <skos:scopeNote xml:lang="en">Users that require more sophisticated representations of time are encouraged to import a temporal extension of BFO-Core provided by the BFO development team. See documentation for guidance: &lt;Link&gt;</skos:scopeNote>
+    </owl:ObjectProperty>
+    
+
+
+    <!-- http://purl.obolibrary.org/obo/BFO_0000176 -->
+
+    <owl:ObjectProperty rdf:about="http://purl.obolibrary.org/obo/BFO_0000176">
+        <owl:inverseOf rdf:resource="http://purl.obolibrary.org/obo/BFO_0000178"/>
+        <rdfs:domain rdf:resource="http://purl.obolibrary.org/obo/BFO_0000002"/>
+        <rdfs:range rdf:resource="http://purl.obolibrary.org/obo/BFO_0000002"/>
+        <dce:identifier>221-BFO</dce:identifier>
+        <rdfs:label xml:lang="en">continuant part of</rdfs:label>
+        <skos:definition xml:lang="en">b continuant part of c =Def b and c are continuants &amp; there is some time t such that b and c exist at t &amp; b continuant part of c at t</skos:definition>
+        <skos:example xml:lang="en">Milk teeth continuant part of human; surgically removed tumour continuant part of organism</skos:example>
+        <skos:scopeNote xml:lang="en">Users that require more sophisticated representations of time are encouraged to import a temporal extension of BFO-Core provided by the BFO development team. See documentation for guidance: &lt;Link&gt;</skos:scopeNote>
+    </owl:ObjectProperty>
+    
+
+
+    <!-- http://purl.obolibrary.org/obo/BFO_0000178 -->
+
+    <owl:ObjectProperty rdf:about="http://purl.obolibrary.org/obo/BFO_0000178">
+        <rdfs:domain rdf:resource="http://purl.obolibrary.org/obo/BFO_0000002"/>
+        <rdfs:range rdf:resource="http://purl.obolibrary.org/obo/BFO_0000002"/>
+        <dce:identifier>271-BFO</dce:identifier>
+        <rdfs:label xml:lang="en">has continuant part</rdfs:label>
+        <skos:definition xml:lang="en">b has continuant part c =Def c continuant part of b</skos:definition>
+        <skos:scopeNote xml:lang="en">Users that require more sophisticated representations of time are encouraged to import a temporal extension of BFO-Core provided by the BFO development team. See documentation for guidance: &lt;Link&gt;</skos:scopeNote>
+    </owl:ObjectProperty>
+    
+
+
+    <!-- http://purl.obolibrary.org/obo/BFO_0000194 -->
+
+    <owl:ObjectProperty rdf:about="http://purl.obolibrary.org/obo/BFO_0000194">
+        <owl:inverseOf rdf:resource="http://purl.obolibrary.org/obo/BFO_0000195"/>
+        <rdfs:domain>
+            <owl:Class>
+                <owl:unionOf rdf:parseType="Collection">
+                    <rdf:Description rdf:about="http://purl.obolibrary.org/obo/BFO_0000020"/>
+                    <owl:Class>
+                        <owl:intersectionOf rdf:parseType="Collection">
+                            <rdf:Description rdf:about="http://purl.obolibrary.org/obo/BFO_0000004"/>
+                            <owl:Class>
+                                <owl:complementOf rdf:resource="http://purl.obolibrary.org/obo/BFO_0000006"/>
+                            </owl:Class>
+                        </owl:intersectionOf>
+                    </owl:Class>
+                </owl:unionOf>
+            </owl:Class>
+        </rdfs:domain>
+        <rdfs:range rdf:resource="http://purl.obolibrary.org/obo/BFO_0000020"/>
+        <dce:identifier>260-BFO</dce:identifier>
+        <rdfs:label xml:lang="en">specifically depended on by</rdfs:label>
+        <skos:altLabel xml:lang="en">s-depended on by</skos:altLabel>
+        <skos:definition xml:lang="en">b specifically depended on by c =Def c specifically depends on b</skos:definition>
+        <skos:example xml:lang="en">Coloured object specifically depended on by colour</skos:example>
+    </owl:ObjectProperty>
+    
+
+
+    <!-- http://purl.obolibrary.org/obo/BFO_0000195 -->
+
+    <owl:ObjectProperty rdf:about="http://purl.obolibrary.org/obo/BFO_0000195">
+        <rdfs:domain rdf:resource="http://purl.obolibrary.org/obo/BFO_0000020"/>
+        <rdfs:range>
+            <owl:Class>
+                <owl:unionOf rdf:parseType="Collection">
+                    <rdf:Description rdf:about="http://purl.obolibrary.org/obo/BFO_0000020"/>
+                    <owl:Class>
+                        <owl:intersectionOf rdf:parseType="Collection">
+                            <rdf:Description rdf:about="http://purl.obolibrary.org/obo/BFO_0000004"/>
+                            <owl:Class>
+                                <owl:complementOf rdf:resource="http://purl.obolibrary.org/obo/BFO_0000006"/>
+                            </owl:Class>
+                        </owl:intersectionOf>
+                    </owl:Class>
+                </owl:unionOf>
+            </owl:Class>
+        </rdfs:range>
+        <dce:identifier>012-BFO</dce:identifier>
+        <rdfs:label xml:lang="en">specifically depends on</rdfs:label>
+        <skos:altLabel xml:lang="en">s-depends on</skos:altLabel>
+        <skos:definition xml:lang="en">(Elucidation) specifically depends on is a relation between a specifically dependent continuant b and specifically dependent continuant or independent continuant that is not a spatial region c such that b and c share no parts in common &amp; b is of a nature such that at all times t it cannot exist unless c exists &amp; b is not a boundary of c</skos:definition>
+        <skos:example xml:lang="en">A shape specifically depends on the shaped object; hue, saturation and brightness of a colour sample specifically depends on each other</skos:example>
+        <skos:scopeNote xml:lang="en">The analogue of specifically depends on for occurrents is has participant.</skos:scopeNote>
+    </owl:ObjectProperty>
+    
+
+
+    <!-- http://purl.obolibrary.org/obo/BFO_0000196 -->
+
+    <owl:ObjectProperty rdf:about="http://purl.obolibrary.org/obo/BFO_0000196">
+        <rdfs:subPropertyOf rdf:resource="http://purl.obolibrary.org/obo/BFO_0000194"/>
+        <owl:inverseOf rdf:resource="http://purl.obolibrary.org/obo/BFO_0000197"/>
+        <rdfs:domain>
+            <owl:Class>
+                <owl:intersectionOf rdf:parseType="Collection">
+                    <rdf:Description rdf:about="http://purl.obolibrary.org/obo/BFO_0000004"/>
+                    <owl:Class>
+                        <owl:complementOf rdf:resource="http://purl.obolibrary.org/obo/BFO_0000006"/>
+                    </owl:Class>
+                </owl:intersectionOf>
+            </owl:Class>
+        </rdfs:domain>
+        <rdfs:range rdf:resource="http://purl.obolibrary.org/obo/BFO_0000020"/>
+        <dce:identifier>053-BFO</dce:identifier>
+        <rdfs:label xml:lang="en">bearer of</rdfs:label>
+        <skos:definition xml:lang="en">b bearer of c =Def c inheres in b</skos:definition>
+        <skos:example xml:lang="en">A patch of ink is the bearer of a colour quality; an organism is the bearer of a temperature quality</skos:example>
+    </owl:ObjectProperty>
+    
+
+
+    <!-- http://purl.obolibrary.org/obo/BFO_0000197 -->
+
+    <owl:ObjectProperty rdf:about="http://purl.obolibrary.org/obo/BFO_0000197">
+        <rdfs:subPropertyOf rdf:resource="http://purl.obolibrary.org/obo/BFO_0000195"/>
+        <rdfs:domain rdf:resource="http://purl.obolibrary.org/obo/BFO_0000020"/>
+        <rdfs:range>
+            <owl:Class>
+                <owl:intersectionOf rdf:parseType="Collection">
+                    <rdf:Description rdf:about="http://purl.obolibrary.org/obo/BFO_0000004"/>
+                    <owl:Class>
+                        <owl:complementOf rdf:resource="http://purl.obolibrary.org/obo/BFO_0000006"/>
+                    </owl:Class>
+                </owl:intersectionOf>
+            </owl:Class>
+        </rdfs:range>
+        <dce:identifier>051-BFO</dce:identifier>
+        <rdfs:label xml:lang="en">inheres in</rdfs:label>
+        <skos:definition xml:lang="en">b inheres in c =Def b is a specifically dependent continuant &amp; c is an independent continuant that is not a spatial region &amp; b specifically depends on c</skos:definition>
+        <skos:example xml:lang="en">A shape inheres in a shaped object; a mass inheres in a material entity</skos:example>
+    </owl:ObjectProperty>
+    
+
+
+    <!-- http://purl.obolibrary.org/obo/BFO_0000199 -->
+
+    <owl:ObjectProperty rdf:about="http://purl.obolibrary.org/obo/BFO_0000199">
+        <rdf:type rdf:resource="http://www.w3.org/2002/07/owl#FunctionalProperty"/>
+        <rdfs:domain>
+            <owl:Class>
+                <owl:unionOf rdf:parseType="Collection">
+                    <rdf:Description rdf:about="http://purl.obolibrary.org/obo/BFO_0000015"/>
+                    <rdf:Description rdf:about="http://purl.obolibrary.org/obo/BFO_0000035"/>
+                </owl:unionOf>
+            </owl:Class>
+        </rdfs:domain>
+        <rdfs:range rdf:resource="http://purl.obolibrary.org/obo/BFO_0000008"/>
+        <dce:identifier>132-BFO</dce:identifier>
+        <rdfs:label xml:lang="en">occupies temporal region</rdfs:label>
+        <skos:definition xml:lang="en">p occupies temporal region t =Def p is a process or process boundary &amp; the spatiotemporal region occupied by p temporally projects onto t</skos:definition>
+        <skos:example xml:lang="en">The Second World War occupies the temporal region September 1, 1939 - September 2, 1945</skos:example>
+    </owl:ObjectProperty>
+    
+
+
+    <!-- https://www.inf.ufrgs.br/bdi/ontologies/GEOCORE_0000015 -->
+
+    <owl:ObjectProperty rdf:about="https://www.inf.ufrgs.br/bdi/ontologies/GEOCORE_0000015">
+        <rdfs:subPropertyOf rdf:resource="http://purl.obolibrary.org/obo/BFO_0000196"/>
+        <owl:inverseOf rdf:resource="https://www.inf.ufrgs.br/bdi/ontologies/GEOCORE_0000016"/>
+        <obo:IAO_0000115 xml:lang="en">The relation between a Geological Object and its Geological Age.</obo:IAO_0000115>
+        <rdfs:label xml:lang="en">has age</rdfs:label>
+    </owl:ObjectProperty>
+    
+
+
+    <!-- https://www.inf.ufrgs.br/bdi/ontologies/GEOCORE_0000016 -->
+
+    <owl:ObjectProperty rdf:about="https://www.inf.ufrgs.br/bdi/ontologies/GEOCORE_0000016">
+        <rdfs:subPropertyOf rdf:resource="http://purl.obolibrary.org/obo/BFO_0000197"/>
+        <obo:IAO_0000115 xml:lang="en">The relation between a Geological Age and a Geological Object. Inverse of has age relation.</obo:IAO_0000115>
+        <rdfs:label xml:lang="en">age of</rdfs:label>
+    </owl:ObjectProperty>
+    
+
+
+    <!-- https://www.inf.ufrgs.br/bdi/ontologies/GEOCORE_0000017 -->
+
+    <owl:ObjectProperty rdf:about="https://www.inf.ufrgs.br/bdi/ontologies/GEOCORE_0000017">
+        <rdf:type rdf:resource="http://www.w3.org/2002/07/owl#AsymmetricProperty"/>
+        <rdf:type rdf:resource="http://www.w3.org/2002/07/owl#IrreflexiveProperty"/>
+        <obo:IAO_0000115>The relation between some material entity and the material that it is made of.</obo:IAO_0000115>
+        <obo:IAO_0000116 xml:lang="en">This is a material constitution relation intended to represent the relationship between material objects, such as geological objects and earth materials, or aggregates of them.</obo:IAO_0000116>
+        <obo:IAO_0000119>Evnine, S. J. (2011). Constitution and composition: Three approaches to their relation. ProtoSociology, 27, 212-235.</obo:IAO_0000119>
+        <rdfs:label xml:lang="en">constituted by</rdfs:label>
+    </owl:ObjectProperty>
+    
+
+
+    <!-- https://www.inf.ufrgs.br/bdi/ontologies/GEORES_0000044 -->
+
+    <owl:ObjectProperty rdf:about="https://www.inf.ufrgs.br/bdi/ontologies/GEORES_0000044">
+        <rdfs:subPropertyOf rdf:resource="http://www.w3.org/2002/07/owl#topObjectProperty"/>
+        <rdfs:domain rdf:resource="https://www.inf.ufrgs.br/bdi/ontologies/GEORES_0000026"/>
+        <rdfs:range rdf:resource="https://www.inf.ufrgs.br/bdi/ontologies/GEORES_0000041"/>
+        <rdfs:label xml:lang="en">has contact position</rdfs:label>
+    </owl:ObjectProperty>
+    
+
+
+    <!-- https://www.inf.ufrgs.br/bdi/ontologies/GEORES_0000045 -->
+
+    <owl:ObjectProperty rdf:about="https://www.inf.ufrgs.br/bdi/ontologies/GEORES_0000045">
+        <rdfs:subPropertyOf rdf:resource="http://www.w3.org/2002/07/owl#topObjectProperty"/>
+        <rdfs:domain rdf:resource="https://www.inf.ufrgs.br/bdi/ontologies/GEORES_0000026"/>
+        <rdfs:range rdf:resource="https://www.inf.ufrgs.br/bdi/ontologies/GEORES_0000043"/>
+        <rdfs:label xml:lang="en">has contact type</rdfs:label>
+    </owl:ObjectProperty>
+    
+
+
+    <!-- https://www.inf.ufrgs.br/bdi/ontologies/GEORES_0000046 -->
+
+    <owl:ObjectProperty rdf:about="https://www.inf.ufrgs.br/bdi/ontologies/GEORES_0000046">
+        <rdfs:domain rdf:resource="https://www.inf.ufrgs.br/bdi/ontologies/GEORES_0000023"/>
+        <rdfs:range rdf:resource="https://www.inf.ufrgs.br/bdi/ontologies/GEORES_0000042"/>
+        <rdfs:comment xml:lang="pt">Luan: Geometry Type talvez seja uma classe de segunda ordem cuja as instâncias são os diferentes tipos de Geometria. Por exemplo, é errado dizer que Geometria Lenticular é subtipo da Quality Geometria. Lenticular é na realidade um subtipo de Tipo de Geometria e não de Geometria.</rdfs:comment>
+        <rdfs:label xml:lang="en">has geometry type</rdfs:label>
+    </owl:ObjectProperty>
+    
+
+
+    <!-- https://www.inf.ufrgs.br/bdi/ontologies/GEORES_0000047 -->
+
+    <owl:ObjectProperty rdf:about="https://www.inf.ufrgs.br/bdi/ontologies/GEORES_0000047">
+        <rdfs:subPropertyOf rdf:resource="https://www.inf.ufrgs.br/bdi/ontologies/GEORES_0000046"/>
+        <rdfs:label xml:lang="en">has base geometry</rdfs:label>
+    </owl:ObjectProperty>
+    
+
+
+    <!-- https://www.inf.ufrgs.br/bdi/ontologies/GEORES_0000048 -->
+
+    <owl:ObjectProperty rdf:about="https://www.inf.ufrgs.br/bdi/ontologies/GEORES_0000048">
+        <rdfs:subPropertyOf rdf:resource="https://www.inf.ufrgs.br/bdi/ontologies/GEORES_0000046"/>
+        <rdfs:label xml:lang="en">has top geometry</rdfs:label>
+    </owl:ObjectProperty>
+    
+
+
+    <!-- 
+    ///////////////////////////////////////////////////////////////////////////////////////
+    //
+    // Data properties
+    //
+    ///////////////////////////////////////////////////////////////////////////////////////
+     -->
+
+    
+
+
+    <!-- https://www.inf.ufrgs.br/bdi/ontologies/GEORES_0000049 -->
+
+    <owl:DatatypeProperty rdf:about="https://www.inf.ufrgs.br/bdi/ontologies/GEORES_0000049">
+        <rdfs:subPropertyOf rdf:resource="http://www.w3.org/2002/07/owl#topDataProperty"/>
+        <rdfs:domain rdf:resource="http://purl.obolibrary.org/obo/BFO_0000019"/>
+        <obo:IAO_0000115 xml:lang="en">A relation between a Quality and its values.</obo:IAO_0000115>
+        <rdfs:comment xml:lang="pt">O objetivo desta data property é conectar em níveL de implementação uma qualidade com o valor em seu espaço de qualiades. Por exemplo, a qualidade dimensão tem um espaço de qualidade que é um valor real positivo para sua largura.
+
+A IAO possui uma propriedade has measurement datum cujo domínio é um measurement datum. Porém, o problema de usar tal propriedade é acrescentar a necessidade de criar uma instância de measurement datum.</rdfs:comment>
+        <rdfs:label xml:lang="en">has value</rdfs:label>
+    </owl:DatatypeProperty>
+    
+
+
+    <!-- https://www.inf.ufrgs.br/bdi/ontologies/GEORES_0000070 -->
+
+    <owl:DatatypeProperty rdf:about="https://www.inf.ufrgs.br/bdi/ontologies/GEORES_0000070">
+        <rdfs:subPropertyOf rdf:resource="https://www.inf.ufrgs.br/bdi/ontologies/GEORES_0000049"/>
+        <rdfs:domain rdf:resource="https://www.inf.ufrgs.br/bdi/ontologies/GEORES_0000022"/>
+        <rdfs:label xml:lang="en">has dimension value</rdfs:label>
+    </owl:DatatypeProperty>
+    
+
+
+    <!-- https://www.inf.ufrgs.br/bdi/ontologies/GEORES_0000071 -->
+
+    <owl:DatatypeProperty rdf:about="https://www.inf.ufrgs.br/bdi/ontologies/GEORES_0000071">
+        <rdfs:subPropertyOf rdf:resource="https://www.inf.ufrgs.br/bdi/ontologies/GEORES_0000070"/>
+        <rdfs:domain rdf:resource="https://www.inf.ufrgs.br/bdi/ontologies/GEORES_0000022"/>
+        <rdfs:range rdf:resource="http://www.w3.org/2001/XMLSchema#double"/>
+        <rdfs:label xml:lang="en">has lenght value</rdfs:label>
+    </owl:DatatypeProperty>
+    
+
+
+    <!-- https://www.inf.ufrgs.br/bdi/ontologies/GEORES_0000072 -->
+
+    <owl:DatatypeProperty rdf:about="https://www.inf.ufrgs.br/bdi/ontologies/GEORES_0000072">
+        <rdfs:subPropertyOf rdf:resource="https://www.inf.ufrgs.br/bdi/ontologies/GEORES_0000070"/>
+        <rdfs:domain rdf:resource="http://purl.obolibrary.org/obo/BFO_0000019"/>
+        <rdfs:range rdf:resource="http://www.w3.org/2001/XMLSchema#string"/>
+        <obo:IAO_0000115 xml:lang="en">A relation between a Quality and a literal string that represents its measurement unit.</obo:IAO_0000115>
+        <rdfs:label xml:lang="en">has measurement unit</rdfs:label>
+    </owl:DatatypeProperty>
+    
+
+
+    <!-- https://www.inf.ufrgs.br/bdi/ontologies/GEORES_0000073 -->
+
+    <owl:DatatypeProperty rdf:about="https://www.inf.ufrgs.br/bdi/ontologies/GEORES_0000073">
+        <rdfs:subPropertyOf rdf:resource="https://www.inf.ufrgs.br/bdi/ontologies/GEORES_0000070"/>
+        <rdfs:domain rdf:resource="https://www.inf.ufrgs.br/bdi/ontologies/GEORES_0000022"/>
+        <rdfs:range rdf:resource="http://www.w3.org/2001/XMLSchema#double"/>
+        <rdfs:label xml:lang="en">has thickness value</rdfs:label>
+    </owl:DatatypeProperty>
+    
+
+
+    <!-- https://www.inf.ufrgs.br/bdi/ontologies/GEORES_0000074 -->
+
+    <owl:DatatypeProperty rdf:about="https://www.inf.ufrgs.br/bdi/ontologies/GEORES_0000074">
+        <rdfs:subPropertyOf rdf:resource="https://www.inf.ufrgs.br/bdi/ontologies/GEORES_0000070"/>
+        <rdfs:domain rdf:resource="https://www.inf.ufrgs.br/bdi/ontologies/GEORES_0000022"/>
+        <rdfs:range rdf:resource="http://www.w3.org/2001/XMLSchema#double"/>
+        <rdfs:label xml:lang="en">has width value</rdfs:label>
+    </owl:DatatypeProperty>
+    
+
+
+    <!-- 
+    ///////////////////////////////////////////////////////////////////////////////////////
+    //
+    // Classes
+    //
+    ///////////////////////////////////////////////////////////////////////////////////////
+     -->
+
+    
+
+
+    <!-- http://purl.obolibrary.org/obo/BFO_0000001 -->
+
+    <owl:Class rdf:about="http://purl.obolibrary.org/obo/BFO_0000001">
+        <dce:identifier>001-BFO</dce:identifier>
+        <rdfs:label xml:lang="en">entity</rdfs:label>
+        <skos:definition xml:lang="en">(Elucidation) An entity is anything that exists or has existed or will exist</skos:definition>
+        <skos:example xml:lang="en">Julius Caesar; the Second World War; your body mass index; Verdi&apos;s Requiem</skos:example>
+    </owl:Class>
+    
+
+
+    <!-- http://purl.obolibrary.org/obo/BFO_0000002 -->
+
+    <owl:Class rdf:about="http://purl.obolibrary.org/obo/BFO_0000002">
+        <rdfs:subClassOf rdf:resource="http://purl.obolibrary.org/obo/BFO_0000001"/>
+        <rdfs:subClassOf>
+            <owl:Restriction>
+                <owl:onProperty rdf:resource="http://purl.obolibrary.org/obo/BFO_0000176"/>
+                <owl:allValuesFrom rdf:resource="http://purl.obolibrary.org/obo/BFO_0000002"/>
+            </owl:Restriction>
+        </rdfs:subClassOf>
+        <owl:disjointWith rdf:resource="http://purl.obolibrary.org/obo/BFO_0000003"/>
+        <dce:identifier>008-BFO</dce:identifier>
+        <rdfs:label xml:lang="en">continuant</rdfs:label>
+        <skos:definition xml:lang="en">(Elucidation) A continuant is an entity that persists, endures, or continues to exist through time while maintaining its identity</skos:definition>
+        <skos:example xml:lang="en">A human being; a tennis ball; a cave; a region of space; someone&apos;s temperature</skos:example>
+    </owl:Class>
+    
+
+
+    <!-- http://purl.obolibrary.org/obo/BFO_0000003 -->
+
+    <owl:Class rdf:about="http://purl.obolibrary.org/obo/BFO_0000003">
+        <rdfs:subClassOf rdf:resource="http://purl.obolibrary.org/obo/BFO_0000001"/>
+        <dce:identifier>077-BFO</dce:identifier>
+        <rdfs:label xml:lang="en">occurrent</rdfs:label>
+        <skos:definition xml:lang="en">(Elucidation) An occurrent is an entity that unfolds itself in time or it is the start or end of such an entity or it is a temporal or spatiotemporal region</skos:definition>
+        <skos:example xml:lang="en">As for process, history, process boundary, spatiotemporal region, zero-dimensional temporal region, one-dimensional temporal region, temporal interval, temporal instant.</skos:example>
+    </owl:Class>
+    
+
+
+    <!-- http://purl.obolibrary.org/obo/BFO_0000004 -->
+
+    <owl:Class rdf:about="http://purl.obolibrary.org/obo/BFO_0000004">
+        <rdfs:subClassOf rdf:resource="http://purl.obolibrary.org/obo/BFO_0000002"/>
+        <rdfs:subClassOf>
+            <owl:Restriction>
+                <owl:onProperty rdf:resource="http://purl.obolibrary.org/obo/BFO_0000176"/>
+                <owl:allValuesFrom rdf:resource="http://purl.obolibrary.org/obo/BFO_0000004"/>
+            </owl:Restriction>
+        </rdfs:subClassOf>
+        <dce:identifier>017-BFO</dce:identifier>
+        <rdfs:label xml:lang="en">independent continuant</rdfs:label>
+        <skos:definition xml:lang="en">b is an independent continuant =Def b is a continuant &amp; there is no c such that b specifically depends on c or b generically depends on c</skos:definition>
+        <skos:example xml:lang="en">An atom; a molecule; an organism; a heart; a chair; the bottom right portion of a human torso; a leg; the interior of your mouth; a spatial region; an orchestra</skos:example>
+    </owl:Class>
+    
+
+
+    <!-- http://purl.obolibrary.org/obo/BFO_0000006 -->
+
+    <owl:Class rdf:about="http://purl.obolibrary.org/obo/BFO_0000006">
+        <rdfs:subClassOf rdf:resource="http://purl.obolibrary.org/obo/BFO_0000141"/>
+        <rdfs:subClassOf>
+            <owl:Restriction>
+                <owl:onProperty rdf:resource="http://purl.obolibrary.org/obo/BFO_0000176"/>
+                <owl:allValuesFrom rdf:resource="http://purl.obolibrary.org/obo/BFO_0000006"/>
+            </owl:Restriction>
+        </rdfs:subClassOf>
+        <dce:identifier>035-BFO</dce:identifier>
+        <rdfs:label xml:lang="en">spatial region</rdfs:label>
+        <skos:definition xml:lang="en">(Elucidation) A spatial region is a continuant entity that is a continuant part of the spatial projection of a portion of spacetime at a given time</skos:definition>
+        <skos:example xml:lang="en">As for zero-dimensional spatial region, one-dimensional spatial region, two-dimensional spatial region, three-dimensional spatial region</skos:example>
+    </owl:Class>
+    
+
+
+    <!-- http://purl.obolibrary.org/obo/BFO_0000008 -->
+
+    <owl:Class rdf:about="http://purl.obolibrary.org/obo/BFO_0000008">
+        <rdfs:subClassOf rdf:resource="http://purl.obolibrary.org/obo/BFO_0000003"/>
+        <dce:identifier>100-BFO</dce:identifier>
+        <rdfs:label xml:lang="en">temporal region</rdfs:label>
+        <skos:definition xml:lang="en">(Elucidation) A temporal region is an occurrent over which processes can unfold</skos:definition>
+        <skos:example xml:lang="en">As for zero-dimensional temporal region and one-dimensional temporal region</skos:example>
+    </owl:Class>
+    
+
+
+    <!-- http://purl.obolibrary.org/obo/BFO_0000011 -->
+
+    <owl:Class rdf:about="http://purl.obolibrary.org/obo/BFO_0000011">
+        <rdfs:subClassOf rdf:resource="http://purl.obolibrary.org/obo/BFO_0000003"/>
+        <dce:identifier>095-BFO</dce:identifier>
+        <rdfs:label xml:lang="en">spatiotemporal region</rdfs:label>
+        <skos:definition xml:lang="en">(Elucidation) A spatiotemporal region is an occurrent that is an occurrent part of spacetime</skos:definition>
+        <skos:example xml:lang="en">The spatiotemporal region occupied by the development of a cancer tumour; the spatiotemporal region occupied by an orbiting satellite</skos:example>
+        <skos:scopeNote xml:lang="en">&apos;Spacetime&apos; here refers to the maximal instance of the universal spatiotemporal region.</skos:scopeNote>
+    </owl:Class>
+    
+
+
+    <!-- http://purl.obolibrary.org/obo/BFO_0000015 -->
+
+    <owl:Class rdf:about="http://purl.obolibrary.org/obo/BFO_0000015">
+        <rdfs:subClassOf rdf:resource="http://purl.obolibrary.org/obo/BFO_0000003"/>
+        <dce:identifier>083-BFO</dce:identifier>
+        <rdfs:label xml:lang="en">process</rdfs:label>
+        <skos:altLabel xml:lang="en">event</skos:altLabel>
+        <skos:definition xml:lang="en">(Elucidation) p is a process means p is an occurrent that has some temporal proper part and for some time t, p has some material entity as participant</skos:definition>
+        <skos:example xml:lang="en">An act of selling; the life of an organism; a process of sleeping; a process of cell-division; a beating of the heart; a process of meiosis; the taxiing of an aircraft; the programming of a computer</skos:example>
+    </owl:Class>
+    
+
+
+    <!-- http://purl.obolibrary.org/obo/BFO_0000019 -->
+
+    <owl:Class rdf:about="http://purl.obolibrary.org/obo/BFO_0000019">
+        <rdfs:subClassOf rdf:resource="http://purl.obolibrary.org/obo/BFO_0000020"/>
+        <dce:identifier>055-BFO</dce:identifier>
+        <rdfs:label xml:lang="en">quality</rdfs:label>
+        <skos:definition xml:lang="en">(Elucidation) A quality is a specifically dependent continuant that, in contrast to roles and dispositions, does not require any further process in order to be realized</skos:definition>
+        <skos:example xml:lang="en">The colour of a tomato; the ambient temperature of this portion of air; the length of the circumference of your waist; the shape of your nose; the shape of your nostril; the mass of this piece of gold</skos:example>
+    </owl:Class>
+    
+
+
+    <!-- http://purl.obolibrary.org/obo/BFO_0000020 -->
+
+    <owl:Class rdf:about="http://purl.obolibrary.org/obo/BFO_0000020">
+        <rdfs:subClassOf rdf:resource="http://purl.obolibrary.org/obo/BFO_0000002"/>
+        <dce:identifier>050-BFO</dce:identifier>
+        <rdfs:label xml:lang="en">specifically dependent continuant</rdfs:label>
+        <skos:definition xml:lang="en">b is a specifically dependent continuant =Def b is a continuant &amp; there is some independent continuant c which is not a spatial region &amp; which is such that b specifically depends on c</skos:definition>
+        <skos:example xml:lang="en">(with multiple bearers) John&apos;s love for Mary; the ownership relation between John and this statue; the relation of authority between John and his subordinates</skos:example>
+        <skos:example xml:lang="en">(with one bearer) The mass of this tomato; the pink colour of a medium rare piece of grilled filet mignon at its centre; the smell of this portion of mozzarella; the disposition of this fish to decay; the role of being a doctor; the function of this heart to pump blood; the shape of this hole</skos:example>
+    </owl:Class>
+    
+
+
+    <!-- http://purl.obolibrary.org/obo/BFO_0000027 -->
+
+    <owl:Class rdf:about="http://purl.obolibrary.org/obo/BFO_0000027">
+        <rdfs:subClassOf rdf:resource="http://purl.obolibrary.org/obo/BFO_0000040"/>
+        <dce:identifier>025-BFO</dce:identifier>
+        <rdfs:label xml:lang="en">object aggregate</rdfs:label>
+        <skos:definition xml:lang="en">(Elucidation) An object aggregate is a material entity consisting exactly of a plurality (≥1) of objects as member parts which together form a unit</skos:definition>
+        <skos:example xml:lang="en">The aggregate of the musicians in a symphony orchestra and their instruments; the aggregate of bearings in a constant velocity axle joint; the nitrogen atoms in the atmosphere; a collection of cells in a blood biobank</skos:example>
+        <skos:scopeNote>&apos;Exactly&apos; means that there are no parts of the object aggregate other than its member parts.</skos:scopeNote>
+        <skos:scopeNote>The unit can, at certain times, consist of exactly one object, for example, when a wolf litter loses all but one of its pups, but it must at some time have a plurality of member parts.</skos:scopeNote>
+    </owl:Class>
+    
+
+
+    <!-- http://purl.obolibrary.org/obo/BFO_0000029 -->
+
+    <owl:Class rdf:about="http://purl.obolibrary.org/obo/BFO_0000029">
+        <rdfs:subClassOf rdf:resource="http://purl.obolibrary.org/obo/BFO_0000141"/>
+        <rdfs:subClassOf>
+            <owl:Restriction>
+                <owl:onProperty rdf:resource="http://purl.obolibrary.org/obo/BFO_0000176"/>
+                <owl:allValuesFrom>
+                    <owl:Class>
+                        <owl:unionOf rdf:parseType="Collection">
+                            <rdf:Description rdf:about="http://purl.obolibrary.org/obo/BFO_0000029"/>
+                            <rdf:Description rdf:about="http://purl.obolibrary.org/obo/BFO_0000040"/>
+                        </owl:unionOf>
+                    </owl:Class>
+                </owl:allValuesFrom>
+            </owl:Restriction>
+        </rdfs:subClassOf>
+        <rdfs:subClassOf>
+            <owl:Restriction>
+                <owl:onProperty rdf:resource="http://purl.obolibrary.org/obo/BFO_0000178"/>
+                <owl:allValuesFrom>
+                    <owl:Class>
+                        <owl:unionOf rdf:parseType="Collection">
+                            <rdf:Description rdf:about="http://purl.obolibrary.org/obo/BFO_0000029"/>
+                            <rdf:Description rdf:about="http://purl.obolibrary.org/obo/BFO_0000140"/>
+                        </owl:unionOf>
+                    </owl:Class>
+                </owl:allValuesFrom>
+            </owl:Restriction>
+        </rdfs:subClassOf>
+        <dce:identifier>034-BFO</dce:identifier>
+        <rdfs:label xml:lang="en">site</rdfs:label>
+        <skos:definition xml:lang="en">(Elucidation) A site is a three-dimensional immaterial entity whose boundaries either (partially or wholly) coincide with the boundaries of one or more material entities or have locations determined in relation to some material entity</skos:definition>
+        <skos:example xml:lang="en">A hole in a portion of cheese; a rabbit hole; the Grand Canyon; the Piazza San Marco; the kangaroo-joey-containing hole of a kangaroo pouch; your left nostril (a fiat part - the opening - of your left nasal cavity); the lumen of your gut; the hold of a ship; the interior of the trunk of your car; hole in an engineered floor joist</skos:example>
+    </owl:Class>
+    
+
+
+    <!-- http://purl.obolibrary.org/obo/BFO_0000030 -->
+
+    <owl:Class rdf:about="http://purl.obolibrary.org/obo/BFO_0000030">
+        <rdfs:subClassOf rdf:resource="http://purl.obolibrary.org/obo/BFO_0000040"/>
+        <dce:identifier>024-BFO</dce:identifier>
+        <rdfs:label xml:lang="en">object</rdfs:label>
+        <skos:definition xml:lang="en">(Elucidation) An object is a material entity which manifests causal unity &amp; is of a type instances of which are maximal relative to the sort of causal unity manifested</skos:definition>
+        <skos:example xml:lang="en">An organism; a fish tank; a planet; a laptop; a valve; a block of marble; an ice cube</skos:example>
+        <skos:scopeNote xml:lang="en">A description of three primary sorts of causal unity is provided in Basic Formal Ontology 2.0. Specification and User Guide</skos:scopeNote>
+    </owl:Class>
+    
+
+
+    <!-- http://purl.obolibrary.org/obo/BFO_0000031 -->
+
+    <owl:Class rdf:about="http://purl.obolibrary.org/obo/BFO_0000031">
+        <rdfs:subClassOf rdf:resource="http://purl.obolibrary.org/obo/BFO_0000002"/>
+        <dce:identifier>074-BFO</dce:identifier>
+        <rdfs:label xml:lang="en">generically dependent continuant</rdfs:label>
+        <skos:altLabel xml:lang="en">g-dependent continuant</skos:altLabel>
+        <skos:definition xml:lang="en">(Elucidation) A generically dependent continuant is an entity that exists in virtue of the fact that there is at least one of what may be multiple copies which is the content or the pattern that multiple copies would share</skos:definition>
+        <skos:example xml:lang="en">The pdf file on your laptop; the pdf file that is a copy thereof on my laptop; the sequence of this protein molecule; the sequence that is a copy thereof in that protein molecule; the content that is shared by a string of dots and dashes written on a page and the transmitted Morse code signal; the content of a sentence; an engineering blueprint</skos:example>
+    </owl:Class>
+    
+
+
+    <!-- http://purl.obolibrary.org/obo/BFO_0000035 -->
+
+    <owl:Class rdf:about="http://purl.obolibrary.org/obo/BFO_0000035">
+        <rdfs:subClassOf rdf:resource="http://purl.obolibrary.org/obo/BFO_0000003"/>
+        <dce:identifier>084-BFO</dce:identifier>
+        <rdfs:label xml:lang="en">process boundary</rdfs:label>
+        <skos:definition xml:lang="en">p is a process boundary =Def p is a temporal part of a process &amp; p has no proper temporal parts</skos:definition>
+        <skos:example xml:lang="en">The boundary between the 2nd and 3rd year of your life</skos:example>
+    </owl:Class>
+    
+
+
+    <!-- http://purl.obolibrary.org/obo/BFO_0000038 -->
+
+    <owl:Class rdf:about="http://purl.obolibrary.org/obo/BFO_0000038">
+        <rdfs:subClassOf rdf:resource="http://purl.obolibrary.org/obo/BFO_0000008"/>
+        <dce:identifier>103-BFO</dce:identifier>
+        <rdfs:label xml:lang="en">one-dimensional temporal region</rdfs:label>
+        <skos:definition xml:lang="en">(Elucidation) A one-dimensional temporal region is a temporal region that is a whole that has a temporal interval and zero or more temporal intervals and temporal instants as parts</skos:definition>
+        <skos:example xml:lang="en">The temporal region during which a process occurs</skos:example>
+    </owl:Class>
+    
+
+
+    <!-- http://purl.obolibrary.org/obo/BFO_0000040 -->
+
+    <owl:Class rdf:about="http://purl.obolibrary.org/obo/BFO_0000040">
+        <rdfs:subClassOf rdf:resource="http://purl.obolibrary.org/obo/BFO_0000004"/>
+        <rdfs:subClassOf>
+            <owl:Restriction>
+                <owl:onProperty rdf:resource="http://purl.obolibrary.org/obo/BFO_0000176"/>
+                <owl:allValuesFrom rdf:resource="http://purl.obolibrary.org/obo/BFO_0000040"/>
+            </owl:Restriction>
+        </rdfs:subClassOf>
+        <rdfs:subClassOf>
+            <owl:Restriction>
+                <owl:onProperty rdf:resource="http://purl.obolibrary.org/obo/BFO_0000178"/>
+                <owl:allValuesFrom>
+                    <owl:Class>
+                        <owl:unionOf rdf:parseType="Collection">
+                            <rdf:Description rdf:about="http://purl.obolibrary.org/obo/BFO_0000029"/>
+                            <rdf:Description rdf:about="http://purl.obolibrary.org/obo/BFO_0000040"/>
+                            <rdf:Description rdf:about="http://purl.obolibrary.org/obo/BFO_0000140"/>
+                        </owl:unionOf>
+                    </owl:Class>
+                </owl:allValuesFrom>
+            </owl:Restriction>
+        </rdfs:subClassOf>
+        <owl:disjointWith rdf:resource="http://purl.obolibrary.org/obo/BFO_0000141"/>
+        <dce:identifier>019-BFO</dce:identifier>
+        <rdfs:label xml:lang="en">material entity</rdfs:label>
+        <skos:definition xml:lang="en">(Elucidation) A material entity is an independent continuant has some portion of matter as continuant part</skos:definition>
+        <skos:example xml:lang="en">A human being; the undetached arm of a human being; an aggregate of human beings</skos:example>
+    </owl:Class>
+    
+
+
+    <!-- http://purl.obolibrary.org/obo/BFO_0000140 -->
+
+    <owl:Class rdf:about="http://purl.obolibrary.org/obo/BFO_0000140">
+        <rdfs:subClassOf rdf:resource="http://purl.obolibrary.org/obo/BFO_0000141"/>
+        <rdfs:subClassOf>
+            <owl:Restriction>
+                <owl:onProperty rdf:resource="http://purl.obolibrary.org/obo/BFO_0000178"/>
+                <owl:allValuesFrom rdf:resource="http://purl.obolibrary.org/obo/BFO_0000140"/>
+            </owl:Restriction>
+        </rdfs:subClassOf>
+        <dce:identifier>029-BFO</dce:identifier>
+        <rdfs:label xml:lang="en">continuant fiat boundary</rdfs:label>
+        <skos:definition xml:lang="en">(Elucidation) A continuant fiat boundary b is an immaterial entity that is of zero, one or two dimensions &amp; such that there is no time t when b has a spatial region as continuant part &amp; whose location is determined in relation to some material entity</skos:definition>
+        <skos:example xml:lang="en">As for fiat point, fiat line, fiat surface</skos:example>
+    </owl:Class>
+    
+
+
+    <!-- http://purl.obolibrary.org/obo/BFO_0000141 -->
+
+    <owl:Class rdf:about="http://purl.obolibrary.org/obo/BFO_0000141">
+        <rdfs:subClassOf rdf:resource="http://purl.obolibrary.org/obo/BFO_0000004"/>
+        <dce:identifier>028-BFO</dce:identifier>
+        <rdfs:label xml:lang="en">immaterial entity</rdfs:label>
+        <skos:definition xml:lang="en">b is an immaterial entity =Def b is an independent continuant which is such that there is no time t when it has a material entity as continuant part</skos:definition>
+        <skos:example xml:lang="en">As for fiat point, fiat line, fiat surface, site</skos:example>
+    </owl:Class>
+    
+
+
+    <!-- http://purl.obolibrary.org/obo/BFO_0000145 -->
+
+    <owl:Class rdf:about="http://purl.obolibrary.org/obo/BFO_0000145">
+        <rdfs:subClassOf rdf:resource="http://purl.obolibrary.org/obo/BFO_0000019"/>
+        <dce:identifier>057-BFO</dce:identifier>
+        <rdfs:label xml:lang="en">relational quality</rdfs:label>
+        <skos:definition xml:lang="en">b is a relational quality =Def b is a quality &amp; there exists c and d such that c and d are not identical &amp; b specifically depends on c &amp; b specifically depends on d</skos:definition>
+        <skos:example xml:lang="en">A marriage bond; an instance of love; an obligation between one person and another</skos:example>
+    </owl:Class>
+    
+
+
+    <!-- http://purl.obolibrary.org/obo/BFO_0000146 -->
+
+    <owl:Class rdf:about="http://purl.obolibrary.org/obo/BFO_0000146">
+        <rdfs:subClassOf rdf:resource="http://purl.obolibrary.org/obo/BFO_0000140"/>
+        <dce:identifier>033-BFO</dce:identifier>
+        <rdfs:label xml:lang="en">fiat surface</rdfs:label>
+        <skos:definition xml:lang="en">(Elucidation) A fiat surface is a two-dimensional continuant fiat boundary that is self-connected</skos:definition>
+        <skos:example xml:lang="en">The surface of the Earth; the plane separating the smoking from the non-smoking zone in a restaurant</skos:example>
+    </owl:Class>
+    
+
+
+    <!-- https://www.inf.ufrgs.br/bdi/ontologies/GEOCORE_0000001 -->
+
+    <owl:Class rdf:about="https://www.inf.ufrgs.br/bdi/ontologies/GEOCORE_0000001">
+        <rdfs:subClassOf rdf:resource="http://purl.obolibrary.org/obo/BFO_0000030"/>
+        <rdfs:subClassOf>
+            <owl:Restriction>
+                <owl:onProperty rdf:resource="http://purl.obolibrary.org/obo/BFO_0000196"/>
+                <owl:someValuesFrom rdf:resource="https://www.inf.ufrgs.br/bdi/ontologies/GEORES_0000022"/>
+            </owl:Restriction>
+        </rdfs:subClassOf>
+        <rdfs:subClassOf>
+            <owl:Restriction>
+                <owl:onProperty rdf:resource="https://www.inf.ufrgs.br/bdi/ontologies/GEOCORE_0000015"/>
+                <owl:someValuesFrom rdf:resource="https://www.inf.ufrgs.br/bdi/ontologies/GEOCORE_0000003"/>
+            </owl:Restriction>
+        </rdfs:subClassOf>
+        <rdfs:subClassOf>
+            <owl:Restriction>
+                <owl:onProperty rdf:resource="https://www.inf.ufrgs.br/bdi/ontologies/GEOCORE_0000017"/>
+                <owl:someValuesFrom>
+                    <owl:Class>
+                        <owl:intersectionOf rdf:parseType="Collection">
+                            <rdf:Description rdf:about="https://www.inf.ufrgs.br/bdi/ontologies/GEOCORE_0000006"/>
+                            <owl:Class>
+                                <owl:complementOf rdf:resource="https://www.inf.ufrgs.br/bdi/ontologies/GEOCORE_0000009"/>
+                            </owl:Class>
+                        </owl:intersectionOf>
+                    </owl:Class>
+                </owl:someValuesFrom>
+            </owl:Restriction>
+        </rdfs:subClassOf>
+        <owl:disjointWith rdf:resource="https://www.inf.ufrgs.br/bdi/ontologies/GEOCORE_0000006"/>
+        <obo:IAO_0000115 xml:lang="en">An object that is &apos;generated by&apos; some &apos;geological process&apos; and has at least one part &apos;constituted by&apos; some &apos;earth material&apos; that is not an &apos;earth fluid&apos;.</obo:IAO_0000115>
+        <obo:IAO_0000116 xml:lang="en">A geological object is a naturally occurring entity because a geological process
+generates it, and some earth material constitutes it. Thus, we can differentiate geological objects from artificial objects, such as a well-core, because even though some earth material constitutes artificial objects, they are human-made rather than generated by some geological process. Furthermore, Geological Objects are specializations of BFO Objects, meaning they must necessarily have some unity criteria. The unity is what differentiates geological objects from Earth Materials.</obo:IAO_0000116>
+        <rdfs:label xml:lang="en">geological object</rdfs:label>
+        <skos:altLabel xml:lang="pt">objeto geológico</skos:altLabel>
+    </owl:Class>
+    
+
+
+    <!-- https://www.inf.ufrgs.br/bdi/ontologies/GEOCORE_0000002 -->
+
+    <owl:Class rdf:about="https://www.inf.ufrgs.br/bdi/ontologies/GEOCORE_0000002">
+        <rdfs:subClassOf rdf:resource="http://purl.obolibrary.org/obo/BFO_0000015"/>
+        <rdfs:subClassOf>
+            <owl:Restriction>
+                <owl:onProperty rdf:resource="http://purl.obolibrary.org/obo/BFO_0000199"/>
+                <owl:someValuesFrom rdf:resource="https://www.inf.ufrgs.br/bdi/ontologies/GEOCORE_0000005"/>
+            </owl:Restriction>
+        </rdfs:subClassOf>
+        <obo:IAO_0000112 xml:lang="en">Examples are the process of deposition, the process of folding, a tectonic process, a sedimentary process.</obo:IAO_0000112>
+        <obo:IAO_0000115 xml:lang="en">It is a physical, or chemical, or biological, naturally occurring process that occurs on the Earth’s surface or subsurface and occupies some &apos;geological time interval&apos;</obo:IAO_0000115>
+        <obo:IAO_0000116 xml:lang="en">Geological processes are macro processes that generate, transform, deform, transport, or destroy geological objects and earth materials. These processes are not necessarily atomic and may have other geological processes as parts.</obo:IAO_0000116>
+        <rdfs:label xml:lang="en">geological process</rdfs:label>
+        <skos:altLabel xml:lang="pt">processo geológico</skos:altLabel>
+    </owl:Class>
+    
+
+
+    <!-- https://www.inf.ufrgs.br/bdi/ontologies/GEOCORE_0000003 -->
+
+    <owl:Class rdf:about="https://www.inf.ufrgs.br/bdi/ontologies/GEOCORE_0000003">
+        <rdfs:subClassOf rdf:resource="http://purl.obolibrary.org/obo/BFO_0000019"/>
+        <obo:IAO_0000115 xml:lang="en">It is a quality that &apos;inheres in&apos; a &apos;geological object&apos; or &apos;earth material&apos; that corresponds to the &apos;geological time interval&apos; in which the &apos;geological process&apos; that it was &apos;generated by&apos; occupied.</obo:IAO_0000115>
+        <rdfs:label xml:lang="en">geological age</rdfs:label>
+        <skos:altLabel xml:lang="pt">idade geológica</skos:altLabel>
+    </owl:Class>
+    
+
+
+    <!-- https://www.inf.ufrgs.br/bdi/ontologies/GEOCORE_0000004 -->
+
+    <owl:Class rdf:about="https://www.inf.ufrgs.br/bdi/ontologies/GEOCORE_0000004">
+        <rdfs:subClassOf rdf:resource="http://purl.obolibrary.org/obo/BFO_0000031"/>
+        <rdfs:subClassOf>
+            <owl:Restriction>
+                <owl:onProperty rdf:resource="http://purl.obolibrary.org/obo/BFO_0000084"/>
+                <owl:someValuesFrom rdf:resource="https://www.inf.ufrgs.br/bdi/ontologies/GEOCORE_0000001"/>
+            </owl:Restriction>
+        </rdfs:subClassOf>
+        <obo:IAO_0000115 xml:lang="en">It is a &apos;generically dependent continuant&apos; that is the pattern of a non-atomic &apos;geological object&apos;&apos;s internal arrangement.</obo:IAO_0000115>
+        <obo:IAO_0000116 xml:lang="en">Geological structures are general material patterns repeated in many geological
+objects. The pattern comprises the material configuration and the mutual relationships of the object’s different parts. Structures result from one or a series of geological processes that generated or transformed the geological object they generically depend on. Thus, there is some historical dependence relation between the structure and this geological process, but what concretizes the structure is some complex quality inhering in the object, not the process.</obo:IAO_0000116>
+        <rdfs:label xml:lang="en">geological structure</rdfs:label>
+        <skos:altLabel xml:lang="pt">estrutura geológica</skos:altLabel>
+    </owl:Class>
+    
+
+
+    <!-- https://www.inf.ufrgs.br/bdi/ontologies/GEOCORE_0000005 -->
+
+    <owl:Class rdf:about="https://www.inf.ufrgs.br/bdi/ontologies/GEOCORE_0000005">
+        <rdfs:subClassOf rdf:resource="http://purl.obolibrary.org/obo/BFO_0000038"/>
+        <obo:IAO_0000115 xml:lang="en">It is a BFO temporal interval that corresponds to a time interval within the Geological Time Scale.</obo:IAO_0000115>
+        <rdfs:label xml:lang="en">geological time interval</rdfs:label>
+        <skos:altLabel xml:lang="pt">intervalo de tempo geológico</skos:altLabel>
+    </owl:Class>
+    
+
+
+    <!-- https://www.inf.ufrgs.br/bdi/ontologies/GEOCORE_0000006 -->
+
+    <owl:Class rdf:about="https://www.inf.ufrgs.br/bdi/ontologies/GEOCORE_0000006">
+        <rdfs:subClassOf rdf:resource="http://purl.obolibrary.org/obo/BFO_0000040"/>
+        <rdfs:subClassOf>
+            <owl:Restriction>
+                <owl:onProperty rdf:resource="https://www.inf.ufrgs.br/bdi/ontologies/GEOCORE_0000015"/>
+                <owl:someValuesFrom rdf:resource="https://www.inf.ufrgs.br/bdi/ontologies/GEOCORE_0000003"/>
+            </owl:Restriction>
+        </rdfs:subClassOf>
+        <obo:IAO_0000112 xml:lang="en">Examples are an amount of sandstone, an amount of petroleum, an amount of
+natural gas.</obo:IAO_0000112>
+        <obo:IAO_0000115 xml:lang="en">It is a natural amount of matter &apos;generated by&apos; some &apos;geological process&apos;.</obo:IAO_0000115>
+        <obo:IAO_0000116 xml:lang="en">Earth Materials are natural amounts of matter. Thus, they come into existence by nature, without any artificial aid. Since they are amounts, they don’t hold unity criteria, but they are ontologically rigid and provide an identity criteria. Earth Materials and BFO Objects are disjoint. They are either solid, fluid, or unconsolidated. We usually observe earth materials when constituting other objects, such as an amount of rock constituting a geological unity or an amount of sand constituting a dune.</obo:IAO_0000116>
+        <rdfs:label xml:lang="en">earth material</rdfs:label>
+        <skos:altLabel xml:lang="pt">material geologico</skos:altLabel>
+    </owl:Class>
+    
+
+
+    <!-- https://www.inf.ufrgs.br/bdi/ontologies/GEOCORE_0000007 -->
+
+    <owl:Class rdf:about="https://www.inf.ufrgs.br/bdi/ontologies/GEOCORE_0000007">
+        <rdfs:subClassOf rdf:resource="https://www.inf.ufrgs.br/bdi/ontologies/GEOCORE_0000006"/>
+        <obo:IAO_0000112 xml:lang="en">The amount of quarts that constitutes some grain, the amount of feldspar that is part of an amount of rock.</obo:IAO_0000112>
+        <obo:IAO_0000115 xml:lang="en">An amount of rock is an &apos;earth material&apos; that is a naturally occuring, inorganic, solid, homogeneous chemical compound with a crystalline structure.</obo:IAO_0000115>
+        <obo:IAO_0000116 xml:lang="en">Amounts of mineral lack a unity criteria as every other &apos;earth material&apos;. We usually observe them when they are constitution objects such as crystals or grains.</obo:IAO_0000116>
+        <rdfs:label xml:lang="en">amount of mineral</rdfs:label>
+        <skos:altLabel xml:lang="pt">quantidade de mineral</skos:altLabel>
+    </owl:Class>
+    
+
+
+    <!-- https://www.inf.ufrgs.br/bdi/ontologies/GEOCORE_0000008 -->
+
+    <owl:Class rdf:about="https://www.inf.ufrgs.br/bdi/ontologies/GEOCORE_0000008">
+        <rdfs:subClassOf rdf:resource="https://www.inf.ufrgs.br/bdi/ontologies/GEOCORE_0000006"/>
+        <rdfs:subClassOf>
+            <owl:Restriction>
+                <owl:onProperty rdf:resource="http://purl.obolibrary.org/obo/BFO_0000196"/>
+                <owl:someValuesFrom rdf:resource="https://www.inf.ufrgs.br/bdi/ontologies/GEORES_0000024"/>
+            </owl:Restriction>
+        </rdfs:subClassOf>
+        <owl:disjointWith rdf:resource="https://www.inf.ufrgs.br/bdi/ontologies/GEOCORE_0000009"/>
+        <obo:IAO_0000112 xml:lang="en">The amount of sandstone that constitutes a lithostratigraphic unit.</obo:IAO_0000112>
+        <obo:IAO_0000115 xml:lang="en">An amount of rock is a solid consolidated &apos;earth material&apos; that is &apos;constituted by&apos; an aggregate of particles made of mineral matter or material of biological origin.</obo:IAO_0000115>
+        <obo:IAO_0000116 xml:lang="en">Geologists define rocks at a scale of observation where they consider them homogeneous, even though an aggregate of solid particles constitutes it. These particles are usually geological objects, such as grains or crystals, or the rest of dead animals or plants. 
+
+Amounts of rock, like other earth materials, are independent rigid entities that do not hold any unity criteria. We can observe them in nature when they are constituting objects such as geological unities.</obo:IAO_0000116>
+        <rdfs:label xml:lang="en">amount of rock</rdfs:label>
+        <skos:altLabel xml:lang="pt">quantidade de rocha</skos:altLabel>
+    </owl:Class>
+    
+
+
+    <!-- https://www.inf.ufrgs.br/bdi/ontologies/GEOCORE_0000009 -->
+
+    <owl:Class rdf:about="https://www.inf.ufrgs.br/bdi/ontologies/GEOCORE_0000009">
+        <rdfs:subClassOf rdf:resource="https://www.inf.ufrgs.br/bdi/ontologies/GEOCORE_0000006"/>
+        <obo:IAO_0000115 xml:lang="en">Earth fluid is an &apos;earth material&apos; that is fluild.</obo:IAO_0000115>
+        <obo:IAO_0000116 xml:lang="en">Earth fluids can be water, oil, gas or a mixture of those fluids.</obo:IAO_0000116>
+        <rdfs:label xml:lang="en">earth fluid</rdfs:label>
+        <skos:altLabel xml:lang="pt">fluido da terra</skos:altLabel>
+    </owl:Class>
+    
+
+
+    <!-- https://www.inf.ufrgs.br/bdi/ontologies/GEOCORE_0000010 -->
+
+    <owl:Class rdf:about="https://www.inf.ufrgs.br/bdi/ontologies/GEOCORE_0000010">
+        <rdfs:subClassOf rdf:resource="https://www.inf.ufrgs.br/bdi/ontologies/GEOCORE_0000006"/>
+        <obo:IAO_0000115 xml:lang="en">Unconsolidated earth material is an &apos;earth material&apos; that is consituted by an aggregate of solid particles but is not consolidated into a &apos;rock&apos; it self.</obo:IAO_0000115>
+        <rdfs:label xml:lang="en">unconsolidated earth material</rdfs:label>
+        <skos:altLabel xml:lang="pt">material geológico inconsolidado</skos:altLabel>
+    </owl:Class>
+    
+
+
+    <!-- https://www.inf.ufrgs.br/bdi/ontologies/GEOCORE_0000011 -->
+
+    <owl:Class rdf:about="https://www.inf.ufrgs.br/bdi/ontologies/GEOCORE_0000011">
+        <rdfs:subClassOf rdf:resource="http://purl.obolibrary.org/obo/BFO_0000146"/>
+        <obo:IAO_0000115 xml:lang="en">It is a fiat surface that is &apos;located in&apos; the external surface of a &apos;geological object&apos;.</obo:IAO_0000115>
+        <obo:IAO_0000116 xml:lang="en">The &apos;geological boundary&apos; of a &apos;geological object&apos; coincides with the complete physical discontinuity that delimits it.</obo:IAO_0000116>
+        <rdfs:label xml:lang="en">geological boundary</rdfs:label>
+        <skos:altLabel xml:lang="pt">limite geológico</skos:altLabel>
+    </owl:Class>
+    
+
+
+    <!-- https://www.inf.ufrgs.br/bdi/ontologies/GEOCORE_0000012 -->
+
+    <owl:Class rdf:about="https://www.inf.ufrgs.br/bdi/ontologies/GEOCORE_0000012">
+        <rdfs:subClassOf rdf:resource="http://purl.obolibrary.org/obo/BFO_0000145"/>
+        <rdfs:subClassOf>
+            <owl:Restriction>
+                <owl:onProperty rdf:resource="http://purl.obolibrary.org/obo/BFO_0000197"/>
+                <owl:qualifiedCardinality rdf:datatype="http://www.w3.org/2001/XMLSchema#nonNegativeInteger">2</owl:qualifiedCardinality>
+                <owl:onClass rdf:resource="https://www.inf.ufrgs.br/bdi/ontologies/GEOCORE_0000001"/>
+            </owl:Restriction>
+        </rdfs:subClassOf>
+        <obo:IAO_0000115 xml:lang="en">It is a &apos;relational quality&apos; that &apos;inheres in&apos; two distinct &apos;geological object&apos; that are &apos;externally connected with&apos;</obo:IAO_0000115>
+        <obo:IAO_0000116 xml:lang="en">A geological contact exists when two distinct geological objects are externally
+connected with, i.e., their external boundaries are physically adjacent. Objects that are in contact do not have any kind of proper parthood relationship between them.</obo:IAO_0000116>
+        <rdfs:label xml:lang="en">geological contact</rdfs:label>
+        <skos:altLabel xml:lang="pt">contato geológico</skos:altLabel>
+    </owl:Class>
+    
+
+
+    <!-- https://www.inf.ufrgs.br/bdi/ontologies/GEORES_0000001 -->
+
+    <owl:Class rdf:about="https://www.inf.ufrgs.br/bdi/ontologies/GEORES_0000001">
+        <owl:equivalentClass>
+            <owl:Class>
+                <owl:intersectionOf rdf:parseType="Collection">
+                    <rdf:Description rdf:about="https://www.inf.ufrgs.br/bdi/ontologies/GEOCORE_0000001"/>
+                    <owl:Restriction>
+                        <owl:onProperty rdf:resource="https://www.inf.ufrgs.br/bdi/ontologies/GEOCORE_0000017"/>
+                        <owl:someValuesFrom rdf:resource="https://www.inf.ufrgs.br/bdi/ontologies/GEOCORE_0000008"/>
+                    </owl:Restriction>
+                </owl:intersectionOf>
+            </owl:Class>
+        </owl:equivalentClass>
+        <rdfs:subClassOf rdf:resource="https://www.inf.ufrgs.br/bdi/ontologies/GEOCORE_0000001"/>
+        <rdfs:subClassOf>
+            <owl:Restriction>
+                <owl:onProperty rdf:resource="http://purl.obolibrary.org/obo/BFO_0000101"/>
+                <owl:someValuesFrom rdf:resource="https://www.inf.ufrgs.br/bdi/ontologies/GEOCORE_0000004"/>
+            </owl:Restriction>
+        </rdfs:subClassOf>
+        <rdfs:subClassOf>
+            <owl:Restriction>
+                <owl:onProperty rdf:resource="http://purl.obolibrary.org/obo/BFO_0000129"/>
+                <owl:someValuesFrom rdf:resource="https://www.inf.ufrgs.br/bdi/ontologies/GEORES_0000020"/>
+            </owl:Restriction>
+        </rdfs:subClassOf>
+        <rdfs:subClassOf>
+            <owl:Restriction>
+                <owl:onProperty rdf:resource="http://purl.obolibrary.org/obo/BFO_0000129"/>
+                <owl:someValuesFrom rdf:resource="https://www.inf.ufrgs.br/bdi/ontologies/GEORES_0000021"/>
+            </owl:Restriction>
+        </rdfs:subClassOf>
+        <rdfs:subClassOf>
+            <owl:Restriction>
+                <owl:onProperty rdf:resource="https://www.inf.ufrgs.br/bdi/ontologies/GEOCORE_0000017"/>
+                <owl:someValuesFrom rdf:resource="https://www.inf.ufrgs.br/bdi/ontologies/GEOCORE_0000008"/>
+            </owl:Restriction>
+        </rdfs:subClassOf>
+        <rdfs:label xml:lang="en">body of rock</rdfs:label>
+        <skos:altLabel xml:lang="pt">corpo de rocha</skos:altLabel>
+        <skos:definition>&apos;body of rock&apos; is a &apos;geological object&apos; that is &apos;constituted by&apos; some &apos;amount of rock&apos;</skos:definition>
+    </owl:Class>
+    
+
+
+    <!-- https://www.inf.ufrgs.br/bdi/ontologies/GEORES_0000002 -->
+
+    <owl:Class rdf:about="https://www.inf.ufrgs.br/bdi/ontologies/GEORES_0000002">
+        <rdfs:subClassOf rdf:resource="https://www.inf.ufrgs.br/bdi/ontologies/GEORES_0000001"/>
+        <rdfs:comment xml:lang="pt">Os diferentes elementos arquiteturais ocorrem dentro de uma unidade com uma idade definida que é a unidade estratigráfica.
+
+Ainda não sabemos se poderia ser uma unidade litoestratigráfica.</rdfs:comment>
+        <rdfs:label xml:lang="en">stratigraphic unit</rdfs:label>
+        <skos:altLabel xml:lang="pt">unidade estratigráfica</skos:altLabel>
+    </owl:Class>
+    
+
+
+    <!-- https://www.inf.ufrgs.br/bdi/ontologies/GEORES_0000003 -->
+
+    <owl:Class rdf:about="https://www.inf.ufrgs.br/bdi/ontologies/GEORES_0000003">
+        <rdfs:subClassOf rdf:resource="https://www.inf.ufrgs.br/bdi/ontologies/GEORES_0000001"/>
+        <rdfs:label xml:lang="en">lithostratigraphic unit</rdfs:label>
+        <skos:altLabel xml:lang="pt">unidade litoestratigráfica</skos:altLabel>
+    </owl:Class>
+    
+
+
+    <!-- https://www.inf.ufrgs.br/bdi/ontologies/GEORES_0000004 -->
+
+    <owl:Class rdf:about="https://www.inf.ufrgs.br/bdi/ontologies/GEORES_0000004">
+        <rdfs:subClassOf rdf:resource="https://www.inf.ufrgs.br/bdi/ontologies/GEORES_0000003"/>
+        <rdfs:subClassOf>
+            <owl:Restriction>
+                <owl:onProperty rdf:resource="http://purl.obolibrary.org/obo/BFO_0000129"/>
+                <owl:someValuesFrom rdf:resource="https://www.inf.ufrgs.br/bdi/ontologies/GEORES_0000019"/>
+            </owl:Restriction>
+        </rdfs:subClassOf>
+        <rdfs:label xml:lang="en">formation</rdfs:label>
+        <skos:altLabel xml:lang="pt">formação</skos:altLabel>
+    </owl:Class>
+    
+
+
+    <!-- https://www.inf.ufrgs.br/bdi/ontologies/GEORES_0000005 -->
+
+    <owl:Class rdf:about="https://www.inf.ufrgs.br/bdi/ontologies/GEORES_0000005">
+        <rdfs:subClassOf rdf:resource="https://www.inf.ufrgs.br/bdi/ontologies/GEORES_0000003"/>
+        <rdfs:subClassOf>
+            <owl:Restriction>
+                <owl:onProperty rdf:resource="http://purl.obolibrary.org/obo/BFO_0000176"/>
+                <owl:someValuesFrom rdf:resource="https://www.inf.ufrgs.br/bdi/ontologies/GEORES_0000004"/>
+            </owl:Restriction>
+        </rdfs:subClassOf>
+        <rdfs:label xml:lang="en">member</rdfs:label>
+        <skos:altLabel xml:lang="pt">membro</skos:altLabel>
+    </owl:Class>
+    
+
+
+    <!-- https://www.inf.ufrgs.br/bdi/ontologies/GEORES_0000006 -->
+
+    <owl:Class rdf:about="https://www.inf.ufrgs.br/bdi/ontologies/GEORES_0000006">
+        <rdfs:subClassOf rdf:resource="https://www.inf.ufrgs.br/bdi/ontologies/GEORES_0000001"/>
+        <rdfs:subClassOf>
+            <owl:Restriction>
+                <owl:onProperty rdf:resource="http://purl.obolibrary.org/obo/BFO_0000196"/>
+                <owl:someValuesFrom rdf:resource="https://www.inf.ufrgs.br/bdi/ontologies/GEORES_0000023"/>
+            </owl:Restriction>
+        </rdfs:subClassOf>
+        <rdfs:comment xml:lang="pt">A restrição de partes de escala menores ainda não foi implementada.</rdfs:comment>
+        <rdfs:comment xml:lang="pt">Luan: Elementos arquiteturais são os objetos básicos que os geólogos vão reconhecer e descrever. Eles podem ocorrer em diversas escalas.
+Um elemento pode ter outro elemento como parte, desde que de uma escala menor.</rdfs:comment>
+        <rdfs:label xml:lang="en">architectural element</rdfs:label>
+        <skos:altLabel xml:lang="pt">elemento arquitetural</skos:altLabel>
+    </owl:Class>
+    
+
+
+    <!-- https://www.inf.ufrgs.br/bdi/ontologies/GEORES_0000007 -->
+
+    <owl:Class rdf:about="https://www.inf.ufrgs.br/bdi/ontologies/GEORES_0000007">
+        <rdfs:subClassOf rdf:resource="https://www.inf.ufrgs.br/bdi/ontologies/GEORES_0000006"/>
+        <rdfs:label xml:lang="en">build up unit</rdfs:label>
+        <skos:altLabel xml:lang="pt">edifício</skos:altLabel>
+    </owl:Class>
+    
+
+
+    <!-- https://www.inf.ufrgs.br/bdi/ontologies/GEORES_0000008 -->
+
+    <owl:Class rdf:about="https://www.inf.ufrgs.br/bdi/ontologies/GEORES_0000008">
+        <rdfs:subClassOf rdf:resource="https://www.inf.ufrgs.br/bdi/ontologies/GEORES_0000006"/>
+        <obo:IAO_0000115 xml:lang="en">An elongated Depositional Unit having some Channel Surface as its boundary and constituted by some Sediment or Sedimentary Rock that fills it (McHargue et al., 2011).</obo:IAO_0000115>
+        <rdfs:comment xml:lang="en">In stratigraphic terms, a channel unit is constituted by the sediments or sedimentary rocks that fill a channel. It is important to notice that, in more general terms, a channel is a passageway for fluids or sediments, i.e., an immaterial entity. If one elaborates about the erosion and deposition processes that generate these units (McHargue et al., 2011), it is essential to have this disambiguation.</rdfs:comment>
+        <rdfs:comment xml:lang="en">In this work, we decided not to model the named hierarchical scales as entities (e.g., Channel Element, Channel Complex, Channel Complex Set - McHargue et al., 2011) because there exists a wide variety of hierarchical schemes in the literature, and they are not necessarily interoperable (Cullis et al., 2018). Instead, we focus on the fact that units can be fractally nested: a unit can be a Proper Spatial Part Of another unit, which can be a Proper Spatial Part Of another unit, and so forth. We consider that this approach solves the problem of implementing a solution for the repeatability of the geological objects in multiple scales. As so, a Channel Unit can be decomposed in other Channel Units many times as necessary, keeping the representation structure. In the future, we can study the integration of hierarchical schemes and try to infer scales from the spatial relations.</rdfs:comment>
+        <rdfs:label xml:lang="en">channel unit</rdfs:label>
+        <skos:altLabel xml:lang="pt">canal</skos:altLabel>
+        <ontologies:GEORES_0000050>R+ I+ O- U+ ED-</ontologies:GEORES_0000050>
+    </owl:Class>
+    
+
+
+    <!-- https://www.inf.ufrgs.br/bdi/ontologies/GEORES_0000009 -->
+
+    <owl:Class rdf:about="https://www.inf.ufrgs.br/bdi/ontologies/GEORES_0000009">
+        <rdfs:subClassOf rdf:resource="https://www.inf.ufrgs.br/bdi/ontologies/GEORES_0000006"/>
+        <rdfs:label xml:lang="en">dome unit</rdfs:label>
+        <skos:altLabel xml:lang="pt">domo</skos:altLabel>
+    </owl:Class>
+    
+
+
+    <!-- https://www.inf.ufrgs.br/bdi/ontologies/GEORES_0000010 -->
+
+    <owl:Class rdf:about="https://www.inf.ufrgs.br/bdi/ontologies/GEORES_0000010">
+        <rdfs:subClassOf rdf:resource="https://www.inf.ufrgs.br/bdi/ontologies/GEORES_0000006"/>
+        <rdfs:label xml:lang="en">dune unit</rdfs:label>
+        <skos:altLabel xml:lang="pt">duna</skos:altLabel>
+    </owl:Class>
+    
+
+
+    <!-- https://www.inf.ufrgs.br/bdi/ontologies/GEORES_0000011 -->
+
+    <owl:Class rdf:about="https://www.inf.ufrgs.br/bdi/ontologies/GEORES_0000011">
+        <rdfs:subClassOf rdf:resource="https://www.inf.ufrgs.br/bdi/ontologies/GEORES_0000006"/>
+        <rdfs:label xml:lang="en">intrusive dike</rdfs:label>
+        <skos:altLabel xml:lang="pt">dique intrusivo</skos:altLabel>
+    </owl:Class>
+    
+
+
+    <!-- https://www.inf.ufrgs.br/bdi/ontologies/GEORES_0000012 -->
+
+    <owl:Class rdf:about="https://www.inf.ufrgs.br/bdi/ontologies/GEORES_0000012">
+        <rdfs:subClassOf rdf:resource="https://www.inf.ufrgs.br/bdi/ontologies/GEORES_0000006"/>
+        <rdfs:label xml:lang="en">intrusive sill unit</rdfs:label>
+        <skos:altLabel xml:lang="pt">soleira intrusiva</skos:altLabel>
+    </owl:Class>
+    
+
+
+    <!-- https://www.inf.ufrgs.br/bdi/ontologies/GEORES_0000013 -->
+
+    <owl:Class rdf:about="https://www.inf.ufrgs.br/bdi/ontologies/GEORES_0000013">
+        <rdfs:subClassOf rdf:resource="https://www.inf.ufrgs.br/bdi/ontologies/GEORES_0000006"/>
+        <obo:IAO_0000115 xml:lang="en">A Depositional Unit having Wedge Geometry and forming a bank or ridge geomorphology associated with some Channel Unit.</obo:IAO_0000115>
+        <rdfs:comment xml:lang="en">This term is not consensual as some authors refer to these units as the wedge-shape embankments around channels, which is the definition that we adopt here, while other authors refer to them as not necessarily being these embankments and possibly having wing shapes, among other definitions.</rdfs:comment>
+        <rdfs:comment xml:lang="en">This term refers to the geomorphological association of some wegde-shaped unit with some channel unit, even if the channel does not exist at the moment of the observation by the geologist and the levee is probabilistically identified by tendencies (e.g., typical facies). In other words, the term &quot;levee&quot; ontologicallly denotes this relation even though it cannot be deterministically observed.</rdfs:comment>
+        <rdfs:label xml:lang="en">levee unit</rdfs:label>
+        <skos:altLabel xml:lang="pt">dique</skos:altLabel>
+        <ontologies:GEORES_0000050>R~ I+ O- U+ ED-</ontologies:GEORES_0000050>
+    </owl:Class>
+    
+
+
+    <!-- https://www.inf.ufrgs.br/bdi/ontologies/GEORES_0000014 -->
+
+    <owl:Class rdf:about="https://www.inf.ufrgs.br/bdi/ontologies/GEORES_0000014">
+        <rdfs:subClassOf rdf:resource="https://www.inf.ufrgs.br/bdi/ontologies/GEORES_0000006"/>
+        <obo:IAO_0000115 xml:lang="en">A Depositional Unit having some Lobe Geometry.</obo:IAO_0000115>
+        <rdfs:comment xml:lang="en">For Lobe Unit hierarchical scales, we adopted the same approach as in Channel Unit.</rdfs:comment>
+        <rdfs:comment xml:lang="en">These depositional units are usually found at deep-water depositional system terminal regions, or at channel laterals as Overbank Units.</rdfs:comment>
+        <rdfs:label xml:lang="en">lobe unit</rdfs:label>
+        <skos:altLabel xml:lang="pt">lobo</skos:altLabel>
+        <ontologies:GEORES_0000050>R+ I+ O- U+ ED-</ontologies:GEORES_0000050>
+    </owl:Class>
+    
+
+
+    <!-- https://www.inf.ufrgs.br/bdi/ontologies/GEORES_0000015 -->
+
+    <owl:Class rdf:about="https://www.inf.ufrgs.br/bdi/ontologies/GEORES_0000015">
+        <rdfs:subClassOf rdf:resource="https://www.inf.ufrgs.br/bdi/ontologies/GEORES_0000006"/>
+        <obo:IAO_0000115 xml:lang="en">A Depositional Unit having Mound Geometry with an irregular top surface and internal chaotic facies.</obo:IAO_0000115>
+        <rdfs:label xml:lang="en">mound unit</rdfs:label>
+        <skos:altLabel xml:lang="pt">monte</skos:altLabel>
+        <ontologies:GEORES_0000050>R+ I+ O- U+ ED-</ontologies:GEORES_0000050>
+    </owl:Class>
+    
+
+
+    <!-- https://www.inf.ufrgs.br/bdi/ontologies/GEORES_0000016 -->
+
+    <owl:Class rdf:about="https://www.inf.ufrgs.br/bdi/ontologies/GEORES_0000016">
+        <rdfs:subClassOf rdf:resource="https://www.inf.ufrgs.br/bdi/ontologies/GEORES_0000006"/>
+        <obo:IAO_0000118 xml:lang="en">megaclast</obo:IAO_0000118>
+        <obo:IAO_0000118 xml:lang="pt">megaclasto</obo:IAO_0000118>
+        <rdfs:label xml:lang="en">olistrostomes unit</rdfs:label>
+        <skos:altLabel xml:lang="pt">olistrostomas</skos:altLabel>
+    </owl:Class>
+    
+
+
+    <!-- https://www.inf.ufrgs.br/bdi/ontologies/GEORES_0000017 -->
+
+    <owl:Class rdf:about="https://www.inf.ufrgs.br/bdi/ontologies/GEORES_0000017">
+        <rdfs:subClassOf rdf:resource="https://www.inf.ufrgs.br/bdi/ontologies/GEORES_0000006"/>
+        <rdfs:label xml:lang="en">sheet unit</rdfs:label>
+        <skos:altLabel xml:lang="pt">lençol</skos:altLabel>
+    </owl:Class>
+    
+
+
+    <!-- https://www.inf.ufrgs.br/bdi/ontologies/GEORES_0000018 -->
+
+    <owl:Class rdf:about="https://www.inf.ufrgs.br/bdi/ontologies/GEORES_0000018">
+        <rdfs:subClassOf rdf:resource="https://www.inf.ufrgs.br/bdi/ontologies/GEOCORE_0000001"/>
+        <rdfs:label xml:lang="en">fossil</rdfs:label>
+        <skos:altLabel xml:lang="pt">fóssil</skos:altLabel>
+    </owl:Class>
+    
+
+
+    <!-- https://www.inf.ufrgs.br/bdi/ontologies/GEORES_0000019 -->
+
+    <owl:Class rdf:about="https://www.inf.ufrgs.br/bdi/ontologies/GEORES_0000019">
+        <rdfs:subClassOf rdf:resource="http://purl.obolibrary.org/obo/BFO_0000027"/>
+        <rdfs:subClassOf>
+            <owl:Restriction>
+                <owl:onProperty rdf:resource="http://purl.obolibrary.org/obo/BFO_0000115"/>
+                <owl:allValuesFrom rdf:resource="https://www.inf.ufrgs.br/bdi/ontologies/GEORES_0000004"/>
+            </owl:Restriction>
+        </rdfs:subClassOf>
+        <rdfs:label xml:lang="en">group</rdfs:label>
+        <skos:altLabel xml:lang="pt">grupo</skos:altLabel>
+    </owl:Class>
+    
+
+
+    <!-- https://www.inf.ufrgs.br/bdi/ontologies/GEORES_0000020 -->
+
+    <owl:Class rdf:about="https://www.inf.ufrgs.br/bdi/ontologies/GEORES_0000020">
+        <rdfs:subClassOf rdf:resource="http://purl.obolibrary.org/obo/BFO_0000027"/>
+        <obo:IAO_0000115 xml:lang="en">An Object Aggregate whose members are mereotopologically-linked Depositional Units.</obo:IAO_0000115>
+        <rdfs:label xml:lang="en">depositional system</rdfs:label>
+        <skos:altLabel xml:lang="pt">sistema deposicional</skos:altLabel>
+        <ontologies:GEORES_0000050>R+ I+ O+ U+ ED-</ontologies:GEORES_0000050>
+    </owl:Class>
+    
+
+
+    <!-- https://www.inf.ufrgs.br/bdi/ontologies/GEORES_0000021 -->
+
+    <owl:Class rdf:about="https://www.inf.ufrgs.br/bdi/ontologies/GEORES_0000021">
+        <rdfs:subClassOf rdf:resource="http://purl.obolibrary.org/obo/BFO_0000027"/>
+        <obo:IAO_0000115 xml:lang="en">The sedimentary environment is the specific depositional setting of a particular sedimentary rock and is unique in terms of physical, chemical, and biological characteristics.</obo:IAO_0000115>
+        <obo:IAO_0000119 xml:lang="en">Britannica
+https://www.britannica.com/science/sedimentary-rock/Sedimentary-environments</obo:IAO_0000119>
+        <rdfs:label xml:lang="en">sedimentary environment</rdfs:label>
+        <skos:altLabel xml:lang="pt">ambiente de sedimentação</skos:altLabel>
+    </owl:Class>
+    
+
+
+    <!-- https://www.inf.ufrgs.br/bdi/ontologies/GEORES_0000022 -->
+
+    <owl:Class rdf:about="https://www.inf.ufrgs.br/bdi/ontologies/GEORES_0000022">
+        <rdfs:subClassOf rdf:resource="http://purl.obolibrary.org/obo/BFO_0000019"/>
+        <rdfs:subClassOf>
+            <owl:Restriction>
+                <owl:onProperty rdf:resource="https://www.inf.ufrgs.br/bdi/ontologies/GEORES_0000071"/>
+                <owl:someValuesFrom rdf:resource="http://www.w3.org/2001/XMLSchema#double"/>
+            </owl:Restriction>
+        </rdfs:subClassOf>
+        <rdfs:subClassOf>
+            <owl:Restriction>
+                <owl:onProperty rdf:resource="https://www.inf.ufrgs.br/bdi/ontologies/GEORES_0000072"/>
+                <owl:someValuesFrom rdf:resource="http://www.w3.org/2001/XMLSchema#string"/>
+            </owl:Restriction>
+        </rdfs:subClassOf>
+        <rdfs:subClassOf>
+            <owl:Restriction>
+                <owl:onProperty rdf:resource="https://www.inf.ufrgs.br/bdi/ontologies/GEORES_0000073"/>
+                <owl:someValuesFrom rdf:resource="http://www.w3.org/2001/XMLSchema#double"/>
+            </owl:Restriction>
+        </rdfs:subClassOf>
+        <rdfs:subClassOf>
+            <owl:Restriction>
+                <owl:onProperty rdf:resource="https://www.inf.ufrgs.br/bdi/ontologies/GEORES_0000074"/>
+                <owl:someValuesFrom rdf:resource="http://www.w3.org/2001/XMLSchema#double"/>
+            </owl:Restriction>
+        </rdfs:subClassOf>
+        <obo:IAO_0000115 xml:lang="en">A Quality that inheres in an Independent Continuant by virtue of one of its one-dimensional extents. It is a category that includes at least the three dimensions defined in this ontology: Width, Length, and Thickness. All dimensions are expressed by a real number indicating its value and a literal string indicating its measurement unit.</obo:IAO_0000115>
+        <rdfs:label xml:lang="en">dimension</rdfs:label>
+    </owl:Class>
+    
+
+
+    <!-- https://www.inf.ufrgs.br/bdi/ontologies/GEORES_0000023 -->
+
+    <owl:Class rdf:about="https://www.inf.ufrgs.br/bdi/ontologies/GEORES_0000023">
+        <rdfs:subClassOf rdf:resource="http://purl.obolibrary.org/obo/BFO_0000019"/>
+        <rdfs:subClassOf>
+            <owl:Restriction>
+                <owl:onProperty rdf:resource="https://www.inf.ufrgs.br/bdi/ontologies/GEORES_0000046"/>
+                <owl:minQualifiedCardinality rdf:datatype="http://www.w3.org/2001/XMLSchema#nonNegativeInteger">1</owl:minQualifiedCardinality>
+                <owl:onClass rdf:resource="https://www.inf.ufrgs.br/bdi/ontologies/GEORES_0000042"/>
+            </owl:Restriction>
+        </rdfs:subClassOf>
+        <obo:IAO_0000115 xml:lang="en">A Quality that inheres in a Depositional Unit by virtue of its external three-dimensional shape. It does not reflect the exact mathematical specifications of a geometric shape but abstracts and simplifies these specifications (Rovetto, 2011).</obo:IAO_0000115>
+        <rdfs:label xml:lang="en">geometry</rdfs:label>
+        <skos:altLabel xml:lang="pt">geometria</skos:altLabel>
+    </owl:Class>
+    
+
+
+    <!-- https://www.inf.ufrgs.br/bdi/ontologies/GEORES_0000024 -->
+
+    <owl:Class rdf:about="https://www.inf.ufrgs.br/bdi/ontologies/GEORES_0000024">
+        <rdfs:subClassOf rdf:resource="http://purl.obolibrary.org/obo/BFO_0000019"/>
+        <rdfs:label xml:lang="en">lithology</rdfs:label>
+        <skos:altLabel xml:lang="pt">litologia</skos:altLabel>
+    </owl:Class>
+    
+
+
+    <!-- https://www.inf.ufrgs.br/bdi/ontologies/GEORES_0000025 -->
+
+    <owl:Class rdf:about="https://www.inf.ufrgs.br/bdi/ontologies/GEORES_0000025">
+        <rdfs:subClassOf rdf:resource="https://www.inf.ufrgs.br/bdi/ontologies/GEOCORE_0000012"/>
+        <rdfs:label xml:lang="en">statigraphic contact</rdfs:label>
+        <skos:altLabel xml:lang="pt">contato estratigráfico</skos:altLabel>
+    </owl:Class>
+    
+
+
+    <!-- https://www.inf.ufrgs.br/bdi/ontologies/GEORES_0000026 -->
+
+    <owl:Class rdf:about="https://www.inf.ufrgs.br/bdi/ontologies/GEORES_0000026">
+        <rdfs:subClassOf rdf:resource="https://www.inf.ufrgs.br/bdi/ontologies/GEOCORE_0000012"/>
+        <rdfs:subClassOf>
+            <owl:Restriction>
+                <owl:onProperty rdf:resource="https://www.inf.ufrgs.br/bdi/ontologies/GEORES_0000044"/>
+                <owl:qualifiedCardinality rdf:datatype="http://www.w3.org/2001/XMLSchema#nonNegativeInteger">1</owl:qualifiedCardinality>
+                <owl:onClass rdf:resource="https://www.inf.ufrgs.br/bdi/ontologies/GEORES_0000041"/>
+            </owl:Restriction>
+        </rdfs:subClassOf>
+        <rdfs:subClassOf>
+            <owl:Restriction>
+                <owl:onProperty rdf:resource="https://www.inf.ufrgs.br/bdi/ontologies/GEORES_0000045"/>
+                <owl:qualifiedCardinality rdf:datatype="http://www.w3.org/2001/XMLSchema#nonNegativeInteger">1</owl:qualifiedCardinality>
+                <owl:onClass rdf:resource="https://www.inf.ufrgs.br/bdi/ontologies/GEORES_0000043"/>
+            </owl:Restriction>
+        </rdfs:subClassOf>
+        <rdfs:label xml:lang="en">bed contact</rdfs:label>
+        <skos:altLabel xml:lang="pt">contato de camada</skos:altLabel>
+    </owl:Class>
+    
+
+
+    <!-- https://www.inf.ufrgs.br/bdi/ontologies/GEORES_0000027 -->
+
+    <owl:Class rdf:about="https://www.inf.ufrgs.br/bdi/ontologies/GEORES_0000027">
+        <rdfs:subClassOf rdf:resource="http://purl.obolibrary.org/obo/BFO_0000019"/>
+        <rdfs:subClassOf>
+            <owl:Restriction>
+                <owl:onProperty rdf:resource="http://purl.obolibrary.org/obo/BFO_0000197"/>
+                <owl:qualifiedCardinality rdf:datatype="http://www.w3.org/2001/XMLSchema#nonNegativeInteger">1</owl:qualifiedCardinality>
+                <owl:onClass rdf:resource="https://www.inf.ufrgs.br/bdi/ontologies/GEORES_0000008"/>
+            </owl:Restriction>
+        </rdfs:subClassOf>
+        <rdfs:subClassOf>
+            <owl:Restriction>
+                <owl:onProperty rdf:resource="https://www.inf.ufrgs.br/bdi/ontologies/GEORES_0000049"/>
+                <owl:someValuesFrom>
+                    <rdfs:Datatype>
+                        <owl:onDatatype rdf:resource="http://www.w3.org/2001/XMLSchema#decimal"/>
+                        <owl:withRestrictions rdf:parseType="Collection">
+                            <rdf:Description>
+                                <xsd:minInclusive rdf:datatype="http://www.w3.org/2001/XMLSchema#integer">1</xsd:minInclusive>
+                            </rdf:Description>
+                        </owl:withRestrictions>
+                    </rdfs:Datatype>
+                </owl:someValuesFrom>
+            </owl:Restriction>
+        </rdfs:subClassOf>
+        <rdfs:subClassOf>
+            <owl:Restriction>
+                <owl:onProperty rdf:resource="https://www.inf.ufrgs.br/bdi/ontologies/GEORES_0000049"/>
+                <owl:allValuesFrom>
+                    <rdfs:Datatype>
+                        <owl:onDatatype rdf:resource="http://www.w3.org/2001/XMLSchema#decimal"/>
+                        <owl:withRestrictions rdf:parseType="Collection">
+                            <rdf:Description>
+                                <xsd:minInclusive rdf:datatype="http://www.w3.org/2001/XMLSchema#integer">1</xsd:minInclusive>
+                            </rdf:Description>
+                        </owl:withRestrictions>
+                    </rdfs:Datatype>
+                </owl:allValuesFrom>
+            </owl:Restriction>
+        </rdfs:subClassOf>
+        <obo:IAO_0000115 xml:lang="en">A Quality that inheres in a Channel Unit by virtue of how wavy it is across its length. It is expressed by a real number given by its curved length divided by its length in a straight line.</obo:IAO_0000115>
+        <rdfs:label xml:lang="en">sinuosity</rdfs:label>
+    </owl:Class>
+    
+
+
+    <!-- https://www.inf.ufrgs.br/bdi/ontologies/GEORES_0000028 -->
+
+    <owl:Class rdf:about="https://www.inf.ufrgs.br/bdi/ontologies/GEORES_0000028">
+        <rdfs:subClassOf rdf:resource="http://purl.obolibrary.org/obo/BFO_0000031"/>
+        <rdfs:subClassOf>
+            <owl:Restriction>
+                <owl:onProperty rdf:resource="http://purl.obolibrary.org/obo/BFO_0000084"/>
+                <owl:someValuesFrom rdf:resource="https://www.inf.ufrgs.br/bdi/ontologies/GEORES_0000001"/>
+            </owl:Restriction>
+        </rdfs:subClassOf>
+        <obo:IAO_0000115 xml:lang="en">A pattern of properties of Geological Objects.</obo:IAO_0000115>
+        <rdfs:comment xml:lang="en">This entity is defined in the literature as a combination of features that differentiates a geological object from its adjacent geological objects (Walker and James, 1992). However, a Facies does not describe a single Geological Object’s features: it might repeat in several objects as a pattern. This particular aspect matches the definition of Generically Dependent Continuant in BFO. Another important aspect is that the features that compose facies vary depending on the research context, e.g., Sedimentary Facies, Petrofacies (De Ros and Goldberg, 2007), Lithofacies, Ichnofacies, and Biofacies (Nichols, 2009).</rdfs:comment>
+        <rdfs:label xml:lang="en">facies</rdfs:label>
+        <skos:altLabel xml:lang="pt">fácies</skos:altLabel>
+    </owl:Class>
+    
+
+
+    <!-- https://www.inf.ufrgs.br/bdi/ontologies/GEORES_0000029 -->
+
+    <owl:Class rdf:about="https://www.inf.ufrgs.br/bdi/ontologies/GEORES_0000029">
+        <rdfs:subClassOf rdf:resource="https://www.inf.ufrgs.br/bdi/ontologies/GEORES_0000028"/>
+        <obo:IAO_0000115 xml:lang="en">A Facies consisting of the sum of the sedimentological characteristics of Depositional Units (Middleton, 1973, Nichols, 2009, Carbonera et al., 2015).</obo:IAO_0000115>
+        <rdfs:comment xml:lang="en">As an example, if we would model Cross-bedded Sandstone (Nichols, 2009), it would be an entity subsumed by Sedimentary Facies having the following relations: (1) Generically Depends On some (Constituted By some Sandstone (a)); and (2) Has Part some Cross-bedding Structure (b). (a): Sandstone would be an entity subsumed by Sedimentary Rock. (b): Cross-bedding Structure would be an entity subsumed by Sedimentary Structure.</rdfs:comment>
+        <rdfs:label xml:lang="en">sedimentary facies</rdfs:label>
+        <skos:altLabel xml:lang="pt">fácies sedimentar</skos:altLabel>
+    </owl:Class>
+    
+
+
+    <!-- https://www.inf.ufrgs.br/bdi/ontologies/GEORES_0000030 -->
+
+    <owl:Class rdf:about="https://www.inf.ufrgs.br/bdi/ontologies/GEORES_0000030">
+        <rdfs:subClassOf rdf:resource="http://purl.obolibrary.org/obo/BFO_0000031"/>
+        <rdfs:subClassOf>
+            <owl:Restriction>
+                <owl:onProperty rdf:resource="http://purl.obolibrary.org/obo/BFO_0000178"/>
+                <owl:minQualifiedCardinality rdf:datatype="http://www.w3.org/2001/XMLSchema#nonNegativeInteger">2</owl:minQualifiedCardinality>
+                <owl:onClass rdf:resource="https://www.inf.ufrgs.br/bdi/ontologies/GEORES_0000028"/>
+            </owl:Restriction>
+        </rdfs:subClassOf>
+        <obo:IAO_0000115 xml:lang="en">A Generically Dependent Continuant that consists of an aggregate of Facies.</obo:IAO_0000115>
+        <rdfs:comment xml:lang="en">It usually describes the Facies that are typically found in specific regions or sub-environments. For example, the Channel Axis Association (McHargue et al., 2011) describes Sedimentary Facies typically found at the center part of channels (in a cross-section point of view).</rdfs:comment>
+        <rdfs:label xml:lang="en">facies association</rdfs:label>
+        <skos:altLabel xml:lang="pt">associação de facies</skos:altLabel>
+    </owl:Class>
+    
+
+
+    <!-- https://www.inf.ufrgs.br/bdi/ontologies/GEORES_0000031 -->
+
+    <owl:Class rdf:about="https://www.inf.ufrgs.br/bdi/ontologies/GEORES_0000031">
+        <rdfs:subClassOf rdf:resource="https://www.inf.ufrgs.br/bdi/ontologies/GEOCORE_0000010"/>
+        <obo:IAO_0000115 xml:lang="en">An Unconsolidated Earth Material constituted by some collection of sedimentary grains or particles (Garcia et al., 2019).</obo:IAO_0000115>
+        <rdfs:label xml:lang="en">sediment</rdfs:label>
+        <ontologies:GEORES_0000050>R+ I+ O- U- ED-</ontologies:GEORES_0000050>
+    </owl:Class>
+    
+
+
+    <!-- https://www.inf.ufrgs.br/bdi/ontologies/GEORES_0000032 -->
+
+    <owl:Class rdf:about="https://www.inf.ufrgs.br/bdi/ontologies/GEORES_0000032">
+        <rdfs:subClassOf rdf:resource="https://www.inf.ufrgs.br/bdi/ontologies/GEOCORE_0000008"/>
+        <obo:IAO_0000115 xml:lang="en">&apos;sedimentary rock&apos; is an &apos;amount of rock&apos; constituted by some collection of sedimentary grains or particles (Garcia et al., 2019).</obo:IAO_0000115>
+        <rdfs:label xml:lang="en">sedimentary rock</rdfs:label>
+        <skos:altLabel xml:lang="pt">rocha sedimentar</skos:altLabel>
+        <ontologies:GEORES_0000050>R+ I+ O- U- ED-</ontologies:GEORES_0000050>
+    </owl:Class>
+    
+
+
+    <!-- https://www.inf.ufrgs.br/bdi/ontologies/GEORES_0000033 -->
+
+    <owl:Class rdf:about="https://www.inf.ufrgs.br/bdi/ontologies/GEORES_0000033">
+        <rdfs:subClassOf rdf:resource="https://www.inf.ufrgs.br/bdi/ontologies/GEOCORE_0000008"/>
+        <rdfs:isDefinedBy>https://www.britannica.com/science/igneous-rock</rdfs:isDefinedBy>
+        <rdfs:label xml:lang="en">igneous rock</rdfs:label>
+        <skos:altLabel xml:lang="pt">rocha ígnea</skos:altLabel>
+        <skos:definition>&apos;igneous rock&apos; is an &apos;amount of rock&apos; generated by the cooling and solidification of molten &apos;earth material&apos;.</skos:definition>
+    </owl:Class>
+    
+
+
+    <!-- https://www.inf.ufrgs.br/bdi/ontologies/GEORES_0000034 -->
+
+    <owl:Class rdf:about="https://www.inf.ufrgs.br/bdi/ontologies/GEORES_0000034">
+        <rdfs:subClassOf rdf:resource="https://www.inf.ufrgs.br/bdi/ontologies/GEOCORE_0000008"/>
+        <rdfs:isDefinedBy>Adapted from Brittanica.
+https://www.britannica.com/science/metamorphic-rock</rdfs:isDefinedBy>
+        <rdfs:label xml:lang="en">metamorphic rock</rdfs:label>
+        <skos:altLabel xml:lang="pt">rocha metamórfica</skos:altLabel>
+        <skos:definition>&apos;metamorphic rock&apos; is an &apos;amount of rock&apos; generated by the alteration of preexisting rocks in response to changing environmental conditions, such as variations in temperature, pressure, and mechanical stress, and the addition or subtraction of chemical components.</skos:definition>
+    </owl:Class>
+    
+
+
+    <!-- https://www.inf.ufrgs.br/bdi/ontologies/GEORES_0000035 -->
+
+    <owl:Class rdf:about="https://www.inf.ufrgs.br/bdi/ontologies/GEORES_0000035">
+        <rdfs:subClassOf rdf:resource="https://www.inf.ufrgs.br/bdi/ontologies/GEORES_0000001"/>
+        <rdfs:subClassOf>
+            <owl:Class>
+                <owl:intersectionOf rdf:parseType="Collection">
+                    <rdf:Description rdf:about="https://www.inf.ufrgs.br/bdi/ontologies/GEORES_0000006"/>
+                    <owl:Restriction>
+                        <owl:onProperty rdf:resource="http://purl.obolibrary.org/obo/BFO_0000178"/>
+                        <owl:allValuesFrom>
+                            <owl:Class>
+                                <owl:unionOf rdf:parseType="Collection">
+                                    <rdf:Description rdf:about="https://www.inf.ufrgs.br/bdi/ontologies/GEORES_0000036"/>
+                                    <rdf:Description rdf:about="https://www.inf.ufrgs.br/bdi/ontologies/GEORES_0000037"/>
+                                </owl:unionOf>
+                            </owl:Class>
+                        </owl:allValuesFrom>
+                    </owl:Restriction>
+                </owl:intersectionOf>
+            </owl:Class>
+        </rdfs:subClassOf>
+        <rdfs:label xml:lang="en">complex architectural element</rdfs:label>
+    </owl:Class>
+    
+
+
+    <!-- https://www.inf.ufrgs.br/bdi/ontologies/GEORES_0000036 -->
+
+    <owl:Class rdf:about="https://www.inf.ufrgs.br/bdi/ontologies/GEORES_0000036">
+        <rdfs:subClassOf rdf:resource="https://www.inf.ufrgs.br/bdi/ontologies/GEORES_0000001"/>
+        <rdfs:subClassOf>
+            <owl:Class>
+                <owl:intersectionOf rdf:parseType="Collection">
+                    <rdf:Description rdf:about="https://www.inf.ufrgs.br/bdi/ontologies/GEORES_0000006"/>
+                    <owl:Restriction>
+                        <owl:onProperty rdf:resource="http://purl.obolibrary.org/obo/BFO_0000178"/>
+                        <owl:allValuesFrom rdf:resource="https://www.inf.ufrgs.br/bdi/ontologies/GEORES_0000037"/>
+                    </owl:Restriction>
+                </owl:intersectionOf>
+            </owl:Class>
+        </rdfs:subClassOf>
+        <rdfs:label xml:lang="en">composite architectural element</rdfs:label>
+    </owl:Class>
+    
+
+
+    <!-- https://www.inf.ufrgs.br/bdi/ontologies/GEORES_0000037 -->
+
+    <owl:Class rdf:about="https://www.inf.ufrgs.br/bdi/ontologies/GEORES_0000037">
+        <rdfs:subClassOf>
+            <owl:Class>
+                <owl:intersectionOf rdf:parseType="Collection">
+                    <rdf:Description rdf:about="https://www.inf.ufrgs.br/bdi/ontologies/GEORES_0000006"/>
+                    <owl:Class>
+                        <owl:complementOf>
+                            <owl:Restriction>
+                                <owl:onProperty rdf:resource="http://purl.obolibrary.org/obo/BFO_0000178"/>
+                                <owl:someValuesFrom rdf:resource="https://www.inf.ufrgs.br/bdi/ontologies/GEORES_0000006"/>
+                            </owl:Restriction>
+                        </owl:complementOf>
+                    </owl:Class>
+                </owl:intersectionOf>
+            </owl:Class>
+        </rdfs:subClassOf>
+        <rdfs:label xml:lang="en">individual architectural element</rdfs:label>
+    </owl:Class>
+    
+
+
+    <!-- https://www.inf.ufrgs.br/bdi/ontologies/GEORES_0000038 -->
+
+    <owl:Class rdf:about="https://www.inf.ufrgs.br/bdi/ontologies/GEORES_0000038">
+        <rdfs:subClassOf rdf:resource="https://www.inf.ufrgs.br/bdi/ontologies/GEOCORE_0000011"/>
+        <obo:IAO_0000115 xml:lang="en">A Geological Boundary that forms the basis of a Channel Unit, having a concave-up shape unless truncated by overlying depositional units.</obo:IAO_0000115>
+        <rdfs:label xml:lang="en">channel surface</rdfs:label>
+        <ontologies:GEORES_0000050>R+ I+ O- U+ ED-</ontologies:GEORES_0000050>
+    </owl:Class>
+    
+
+
+    <!-- https://www.inf.ufrgs.br/bdi/ontologies/GEORES_0000039 -->
+
+    <owl:Class rdf:about="https://www.inf.ufrgs.br/bdi/ontologies/GEORES_0000039">
+        <rdfs:subClassOf rdf:resource="http://purl.obolibrary.org/obo/BFO_0000029"/>
+        <rdfs:label xml:lang="en">basin</rdfs:label>
+        <skos:altLabel xml:lang="pt">bacia</skos:altLabel>
+    </owl:Class>
+    
+
+
+    <!-- https://www.inf.ufrgs.br/bdi/ontologies/GEORES_0000040 -->
+
+    <owl:Class rdf:about="https://www.inf.ufrgs.br/bdi/ontologies/GEORES_0000040">
+        <rdfs:subClassOf rdf:resource="http://purl.obolibrary.org/obo/BFO_0000029"/>
+        <rdfs:comment xml:lang="pt">Epistemologicamente não é possível determinar os limites deste site e, portanto, cada geólogo pode posicionar sua área de interesse em uma localização e limites distintos, o que torna muito difícil tratar computacionalmente a identidade do sítio geológico. Esse problema acontece com outras entidades do tipo site: Região da Serra Gaúcha, Litoral Norte, etc, cuja delimitação é problemática, mas existe uma identidade consensual.</rdfs:comment>
+        <rdfs:label xml:lang="en">geological site</rdfs:label>
+        <skos:altLabel xml:lang="pt">sítio geológico</skos:altLabel>
+    </owl:Class>
+    
+
+
+    <!-- https://www.inf.ufrgs.br/bdi/ontologies/GEORES_0000041 -->
+
+    <owl:Class rdf:about="https://www.inf.ufrgs.br/bdi/ontologies/GEORES_0000041">
+        <owl:equivalentClass>
+            <owl:Class>
+                <owl:oneOf rdf:parseType="Collection">
+                    <rdf:Description rdf:about="https://www.inf.ufrgs.br/bdi/ontologies/GEORES_0000052"/>
+                    <rdf:Description rdf:about="https://www.inf.ufrgs.br/bdi/ontologies/GEORES_0000063"/>
+                    <rdf:Description rdf:about="https://www.inf.ufrgs.br/bdi/ontologies/GEORES_0000068"/>
+                </owl:oneOf>
+            </owl:Class>
+        </owl:equivalentClass>
+        <rdfs:label xml:lang="en">contact position</rdfs:label>
+        <skos:altLabel xml:lang="pt">posição do contato</skos:altLabel>
+    </owl:Class>
+    
+
+
+    <!-- https://www.inf.ufrgs.br/bdi/ontologies/GEORES_0000042 -->
+
+    <owl:Class rdf:about="https://www.inf.ufrgs.br/bdi/ontologies/GEORES_0000042">
+        <owl:equivalentClass>
+            <owl:Class>
+                <owl:oneOf rdf:parseType="Collection">
+                    <rdf:Description rdf:about="https://www.inf.ufrgs.br/bdi/ontologies/GEORES_0000060"/>
+                    <rdf:Description rdf:about="https://www.inf.ufrgs.br/bdi/ontologies/GEORES_0000061"/>
+                    <rdf:Description rdf:about="https://www.inf.ufrgs.br/bdi/ontologies/GEORES_0000062"/>
+                    <rdf:Description rdf:about="https://www.inf.ufrgs.br/bdi/ontologies/GEORES_0000064"/>
+                    <rdf:Description rdf:about="https://www.inf.ufrgs.br/bdi/ontologies/GEORES_0000065"/>
+                    <rdf:Description rdf:about="https://www.inf.ufrgs.br/bdi/ontologies/GEORES_0000066"/>
+                    <rdf:Description rdf:about="https://www.inf.ufrgs.br/bdi/ontologies/GEORES_0000067"/>
+                    <rdf:Description rdf:about="https://www.inf.ufrgs.br/bdi/ontologies/GEORES_0000069"/>
+                </owl:oneOf>
+            </owl:Class>
+        </owl:equivalentClass>
+        <rdfs:comment xml:lang="pt">Luan: Talvez tipo de Geometria seja uma classe de segunda ordem, mas em primeiro momento não utilizaremos punning para representar isto. A classe geometry tem uma relação de &apos;has geometry type&apos; com um &apos;geometry type&apos; e as instâncias dessa classe é que definem o tipo de geometria de fato. Caso seja necessário criar alguma subclasse de um &apos;body of rock&apos; que tenha um &apos;geometry type&apos; específico é possível utilizar a primitiva do owl value para isto.
+
+Não sabemos ainda como classificar esta classe. Do que ela seria subclasse?</rdfs:comment>
+        <rdfs:label xml:lang="en">geometry type</rdfs:label>
+        <skos:altLabel xml:lang="pt">tipo de geometria</skos:altLabel>
+    </owl:Class>
+    
+
+
+    <!-- https://www.inf.ufrgs.br/bdi/ontologies/GEORES_0000043 -->
+
+    <owl:Class rdf:about="https://www.inf.ufrgs.br/bdi/ontologies/GEORES_0000043">
+        <owl:equivalentClass>
+            <owl:Class>
+                <owl:oneOf rdf:parseType="Collection">
+                    <rdf:Description rdf:about="https://www.inf.ufrgs.br/bdi/ontologies/GEORES_0000051"/>
+                    <rdf:Description rdf:about="https://www.inf.ufrgs.br/bdi/ontologies/GEORES_0000053"/>
+                    <rdf:Description rdf:about="https://www.inf.ufrgs.br/bdi/ontologies/GEORES_0000054"/>
+                    <rdf:Description rdf:about="https://www.inf.ufrgs.br/bdi/ontologies/GEORES_0000055"/>
+                    <rdf:Description rdf:about="https://www.inf.ufrgs.br/bdi/ontologies/GEORES_0000056"/>
+                    <rdf:Description rdf:about="https://www.inf.ufrgs.br/bdi/ontologies/GEORES_0000057"/>
+                    <rdf:Description rdf:about="https://www.inf.ufrgs.br/bdi/ontologies/GEORES_0000058"/>
+                    <rdf:Description rdf:about="https://www.inf.ufrgs.br/bdi/ontologies/GEORES_0000059"/>
+                </owl:oneOf>
+            </owl:Class>
+        </owl:equivalentClass>
+        <rdfs:label xml:lang="en">contact type</rdfs:label>
+        <skos:altLabel xml:lang="pt">tipo de contato</skos:altLabel>
+    </owl:Class>
+    
+
+
+    <!-- 
+    ///////////////////////////////////////////////////////////////////////////////////////
+    //
+    // Individuals
+    //
+    ///////////////////////////////////////////////////////////////////////////////////////
+     -->
+
+    
+
+
+    <!-- https://www.inf.ufrgs.br/bdi/ontologies/GEORES_0000051 -->
+
+    <owl:NamedIndividual rdf:about="https://www.inf.ufrgs.br/bdi/ontologies/GEORES_0000051">
+        <rdf:type rdf:resource="https://www.inf.ufrgs.br/bdi/ontologies/GEORES_0000043"/>
+        <rdfs:label xml:lang="en">amalgamated contact</rdfs:label>
+        <skos:altLabel xml:lang="pt">contato amalgamado</skos:altLabel>
+    </owl:NamedIndividual>
+    
+
+
+    <!-- https://www.inf.ufrgs.br/bdi/ontologies/GEORES_0000052 -->
+
+    <owl:NamedIndividual rdf:about="https://www.inf.ufrgs.br/bdi/ontologies/GEORES_0000052">
+        <rdf:type rdf:resource="https://www.inf.ufrgs.br/bdi/ontologies/GEORES_0000041"/>
+        <rdfs:label xml:lang="en">base position contact</rdfs:label>
+        <skos:altLabel xml:lang="pt">contato de base</skos:altLabel>
+    </owl:NamedIndividual>
+    
+
+
+    <!-- https://www.inf.ufrgs.br/bdi/ontologies/GEORES_0000053 -->
+
+    <owl:NamedIndividual rdf:about="https://www.inf.ufrgs.br/bdi/ontologies/GEORES_0000053">
+        <rdf:type rdf:resource="https://www.inf.ufrgs.br/bdi/ontologies/GEORES_0000043"/>
+        <rdfs:label xml:lang="en">cryptic/covered contact</rdfs:label>
+        <skos:altLabel xml:lang="pt">contato críptico/encoberto</skos:altLabel>
+    </owl:NamedIndividual>
+    
+
+
+    <!-- https://www.inf.ufrgs.br/bdi/ontologies/GEORES_0000054 -->
+
+    <owl:NamedIndividual rdf:about="https://www.inf.ufrgs.br/bdi/ontologies/GEORES_0000054">
+        <rdf:type rdf:resource="https://www.inf.ufrgs.br/bdi/ontologies/GEORES_0000043"/>
+        <rdfs:label xml:lang="en">conformable contact</rdfs:label>
+        <skos:altLabel xml:lang="pt">contato concordante</skos:altLabel>
+    </owl:NamedIndividual>
+    
+
+
+    <!-- https://www.inf.ufrgs.br/bdi/ontologies/GEORES_0000055 -->
+
+    <owl:NamedIndividual rdf:about="https://www.inf.ufrgs.br/bdi/ontologies/GEORES_0000055">
+        <rdf:type rdf:resource="https://www.inf.ufrgs.br/bdi/ontologies/GEORES_0000043"/>
+        <rdfs:label xml:lang="en">erosive contact</rdfs:label>
+        <skos:altLabel xml:lang="pt">contato erosivo</skos:altLabel>
+    </owl:NamedIndividual>
+    
+
+
+    <!-- https://www.inf.ufrgs.br/bdi/ontologies/GEORES_0000056 -->
+
+    <owl:NamedIndividual rdf:about="https://www.inf.ufrgs.br/bdi/ontologies/GEORES_0000056">
+        <rdf:type rdf:resource="https://www.inf.ufrgs.br/bdi/ontologies/GEORES_0000043"/>
+        <rdfs:label xml:lang="en">faulted contact</rdfs:label>
+        <skos:altLabel xml:lang="pt">contato de falha</skos:altLabel>
+    </owl:NamedIndividual>
+    
+
+
+    <!-- https://www.inf.ufrgs.br/bdi/ontologies/GEORES_0000057 -->
+
+    <owl:NamedIndividual rdf:about="https://www.inf.ufrgs.br/bdi/ontologies/GEORES_0000057">
+        <rdf:type rdf:resource="https://www.inf.ufrgs.br/bdi/ontologies/GEORES_0000043"/>
+        <rdfs:label xml:lang="en">gradational contact</rdfs:label>
+        <skos:altLabel xml:lang="pt">contato gradacional</skos:altLabel>
+    </owl:NamedIndividual>
+    
+
+
+    <!-- https://www.inf.ufrgs.br/bdi/ontologies/GEORES_0000058 -->
+
+    <owl:NamedIndividual rdf:about="https://www.inf.ufrgs.br/bdi/ontologies/GEORES_0000058">
+        <rdf:type rdf:resource="https://www.inf.ufrgs.br/bdi/ontologies/GEORES_0000043"/>
+        <rdfs:label xml:lang="en">intrusive contact</rdfs:label>
+        <skos:altLabel xml:lang="pt">contato intrusivo</skos:altLabel>
+    </owl:NamedIndividual>
+    
+
+
+    <!-- https://www.inf.ufrgs.br/bdi/ontologies/GEORES_0000059 -->
+
+    <owl:NamedIndividual rdf:about="https://www.inf.ufrgs.br/bdi/ontologies/GEORES_0000059">
+        <rdf:type rdf:resource="https://www.inf.ufrgs.br/bdi/ontologies/GEORES_0000043"/>
+        <rdfs:label xml:lang="en">sharp contact</rdfs:label>
+        <skos:altLabel xml:lang="pt">contato abrupto</skos:altLabel>
+    </owl:NamedIndividual>
+    
+
+
+    <!-- https://www.inf.ufrgs.br/bdi/ontologies/GEORES_0000060 -->
+
+    <owl:NamedIndividual rdf:about="https://www.inf.ufrgs.br/bdi/ontologies/GEORES_0000060">
+        <rdf:type rdf:resource="https://www.inf.ufrgs.br/bdi/ontologies/GEORES_0000042"/>
+        <rdfs:label xml:lang="en">irregular geometry</rdfs:label>
+        <skos:altLabel xml:lang="pt">geometria irregular</skos:altLabel>
+    </owl:NamedIndividual>
+    
+
+
+    <!-- https://www.inf.ufrgs.br/bdi/ontologies/GEORES_0000061 -->
+
+    <owl:NamedIndividual rdf:about="https://www.inf.ufrgs.br/bdi/ontologies/GEORES_0000061">
+        <rdf:type rdf:resource="https://www.inf.ufrgs.br/bdi/ontologies/GEORES_0000042"/>
+        <rdfs:label xml:lang="en">lenticular convex top flatbed geometry</rdfs:label>
+        <skos:altLabel xml:lang="pt">geometria lenticular topo convexo base plana</skos:altLabel>
+    </owl:NamedIndividual>
+    
+
+
+    <!-- https://www.inf.ufrgs.br/bdi/ontologies/GEORES_0000062 -->
+
+    <owl:NamedIndividual rdf:about="https://www.inf.ufrgs.br/bdi/ontologies/GEORES_0000062">
+        <rdf:type rdf:resource="https://www.inf.ufrgs.br/bdi/ontologies/GEORES_0000042"/>
+        <rdfs:label xml:lang="en">lenticular concave convex geometry</rdfs:label>
+        <skos:altLabel xml:lang="pt">geometria lenticular côncavo convexa</skos:altLabel>
+    </owl:NamedIndividual>
+    
+
+
+    <!-- https://www.inf.ufrgs.br/bdi/ontologies/GEORES_0000063 -->
+
+    <owl:NamedIndividual rdf:about="https://www.inf.ufrgs.br/bdi/ontologies/GEORES_0000063">
+        <rdf:type rdf:resource="https://www.inf.ufrgs.br/bdi/ontologies/GEORES_0000041"/>
+        <rdfs:label xml:lang="en">lateral position contact</rdfs:label>
+        <skos:altLabel xml:lang="pt">contato lateral</skos:altLabel>
+    </owl:NamedIndividual>
+    
+
+
+    <!-- https://www.inf.ufrgs.br/bdi/ontologies/GEORES_0000064 -->
+
+    <owl:NamedIndividual rdf:about="https://www.inf.ufrgs.br/bdi/ontologies/GEORES_0000064">
+        <rdf:type rdf:resource="https://www.inf.ufrgs.br/bdi/ontologies/GEORES_0000042"/>
+        <rdfs:label xml:lang="en">lenticular flattop concave base geometry</rdfs:label>
+        <skos:altLabel xml:lang="pt">geometria lenticular topo plano base convexa</skos:altLabel>
+    </owl:NamedIndividual>
+    
+
+
+    <!-- https://www.inf.ufrgs.br/bdi/ontologies/GEORES_0000065 -->
+
+    <owl:NamedIndividual rdf:about="https://www.inf.ufrgs.br/bdi/ontologies/GEORES_0000065">
+        <rdf:type rdf:resource="https://www.inf.ufrgs.br/bdi/ontologies/GEORES_0000042"/>
+        <rdfs:label xml:lang="en">sheet geometry</rdfs:label>
+        <skos:altLabel xml:lang="pt">geometria lençoidal</skos:altLabel>
+    </owl:NamedIndividual>
+    
+
+
+    <!-- https://www.inf.ufrgs.br/bdi/ontologies/GEORES_0000066 -->
+
+    <owl:NamedIndividual rdf:about="https://www.inf.ufrgs.br/bdi/ontologies/GEORES_0000066">
+        <rdf:type rdf:resource="https://www.inf.ufrgs.br/bdi/ontologies/GEORES_0000042"/>
+        <rdfs:label xml:lang="en">sigmoidal geometry</rdfs:label>
+        <skos:altLabel xml:lang="pt">geometria sigmoidal</skos:altLabel>
+    </owl:NamedIndividual>
+    
+
+
+    <!-- https://www.inf.ufrgs.br/bdi/ontologies/GEORES_0000067 -->
+
+    <owl:NamedIndividual rdf:about="https://www.inf.ufrgs.br/bdi/ontologies/GEORES_0000067">
+        <rdf:type rdf:resource="https://www.inf.ufrgs.br/bdi/ontologies/GEORES_0000042"/>
+        <rdfs:label xml:lang="en">tabular geometry</rdfs:label>
+        <skos:altLabel xml:lang="pt">geometria tabular</skos:altLabel>
+    </owl:NamedIndividual>
+    
+
+
+    <!-- https://www.inf.ufrgs.br/bdi/ontologies/GEORES_0000068 -->
+
+    <owl:NamedIndividual rdf:about="https://www.inf.ufrgs.br/bdi/ontologies/GEORES_0000068">
+        <rdf:type rdf:resource="https://www.inf.ufrgs.br/bdi/ontologies/GEORES_0000041"/>
+        <rdfs:label xml:lang="en">top position contact</rdfs:label>
+        <skos:altLabel xml:lang="pt">contato de topo</skos:altLabel>
+    </owl:NamedIndividual>
+    
+
+
+    <!-- https://www.inf.ufrgs.br/bdi/ontologies/GEORES_0000069 -->
+
+    <owl:NamedIndividual rdf:about="https://www.inf.ufrgs.br/bdi/ontologies/GEORES_0000069">
+        <rdf:type rdf:resource="https://www.inf.ufrgs.br/bdi/ontologies/GEORES_0000042"/>
+        <rdfs:label xml:lang="en">wedge shape geometry</rdfs:label>
+        <skos:altLabel xml:lang="pt">geometria de cunha</skos:altLabel>
+    </owl:NamedIndividual>
+    
+
+
+    <!-- 
+    ///////////////////////////////////////////////////////////////////////////////////////
+    //
+    // General axioms
+    //
+    ///////////////////////////////////////////////////////////////////////////////////////
+     -->
+
+    <rdf:Description>
+        <rdf:type rdf:resource="http://www.w3.org/2002/07/owl#AllDisjointClasses"/>
+        <owl:members rdf:parseType="Collection">
+            <rdf:Description rdf:about="http://purl.obolibrary.org/obo/BFO_0000004"/>
+            <rdf:Description rdf:about="http://purl.obolibrary.org/obo/BFO_0000020"/>
+            <rdf:Description rdf:about="http://purl.obolibrary.org/obo/BFO_0000031"/>
+        </owl:members>
+    </rdf:Description>
+    <rdf:Description>
+        <rdf:type rdf:resource="http://www.w3.org/2002/07/owl#AllDisjointClasses"/>
+        <owl:members rdf:parseType="Collection">
+            <rdf:Description rdf:about="http://purl.obolibrary.org/obo/BFO_0000006"/>
+            <rdf:Description rdf:about="http://purl.obolibrary.org/obo/BFO_0000029"/>
+            <rdf:Description rdf:about="http://purl.obolibrary.org/obo/BFO_0000140"/>
+        </owl:members>
+    </rdf:Description>
+    <rdf:Description>
+        <rdf:type rdf:resource="http://www.w3.org/2002/07/owl#AllDisjointClasses"/>
+        <owl:members rdf:parseType="Collection">
+            <rdf:Description rdf:about="http://purl.obolibrary.org/obo/BFO_0000008"/>
+            <rdf:Description rdf:about="http://purl.obolibrary.org/obo/BFO_0000011"/>
+            <rdf:Description rdf:about="http://purl.obolibrary.org/obo/BFO_0000015"/>
+            <rdf:Description rdf:about="http://purl.obolibrary.org/obo/BFO_0000035"/>
+        </owl:members>
+    </rdf:Description>
+    <rdf:Description>
+        <rdf:type rdf:resource="http://www.w3.org/2002/07/owl#AllDisjointClasses"/>
+        <owl:members rdf:parseType="Collection">
+            <rdf:Description rdf:about="https://www.inf.ufrgs.br/bdi/ontologies/GEOCORE_0000007"/>
+            <rdf:Description rdf:about="https://www.inf.ufrgs.br/bdi/ontologies/GEOCORE_0000008"/>
+            <rdf:Description rdf:about="https://www.inf.ufrgs.br/bdi/ontologies/GEOCORE_0000009"/>
+        </owl:members>
+    </rdf:Description>
+    <rdf:Description>
+        <rdf:type rdf:resource="http://www.w3.org/2002/07/owl#AllDisjointClasses"/>
+        <owl:members rdf:parseType="Collection">
+            <rdf:Description rdf:about="https://www.inf.ufrgs.br/bdi/ontologies/GEOCORE_0000007"/>
+            <rdf:Description rdf:about="https://www.inf.ufrgs.br/bdi/ontologies/GEOCORE_0000008"/>
+            <rdf:Description rdf:about="https://www.inf.ufrgs.br/bdi/ontologies/GEOCORE_0000009"/>
+            <rdf:Description rdf:about="https://www.inf.ufrgs.br/bdi/ontologies/GEOCORE_0000010"/>
+        </owl:members>
+    </rdf:Description>
+    <rdf:Description>
+        <rdf:type rdf:resource="http://www.w3.org/2002/07/owl#AllDisjointClasses"/>
+        <owl:members rdf:parseType="Collection">
+            <rdf:Description rdf:about="https://www.inf.ufrgs.br/bdi/ontologies/GEORES_0000007"/>
+            <rdf:Description rdf:about="https://www.inf.ufrgs.br/bdi/ontologies/GEORES_0000008"/>
+            <rdf:Description rdf:about="https://www.inf.ufrgs.br/bdi/ontologies/GEORES_0000009"/>
+            <rdf:Description rdf:about="https://www.inf.ufrgs.br/bdi/ontologies/GEORES_0000010"/>
+            <rdf:Description rdf:about="https://www.inf.ufrgs.br/bdi/ontologies/GEORES_0000011"/>
+            <rdf:Description rdf:about="https://www.inf.ufrgs.br/bdi/ontologies/GEORES_0000012"/>
+            <rdf:Description rdf:about="https://www.inf.ufrgs.br/bdi/ontologies/GEORES_0000013"/>
+            <rdf:Description rdf:about="https://www.inf.ufrgs.br/bdi/ontologies/GEORES_0000014"/>
+            <rdf:Description rdf:about="https://www.inf.ufrgs.br/bdi/ontologies/GEORES_0000015"/>
+            <rdf:Description rdf:about="https://www.inf.ufrgs.br/bdi/ontologies/GEORES_0000016"/>
+            <rdf:Description rdf:about="https://www.inf.ufrgs.br/bdi/ontologies/GEORES_0000017"/>
+        </owl:members>
+    </rdf:Description>
+    <rdf:Description>
+        <rdf:type rdf:resource="http://www.w3.org/2002/07/owl#AllDisjointClasses"/>
+        <owl:members rdf:parseType="Collection">
+            <rdf:Description rdf:about="https://www.inf.ufrgs.br/bdi/ontologies/GEORES_0000008"/>
+            <rdf:Description rdf:about="https://www.inf.ufrgs.br/bdi/ontologies/GEORES_0000013"/>
+            <rdf:Description rdf:about="https://www.inf.ufrgs.br/bdi/ontologies/GEORES_0000014"/>
+            <rdf:Description rdf:about="https://www.inf.ufrgs.br/bdi/ontologies/GEORES_0000015"/>
+        </owl:members>
+    </rdf:Description>
+    <rdf:Description>
+        <rdf:type rdf:resource="http://www.w3.org/2002/07/owl#AllDisjointClasses"/>
+        <owl:members rdf:parseType="Collection">
+            <rdf:Description rdf:about="https://www.inf.ufrgs.br/bdi/ontologies/GEORES_0000032"/>
+            <rdf:Description rdf:about="https://www.inf.ufrgs.br/bdi/ontologies/GEORES_0000033"/>
+            <rdf:Description rdf:about="https://www.inf.ufrgs.br/bdi/ontologies/GEORES_0000034"/>
+        </owl:members>
+    </rdf:Description>
+    <rdf:Description>
+        <rdf:type rdf:resource="http://www.w3.org/2002/07/owl#AllDisjointClasses"/>
+        <owl:members rdf:parseType="Collection">
+            <rdf:Description rdf:about="https://www.inf.ufrgs.br/bdi/ontologies/GEORES_0000035"/>
+            <rdf:Description rdf:about="https://www.inf.ufrgs.br/bdi/ontologies/GEORES_0000036"/>
+            <rdf:Description rdf:about="https://www.inf.ufrgs.br/bdi/ontologies/GEORES_0000037"/>
+        </owl:members>
+    </rdf:Description>
+</rdf:RDF>
+
+
+
+<!-- Generated by the OWL API (version 4.5.26) https://github.com/owlcs/owlapi -->
+

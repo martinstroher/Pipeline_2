@@ -76,6 +76,17 @@ def main():
         help="Verify an OWL .ttl file (e.g., output/7_ontology.ttl)",
     )
     parser.add_argument(
+        "--relations",
+        type=str,
+        default=None,
+        help="Extract relations from categorized CSV (e.g., output/5_categorized_ontology.csv)",
+    )
+    parser.add_argument(
+        "--skip-relations",
+        action="store_true",
+        help="Skip Step 6b relation extraction in the standard pipeline",
+    )
+    parser.add_argument(
         "--skip-oops",
         action="store_true",
         help="Skip OOPS! API call during verification (offline mode)",
@@ -141,6 +152,12 @@ def main():
         run_ontology_verification(args.verify, skip_oops=args.skip_oops)
         return
 
+    # --- Standalone relation extraction ---
+    if args.relations:
+        from src.modules.relation_extractor import run_relation_extraction
+        run_relation_extraction(args.relations)
+        return
+
     # --- Standard pipeline ---
     if not args.skip_pdf:
         log.banner(0, "PDF Text Extraction")
@@ -171,13 +188,22 @@ def main():
     cat_csv = os.environ["CATEGORIZED_LLM_TERMS"]
     run_taxonomy_builder(cat_csv)
 
+    # Step 6b: Relation Extraction
+    relations_csv = None
+    if not args.skip_relations:
+        log.banner("6b", "Relation Extraction")
+        from src.modules.relation_extractor import run_relation_extraction
+        relations_csv = run_relation_extraction(cat_csv)
+    else:
+        log.info("Step 6b: Relation extraction skipped (--skip-relations)")
+
     log.banner(7, "OWL Export")
     from src.modules.owl_exporter import run_owl_export
     tax_csv = (
         os.path.splitext(cat_csv)[0]
         .replace("5_categorized_ontology", "6_taxonomy") + ".csv"
     )
-    owl_path = run_owl_export(tax_csv)
+    owl_path = run_owl_export(tax_csv, relations_csv=relations_csv)
 
     # Step 7b: Ontology Verification
     from src.modules.ontology_verifier import run_ontology_verification
