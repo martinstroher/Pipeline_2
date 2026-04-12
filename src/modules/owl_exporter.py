@@ -213,6 +213,9 @@ def run_owl_export(
     # Import declarations
     g.add((onto_uri, OWL.imports, URIRef("http://purl.obolibrary.org/obo/bfo.owl")))
 
+    # Track individual IRIs (rdf:type entities) to handle differently in relations
+    _individual_iris: set[str] = set()
+
     # Process taxonomy entries
     for _, row in df.iterrows():
         term = row["Term"]
@@ -223,6 +226,9 @@ def run_owl_export(
         term_iri = _term_to_iri(str(term))
         parent_iri = None
         has_parent = parent and not (isinstance(parent, float) and pd.isna(parent)) and str(parent).strip()
+
+        if rel_type == "rdf:type":
+            _individual_iris.add(str(term_iri))
 
         if has_parent:
             parent_iri = _term_to_iri(str(parent))
@@ -310,10 +316,15 @@ def run_owl_export(
             if _is_upper_iri(term_iri) and _is_upper_iri(filler_iri):
                 continue
 
-            # Ensure filler is declared as a class
-            g.add((filler_iri, RDF.type, OWL.Class))
+            # Skip relations where subject is an individual (factual, not ontological)
+            if str(term_iri) in _individual_iris:
+                continue
 
-            # BNode restriction: term ⊑ ∃property.filler
+            # Ensure filler is declared as a class (unless it's an individual)
+            if str(filler_iri) not in _individual_iris:
+                g.add((filler_iri, RDF.type, OWL.Class))
+
+            # Existential restriction: Class ⊑ ∃property.filler
             restriction = BNode()
             g.add((restriction, RDF.type, OWL.Restriction))
             g.add((restriction, OWL.onProperty, prop_uri))

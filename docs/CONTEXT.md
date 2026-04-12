@@ -15,7 +15,9 @@ graph TD
     F -->|nld_generator.py + RAG| G(NLDs + Definitions CSV)
     G -->|term_categorizer.py + RAG| H(Categorized Ontology CSV)
     H -->|taxonomy_builder.py| I(Taxonomy CSV)
-    I -->|owl_exporter.py| J[OWL Turtle .ttl]
+    H -->|relation_extractor.py| Rel(Relations CSV)
+    I --> |owl_exporter.py| J[OWL Turtle .ttl]
+    Rel -.->|OWL restrictions| J
     J -->|ontology_verifier.py| K[Verification Report JSON]
     C -.->|retrieval context| G
     C -.->|retrieval context| H
@@ -100,12 +102,24 @@ Key validated findings that justify our design choices:
 - NLDs are carried forward into the output CSV as a column for OWL annotation.
 - Output: `output/6_taxonomy.csv`
 
+### `src/modules/relation_extractor.py` — Step 6b: Relation Extraction
+- **Tech**: Gemini 2.5 Pro + `relation_validator.py`
+- Extracts ontological relations from NLDs using 16 Tier 1 BFO/RO properties (has_part, part_of, has_participant, participates_in, occurs_in, located_in, derives_from, derives_into, generated_by, constituted_by, has_quality, inheres_in, preceded_by, precedes, generated_in, has_age).
+- Processes terms in batches of 10 (configurable via `RELATION_BATCH_SIZE`).
+- 3 few-shot examples guide extraction; confidence threshold filters weak relations (≥0.7).
+- Post-hoc property specialisation: generic `has_part`/`part_of` upgraded to BFO-precise `has_continuant_part`/`has_occurrent_part` based on subject/filler metatypes.
+- Filler source resolution: deterministic Python-side tagging (`domain_term` vs `external`).
+- **Robustness:** Checkpoint/resume with single flat CSV. Batch size mismatch raises `ValueError`. Unknown properties are rejected.
+- Output: `output/6b_relations.csv`
+
 ### `src/modules/owl_exporter.py` — Step 7: OWL Export
 - **Tech**: `rdflib`
 - Converts the taxonomy CSV to a Protege-compatible OWL Turtle file.
 - `owl:Class` entries get `rdfs:label`, `rdfs:comment` (NLD, from the taxonomy CSV NLD column), and `rdfs:subClassOf` triples pointing to published BFO/GeoCore/GeoReservoir IRIs.
 - `owl:NamedIndividual` entries (named fields, basins, formations, time periods) get `rdf:type` triples pointing to their parent class.
 - Intermediate (synthesised) nodes get `rdfs:label` only (no NLD comment).
+- Accepted relations from Step 6b are encoded as `owl:Restriction` blank nodes (`owl:onProperty` + `owl:someValuesFrom`), adding existential axioms to domain classes.
+- **Upper-ontology backbone:** Parses reference OWL files (`bfo-core.owl`, `geocore-full.owl`, `geores-full.owl`) and walks parent chains to add `rdfs:subClassOf` triples anchoring GeoCore/GeoReservoir classes to their BFO roots, plus `rdfs:label` annotations for all intermediate upper-level IRIs.
 - The ontology header declares `owl:imports <http://purl.obolibrary.org/obo/bfo.owl>`.
 - **Robustness guards:**
   - IRI generation normalises terms to lowercase before CamelCase conversion, preventing case-collision duplicates (e.g., "Carbonate Mineral" and "carbonate mineral" map to the same IRI).
@@ -113,6 +127,22 @@ Key validated findings that justify our design choices:
   - Self-referential `rdfs:subClassOf` triples (term IRI = parent IRI) are detected and suppressed.
   - Upper→upper triple suppression: triples where both subject and object resolve to upper-level IRIs (BFO/GeoCore/GeoReservoir) are skipped. Only triples where at least one side is a presalt: entity are emitted — the pipeline does not alter published upper ontologies.
 - Output: `output/7_ontology.ttl`
+
+#### Axiom Coverage
+The pipeline generates the following OWL axiom types:
+- **SubClassOf axioms** (from Step 6 taxonomy): class hierarchy triples, e.g., `Grainstone rdfs:subClassOf SedimentaryRock`.
+- **Existential restrictions** (from Step 6b relations): `owl:someValuesFrom` restrictions on object properties, e.g., `Dolomitization rdfs:subClassOf (has_participant some Calcite)`.
+- **Type assertions** (from Step 6 taxonomy): named individuals get `rdf:type` triples, e.g., `SantosBasin rdf:type SedimentaryBasin`.
+- **Disjointness axioms**: BFO-level `owl:disjointWith` triples between top-level categories.
+- **Upper-ontology backbone**: `rdfs:subClassOf` chains linking GeoCore/GeoReservoir intermediate classes up to their BFO roots.
+
+The following axiom types are **not generated** and are left for future work:
+- **Cardinality restrictions** (`owl:minCardinality`, `owl:maxCardinality`): require domain expert curation not feasible from NLDs alone.
+- **Equivalence axioms** (`owl:equivalentClass`): necessary-and-sufficient conditions carry high risk of incorrect ontological commitment when generated automatically.
+- **Universal restrictions** (`owl:allValuesFrom`): "only" constraints are rarely extractable from natural language text.
+- **Closure axioms**: depend on universal restrictions and complete domain knowledge.
+
+The combination of taxonomy axioms and existential restrictions is the standard output level for ontology learning systems. More expressive axioms require manual ontological commitment beyond what automated NLD analysis can provide.
 
 ### `src/modules/ontology_verifier.py` — Step 7b: Ontology Verification
 - **Tech**: `rdflib`, OOPS! REST API (optional)
@@ -132,12 +162,13 @@ Key validated findings that justify our design choices:
 pipeline.py               # Orchestrator + CLI
 src/
   modules/                # Steps 1-7 (extraction → OWL export)
-  utils/                  # RAG setup, PDF conversion, logging, Gemini client
+  utils/                  # RAG setup, PDF conversion, logging, Gemini client, relation validator, prompt loader
   evaluation/             # Ablation study, Layer 1 & 2 analysis, expert eval
+prompts/                  # LLM prompt files (system instructions + templates)
 inputs/                   # Source PDFs + generated .md files
 output/                   # Step outputs (1_raw → 7_ontology.ttl)
   ablation/               # Condition-specific CSVs (cat_A.csv … cat_D.csv)
-resources/                # Upper ontology definition text files
+resources/                # Upper ontology definition text files + reference OWL files
 chroma_db_1024/           # Cached ChromaDB vector index (created on first run)
 test/                     # E2E test runner + isolated test environment
 ```

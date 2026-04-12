@@ -161,6 +161,7 @@ When helping write or review thesis text:
 | 4 | `4_nld_generated_definitions.csv` | `Term`, `NLD`, `Context_Used` (bool), `Context` |
 | 5 | `5_categorized_ontology.csv` | `Term`, `Category`, `Reasoning`, `NLD`, `RAG_Context_Used` |
 | 6 | `6_taxonomy.csv` | `Term`, `Parent_Term`, `Relationship_Type`, `Category`, `Is_Intermediate`, `NLD`, `FALLBACK` |
+| 6b | `6b_relations.csv` | `Term`, `Category`, `Property`, `Property_IRI`, `Filler`, `Filler_Source`, `Confidence`, `Evidence`, `Validation_Status`, `Validation_Reason` |
 | 7 | `7_ontology.ttl` | OWL Turtle format — loadable in Protégé |
 | 7b | `7b_verification_report.json` | `layers.syntax.status`, `layers.structure.{classes,individuals,issues}`, `layers.oops_pitfalls`, `overall_status` |
 

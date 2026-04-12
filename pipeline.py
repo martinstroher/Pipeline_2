@@ -82,6 +82,14 @@ def main():
         help="Extract relations from categorized CSV (e.g., output/5_categorized_ontology.csv)",
     )
     parser.add_argument(
+        "--relation-analysis",
+        type=str,
+        default=None,
+        nargs="?",
+        const="output/6b_relations.csv",
+        help="Run descriptive stats + precision sample on 6b_relations.csv",
+    )
+    parser.add_argument(
         "--skip-relations",
         action="store_true",
         help="Skip Step 6b relation extraction in the standard pipeline",
@@ -156,6 +164,12 @@ def main():
     if args.relations:
         from src.modules.relation_extractor import run_relation_extraction
         run_relation_extraction(args.relations)
+        return
+
+    # --- Relation analysis ---
+    if args.relation_analysis:
+        from src.evaluation.relation_analysis import run_relation_analysis
+        run_relation_analysis(args.relation_analysis)
         return
 
     # --- Standard pipeline ---

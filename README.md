@@ -44,7 +44,8 @@ The full pipeline runs Steps 0-7 and writes a Turtle OWL file (`output/7_ontolog
 | 4 | `nld_generator.py` | Step 3 + RAG | `output/4_nld_generated_definitions.csv` |
 | 5 | `term_categorizer.py` | Step 4 CSV | `output/5_categorized_ontology.csv` |
 | 6 | `taxonomy_builder.py` | Step 5 CSV | `output/6_taxonomy.csv` |
-| 7 | `owl_exporter.py` | Step 6 CSV | `output/7_ontology.ttl` |
+| 6b | `relation_extractor.py` | Step 5 CSV | `output/6b_relations.csv` |
+| 7 | `owl_exporter.py` | Step 6 CSV + Step 6b CSV | `output/7_ontology.ttl` |
 
 **Step R (RAG setup)** runs once after Step 0 and provides retrieval context to Steps 4 and 5. ChromaDB is cached to disk (`chroma_db_1024/`) on first run; subsequent runs load from cache. BM25 is always rebuilt in-memory.
 
@@ -66,6 +67,8 @@ The full pipeline runs Steps 0-7 and writes a Turtle OWL file (`output/7_ontolog
 | `--taxonomy CSV` | Build taxonomy from a specific categorized CSV (ablation post-processing) |
 | `--owl CSV` | Export OWL from a specific taxonomy CSV (ablation post-processing) |
 | `--verify TTL` | Verify an OWL .ttl file (syntax + structure + optional OOPS! pitfalls) |
+| `--relations CSV` | Extract relations from a categorized CSV (standalone Step 6b) |
+| `--skip-relations` | Skip Step 6b relation extraction in the standard pipeline |
 | `--skip-oops` | Skip OOPS! API call during verification (offline mode) |
 
 ---
@@ -117,6 +120,7 @@ Self-contained test that:
 
 ```
 pipeline.py               # Main orchestrator + CLI
+prompts/                  # Centralized LLM prompt files (system instruction + template per step)
 src/
   modules/
     term_extractor.py     # Step 1: LLM-based term extraction (Gemini 2.5 Pro)
@@ -125,13 +129,16 @@ src/
     nld_generator.py      # Step 4: RAG-grounded NLD generation (Gemini 2.5 Pro)
     term_categorizer.py   # Step 5: Waterfall categorization (GeoReservoir→GeoCore→BFO)
     taxonomy_builder.py   # Step 6: Group-based LLM hierarchy builder, UPPER_IRIS anchoring
-    owl_exporter.py       # Step 7: rdflib Turtle export, Protege-compatible
+    relation_extractor.py # Step 6b: LLM relation extraction + BFO domain/range validation
+    owl_exporter.py       # Step 7: rdflib Turtle export, OWL restrictions, upper backbone
     ontology_verifier.py  # Step 7b: Post-export verification (syntax, structure, OOPS!)
   utils/
     rag_setup.py          # RAG infrastructure: BGE-M3 dense + BM25 sparse + BGE-Reranker RRF
     pdf_processor.py      # PDF→Markdown conversion (pymupdf4llm)
     log.py                # ANSI colour logging helpers
     gemini_client.py      # Gemini API wrapper (AI Studio + Vertex AI express mode)
+    prompt_loader.py      # Loads system instruction + prompt template from prompts/ files
+    relation_validator.py # BFO domain/range validation for extracted relations (71 properties)
   evaluation/
     ablation_study.py     # 4-condition ablation runner with checkpointing and encoding-safe I/O
     layer1_analysis.py    # Automated analysis: agreement, Cochran's Q, migration, NOT_CLASSIFIED
@@ -140,6 +147,6 @@ src/
 inputs/                   # Source PDFs (and generated .md files)
 output/                   # Step outputs (1_raw → 7_ontology.ttl)
   ablation/               # Ablation condition outputs (cat_A.csv … cat_D.csv)
-resources/                # Upper ontology definition text files (BFO, GeoCore, GeoReservoir)
+resources/                # Upper ontology OWL files + category definition text files
 test/                     # E2E test runner + isolated config
 ```
