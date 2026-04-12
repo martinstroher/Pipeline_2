@@ -5,15 +5,15 @@
       "layer": "syntax",
       "status": "PASS",
       "errors": [],
-      "triple_count": 408
+      "triple_count": 404
     },
     "structure": {
       "layer": "structure",
       "status": "PASS",
-      "classes": 63,
-      "individuals": 1,
-      "triples": 408,
-      "upper_iris_referenced": 26,
+      "classes": 60,
+      "individuals": 2,
+      "triples": 404,
+      "upper_iris_referenced": 24,
       "upper_iris_list": [
         "http://purl.obolibrary.org/obo/BFO_0000001",
         "http://purl.obolibrary.org/obo/BFO_0000002",
@@ -36,23 +36,21 @@
         "https://www.inf.ufrgs.br/bdi/ontologies/GEORES_0000002",
         "https://www.inf.ufrgs.br/bdi/ontologies/GEORES_0000003",
         "https://www.inf.ufrgs.br/bdi/ontologies/GEORES_0000004",
-        "https://www.inf.ufrgs.br/bdi/ontologies/GEORES_0000020",
         "https://www.inf.ufrgs.br/bdi/ontologies/GEORES_0000021",
         "https://www.inf.ufrgs.br/bdi/ontologies/GEORES_0000028",
-        "https://www.inf.ufrgs.br/bdi/ontologies/GEORES_0000029",
         "https://www.inf.ufrgs.br/bdi/ontologies/GEORES_0000032"
       ],
       "issues": [
         {
           "type": "MISSING_COMMENT",
           "severity": "MINOR",
-          "entity": "https://w3id.org/presalt-onto#PhysicalProperty",
+          "entity": "https://w3id.org/presalt-onto#Mineral",
           "detail": "Entity has no rdfs:comment (NLD not propagated)."
         },
         {
           "type": "MISSING_COMMENT",
           "severity": "MINOR",
-          "entity": "https://w3id.org/presalt-onto#Mineral",
+          "entity": "https://w3id.org/presalt-onto#PhysicalProperty",
           "detail": "Entity has no rdfs:comment (NLD not propagated)."
         }
       ],

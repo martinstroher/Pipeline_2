@@ -321,14 +321,19 @@ def run_owl_export(
                 continue
 
             # Ensure filler is declared as a class (unless it's an individual)
-            if str(filler_iri) not in _individual_iris:
+            filler_is_individual = str(filler_iri) in _individual_iris
+            if not filler_is_individual:
                 g.add((filler_iri, RDF.type, OWL.Class))
 
-            # Existential restriction: Class ⊑ ∃property.filler
+            # Restriction: use owl:hasValue for individual fillers,
+            # owl:someValuesFrom for class fillers (OWL 2 compliance)
             restriction = BNode()
             g.add((restriction, RDF.type, OWL.Restriction))
             g.add((restriction, OWL.onProperty, prop_uri))
-            g.add((restriction, OWL.someValuesFrom, filler_iri))
+            if filler_is_individual:
+                g.add((restriction, OWL.hasValue, filler_iri))
+            else:
+                g.add((restriction, OWL.someValuesFrom, filler_iri))
             g.add((term_iri, RDFS.subClassOf, restriction))
             n_restrictions += 1
 
