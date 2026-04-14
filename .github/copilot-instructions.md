@@ -155,8 +155,8 @@ When helping write or review thesis text:
 
 | Step | Output File | Required Columns |
 |---|---|---|
-| 1 | `1_raw_llm_extraction.json` | `Entity`, `Category`, `Description`, `Confidence_Score` |
-| 2 | `2_aggregated_counts.csv` | `Readable_Term`, `Frequency`, `ID` |
+| 1 | `1_raw_llm_extraction.json` | `Entity`, `Source_Paper` |
+| 2 | `2_aggregated_counts.csv` | `Readable_Term`, `Frequency` |
 | 3 | `3_filtered_top_terms.csv` | `Readable_Term`, `Frequency` |
 | 4 | `4_nld_generated_definitions.csv` | `Term`, `NLD`, `Context_Used` (bool), `Context` |
 | 5 | `5_categorized_ontology.csv` | `Term`, `Category`, `Reasoning`, `NLD`, `RAG_Context_Used` |

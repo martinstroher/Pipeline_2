@@ -23,6 +23,14 @@ cp .env.example .env
 # Edit .env and set GEMINI_API_KEY (or VERTEX_AI=true + GCP_PROJECT + GCP_LOCATION)
 ```
 
+**Optional environment variables:**
+| Variable | Purpose |
+|---|---|
+| `JAVA_EXE` | Path to Java executable for HermiT reasoner (default: `java` on PATH) |
+| `OOPS_URL` | OOPS! REST API endpoint for pitfall scanning (e.g. `http://localhost:8080/OOPS/rest`) |
+| `EXTRACTION_WORKERS` | Number of parallel workers for Step 1 extraction (default: `5`) |
+| `MINIMUM_FREQUENCY_FILTER` | Minimum document frequency for Step 3 filtering — number of distinct papers a term must appear in (default: `7`; ~8.5% of an 82-paper corpus) |
+
 ### Run
 Place PDF files in `inputs/`, then:
 ```bash
@@ -70,6 +78,7 @@ The full pipeline runs Steps 0-7 and writes a Turtle OWL file (`output/7_ontolog
 | `--relations CSV` | Extract relations from a categorized CSV (standalone Step 6b) |
 | `--skip-relations` | Skip Step 6b relation extraction in the standard pipeline |
 | `--skip-oops` | Skip OOPS! API call during verification (offline mode) |
+| `--skip-reasoner` | Skip HermiT reasoner consistency check during verification |
 
 ---
 

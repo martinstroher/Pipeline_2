@@ -100,6 +100,11 @@ def main():
         help="Skip OOPS! API call during verification (offline mode)",
     )
     parser.add_argument(
+        "--skip-reasoner",
+        action="store_true",
+        help="Skip HermiT reasoner check during verification",
+    )
+    parser.add_argument(
         "--skip-extraction",
         action="store_true",
         help="Skip Steps 1-3 (use existing filtered terms)",
@@ -108,6 +113,18 @@ def main():
         "--skip-pdf",
         action="store_true",
         help="Skip PDF->Markdown conversion (use existing .md files)",
+    )
+    parser.add_argument(
+        "--fresh",
+        action="store_true",
+        help="Clean start: remove all output files, ChromaDB, and .md inputs. Forces full rebuild.",
+    )
+    parser.add_argument(
+        "--stop-after",
+        type=str,
+        default=None,
+        choices=["0", "R", "1", "2", "3", "4", "5", "6", "6b", "7", "7b"],
+        help="Stop pipeline after this step (e.g., --stop-after 3 to run only Steps 0-3)",
     )
     args = parser.parse_args()
 
@@ -157,7 +174,7 @@ def main():
     # --- Ontology verification ---
     if args.verify:
         from src.modules.ontology_verifier import run_ontology_verification
-        run_ontology_verification(args.verify, skip_oops=args.skip_oops)
+        run_ontology_verification(args.verify, skip_oops=args.skip_oops, skip_reasoner=args.skip_reasoner)
         return
 
     # --- Standalone relation extraction ---
@@ -172,35 +189,91 @@ def main():
         run_relation_analysis(args.relation_analysis)
         return
 
+    # --- Fresh start: clean all outputs and caches ---
+    if args.fresh:
+        import glob
+        import shutil
+        log.banner("X", "Fresh Start — Cleaning Previous Run")
+        # Remove output files (Steps 1-7b)
+        output_dir = os.path.dirname(os.environ.get("LLM_OUTPUT_FILE", "output/1_raw_llm_extraction.json")) or "output"
+        output_patterns = [
+            os.path.join(output_dir, "1_raw_llm_extraction.json"),
+            os.path.join(output_dir, "2_aggregated_counts.csv"),
+            os.path.join(output_dir, "3_filtered_top_terms.csv"),
+            os.path.join(output_dir, "4_nld_generated_definitions.csv"),
+            os.path.join(output_dir, "4_nld_generation_failures.csv"),
+            os.path.join(output_dir, "5_categorized_ontology.csv"),
+            os.path.join(output_dir, "6_taxonomy.csv"),
+            os.path.join(output_dir, "6b_relations.csv"),
+            os.path.join(output_dir, "7_ontology.ttl"),
+            os.path.join(output_dir, "7b_verification_report.json"),
+        ]
+        removed = 0
+        for f in output_patterns:
+            if os.path.exists(f):
+                os.remove(f)
+                removed += 1
+        log.info(f"Removed {removed} output files from {output_dir}/")
+        # Remove ChromaDB caches
+        for d in glob.glob("chroma_db_*"):
+            if os.path.isdir(d):
+                shutil.rmtree(d)
+                log.info(f"Removed ChromaDB cache: {d}")
+        # Remove converted .md files from inputs (keep .pdf)
+        md_files = glob.glob(os.path.join(DOCS_DIR, "*.md"))
+        for f in md_files:
+            os.remove(f)
+        if md_files:
+            log.info(f"Removed {len(md_files)} .md files from {DOCS_DIR}")
+        log.success("Clean start complete — all caches and outputs removed.")
+
     # --- Standard pipeline ---
+    _stop = args.stop_after
+
     if not args.skip_pdf:
         log.banner(0, "PDF Text Extraction")
         convert_pdfs(DOCS_DIR)
+        if _stop == "0":
+            log.success("\nStopped after Step 0 (--stop-after 0)."); return
 
-    # Set up RAG system
+    # Set up RAG system (force rebuild after --fresh)
     log.banner("R", "RAG Setup")
-    vector_store, bm25 = setup_rag()
+    vector_store, bm25 = setup_rag(force_rebuild=args.fresh)
+    if _stop == "R":
+        log.success("\nStopped after Step R (--stop-after R)."); return
 
     if not args.skip_extraction:
         log.banner(1, "Term Extraction")
         run_llm_term_extraction()
+        if _stop == "1":
+            log.success("\nStopped after Step 1 (--stop-after 1)."); return
 
         log.banner(2, "Term Aggregation")
         term_aggregator.run_term_aggregation()
+        if _stop == "2":
+            log.success("\nStopped after Step 2 (--stop-after 2)."); return
 
         log.banner(3, "Term Filtering")
         filter_top_terms()
+        if _stop == "3":
+            log.success("\nStopped after Step 3 (--stop-after 3)."); return
 
     log.banner(4, "NLD Generation")
     run_nld_generation(vector_store=vector_store, bm25_retriever=bm25)
+    if _stop == "4":
+        log.success("\nStopped after Step 4 (--stop-after 4)."); return
 
     log.banner(5, "Term Categorization")
     run_term_categorization()
+    if _stop == "5":
+        log.success("\nStopped after Step 5 (--stop-after 5)."); return
 
     log.banner(6, "Taxonomy Builder")
     from src.modules.taxonomy_builder import run_taxonomy_builder
     cat_csv = os.environ["CATEGORIZED_LLM_TERMS"]
     run_taxonomy_builder(cat_csv)
+    if _stop == "6":
+        log.success("\nStopped after Step 6 (--stop-after 6)."); return
 
     # Step 6b: Relation Extraction
     relations_csv = None
@@ -210,6 +283,8 @@ def main():
         relations_csv = run_relation_extraction(cat_csv)
     else:
         log.info("Step 6b: Relation extraction skipped (--skip-relations)")
+    if _stop == "6b":
+        log.success("\nStopped after Step 6b (--stop-after 6b)."); return
 
     log.banner(7, "OWL Export")
     from src.modules.owl_exporter import run_owl_export
@@ -218,10 +293,12 @@ def main():
         .replace("5_categorized_ontology", "6_taxonomy") + ".csv"
     )
     owl_path = run_owl_export(tax_csv, relations_csv=relations_csv)
+    if _stop == "7":
+        log.success("\nStopped after Step 7 (--stop-after 7)."); return
 
     # Step 7b: Ontology Verification
     from src.modules.ontology_verifier import run_ontology_verification
-    run_ontology_verification(owl_path, skip_oops=args.skip_oops)
+    run_ontology_verification(owl_path, skip_oops=args.skip_oops, skip_reasoner=args.skip_reasoner)
 
     log.success("\nPipeline complete.")
 

@@ -45,6 +45,25 @@ Key validated findings that justify our design choices:
 
 ---
 
+## Competency Questions
+
+The ontology scope is defined by 10 competency questions (CQs) that specify what the ontology must be able to answer. These guide both the iterative refinement process and the final evaluation. The canonical list lives in `resources/competency_questions.txt`.
+
+| ID | Question |
+|---|---|
+| CQ1 | What are the geological objects of the Pre-Salt domain? |
+| CQ2 | What earth materials constitute the Pre-Salt geological objects? |
+| CQ3 | What geological structures occur in the Pre-Salt geological objects? |
+| CQ4 | What post-depositional processes and structures occur in the Pre-Salt geological objects? |
+| CQ5 | What are the spatial relations and arrangements in the Pre-Salt domain? |
+| CQ6 | What are the dimensions and positions of the Pre-Salt geological objects? |
+| CQ7 | What types of boundaries exist and where are they in the Pre-Salt geological objects? |
+| CQ8 | What deposits and stratigraphic units are associated with Pre-Salt reservoirs? |
+| CQ9 | What are the petrophysical characteristics of Pre-Salt reservoirs? |
+| CQ10 | What geological age is associated with the Pre-Salt reservoir intervals? |
+
+---
+
 ## Module Responsibilities
 
 ### `src/utils/pdf_processor.py` — Step 0: Ingestion
@@ -70,8 +89,8 @@ Key validated findings that justify our design choices:
 - Output: `output/2_aggregated_counts.csv`
 
 ### `src/modules/term_filter.py` — Step 3: Quality Control
-- Applies a minimum frequency threshold (`MINIMUM_FREQUENCY_FILTER`, default: ≥ 3 source documents). For an 80-paper corpus, 3 = 3.75% cross-document consensus — a threshold consistent with Frantzi et al.'s C-value method and Kageura & Umino's terminology extraction conventions, which establish cross-document co-occurrence as the standard quality signal for domain terminology.
-- No stopword list; frequency across documents is the only filter criterion.
+- Applies a minimum document-frequency threshold (`MINIMUM_FREQUENCY_FILTER`, default 7). Since the LLM extracts each term at most once per paper, Frequency equals the number of distinct papers mentioning that term (document frequency). A threshold of 7 for an 82-paper corpus (~8.5%) retains terms that reflect cross-author consensus while excluding idiosyncratic or peripheral terminology.
+- **Threshold rationale:** The threshold was selected after examining the frequency distribution of the 82-paper corpus: freq≥5 yielded 976 terms (including excessive generic and peripheral entries), freq≥7 yielded 614 well-focused domain terms, and freq≥10 yielded 368 terms (excluding legitimate concepts with narrower but significant coverage). The choice of freq≥7 balances coverage against noise and is consistent with standard terminology extraction practice. Downstream quality filters (NOT_CLASSIFIED removal at Step 5, cycle detection at Step 6) provide additional robustness, so the threshold does not need to be perfect — it needs to be reasonable.
 - Output: `output/3_filtered_top_terms.csv`
 
 ### `src/modules/nld_generator.py` — Step 4: Definition Generation
@@ -121,6 +140,8 @@ Key validated findings that justify our design choices:
 - Accepted relations from Step 6b are encoded as `owl:Restriction` blank nodes (`owl:onProperty` + `owl:someValuesFrom`), adding existential axioms to domain classes.
 - **Upper-ontology backbone:** Parses reference OWL files (`bfo-core.owl`, `geocore-full.owl`, `geores-full.owl`) and walks parent chains to add `rdfs:subClassOf` triples anchoring GeoCore/GeoReservoir classes to their BFO roots, plus `rdfs:label` annotations for all intermediate upper-level IRIs.
 - The ontology header declares `owl:imports <http://purl.obolibrary.org/obo/bfo.owl>`.
+- **Disjointness conflict detection & auto-repair:** After building the upper-ontology backbone, detects presalt: classes that inherit from both sides of a BFO disjoint pair (e.g., MaterialEntity ⊥ ImmaterialEntity). Uses the term's Category from the taxonomy to determine which parent lineage to keep and removes the conflicting `rdfs:subClassOf` edge. Runs up to 3 repair passes to handle cascading conflicts. Each repair is logged as a warning. BFO disjointness axioms are always added to the ontology.
+- **Why post-hoc repair rather than prevention?** The taxonomy builder (Step 6) uses an LLM to arrange terms into IS-A hierarchies within each category. The LLM assigns each term exactly one parent, but may create intermediate classes (e.g., "Geological Depression") to bridge the gap between a domain term and its category root. These intermediates are driven by geological reasoning — the LLM sees that a basin is a type of depression, and a depression is a spatial feature. However, the LLM has no awareness of BFO's formal disjointness axioms (e.g., MaterialEntity ⊥ ImmaterialEntity). When the OWL exporter adds the upper-ontology backbone (published GeoCore/BFO parent chains), an intermediate like "Geological Depression" may transitively inherit from the wrong BFO branch, creating a formal inconsistency that the LLM's geological reasoning cannot anticipate. Post-hoc repair is the correct design because: (1) **prevention is fragile** — instructing the LLM about formal disjointness constraints does not guarantee compliance, since natural-language geological reasoning and formal ontology reasoning are fundamentally different tasks; (2) **the repair is deterministic and principled** — it uses the Category from Step 5 as ground truth to identify which BFO branch each term belongs to, and removes only the edges that lead toward the wrong branch; (3) **the problem is rare** — in the 10-paper production run (2,482 triples), only 2 edges required repair (0.08%), both involving SedimentaryBasin's intermediate ancestor crossing from MaterialEntity to ImmaterialEntity. This architecture separates concerns cleanly: the LLM optimises for geological plausibility, while deterministic post-processing enforces formal ontological consistency.
 - **Robustness guards:**
   - IRI generation normalises terms to lowercase before CamelCase conversion, preventing case-collision duplicates (e.g., "Carbonate Mineral" and "carbonate mineral" map to the same IRI).
   - UPPER_IRIS lookup is case-insensitive, so BFO/GeoCore/GeoReservoir terms are matched regardless of capitalisation.
@@ -145,13 +166,14 @@ The following axiom types are **not generated** and are left for future work:
 The combination of taxonomy axioms and existential restrictions is the standard output level for ontology learning systems. More expressive axioms require manual ontological commitment beyond what automated NLD analysis can provide.
 
 ### `src/modules/ontology_verifier.py` — Step 7b: Ontology Verification
-- **Tech**: `rdflib`, OOPS! REST API (optional)
+- **Tech**: `rdflib`, OOPS! REST API (optional), HermiT reasoner via owlready2 (optional)
 - Post-export verification of the OWL artifact. No LLM repair — verification-only.
 - **Layer 1 — Syntax**: Parses the Turtle file with RDFLib; reports parse errors with diagnostics.
 - **Layer 2 — Structure**: Checks for self-referential `rdfs:subClassOf`, orphan classes (no parent), missing `rdfs:label`, missing `rdfs:comment` (NLD not propagated), and upper-ontology anchoring (BFO/GeoCore/GeoReservoir IRI count).
 - **Layer 3 — OOPS! Pitfalls** (optional): Calls the OOPS! REST API if `OOPS_URL` env var is configured. Works with the remote API (`https://oops.linkeddata.es/rest`), a local Docker instance (`docker run -p 8080:8080 mpovedavillalon/oops:v1`), or any compatible endpoint.
+- **Layer 4 — HermiT Reasoner Consistency** (optional): Invokes the HermiT reasoner via owlready2 to check ontology consistency. Converts Turtle → NTriples via rdflib for cross-platform compatibility. Reports PASS/FAIL with list of unsatisfiable classes. Requires Java (Eclipse Temurin JDK 21) and owlready2. Java path controlled by `JAVA_EXE` env var. Skippable with `--skip-reasoner` CLI flag.
 - Issues are classified by severity: CRITICAL, IMPORTANT, MINOR.
-- **Robustness:** Docker absence, container startup failures, and API errors are caught and reported as warnings, never crashing the pipeline.
+- **Robustness:** Docker absence, container startup failures, API errors, missing Java, and HermiT invocation errors are caught and reported as warnings, never crashing the pipeline.
 - Output: `output/7b_verification_report.json`
 
 ---

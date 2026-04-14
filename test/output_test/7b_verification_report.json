@@ -5,39 +5,40 @@
       "layer": "syntax",
       "status": "PASS",
       "errors": [],
-      "triple_count": 404
+      "triple_count": 460
     },
     "structure": {
       "layer": "structure",
       "status": "PASS",
-      "classes": 60,
+      "classes": 62,
       "individuals": 2,
-      "triples": 404,
-      "upper_iris_referenced": 24,
+      "triples": 460,
+      "upper_iris_referenced": 25,
       "upper_iris_list": [
         "http://purl.obolibrary.org/obo/BFO_0000001",
         "http://purl.obolibrary.org/obo/BFO_0000002",
         "http://purl.obolibrary.org/obo/BFO_0000003",
         "http://purl.obolibrary.org/obo/BFO_0000004",
+        "http://purl.obolibrary.org/obo/BFO_0000008",
         "http://purl.obolibrary.org/obo/BFO_0000015",
         "http://purl.obolibrary.org/obo/BFO_0000019",
         "http://purl.obolibrary.org/obo/BFO_0000020",
         "http://purl.obolibrary.org/obo/BFO_0000027",
         "http://purl.obolibrary.org/obo/BFO_0000030",
         "http://purl.obolibrary.org/obo/BFO_0000031",
+        "http://purl.obolibrary.org/obo/BFO_0000038",
         "http://purl.obolibrary.org/obo/BFO_0000040",
         "https://www.inf.ufrgs.br/bdi/ontologies/GEOCORE_0000001",
         "https://www.inf.ufrgs.br/bdi/ontologies/GEOCORE_0000002",
         "https://www.inf.ufrgs.br/bdi/ontologies/GEOCORE_0000004",
+        "https://www.inf.ufrgs.br/bdi/ontologies/GEOCORE_0000005",
         "https://www.inf.ufrgs.br/bdi/ontologies/GEOCORE_0000006",
         "https://www.inf.ufrgs.br/bdi/ontologies/GEOCORE_0000008",
         "https://www.inf.ufrgs.br/bdi/ontologies/GEOCORE_0000009",
-        "https://www.inf.ufrgs.br/bdi/ontologies/GEORES_0000001",
-        "https://www.inf.ufrgs.br/bdi/ontologies/GEORES_0000002",
-        "https://www.inf.ufrgs.br/bdi/ontologies/GEORES_0000003",
-        "https://www.inf.ufrgs.br/bdi/ontologies/GEORES_0000004",
+        "https://www.inf.ufrgs.br/bdi/ontologies/GEORES_0000020",
         "https://www.inf.ufrgs.br/bdi/ontologies/GEORES_0000021",
         "https://www.inf.ufrgs.br/bdi/ontologies/GEORES_0000028",
+        "https://www.inf.ufrgs.br/bdi/ontologies/GEORES_0000029",
         "https://www.inf.ufrgs.br/bdi/ontologies/GEORES_0000032"
       ],
       "issues": [
@@ -50,12 +51,18 @@
         {
           "type": "MISSING_COMMENT",
           "severity": "MINOR",
+          "entity": "https://w3id.org/presalt-onto#GeologicalFormation",
+          "detail": "Entity has no rdfs:comment (NLD not propagated)."
+        },
+        {
+          "type": "MISSING_COMMENT",
+          "severity": "MINOR",
           "entity": "https://w3id.org/presalt-onto#PhysicalProperty",
           "detail": "Entity has no rdfs:comment (NLD not propagated)."
         }
       ],
       "issue_summary": {
-        "MINOR": 2
+        "MINOR": 3
       }
     },
     "oops_pitfalls": {
@@ -64,9 +71,16 @@
       "pitfalls": [],
       "pitfall_summary": {},
       "errors": [
-        "OOPS! HTTP error: 500 Server Error:  for url: https://oops.linkeddata.es/rest"
+        "OOPS! HTTP error: 503 Server Error: Service Unavailable for url: https://oops.linkeddata.es/rest"
       ],
       "oops_url": "https://oops.linkeddata.es/rest"
+    },
+    "reasoner": {
+      "layer": "reasoner",
+      "status": "PASS",
+      "consistent": true,
+      "unsatisfiable_classes": [],
+      "errors": []
     }
   },
   "overall_status": "PASS"

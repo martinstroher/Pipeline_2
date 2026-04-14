@@ -13,6 +13,7 @@ Features:
 
 import os
 import re
+from collections import defaultdict
 
 import pandas as pd
 from rdflib import BNode, Graph, Namespace, Literal, URIRef, RDF, RDFS, OWL, XSD
@@ -33,6 +34,15 @@ _UPPER_IRIS_LOWER = {k.lower(): v for k, v in UPPER_IRIS.items()}
 
 # Set of IRI values for quick "is upper-level?" checks
 _UPPER_IRI_VALUES = set(UPPER_IRIS.values())
+
+# BFO disjointness pairs — used for conflict detection and axiom generation
+_BFO_DISJOINT = [
+    ("http://purl.obolibrary.org/obo/BFO_0000002", "http://purl.obolibrary.org/obo/BFO_0000003"),  # Continuant ⊥ Occurrent
+    ("http://purl.obolibrary.org/obo/BFO_0000004", "http://purl.obolibrary.org/obo/BFO_0000020"),  # IC ⊥ SDC
+    ("http://purl.obolibrary.org/obo/BFO_0000004", "http://purl.obolibrary.org/obo/BFO_0000031"),  # IC ⊥ GDC
+    ("http://purl.obolibrary.org/obo/BFO_0000020", "http://purl.obolibrary.org/obo/BFO_0000031"),  # SDC ⊥ GDC
+    ("http://purl.obolibrary.org/obo/BFO_0000040", "http://purl.obolibrary.org/obo/BFO_0000141"),  # MaterialEntity ⊥ ImmaterialEntity
+]
 
 
 def _is_upper_iri(iri: URIRef) -> bool:
@@ -154,6 +164,119 @@ def _add_upper_backbone(g: Graph, referenced_upper_iris: set[str]) -> int:
         to_process.add(parent_str)
 
     return added
+
+
+def _detect_and_repair_disjointness(g: Graph, df: pd.DataFrame) -> list[dict]:
+    """Detect and repair disjointness conflicts in the class hierarchy.
+
+    Walks rdfs:subClassOf chains to find presalt classes that inherit from
+    both sides of a BFO disjoint pair (e.g., MaterialEntity AND
+    ImmaterialEntity).  Repairs by removing the parent edge that conflicts
+    with the term's assigned Category from the taxonomy.
+
+    Must be called AFTER upper-ontology backbone triples have been added.
+    """
+    upper_parent_map = _load_upper_parent_map()
+
+    def _build_direct_parents():
+        dp: dict[str, set[str]] = defaultdict(set)
+        for s, _, o in g.triples((None, RDFS.subClassOf, None)):
+            s_str, o_str = str(s), str(o)
+            if s_str.startswith("http") and o_str.startswith("http"):
+                dp[s_str].add(o_str)
+        return dp
+
+    def _ancestors(cls_iri: str, dp: dict[str, set[str]]) -> set[str]:
+        visited: set[str] = set()
+        queue = list(dp.get(cls_iri, set()))
+        while queue:
+            curr = queue.pop()
+            if curr in visited:
+                continue
+            visited.add(curr)
+            queue.extend(dp.get(curr, set()))
+        return visited
+
+    # Build term IRI → Category map from taxonomy
+    category_of: dict[str, str] = {}
+    for _, row in df.iterrows():
+        term_iri_str = str(_term_to_iri(str(row["Term"])))
+        cat = row.get("Category", "")
+        if cat and not pd.isna(cat):
+            category_of[term_iri_str] = str(cat)
+
+    repairs: list[dict] = []
+    onto_prefix = str(ONTO_NS)
+
+    for iteration in range(3):  # safety: max 3 repair passes
+        dp = _build_direct_parents()
+        presalt_classes = [
+            str(s) for s in g.subjects(RDF.type, OWL.Class)
+            if str(s).startswith(onto_prefix)
+        ]
+
+        edges_to_remove: list[tuple[str, str, str, str]] = []
+
+        for iri_a, iri_b in _BFO_DISJOINT:
+            for cls_str in presalt_classes:
+                anc = _ancestors(cls_str, dp)
+                if iri_a not in anc or iri_b not in anc:
+                    continue
+
+                # Conflict: class inherits from both sides of a disjoint pair
+                intended: set[str] = set()
+                cat = category_of.get(cls_str, "")
+                if cat:
+                    cat_upper = _UPPER_IRIS_LOWER.get(cat.lower(), "")
+                    if cat_upper:
+                        current: str | None = cat_upper
+                        while current:
+                            intended.add(current)
+                            current = upper_parent_map.get(current)
+
+                if iri_a in intended and iri_b not in intended:
+                    keep_side, remove_side = iri_a, iri_b
+                elif iri_b in intended and iri_a not in intended:
+                    keep_side, remove_side = iri_b, iri_a
+                else:
+                    cls_label = cls_str.split("#")[-1] if "#" in cls_str else cls_str
+                    log.warn(
+                        f"  Disjointness conflict unresolved: {cls_label} "
+                        f"— category '{cat}' doesn't disambiguate"
+                    )
+                    continue
+
+                for parent_str in list(dp.get(cls_str, [])):
+                    p_anc = _ancestors(parent_str, dp) | {parent_str}
+                    if remove_side in p_anc and keep_side not in p_anc:
+                        edges_to_remove.append(
+                            (cls_str, parent_str, keep_side, remove_side)
+                        )
+
+        if not edges_to_remove:
+            break
+
+        for cls_str, parent_str, keep_side, remove_side in edges_to_remove:
+            g.remove((URIRef(cls_str), RDFS.subClassOf, URIRef(parent_str)))
+            cls_label = cls_str.split("#")[-1] if "#" in cls_str else cls_str
+            parent_label = (
+                parent_str.split("#")[-1]
+                if "#" in parent_str
+                else parent_str.split("/")[-1]
+            )
+            repairs.append({
+                "class": cls_label,
+                "removed_parent": parent_label,
+                "kept_side": keep_side.split("/")[-1],
+                "removed_side": remove_side.split("/")[-1],
+                "iteration": iteration + 1,
+            })
+            log.warn(
+                f"  Disjointness repair: {cls_label} ⊏ {parent_label} removed "
+                f"(conflicted with {keep_side.split('/')[-1]})"
+            )
+
+    return repairs
 
 
 def run_owl_export(
@@ -337,18 +460,15 @@ def run_owl_export(
             g.add((term_iri, RDFS.subClassOf, restriction))
             n_restrictions += 1
 
-    # ── BFO disjointness axioms (safe only) ──
-    _BFO_DISJOINT = [
-        ("http://purl.obolibrary.org/obo/BFO_0000002", "http://purl.obolibrary.org/obo/BFO_0000003"),  # Continuant ⊥ Occurrent
-        ("http://purl.obolibrary.org/obo/BFO_0000004", "http://purl.obolibrary.org/obo/BFO_0000020"),  # IC ⊥ SDC
-        ("http://purl.obolibrary.org/obo/BFO_0000004", "http://purl.obolibrary.org/obo/BFO_0000031"),  # IC ⊥ GDC
-        ("http://purl.obolibrary.org/obo/BFO_0000020", "http://purl.obolibrary.org/obo/BFO_0000031"),  # SDC ⊥ GDC
-        ("http://purl.obolibrary.org/obo/BFO_0000040", "http://purl.obolibrary.org/obo/BFO_0000141"),  # MaterialEntity ⊥ ImmaterialEntity
-    ]
-    if n_restrictions > 0:
-        for iri_a, iri_b in _BFO_DISJOINT:
-            g.add((URIRef(iri_a), OWL.disjointWith, URIRef(iri_b)))
-        log.detail(f"Added {len(_BFO_DISJOINT)} BFO disjointness axioms")
+    # ── Disjointness conflict detection & repair ──
+    repairs = _detect_and_repair_disjointness(g, df)
+    if repairs:
+        log.info(f"Disjointness repairs: {len(repairs)} conflicting edges removed")
+
+    # ── BFO disjointness axioms ──
+    for iri_a, iri_b in _BFO_DISJOINT:
+        g.add((URIRef(iri_a), OWL.disjointWith, URIRef(iri_b)))
+    log.detail(f"Added {len(_BFO_DISJOINT)} BFO disjointness axioms")
 
     # Serialize
     os.makedirs(os.path.dirname(output_path) or ".", exist_ok=True)

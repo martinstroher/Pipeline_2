@@ -27,6 +27,25 @@ The domain is **underrepresented in general LLM training data**, which is why re
 
 ---
 
+## Competency questions — what the ontology must answer
+
+The ontology scope is governed by 10 competency questions (CQs), grounded in the GeoCore/GeoReservoir upper-ontology vocabulary. These define what the ontology commits to representing and guide iterative refinement to remove out-of-scope terms. The full list is maintained in `resources/competency_questions.txt`.
+
+| ID | Question |
+|---|---|
+| CQ1 | What are the geological objects of the Pre-Salt domain? |
+| CQ2 | What earth materials constitute the Pre-Salt geological objects? |
+| CQ3 | What geological structures occur in the Pre-Salt geological objects? |
+| CQ4 | What post-depositional processes and structures occur in the Pre-Salt geological objects? |
+| CQ5 | What are the spatial relations and arrangements in the Pre-Salt domain? |
+| CQ6 | What are the dimensions and positions of the Pre-Salt geological objects? |
+| CQ7 | What types of boundaries exist and where are they in the Pre-Salt geological objects? |
+| CQ8 | What deposits and stratigraphic units are associated with Pre-Salt reservoirs? |
+| CQ9 | What are the petrophysical characteristics of Pre-Salt reservoirs? |
+| CQ10 | What geological age is associated with the Pre-Salt reservoir intervals? |
+
+---
+
 ## How it works — the 7-step pipeline
 
 ```
@@ -35,7 +54,7 @@ PDFs  →  [Step 0]  →  Markdown files
                        ↕
           [Step 1]  →  Raw term lists (per paper)
           [Step 2]  →  Deduplicated frequency table
-          [Step 3]  →  Filtered term list (≥3 papers)
+          [Step 3]  →  Filtered term list (≥7 papers)
           [Step 4]  →  Terms + Natural Language Definitions (NLDs)
           [Step 5]  →  Terms + NLDs + ontology category
           [Step 6]  →  Taxonomy (parent-child hierarchy)
@@ -47,15 +66,15 @@ PDFs  →  [Step 0]  →  Markdown files
 |------|-------------------------------|
 | **0 — Ingest** | PDF papers are converted to plain-text Markdown. |
 | **R — RAG Index** | All Markdown documents are chunked (1024-character windows) and indexed in a vector database (ChromaDB) and a keyword index (BM25). This index is queried by later steps to retrieve relevant passages. |
-| **1 — Extract** | An LLM reads each paper and outputs a list of geological terms found in that text. |
-| **2 — Aggregate** | All term lists are merged, spelling variants are lemmatised (e.g. "dolomites" → "dolomite"), and the number of papers mentioning each term is counted. |
-| **3 — Filter** | Terms appearing in fewer than 3 papers are discarded. Appearing in 3 of 80 papers = 3.75% cross-document consensus, a threshold consistent with established terminology extraction methodology (Frantzi et al. C-value; Kageura & Umino). |
+| **1 — Extract** | An LLM reads each paper and outputs a deduplicated list of geological terms found in that text. |
+| **2 — Aggregate** | All term lists are merged, spelling variants are lemmatised (e.g. “dolomites” → “dolomite”), and the number of papers mentioning each term is counted. Since extraction deduplicates per paper, Frequency = document frequency. |
+| **3 — Filter** | Terms appearing in fewer than N papers are discarded (configurable via `MINIMUM_FREQUENCY_FILTER`, default 7). For the 82-paper corpus, freq≥7 (~8.5% of papers) was selected after distribution analysis: freq≥5 included excessive noise (976 terms), freq≥10 excluded valid narrower concepts (368 terms), and freq≥7 yielded 614 well-focused domain terms. Downstream steps provide additional quality filtering (NOT_CLASSIFIED removal, cycle detection). |
 | **4 — Define (NLD)** | For each term, the system retrieves the 5 most relevant passages from the corpus and asks the LLM to write a **Natural Language Definition (NLD)** in strict Aristotelian form: *"X is a Y that Z"* — where Y is the proximate genus and Z is the differentiating characteristic. |
 | **5 — Classify** | Each term + its NLD is fed to the LLM, which classifies it into the most specific applicable upper ontology namespace using a waterfall: GeoReservoir → GeoCore → BFO. |
 | **6 — Taxonomy** | Terms within each namespace are arranged into a parent-child hierarchy by an LLM that uses the genus Y from each NLD to propose intermediate class names. Cycle detection prevents circular hierarchies (A→B→A) by re-parenting cyclic terms to the category root. |
 | **6b — Extract Relations** | For each term's NLD, an LLM extracts ontological relations (has_part, derives_from, occurs_in, etc.) from 16 BFO/RO properties. Relations are validated against domain/range constraints and encoded as OWL restrictions in the final ontology. |
-| **7 — Export** | The taxonomy is serialised as an OWL/Turtle file with `rdfs:subClassOf` links, `rdfs:label`, `rdfs:comment` (the NLD), and `owl:imports` for the BFO upper ontology. Case-insensitive IRI matching, self-reference guards, and upper→upper triple suppression (never emits triples between two published upper-level IRIs) prevent duplicate/invalid OWL triples. |
-| **7b — Verify** | The exported ontology is verified post-hoc: RDFLib syntax parsing, structural analysis (orphan classes, missing labels/comments, self-references, upper-ontology anchoring), and optionally OOPS! pitfall scanning via REST API. Results are saved as a JSON report. |
+| **7 — Export** | The taxonomy is serialised as an OWL/Turtle file with `rdfs:subClassOf` links, `rdfs:label`, `rdfs:comment` (the NLD), and `owl:imports` for the BFO upper ontology. Case-insensitive IRI matching, self-reference guards, and upper→upper triple suppression prevent duplicate/invalid OWL triples. Disjointness conflict detection automatically resolves presalt: classes that inherit from both sides of BFO disjoint pairs, using the term's Category to determine which parent to keep. |
+| **7b — Verify** | The exported ontology is verified post-hoc: RDFLib syntax parsing, structural analysis (orphan classes, missing labels/comments, self-references, upper-ontology anchoring), optionally OOPS! pitfall scanning via REST API, and optionally HermiT reasoner consistency checking (requires Java and owlready2). Results are saved as a JSON report. |
 
 ---
 

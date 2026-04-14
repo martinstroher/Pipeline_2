@@ -1,0 +1,15 @@
+# Competency Questions — PreSaltOntoLearn Ontology
+
+These competency questions define the scope of the Pre-Salt petroleum geology ontology.
+A term earns its place in the ontology only if it participates in answering at least one CQ.
+
+CQ1  — What are the geological objects of the Pre-Salt domain?
+CQ2  — What earth materials constitute the Pre-Salt geological objects?
+CQ3  — What geological structures occur in the Pre-Salt geological objects?
+CQ4  — What post-depositional processes and structures occur in the Pre-Salt geological objects?
+CQ5  — What are the spatial relations and arrangements in the Pre-Salt domain?
+CQ6  — What are the dimensions and positions of the Pre-Salt geological objects?
+CQ7  — What types of boundaries exist and where are they in the Pre-Salt geological objects?
+CQ8  — What deposits and stratigraphic units are associated with Pre-Salt reservoirs?
+CQ9  — What are the petrophysical characteristics of Pre-Salt reservoirs?
+CQ10 — What geological age is associated with the Pre-Salt reservoir intervals?

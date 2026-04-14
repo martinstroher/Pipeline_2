@@ -10,6 +10,8 @@ Layers:
   3. OOPS! Pitfall Detection (optional): calls OOPS! REST API if OOPS_URL
      env var is set. Works with the remote API, a local Docker instance,
      or any compatible endpoint.
+  4. HermiT Reasoner (optional): runs HermiT via owlready2 to check
+     ontology consistency and detect unsatisfiable classes.
 
 No LLM repair — verification-only. Results are logged + saved to JSON
 for thesis reporting.
@@ -250,7 +252,83 @@ def _verify_oops(ttl_path: str) -> dict:
 
     return result
 
+# ── Layer 4: HermiT Reasoner Consistency Check ─────────────────────────────────
 
+def _verify_hermit(ttl_path: str) -> dict:
+    """Run HermiT reasoner via owlready2 to check consistency."""
+    result = {
+        "layer": "reasoner",
+        "status": "SKIP",
+        "consistent": None,
+        "unsatisfiable_classes": [],
+        "errors": [],
+    }
+
+    try:
+        import owlready2
+    except ImportError:
+        result["errors"].append("owlready2 not installed — skipping reasoner check")
+        return result
+
+    # Set Java path (JAVA_EXE env var or system default)
+    java_exe = os.environ.get("JAVA_EXE", "")
+    if java_exe:
+        owlready2.JAVA_EXE = java_exe
+
+    # Convert Turtle → NTriples via rdflib for cross-platform owlready2 compatibility
+    import tempfile
+    from rdflib import Graph as RDFGraph
+
+    try:
+        rdf_g = RDFGraph()
+        rdf_g.parse(ttl_path, format="turtle")
+    except Exception as e:
+        result["errors"].append(f"Failed to parse Turtle for reasoner: {e}")
+        return result
+
+    tmp_file = tempfile.NamedTemporaryFile(suffix=".nt", delete=False, mode="wb")
+    try:
+        rdf_g.serialize(tmp_file, format="ntriples", encoding="utf-8")
+        tmp_file.close()
+
+        # Use a fresh world to avoid cross-contamination between runs
+        world = owlready2.World()
+        onto = world.get_ontology(_ONTO_PREFIX + "PreSaltOntoLearn").load(
+            fileobj=open(tmp_file.name, "rb"), format="ntriples"
+        )
+
+        with onto:
+            owlready2.sync_reasoner_hermit(world, infer_property_values=False)
+
+        # Check for unsatisfiable classes (reclassified under Nothing)
+        unsatisfiable = [
+            c for c in world.inconsistent_classes()
+            if str(getattr(c, "iri", "")) != "http://www.w3.org/2002/07/owl#Nothing"
+        ]
+
+        if unsatisfiable:
+            result["status"] = "FAIL"
+            result["consistent"] = False
+            result["unsatisfiable_classes"] = [
+                str(getattr(c, "iri", c)) for c in unsatisfiable
+            ]
+        else:
+            result["status"] = "PASS"
+            result["consistent"] = True
+
+    except Exception as e:
+        err_str = str(e)
+        if "InconsistentOntology" in type(e).__name__ or "Inconsistent" in err_str:
+            result["status"] = "FAIL"
+            result["consistent"] = False
+            result["errors"].append("Ontology is globally inconsistent (HermiT)")
+        else:
+            result["status"] = "FAIL"
+            result["errors"].append(f"Reasoner error: {err_str}")
+    finally:
+        os.unlink(tmp_file.name)
+
+    return result
 
 # ── Main Entry Point ────────────────────────────────────────────────────
 
@@ -258,6 +336,7 @@ def run_ontology_verification(
     ttl_path: str,
     output_path: str | None = None,
     skip_oops: bool = False,
+    skip_reasoner: bool = False,
 ) -> dict:
     """Run verification layers on the OWL ontology.
 
@@ -266,6 +345,7 @@ def run_ontology_verification(
         output_path: Path to save the verification report JSON.
                      Default: same dir as ttl_path, named 7b_verification_report.json.
         skip_oops: If True, skip the OOPS! API call (for offline or test runs).
+        skip_reasoner: If True, skip the HermiT reasoner check.
 
     Returns:
         dict with full verification report.
@@ -340,6 +420,27 @@ def run_ontology_verification(
         else:
             log.success("  OOPS!: no pitfalls detected")
 
+    # ── Layer 4: HermiT Reasoner ──
+    if skip_reasoner:
+        log.info("Layer 4: HermiT reasoner — SKIPPED (--skip-reasoner)")
+        report["layers"]["reasoner"] = {"layer": "reasoner", "status": "SKIP"}
+    else:
+        log.info("Layer 4: HermiT reasoner consistency check...")
+        hermit = _verify_hermit(ttl_path)
+        report["layers"]["reasoner"] = hermit
+
+        if hermit["errors"]:
+            log.error(f"  Reasoner: {hermit['errors'][0]}")
+        elif hermit["consistent"] is True:
+            log.success("  Reasoner: PASS — ontology is consistent")
+        elif hermit["consistent"] is False:
+            n_unsat = len(hermit["unsatisfiable_classes"])
+            log.error(f"  Reasoner: FAIL — {n_unsat} unsatisfiable classes")
+            for cls_iri in hermit["unsatisfiable_classes"][:10]:
+                log.error(f"    • {cls_iri}")
+            if n_unsat > 10:
+                log.error(f"    ... and {n_unsat - 10} more")
+
     # ── Overall status ──
     layer_statuses = [v.get("status", "SKIP") for v in report["layers"].values()]
     if "FAIL" in layer_statuses:
@@ -374,5 +475,6 @@ if __name__ == "__main__":
     parser.add_argument("ttl_path", help="Path to .ttl file")
     parser.add_argument("--output", default=None, help="Path for verification report JSON")
     parser.add_argument("--skip-oops", action="store_true", help="Skip OOPS! API call")
+    parser.add_argument("--skip-reasoner", action="store_true", help="Skip HermiT reasoner check")
     args = parser.parse_args()
-    run_ontology_verification(args.ttl_path, args.output, args.skip_oops)
+    run_ontology_verification(args.ttl_path, args.output, args.skip_oops, args.skip_reasoner)
