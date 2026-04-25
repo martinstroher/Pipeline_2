@@ -14,7 +14,9 @@ graph TD
     E -->|term_filter.py| F(Filtered CSV)
     F -->|nld_generator.py + RAG| G(NLDs + Definitions CSV)
     G -->|term_categorizer.py + RAG| H(Categorized Ontology CSV)
-    H -->|taxonomy_builder.py| I(Taxonomy CSV)
+    H -->|cq_refinement.py --refine| H2(Filtered Categorized CSVs × T)
+    H2 -->|taxonomy_builder.py| I(Taxonomy CSV)
+    H -->|taxonomy_builder.py| I
     H -->|relation_extractor.py| Rel(Relations CSV)
     I --> |owl_exporter.py| J[OWL Turtle .ttl]
     Rel -.->|OWL restrictions| J
@@ -111,9 +113,20 @@ The ontology scope is defined by 10 competency questions (CQs) that specify what
 - Waterfall priority ensures each term maps to the most domain-specific applicable namespace: petroleum-specific terms to GeoReservoir first, general geological terms to GeoCore, and foundational abstractions to BFO.
 - Output: `output/5_categorized_ontology.csv`
 
+### `src/modules/cq_refinement.py` — Step 5b: CQ-Driven Refinement
+- **Tech**: Gemini 2.5 Pro (synonym triage + CQ scoring)
+- Activated by `--refine` flag. Runs after Step 5 and before Steps 6-7b.
+- **Sub-step A — Deterministic cleanup:** Detects encoding/accent duplicates (Unicode NFKD normalisation) and hyphenation variants (build-up/buildup). Merges to the longer/accented canonical form.
+- **Sub-step B — Synonym triage:** Groups terms sharing a head noun within the same category (≥50% word overlap). Sends clusters to the LLM for 3-way classification: SYNONYM (merge to canonical), SPECIALIZATION (keep both + emit parent-child hint), or DISTINCT (keep both). NLDs are included so the LLM judges meaning, not just surface form. SPECIALIZATION pairs are written to `5b_specialization_hints.csv` and passed to the taxonomy builder as parent-child constraints.
+- **Sub-step C — CQ scoring:** Each surviving term is scored against 10 competency questions in parallel batches of 5 (`CQ_BATCH_SIZE`). The LLM returns which CQs the term meaningfully contributes to. Checkpoint/resume via `5b_cq_matrix.csv`.
+- **Sub-step D — Threshold split:** Writes filtered categorized CSVs at T=0 (cleanup only), T≥1, T≥2, T≥3 into `output/refined/t{N}/5_categorized_ontology.csv`.
+- **Robustness:** CQ identifiers are validated against a fixed set (CQ1-CQ10). Batch size mismatches raise `ValueError`. JSON parse failures are logged and skipped. ThreadPoolExecutor parallelism is configurable via `MAX_CONCURRENT_CQ`.
+- Output: `output/refined/5b_cleanup_report.csv`, `output/refined/5b_cq_matrix.csv`, `output/refined/5b_specialization_hints.csv`, `output/refined/threshold_summary.csv`, per-threshold CSVs.
+
 ### `src/modules/taxonomy_builder.py` — Step 6: Taxonomy Construction
 - **Tech**: Gemini 2.5 Pro
 - Builds a hierarchical taxonomy per ontology group (GeoReservoir, GeoCore, BFO) using NLDs for naming.
+- Accepts optional `hints_csv` parameter with pre-identified SPECIALIZATION pairs from Step 5b. When provided, these are injected into the prompt as parent-child constraints.
 - Processes terms in chunks of up to 150 per LLM call to avoid cross-chunk inconsistency.
 - **Cycle detection:** After each LLM response, parent-chain walks detect any cycles (A→B→A). Cyclic terms are re-parented to the category root with a warning log.
 - Prompt anchors intermediate node names to canonical UPPER_IRIS vocabulary (52 published IRIs from BFO/GeoCore/GeoReservoir), and instructs the LLM to use the Aristotelian genus from NLDs ("X is a Y that Z" → use Y as intermediate node name).
@@ -190,6 +203,10 @@ prompts/                  # LLM prompt files (system instructions + templates)
 inputs/                   # Source PDFs + generated .md files
 output/                   # Step outputs (1_raw → 7_ontology.ttl)
   ablation/               # Condition-specific CSVs (cat_A.csv … cat_D.csv)
+  refined/                # CQ-driven refinement outputs (--refine)
+    5b_cleanup_report.csv # Encoding/synonym merges
+    5b_cq_matrix.csv      # Per-term CQ scoring matrix
+    t0/ t1/ t2/ t3/       # Per-threshold pipeline outputs (Steps 5-7b)
 resources/                # Upper ontology definition text files + reference OWL files
 chroma_db_1024/           # Cached ChromaDB vector index (created on first run)
 test/                     # E2E test runner + isolated test environment
@@ -208,3 +225,4 @@ The pipeline supports a two-layer evaluation framework for thesis validation:
   - **Category Correctness** (stratified by ontology tier — GeoReservoir with full descriptions, GeoCore/BFO simplified)
   - **Taxonomy Correctness** (~80 parent-child IS-A pairs, stratified by category). Selection: only IS-A edges (`rdfs:subClassOf` / `rdf:type`); ~75 % from edges involving the selected terms (equal samples per category), ~25 % from intermediate-node edges for hierarchy-depth coverage; trimmed to 80, shuffled with seed=42.
   - Results analysed with Wilcoxon signed-rank (gated by Friedman omnibus significance), ICC, Fleiss' kappa. Taxonomy analysis includes per-category accuracy and inter-rater agreement.
+- **CQ filter validation** (combined mode via `--expert-eval --refine --threshold T`): Generates a combined workbook sampling ~150 kept + ~50 removed terms (blinded). Expert relevance scores are analysed with Mann-Whitney U (kept vs removed) to validate that the CQ filter preferentially retains relevant terms. Blinding key includes `CQ_Status` and `CQ_Count` columns.

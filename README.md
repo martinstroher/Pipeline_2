@@ -66,6 +66,8 @@ The full pipeline runs Steps 0-7 and writes a Turtle OWL file (`output/7_ontolog
 | *(none)* | Run the full standard pipeline (Steps 0-7) |
 | `--skip-pdf` | Skip PDF→Markdown (Step 0); use existing `.md` files |
 | `--skip-extraction` | Skip extraction/aggregation/filter (Steps 1-3); use existing filtered terms |
+| `--refine` | Run CQ-driven refinement (Step 5b) after classification, then generate ontologies at 4 thresholds |
+| `--threshold T` | CQ threshold for refined expert evaluation (use with `--expert-eval --refine`, T=0/1/2/3) |
 | `--ablation` | Run 4-condition ablation study instead of the standard pipeline |
 | `--conditions A,B,C,D` | Select ablation conditions to run (default: all four) |
 | `--analysis` | Run Layer 1 automated analysis on ablation output |
@@ -137,6 +139,7 @@ src/
     term_filter.py        # Step 3: Frequency threshold filter
     nld_generator.py      # Step 4: RAG-grounded NLD generation (Gemini 2.5 Pro)
     term_categorizer.py   # Step 5: Waterfall categorization (GeoReservoir→GeoCore→BFO)
+    cq_refinement.py      # Step 5b: CQ-driven refinement (--refine): cleanup + scoring + threshold split
     taxonomy_builder.py   # Step 6: Group-based LLM hierarchy builder, UPPER_IRIS anchoring
     relation_extractor.py # Step 6b: LLM relation extraction + BFO domain/range validation
     owl_exporter.py       # Step 7: rdflib Turtle export, OWL restrictions, upper backbone

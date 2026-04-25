@@ -387,9 +387,10 @@ def run_owl_export(
         if nld and not str(nld).startswith("ERROR"):
             g.add((term_iri, RDFS.comment, Literal(str(nld), lang="en")))
 
-        # Ensure parent class is also declared
+        # Ensure parent class is also declared (but not if parent is an individual)
         if has_parent and parent_iri is not None and parent not in UPPER_IRIS and not is_intermediate:
-            g.add((parent_iri, RDF.type, OWL.Class))
+            if str(parent_iri) not in _individual_iris:
+                g.add((parent_iri, RDF.type, OWL.Class))
 
     # ── Upper-ontology backbone: add subClassOf chains + labels ──
     # Collect all upper-level IRIs referenced in subClassOf and rdf:type triples

@@ -93,6 +93,7 @@ UPPER_IRIS = {
 def build_taxonomy_for_group(
     category: str, terms_with_nlds: list[dict],
     model_name: str, model_temperature: float,
+    hints: list[dict] | None = None,
 ) -> list[dict]:
     """
     Build IS-A hierarchy for a group of terms within the same category.
@@ -100,7 +101,9 @@ def build_taxonomy_for_group(
     Args:
         category: The ontology category (e.g., "Sedimentary Rock")
         terms_with_nlds: List of {"term": ..., "nld": ...}
-        model: Configured Gemini model
+        model_name: Gemini model name
+        model_temperature: Temperature for generation
+        hints: Optional list of {"general": ..., "specific": ...} specialization hints
 
     Returns:
         List of {"Term", "Parent_Term", "Relationship_Type", "Category"}
@@ -109,11 +112,30 @@ def build_taxonomy_for_group(
 
     upper_vocab = "\n   ".join(f"- {k}" for k in sorted(UPPER_IRIS.keys()))
 
+    # Build optional hints section
+    hints_section = ""
+    if hints:
+        relevant = [h for h in hints
+                     if h["general"] in {t["term"] for t in terms_with_nlds}
+                     or h["specific"] in {t["term"] for t in terms_with_nlds}]
+        if relevant:
+            pairs = "\n".join(f"   - \"{h['specific']}\" is a specialization of \"{h['general']}\"" for h in relevant)
+            hints_section = (
+                f"\n\n**PRE-IDENTIFIED SPECIALIZATIONS (use as parent-child constraints):**\n"
+                f"{pairs}\n"
+                f"These pairs were identified by synonym analysis. Place the specific term "
+                f"under the general term in the hierarchy unless the NLDs clearly contradict this.\n"
+            )
+
     prompt = prompt_template.format(
         category=category,
         upper_vocab=upper_vocab,
         terms_json=json.dumps(terms_with_nlds, indent=2),
     )
+    # Append hints after the formatted prompt (before the output format section won't work
+    # since format() already resolved placeholders, so append at the end of terms_json area)
+    if hints_section:
+        prompt = prompt + hints_section
 
     try:
         response_text = generate(
@@ -168,13 +190,14 @@ def build_taxonomy_for_group(
         ]
 
 
-def run_taxonomy_builder(categorized_csv: str, output_path: str | None = None):
+def run_taxonomy_builder(categorized_csv: str, output_path: str | None = None, hints_csv: str | None = None):
     """
     Build taxonomy from a categorized CSV.
 
     Args:
         categorized_csv: Path to categorized output (e.g., cat_A.csv or 5_categorized_ontology.csv)
         output_path: Output path (default: derived from input)
+        hints_csv: Optional path to specialization hints CSV (General_Term, Specific_Term)
     """
     load_dotenv()
     get_client()
@@ -198,6 +221,16 @@ def run_taxonomy_builder(categorized_csv: str, output_path: str | None = None):
     MODEL_NAME = os.environ.get("LLM_GENERATION_MODEL", "gemini-2.5-pro")
     MODEL_TEMPERATURE = float(os.environ.get("LLM_GENERATION_TEMPERATURE", 0))
 
+    # Load optional specialization hints
+    hints = None
+    if hints_csv and os.path.exists(hints_csv):
+        hints_df = pd.read_csv(hints_csv, encoding="utf-8-sig")
+        hints = [
+            {"general": row["General_Term"], "specific": row["Specific_Term"]}
+            for _, row in hints_df.iterrows()
+        ]
+        log.info(f"Loaded {len(hints)} specialization hints from '{hints_csv}'")
+
     all_taxonomy_rows = []
     categories = df_valid["Category"].unique()
 
@@ -215,7 +248,7 @@ def run_taxonomy_builder(categorized_csv: str, output_path: str | None = None):
         # Process in chunks of 150 for large groups
         for chunk_start in range(0, len(terms_with_nlds), 150):
             chunk = terms_with_nlds[chunk_start : chunk_start + 150]
-            rows = build_taxonomy_for_group(cat, chunk, MODEL_NAME, MODEL_TEMPERATURE)
+            rows = build_taxonomy_for_group(cat, chunk, MODEL_NAME, MODEL_TEMPERATURE, hints=hints)
             for row in rows:
                 row["NLD"] = nld_lookup.get(row["Term"], "")
             all_taxonomy_rows.extend(rows)
