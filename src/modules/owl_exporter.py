@@ -486,6 +486,13 @@ def run_owl_export(
                 filler_str in _taxonomy_terms
                 or filler_str.lower() in _UPPER_IRIS_LOWER
             )
+
+            # Skip entire restriction if filler is unknown — referencing an
+            # unknown IRI in owl:someValuesFrom would create a phantom class
+            # under owl:Thing in Protégé with no label, comment, or parent.
+            if not filler_is_individual and not filler_is_known:
+                continue
+
             if not filler_is_individual and filler_is_known:
                 g.add((filler_iri, RDF.type, OWL.Class))
 
