@@ -462,8 +462,16 @@ def run_owl_export(
 
         # Add existential restrictions: Class ⊑ ∃property.Filler
         for _, rel in accepted.iterrows():
-            term_iri = _term_to_iri(str(rel["Term"]))
-            filler_iri = _term_to_iri(str(rel["Filler"]))
+            term_str = str(rel["Term"]).strip()
+            filler_str = str(rel["Filler"]).strip()
+
+            # Skip if subject is not a known taxonomy term or upper-ontology IRI
+            # — avoids creating restrictions for terms only in relations CSV
+            if term_str not in _taxonomy_terms and term_str.lower() not in _UPPER_IRIS_LOWER:
+                continue
+
+            term_iri = _term_to_iri(term_str)
+            filler_iri = _term_to_iri(filler_str)
             prop_iri_str = rel.get("Property_IRI", "")
             if not prop_iri_str:
                 continue
@@ -481,7 +489,6 @@ def run_owl_export(
             # Declare filler as a class only if it's a known taxonomy term or
             # upper-ontology IRI — avoids minting phantom orphan classes.
             filler_is_individual = str(filler_iri) in _individual_iris
-            filler_str = str(rel["Filler"]).strip()
             filler_is_known = (
                 filler_str in _taxonomy_terms
                 or filler_str.lower() in _UPPER_IRIS_LOWER
@@ -507,6 +514,16 @@ def run_owl_export(
                 g.add((restriction, OWL.someValuesFrom, filler_iri))
             g.add((term_iri, RDFS.subClassOf, restriction))
             n_restrictions += 1
+
+    # ── Second backbone pass: pick up upper IRIs referenced in restrictions ──
+    extra_uppers = set()
+    for _, _, o in g.triples((None, OWL.someValuesFrom, None)):
+        o_str = str(o)
+        if o_str in _UPPER_IRI_VALUES:
+            extra_uppers.add(o_str)
+    n_extra = _add_upper_backbone(g, extra_uppers)
+    if n_extra:
+        log.detail(f"Added {n_extra} extra backbone triples for restriction fillers")
 
     # ── Disjointness conflict detection & repair ──
     repairs = _detect_and_repair_disjointness(g, df)
