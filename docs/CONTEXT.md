@@ -155,6 +155,18 @@ The ontology scope is defined by 10 competency questions (CQs) that specify what
 - **Robustness:** Structured `_target` metadata in log rows avoids fragile string parsing. Category validation ensures REMOVE reparenting only uses valid parents.
 - Output: `output/6c_taxonomy_cleaned.csv`, `output/6c_critic_log.csv`, `output/6c_relations_cleaned.csv`
 
+### `src/modules/relation_reclassifier.py` — Step 6d: Relation-Based Reclassification
+- **Tech**: Deterministic Python (no LLM)
+- Post-processing step that uses accepted relations from Step 6b to infer and correct BFO metatype classifications.
+- Reverses the domain/range validation logic from `relation_validator.py`: instead of "is this relation valid for these categories?" → "given these relations, what categories are valid?"
+- For each term, collects all ACCEPTED relations where it appears as subject (→ accumulates property domain constraints) or filler (→ accumulates property range constraints).
+- Intersects all metatype evidence; if intersection is empty → flags as CONTRADICTION for human review.
+- Finds the most specific compatible category from `_CATEGORY_TO_METATYPES`. If current category is less specific or incompatible → reclassifies.
+- After reclassification, checks Parent_Term compatibility with new category and reparents to upper-ontology root if incompatible.
+- **Fully dynamic:** zero hardcoded inference rules. Adding new properties or categories to `relation_validator.py` automatically updates reclassification behaviour.
+- **Robustness:** Never downgrades to a less specific category. Prefers domain-specific categories (GeoCore/GeoReservoir) over raw BFO.
+- Output: `output/6d_taxonomy_reclassified.csv`, `output/6d_reclassification_log.csv`
+
 ### `src/modules/owl_exporter.py` — Step 7: OWL Export
 - **Tech**: `rdflib`
 - Converts the taxonomy CSV to a Protege-compatible OWL Turtle file.

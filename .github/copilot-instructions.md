@@ -165,6 +165,8 @@ When helping write or review thesis text:
 | 6c | `6c_taxonomy_cleaned.csv` | Same columns as Step 6 (cleaned by ontology critic) |
 | 6c | `6c_relations_cleaned.csv` | Same columns as Step 6b (cleaned by ontology critic) |
 | 6c | `6c_critic_log.csv` | `Action`, `Term`, `Detail`, `Reason` |
+| 6d | `6d_taxonomy_reclassified.csv` | Same columns as Step 6 (categories corrected by relation evidence) |
+| 6d | `6d_reclassification_log.csv` | `Action`, `Term`, `Old_Category`, `New_Category`, `Detail`, `Evidence_Count` |
 | 7 | `7_ontology.ttl` | OWL Turtle format — loadable in Protégé |
 | 7b | `7b_verification_report.json` | `layers.syntax.status`, `layers.structure.{classes,individuals,issues}`, `layers.oops_pitfalls`, `overall_status` |
 

@@ -54,7 +54,8 @@ The full pipeline runs Steps 0-7 and writes a Turtle OWL file (`output/7_ontolog
 | 6 | `taxonomy_builder.py` | Step 5 CSV | `output/6_taxonomy.csv` |
 | 6b | `relation_extractor.py` | Step 5 CSV | `output/6b_relations.csv` |
 | 6c | `ontology_critic.py` | Step 6 + 6b CSVs | `output/6c_taxonomy_cleaned.csv` |
-| 7 | `owl_exporter.py` | Step 6c CSV + Step 6c relations | `output/7_ontology.ttl` |
+| 6d | `relation_reclassifier.py` | Step 6c CSVs | `output/6d_taxonomy_reclassified.csv` |
+| 7 | `owl_exporter.py` | Step 6d CSV + Step 6c relations | `output/7_ontology.ttl` |
 
 **Step R (RAG setup)** runs once after Step 0 and provides retrieval context to Steps 4 and 5. ChromaDB is cached to disk (`chroma_db_1024/`) on first run; subsequent runs load from cache. BM25 is always rebuilt in-memory.
 
@@ -144,6 +145,7 @@ src/
     taxonomy_builder.py   # Step 6: Group-based LLM hierarchy builder, UPPER_IRIS anchoring
     relation_extractor.py # Step 6b: LLM relation extraction + BFO domain/range validation
     ontology_critic.py    # Step 6c: 3-pass LLM taxonomy quality review (merge/remove/move)
+    relation_reclassifier.py # Step 6d: Deterministic BFO metatype reclassification from relations
     owl_exporter.py       # Step 7: rdflib Turtle export, OWL restrictions, upper backbone
     ontology_verifier.py  # Step 7b: Post-export verification (syntax, structure, OOPS!)
   utils/

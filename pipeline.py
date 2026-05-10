@@ -360,8 +360,22 @@ def main():
             if _stop == "6c":
                 log.success(f"\nStopped after Step 6c (--stop-after 6c)."); return
 
-            # Use cleaned outputs for OWL export
-            final_tax = cleaned_tax if os.path.exists(cleaned_tax) else tax_csv
+            # Step 6d: Relation-based reclassification
+            reclass_tax = cleaned_tax  # fallback if no relations
+            if cleaned_rel and os.path.exists(cleaned_rel):
+                log.banner(f"T{t}-6d", f"Relation Reclassification (threshold ≥{t})")
+                from src.modules.relation_reclassifier import run_relation_reclassification
+                reclass_tax = os.path.join(t_dir, "6d_taxonomy_reclassified.csv")
+                run_relation_reclassification(
+                    cleaned_tax,
+                    cleaned_rel,
+                    output_path=reclass_tax,
+                )
+            if _stop == "6d":
+                log.success(f"\nStopped after Step 6d (--stop-after 6d)."); return
+
+            # Use best available outputs for OWL export
+            final_tax = reclass_tax if os.path.exists(reclass_tax) else cleaned_tax
             final_rel = cleaned_rel if (cleaned_rel and os.path.exists(cleaned_rel)) else rel_csv
 
             log.banner(f"T{t}-7", f"OWL Export (threshold ≥{t})")
@@ -430,8 +444,22 @@ def main():
     if _stop == "6c":
         log.success("\nStopped after Step 6c (--stop-after 6c)."); return
 
-    # Use cleaned outputs for OWL export
-    final_tax = cleaned_tax if os.path.exists(cleaned_tax) else tax_csv
+    # Step 6d: Relation-based reclassification
+    reclass_tax = cleaned_tax  # fallback if no relations
+    if cleaned_rel and os.path.exists(cleaned_rel):
+        log.banner("6d", "Relation Reclassification")
+        from src.modules.relation_reclassifier import run_relation_reclassification
+        reclass_tax = cleaned_tax.replace("6c_taxonomy_cleaned", "6d_taxonomy_reclassified")
+        run_relation_reclassification(
+            cleaned_tax,
+            cleaned_rel,
+            output_path=reclass_tax,
+        )
+    if _stop == "6d":
+        log.success("\nStopped after Step 6d (--stop-after 6d)."); return
+
+    # Use best available outputs for OWL export
+    final_tax = reclass_tax if os.path.exists(reclass_tax) else cleaned_tax
     final_rel = cleaned_rel if (cleaned_rel and os.path.exists(cleaned_rel)) else relations_csv
 
     log.banner(7, "OWL Export")
