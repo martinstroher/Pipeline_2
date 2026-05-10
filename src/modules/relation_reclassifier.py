@@ -250,13 +250,33 @@ def run_relation_reclassification(
         })
 
     # Step D: Category/Parent consistency repair
-    # Rebuild valid_terms after reclassifications
     for idx, row in df.iterrows():
         term = str(row["Term"]).strip()
         parent = row.get("Parent_Term", "")
         category = str(row.get("Category", "")).strip()
 
         if not parent or (isinstance(parent, float) and pd.isna(parent)) or not str(parent).strip():
+            continue
+
+        parent_str = str(parent).strip()
+
+        # Fix self-referential parents (term = parent)
+        if parent_str == term:
+            upper_key = category if category in UPPER_IRIS else _UPPER_LOWER.get(category.lower(), "")
+            if upper_key and upper_key in UPPER_IRIS:
+                df.at[idx, "Parent_Term"] = upper_key
+                n_reparented += 1
+                log_rows.append({
+                    "Action": "REPARENT",
+                    "Term": term,
+                    "Old_Category": category,
+                    "New_Category": category,
+                    "Detail": (
+                        f"Self-referential parent removed. "
+                        f"Reparented to '{upper_key}'"
+                    ),
+                    "Evidence_Count": 0,
+                })
             continue
 
         parent_str = str(parent).strip()
