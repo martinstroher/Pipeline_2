@@ -1,7 +1,4 @@
-# Competency Questions — PreSaltOntoLearn Ontology
-
-These competency questions define the scope of the Pre-Salt petroleum geology ontology.
-A term earns its place in the ontology only if it participates in answering at least one CQ.
+# Competency Questions
 
 CQ1  — What are the geological objects of the Pre-Salt domain?
 CQ2  — What earth materials constitute the Pre-Salt geological objects?

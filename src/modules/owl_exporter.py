@@ -50,6 +50,15 @@ def _is_upper_iri(iri: URIRef) -> bool:
     return str(iri) in _UPPER_IRI_VALUES
 
 
+def _local_name(iri_str: str) -> str:
+    """Extract the local name (fragment or last path segment) from an IRI string."""
+    if "#" in iri_str:
+        return iri_str.split("#")[-1]
+    if "/" in iri_str:
+        return iri_str.split("/")[-1]
+    return iri_str
+
+
 def _term_to_iri(term: str) -> URIRef:
     """Convert a term string to a valid OWL IRI in the ontology namespace.
 
@@ -208,40 +217,52 @@ def _detect_and_repair_disjointness(g: Graph, df: pd.DataFrame) -> list[dict]:
     repairs: list[dict] = []
     onto_prefix = str(ONTO_NS)
 
-    for iteration in range(3):  # safety: max 3 repair passes
+    for iteration in range(5):  # safety: max 5 repair passes
         dp = _build_direct_parents()
-        presalt_classes = [
+        # Check ALL classes, not just presalt: — upper IRIs can also
+        # acquire taxonomy-derived edges that cross disjoint boundaries.
+        all_classes = [
             str(s) for s in g.subjects(RDF.type, OWL.Class)
-            if str(s).startswith(onto_prefix)
         ]
 
         edges_to_remove: list[tuple[str, str, str, str]] = []
 
         for iri_a, iri_b in _BFO_DISJOINT:
-            for cls_str in presalt_classes:
+            for cls_str in all_classes:
                 anc = _ancestors(cls_str, dp)
                 if iri_a not in anc or iri_b not in anc:
                     continue
 
-                # Conflict: class inherits from both sides of a disjoint pair
+                # Conflict: class inherits from both sides of a disjoint pair.
+                # Determine which side is "correct" via Category or backbone.
                 intended: set[str] = set()
-                cat = category_of.get(cls_str, "")
-                if cat:
-                    cat_upper = _UPPER_IRIS_LOWER.get(cat.lower(), "")
-                    if cat_upper:
-                        current: str | None = cat_upper
-                        while current:
-                            intended.add(current)
-                            current = upper_parent_map.get(current)
+                is_upper = cls_str in _UPPER_IRI_VALUES
+
+                if is_upper:
+                    # For upper-ontology IRIs, the backbone (published
+                    # hierarchy) is authoritative.  Walk up the backbone
+                    # to see which disjoint side it belongs to.
+                    current: str | None = cls_str
+                    while current:
+                        intended.add(current)
+                        current = upper_parent_map.get(current)
+                else:
+                    cat = category_of.get(cls_str, "")
+                    if cat:
+                        cat_upper = _UPPER_IRIS_LOWER.get(cat.lower(), "")
+                        if cat_upper:
+                            current = cat_upper
+                            while current:
+                                intended.add(current)
+                                current = upper_parent_map.get(current)
 
                 if iri_a in intended and iri_b not in intended:
                     keep_side, remove_side = iri_a, iri_b
                 elif iri_b in intended and iri_a not in intended:
                     keep_side, remove_side = iri_b, iri_a
                 else:
-                    cls_label = cls_str.split("#")[-1] if "#" in cls_str else cls_str
                     log.warn(
-                        f"  Disjointness conflict unresolved: {cls_label} "
+                        f"  Disjointness conflict unresolved: {_local_name(cls_str)} "
                         f"— category '{cat}' doesn't disambiguate"
                     )
                     continue
@@ -258,22 +279,18 @@ def _detect_and_repair_disjointness(g: Graph, df: pd.DataFrame) -> list[dict]:
 
         for cls_str, parent_str, keep_side, remove_side in edges_to_remove:
             g.remove((URIRef(cls_str), RDFS.subClassOf, URIRef(parent_str)))
-            cls_label = cls_str.split("#")[-1] if "#" in cls_str else cls_str
-            parent_label = (
-                parent_str.split("#")[-1]
-                if "#" in parent_str
-                else parent_str.split("/")[-1]
-            )
+            cls_label = _local_name(cls_str)
+            parent_label = _local_name(parent_str)
             repairs.append({
                 "class": cls_label,
                 "removed_parent": parent_label,
-                "kept_side": keep_side.split("/")[-1],
-                "removed_side": remove_side.split("/")[-1],
+                "kept_side": _local_name(keep_side),
+                "removed_side": _local_name(remove_side),
                 "iteration": iteration + 1,
             })
             log.warn(
                 f"  Disjointness repair: {cls_label} ⊏ {parent_label} removed "
-                f"(conflicted with {keep_side.split('/')[-1]})"
+                f"(conflicted with {_local_name(keep_side)})"
             )
 
     return repairs
@@ -332,12 +349,16 @@ def run_owl_export(
         "A RAG-augmented LLM-generated ontology for Brazilian Pre-Salt petroleum geology. "
         "Generated by the PreSaltOntoLearn pipeline."
     )))
+    g.add((onto_uri, OWL.versionInfo, Literal("0.1.0")))
 
     # Import declarations
     g.add((onto_uri, OWL.imports, URIRef("http://purl.obolibrary.org/obo/bfo.owl")))
 
     # Track individual IRIs (rdf:type entities) to handle differently in relations
     _individual_iris: set[str] = set()
+
+    # Build set of all terms for parent-existence validation
+    _taxonomy_terms: set[str] = set(df["Term"].dropna().astype(str).str.strip())
 
     # Process taxonomy entries
     for _, row in df.iterrows():
@@ -352,6 +373,14 @@ def run_owl_export(
 
         if rel_type == "rdf:type":
             _individual_iris.add(str(term_iri))
+
+        if has_parent:
+            parent_str = str(parent).strip()
+            # Validate parent exists in taxonomy or upper-ontology before minting IRI
+            if parent_str not in _taxonomy_terms and parent_str.lower() not in _UPPER_IRIS_LOWER:
+                log.warn(f"  Phantom parent '{parent_str}' for '{term}' — treating as root class")
+                has_parent = False
+                parent_iri = None
 
         if has_parent:
             parent_iri = _term_to_iri(str(parent))
@@ -376,8 +405,13 @@ def run_owl_export(
                 # Self-reference detected (case collision) — declare as class only
                 g.add((term_iri, RDF.type, OWL.Class))
         else:
-            # Root node — declare as class with no explicit parent
+            # Root node — try to anchor to upper-ontology via Category
             g.add((term_iri, RDF.type, OWL.Class))
+            category = str(row.get("Category", "")).strip()
+            if category and not _is_upper_iri(term_iri):
+                upper_iri_str = UPPER_IRIS.get(category) or _UPPER_IRIS_LOWER.get(category.lower())
+                if upper_iri_str:
+                    g.add((term_iri, RDFS.subClassOf, URIRef(upper_iri_str)))
 
         # Label
         g.add((term_iri, RDFS.label, Literal(term, lang="en")))
@@ -444,9 +478,15 @@ def run_owl_export(
             if str(term_iri) in _individual_iris:
                 continue
 
-            # Ensure filler is declared as a class (unless it's an individual)
+            # Declare filler as a class only if it's a known taxonomy term or
+            # upper-ontology IRI — avoids minting phantom orphan classes.
             filler_is_individual = str(filler_iri) in _individual_iris
-            if not filler_is_individual:
+            filler_str = str(rel["Filler"]).strip()
+            filler_is_known = (
+                filler_str in _taxonomy_terms
+                or filler_str.lower() in _UPPER_IRIS_LOWER
+            )
+            if not filler_is_individual and filler_is_known:
                 g.add((filler_iri, RDF.type, OWL.Class))
 
             # Restriction: use owl:hasValue for individual fillers,

@@ -54,6 +54,7 @@ UPPER_IRIS = {
     "fiat surface": "http://purl.obolibrary.org/obo/BFO_0000146",
     # GeoCore (namespace: https://www.inf.ufrgs.br/bdi/ontologies/)
     "Geological Object": "https://www.inf.ufrgs.br/bdi/ontologies/GEOCORE_0000001",
+    "Sedimentary Geological Object": "https://www.inf.ufrgs.br/bdi/ontologies/GEOCORE_0000001",
     "Geological Process": "https://www.inf.ufrgs.br/bdi/ontologies/GEOCORE_0000002",
     "Geological Age": "https://www.inf.ufrgs.br/bdi/ontologies/GEOCORE_0000003",
     "Geological Structure": "https://www.inf.ufrgs.br/bdi/ontologies/GEOCORE_0000004",

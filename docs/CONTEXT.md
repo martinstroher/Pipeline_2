@@ -144,6 +144,17 @@ The ontology scope is defined by 10 competency questions (CQs) that specify what
 - **Robustness:** Checkpoint/resume with single flat CSV. Batch size mismatch raises `ValueError`. Unknown properties are rejected.
 - Output: `output/6b_relations.csv`
 
+### `src/modules/ontology_critic.py` — Step 6c: Ontology Critic
+- **Tech**: Gemini 2.5 Pro (3-pass LLM review)
+- Post-processing quality pass that reviews the taxonomy for redundancy, misplacements, and vague terms.
+- **Pass 1 — Intra-category:** Reviews each category branch independently. Actions: MERGE (near-duplicates), MOVE (misplaced siblings), REMOVE (vague/abstract terms), RENAME (ambiguous names).
+- **Pass 2 — Cross-category:** Reviews all non-intermediate terms across categories. Actions: CROSS_MERGE (duplicate concepts in different categories), CROSS_MOVE (miscategorised terms).
+- **Pass 3 — Essentiality:** Final quality gate asking which remaining terms do not earn their place in a lean domain ontology.
+- After all passes, orphaned intermediate nodes (no children remaining) are removed, and broken parent references (removed parents) are repaired by re-parenting to the term's Category.
+- Relations CSV is also cleaned: renames and merges propagate to Term/Filler columns, removed terms' relations are dropped.
+- **Robustness:** Structured `_target` metadata in log rows avoids fragile string parsing. Category validation ensures REMOVE reparenting only uses valid parents.
+- Output: `output/6c_taxonomy_cleaned.csv`, `output/6c_critic_log.csv`, `output/6c_relations_cleaned.csv`
+
 ### `src/modules/owl_exporter.py` — Step 7: OWL Export
 - **Tech**: `rdflib`
 - Converts the taxonomy CSV to a Protege-compatible OWL Turtle file.

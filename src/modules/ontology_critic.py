@@ -25,6 +25,28 @@ from src.utils import log
 from src.utils.prompt_loader import load_prompt
 
 
+# ── Shared helpers ──────────────────────────────────────────────────────
+
+def _nld_summary(nld_raw, max_len: int = 250) -> str:
+    """Extract first sentence of NLD, truncated to max_len."""
+    nld = nld_raw if isinstance(nld_raw, str) else ""
+    first_sentence = nld.split(". ")[0] + "." if nld else ""
+    return first_sentence[:max_len]
+
+
+def _safe_parse_actions(response_text: str, context: str) -> list[dict]:
+    """Parse JSON response into action list, with error handling."""
+    try:
+        actions = json.loads(response_text)
+        if not isinstance(actions, list):
+            log.warn(f"Critic returned non-list for {context}: {type(actions)}")
+            return []
+        return actions
+    except Exception as e:
+        log.warn(f"Critic JSON parse failed for {context}: {e}")
+        return []
+
+
 # ── Branch helpers ──────────────────────────────────────────────────────
 
 def _build_branch_json(group_df: pd.DataFrame) -> list[dict]:
@@ -69,11 +91,7 @@ def _critique_branch(
             temperature=temperature,
             response_mime_type="application/json",
         )
-        actions = json.loads(response_text)
-        if not isinstance(actions, list):
-            log.warn(f"Critic returned non-list for '{category}': {type(actions)}")
-            return []
-        return actions
+        return _safe_parse_actions(response_text, f"branch '{category}'")
     except Exception as e:
         log.warn(f"Critic failed for '{category}': {e}")
         return []
@@ -87,16 +105,12 @@ def _cross_category_review(
     """Check for duplicate/miscategorised concepts across categories."""
     system_instruction, prompt_template = load_prompt("ontology_critic_cross.txt")
 
-    # Send compact representation: term + category + first sentence of NLD
     compact = []
     for t in all_terms:
-        nld_raw = t.get("nld", "")
-        nld = nld_raw if isinstance(nld_raw, str) else ""
-        first_sentence = nld.split(". ")[0] + "." if nld else ""
         compact.append({
             "term": t["term"],
             "category": t["category"],
-            "nld_summary": first_sentence[:250],
+            "nld_summary": _nld_summary(t.get("nld", "")),
         })
 
     prompt = prompt_template.format(
@@ -112,10 +126,7 @@ def _cross_category_review(
             temperature=temperature,
             response_mime_type="application/json",
         )
-        actions = json.loads(response_text)
-        if not isinstance(actions, list):
-            return []
-        return actions
+        return _safe_parse_actions(response_text, "cross-category")
     except Exception as e:
         log.warn(f"Cross-category critic failed: {e}")
         return []
@@ -131,19 +142,15 @@ def _essentiality_review(
         "ontology_critic_essentiality.txt"
     )
 
-    # Compact representation with parent info + NLD summary
     compact = []
     for t in all_terms:
-        nld_raw = t.get("nld", "")
-        nld = nld_raw if isinstance(nld_raw, str) else ""
-        first_sentence = nld.split(". ")[0] + "." if nld else ""
         compact.append({
             "term": t["term"],
             "category": t["category"],
             "parent": t.get("parent", ""),
             "has_children": t.get("has_children", False),
             "is_individual": t.get("is_individual", False),
-            "nld_summary": first_sentence[:250],
+            "nld_summary": _nld_summary(t.get("nld", "")),
         })
 
     prompt = prompt_template.format(
@@ -159,10 +166,7 @@ def _essentiality_review(
             temperature=temperature,
             response_mime_type="application/json",
         )
-        actions = json.loads(response_text)
-        if not isinstance(actions, list):
-            return []
-        return actions
+        return _safe_parse_actions(response_text, "essentiality")
     except Exception as e:
         log.warn(f"Essentiality review failed: {e}")
         return []
@@ -204,6 +208,7 @@ def _apply_actions(
                     "Term": dead_term,
                     "Detail": f"Merged into '{survivor}'",
                     "Reason": reason,
+                    "_target": survivor,
                 })
 
         elif act_type == "REMOVE":
@@ -212,6 +217,13 @@ def _apply_actions(
                 continue
             removed_rows = df[df["Term"] == term]
             parent = removed_rows.iloc[0]["Parent_Term"]
+            # If parent is NaN/empty, fall back to the term's Category (only if valid)
+            if not parent or (isinstance(parent, float) and pd.isna(parent)) or not str(parent).strip():
+                category_val = str(removed_rows.iloc[0].get("Category", "")).strip()
+                if category_val and category_val in df["Term"].values:
+                    parent = category_val
+                else:
+                    parent = ""  # Will become a root class
             # Reparent children to the removed term's parent
             df.loc[df["Parent_Term"] == term, "Parent_Term"] = parent
             # Remove the term
@@ -252,6 +264,7 @@ def _apply_actions(
                 "Term": old_name,
                 "Detail": f"Renamed to '{new_name}'",
                 "Reason": reason,
+                "_target": new_name,
             })
 
         elif act_type == "CROSS_MERGE":
@@ -271,6 +284,7 @@ def _apply_actions(
                         "Term": t_name,
                         "Detail": f"Cross-category merge into '{survivor}'",
                         "Reason": reason,
+                        "_target": survivor,
                     })
 
         elif act_type == "CROSS_MOVE":
@@ -309,19 +323,10 @@ def _apply_actions_to_relations(
     removed = set()
 
     for row in log_rows:
-        if row["Action"] == "RENAME":
-            old_name = row["Term"]
-            # Extract new name from Detail field
-            detail = row["Detail"]
-            new_name = detail.split("'")[1] if "'" in detail else ""
-            if new_name:
-                rewrite_map[old_name] = new_name
-        elif row["Action"] in ("MERGE", "CROSS_MERGE"):
-            dead_term = row["Term"]
-            detail = row["Detail"]
-            survivor = detail.split("'")[1] if "'" in detail else ""
-            if survivor:
-                rewrite_map[dead_term] = survivor
+        if row["Action"] in ("RENAME", "MERGE", "CROSS_MERGE"):
+            target = row.get("_target", "")
+            if target:
+                rewrite_map[row["Term"]] = target
         elif row["Action"] == "REMOVE":
             removed.add(row["Term"])
 
@@ -466,6 +471,35 @@ def run_ontology_critic(
                 })
                 changed = True
 
+    # ── Repair broken parent references ─────────────────────────────────
+    # After all passes, some terms may reference parents that were removed.
+    # Re-parent them to their Category (upper-ontology anchor).
+    from src.modules.taxonomy_builder import UPPER_IRIS
+    _upper_lower = {k.lower(): k for k in UPPER_IRIS}
+    valid_terms = set(df["Term"].values)
+
+    for idx, row in df.iterrows():
+        parent = row["Parent_Term"]
+        if not parent or (isinstance(parent, float) and pd.isna(parent)) or not str(parent).strip():
+            continue  # No parent — will be a root class
+        parent_str = str(parent).strip()
+        # Parent is valid if it exists in the taxonomy OR is an upper-ontology term
+        if parent_str in valid_terms or parent_str.lower() in _upper_lower:
+            continue
+        # Broken reference — reparent to Category (if valid), else root
+        category_val = str(row.get("Category", "")).strip()
+        old_parent = parent_str
+        if category_val and (category_val in valid_terms or category_val.lower() in _upper_lower):
+            df.at[idx, "Parent_Term"] = category_val
+        else:
+            df.at[idx, "Parent_Term"] = ""
+        log_rows.append({
+            "Action": "REPARENT",
+            "Term": row["Term"],
+            "Detail": f"Broken parent '{old_parent}' → reparented to category '{category_val}'",
+            "Reason": "Parent no longer exists in taxonomy after critic passes",
+        })
+
     # ── Save outputs ────────────────────────────────────────────────────
     os.makedirs(os.path.dirname(output_path) or ".", exist_ok=True)
     df.to_csv(output_path, index=False, encoding="utf-8-sig")
@@ -477,12 +511,13 @@ def run_ontology_critic(
         log.detail(f"Critic log: {log_path}")
 
     # Clean relations if provided
-    if relations_csv and os.path.exists(relations_csv) and log_rows:
+    if relations_csv and os.path.exists(relations_csv):
         if relations_output is None:
             relations_output = os.path.join(base_dir, "6c_relations_cleaned.csv")
         rel_df = pd.read_csv(relations_csv, encoding="utf-8-sig")
         n_rel_before = len(rel_df)
-        rel_df = _apply_actions_to_relations(rel_df, log_rows)
+        if log_rows:
+            rel_df = _apply_actions_to_relations(rel_df, log_rows)
         rel_df.to_csv(relations_output, index=False, encoding="utf-8-sig")
         log.detail(f"Relations cleaned: {n_rel_before} → {len(rel_df)} rows → {relations_output}")
 
@@ -491,10 +526,12 @@ def run_ontology_critic(
     n_removes = sum(1 for r in log_rows if r["Action"] == "REMOVE")
     n_moves = sum(1 for r in log_rows if r["Action"] in ("MOVE", "CROSS_MOVE"))
     n_renames = sum(1 for r in log_rows if r["Action"] == "RENAME")
+    n_reparents = sum(1 for r in log_rows if r["Action"] == "REPARENT")
 
     log.success(
         f"Ontology critic: {n_original} → {len(df)} entries "
-        f"(merged={n_merges}, removed={n_removes}, moved={n_moves}, renamed={n_renames})"
+        f"(merged={n_merges}, removed={n_removes}, moved={n_moves}, "
+        f"renamed={n_renames}, reparented={n_reparents})"
     )
     log.detail(f"Cleaned taxonomy: {output_path}")
 

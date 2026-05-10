@@ -59,6 +59,7 @@ PDFs  →  [Step 0]  →  Markdown files
           [Step 5]  →  Terms + NLDs + ontology category
           [Step 6]  →  Taxonomy (parent-child hierarchy)
           [Step 6b] →  Relations (property axioms from NLDs)
+          [Step 6c] →  Cleaned taxonomy + relations (LLM quality review)
           [Step 7]  →  OWL/Turtle file  (.ttl)
 ```
 
@@ -74,6 +75,7 @@ PDFs  →  [Step 0]  →  Markdown files
 | **5b — Refine** | *(optional, `--refine`)* Cleans encoding/synonym duplicates, then scores each term against 10 competency questions (CQs) in parallel. SPECIALIZATION pairs are passed to Step 6 as parent-child hints. Terms are kept or removed based on how many CQs they contribute to. Produces 4 threshold variants (T=0,1,2,3); Steps 6–7b run independently per threshold to compare ontology sizes. |
 | **6 — Taxonomy** | Terms within each namespace are arranged into a parent-child hierarchy by an LLM that uses the genus Y from each NLD to propose intermediate class names. Cycle detection prevents circular hierarchies (A→B→A) by re-parenting cyclic terms to the category root. |
 | **6b — Extract Relations** | For each term's NLD, an LLM extracts ontological relations (has_part, derives_from, occurs_in, etc.) from 16 BFO/RO properties. Relations are validated against domain/range constraints and encoded as OWL restrictions in the final ontology. |
+| **6c — Critic** | A 3-pass LLM review cleans the taxonomy: (1) intra-category deduplication, moves, and removals; (2) cross-category duplicate/miscategorisation detection; (3) essentiality gate removing terms that do not contribute to a lean domain ontology. Orphaned intermediates and broken parent references are repaired automatically. |
 | **7 — Export** | The taxonomy is serialised as an OWL/Turtle file with `rdfs:subClassOf` links, `rdfs:label`, `rdfs:comment` (the NLD), and `owl:imports` for the BFO upper ontology. Case-insensitive IRI matching, self-reference guards, and upper→upper triple suppression prevent duplicate/invalid OWL triples. Disjointness conflict detection automatically resolves presalt: classes that inherit from both sides of BFO disjoint pairs, using the term's Category to determine which parent to keep. |
 | **7b — Verify** | The exported ontology is verified post-hoc: RDFLib syntax parsing, structural analysis (orphan classes, missing labels/comments, self-references, upper-ontology anchoring), optionally OOPS! pitfall scanning via REST API, and optionally HermiT reasoner consistency checking (requires Java and owlready2). Results are saved as a JSON report. |
 
