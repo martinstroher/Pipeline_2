@@ -18,6 +18,8 @@ import threading
 import unicodedata
 
 import pandas as pd
+
+from src.utils.csv_io import read_csv, write_csv
 from concurrent.futures import ThreadPoolExecutor, as_completed
 from tqdm import tqdm
 
@@ -398,7 +400,7 @@ def _run_cq_scoring(df: pd.DataFrame) -> pd.DataFrame:
 
     # Write consolidated output
     df_result = pd.DataFrame(results)
-    df_result.to_csv(CQ_MATRIX_FILE, index=False, encoding="utf-8-sig")
+    write_csv(df_result, CQ_MATRIX_FILE)
     log.success(f"CQ matrix: {len(df_result)} terms scored → '{CQ_MATRIX_FILE}'")
 
     if errors:
@@ -432,7 +434,7 @@ def _run_threshold_split(
         df_filtered = df_merged[df_merged["CQ_Count"] >= t].copy()
         # Drop CQ_Count — not part of the standard Step 5 schema
         df_filtered = df_filtered.drop(columns=["CQ_Count"])
-        df_filtered.to_csv(out_path, index=False, encoding="utf-8-sig")
+        write_csv(df_filtered, out_path)
 
         n_terms = len(df_filtered)
         n_cats = df_filtered["Category"].nunique()
@@ -445,9 +447,7 @@ def _run_threshold_split(
             "Category_Count": n_cats,
         })
 
-    pd.DataFrame(summary_rows).to_csv(
-        THRESHOLD_SUMMARY, index=False, encoding="utf-8-sig"
-    )
+    write_csv(pd.DataFrame(summary_rows), THRESHOLD_SUMMARY)
     return paths
 
 
@@ -475,7 +475,7 @@ def run_cq_refinement(
     os.makedirs(REFINED_DIR, exist_ok=True)
 
     # Load Step 5 output
-    df = pd.read_csv(categorized_csv, encoding="utf-8-sig")
+    df = read_csv(categorized_csv)
     log.info(f"Loaded {len(df)} terms from '{categorized_csv}'")
 
     # Filter out error categories
@@ -509,18 +509,14 @@ def run_cq_refinement(
 
         # Write specialization hints for taxonomy builder
         if specializations:
-            pd.DataFrame(specializations).to_csv(
-                SPECIALIZATION_HINTS, index=False, encoding="utf-8-sig"
-            )
+            write_csv(pd.DataFrame(specializations), SPECIALIZATION_HINTS)
             log.info(f"Specialization hints: {len(specializations)} pairs → '{SPECIALIZATION_HINTS}'")
     else:
         log.info("No synonym candidates found.")
 
     # Write cleanup report
     if all_merges:
-        pd.DataFrame(all_merges).to_csv(
-            CLEANUP_REPORT, index=False, encoding="utf-8-sig"
-        )
+        write_csv(pd.DataFrame(all_merges), CLEANUP_REPORT)
         log.success(f"Cleanup report: {len(all_merges)} merges → '{CLEANUP_REPORT}'")
     else:
         log.info("No merges needed.")

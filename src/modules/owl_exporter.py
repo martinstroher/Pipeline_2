@@ -16,6 +16,8 @@ import re
 from collections import defaultdict
 
 import pandas as pd
+
+from src.utils.csv_io import read_csv, write_csv
 from rdflib import BNode, Graph, Namespace, Literal, URIRef, RDF, RDFS, OWL, XSD
 
 from src.utils import log
@@ -308,7 +310,7 @@ def run_owl_export(
         base = os.path.splitext(taxonomy_csv)[0]
         output_path = base.replace("6_taxonomy", "7_ontology") + ".ttl"
 
-    df = pd.read_csv(taxonomy_csv, encoding="utf-8-sig")
+    df = read_csv(taxonomy_csv)
     log.info(f"OWL Export: {len(df)} taxonomy entries from {taxonomy_csv}")
 
     # Load NLDs — primary source: NLD column in taxonomy CSV (added by taxonomy_builder)
@@ -321,7 +323,7 @@ def run_owl_export(
 
     # Optional separate NLD CSV (fallback / override for backward compatibility)
     if nld_csv and os.path.exists(nld_csv):
-        nld_df = pd.read_csv(nld_csv, encoding="utf-8-sig")
+        nld_df = read_csv(nld_csv)
         for _, row in nld_df.iterrows():
             nld_map[row["Term"]] = row.get("NLD", "")
 
@@ -442,7 +444,7 @@ def run_owl_export(
     # ── Relation restrictions (Step 6b) ──
     n_restrictions = 0
     if relations_csv and os.path.exists(relations_csv):
-        rel_df = pd.read_csv(relations_csv, encoding="utf-8-sig")
+        rel_df = read_csv(relations_csv)
         accepted = rel_df[rel_df["Validation_Status"] == "ACCEPTED"]
         log.info(f"Adding {len(accepted)} relation restrictions from {relations_csv}")
 

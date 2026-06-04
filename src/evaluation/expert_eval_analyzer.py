@@ -16,6 +16,8 @@ import json
 
 import numpy as np
 import pandas as pd
+
+from src.utils.csv_io import read_csv
 from scipy import stats
 from sklearn.metrics import cohen_kappa_score
 
@@ -751,7 +753,7 @@ def run_layer2_analysis(
 
     # Load data
     experts = load_expert_responses(workbook_paths)
-    key_df = pd.read_csv(key_path, encoding="utf-8-sig")
+    key_df = read_csv(key_path)
 
     results = {}
 

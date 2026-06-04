@@ -17,6 +17,8 @@ import os
 import time
 
 import pandas as pd
+
+from src.utils.csv_io import read_csv, write_csv
 from dotenv import load_dotenv
 from tqdm import tqdm
 
@@ -154,7 +156,7 @@ def run_taxonomy_builder(categorized_csv: str, output_path: str | None = None, h
             "5_categorized_ontology", "6_taxonomy"
         ) + ".csv"
 
-    df = pd.read_csv(categorized_csv, encoding="utf-8-sig")
+    df = read_csv(categorized_csv)
     log.info(f"Taxonomy builder: {len(df)} terms from {categorized_csv}")
 
     # Filter out errors and NOT_CLASSIFIED
@@ -170,7 +172,7 @@ def run_taxonomy_builder(categorized_csv: str, output_path: str | None = None, h
     # Load optional specialization hints
     hints = None
     if hints_csv and os.path.exists(hints_csv):
-        hints_df = pd.read_csv(hints_csv, encoding="utf-8-sig")
+        hints_df = read_csv(hints_csv)
         hints = [
             {"general": row["General_Term"], "specific": row["Specific_Term"]}
             for _, row in hints_df.iterrows()
@@ -215,7 +217,7 @@ def run_taxonomy_builder(categorized_csv: str, output_path: str | None = None, h
 
     taxonomy_df = pd.DataFrame(all_taxonomy_rows)
     os.makedirs(os.path.dirname(output_path) or ".", exist_ok=True)
-    taxonomy_df.to_csv(output_path, index=False, encoding="utf-8-sig")
+    write_csv(taxonomy_df, output_path)
 
     # Stats
     n_classes = len(taxonomy_df[taxonomy_df["Relationship_Type"] == "rdfs:subClassOf"])

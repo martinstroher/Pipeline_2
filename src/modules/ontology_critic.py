@@ -18,6 +18,8 @@ import os
 import time
 
 import pandas as pd
+
+from src.utils.csv_io import read_csv, write_csv
 from tqdm import tqdm
 
 from src.utils.gemini_client import get_client, generate
@@ -381,7 +383,7 @@ def run_ontology_critic(
     MODEL_NAME = os.environ.get("LLM_GENERATION_MODEL", "gemini-2.5-pro")
     MODEL_TEMPERATURE = float(os.environ.get("LLM_GENERATION_TEMPERATURE", 0))
 
-    df = pd.read_csv(taxonomy_csv, encoding="utf-8-sig")
+    df = read_csv(taxonomy_csv)
     n_original = len(df)
     log.info(f"Ontology critic: reviewing {n_original} taxonomy entries")
 
@@ -508,23 +510,23 @@ def run_ontology_critic(
 
     # ── Save outputs ────────────────────────────────────────────────────
     os.makedirs(os.path.dirname(output_path) or ".", exist_ok=True)
-    df.to_csv(output_path, index=False, encoding="utf-8-sig")
+    write_csv(df, output_path)
 
     # Audit log
     if log_rows:
         log_df = pd.DataFrame(log_rows)
-        log_df.to_csv(log_path, index=False, encoding="utf-8-sig")
+        write_csv(log_df, log_path)
         log.detail(f"Critic log: {log_path}")
 
     # Clean relations if provided
     if relations_csv and os.path.exists(relations_csv):
         if relations_output is None:
             relations_output = os.path.join(base_dir, "6c_relations_cleaned.csv")
-        rel_df = pd.read_csv(relations_csv, encoding="utf-8-sig")
+        rel_df = read_csv(relations_csv)
         n_rel_before = len(rel_df)
         if log_rows:
             rel_df = _apply_actions_to_relations(rel_df, log_rows)
-        rel_df.to_csv(relations_output, index=False, encoding="utf-8-sig")
+        write_csv(rel_df, relations_output)
         log.detail(f"Relations cleaned: {n_rel_before} → {len(rel_df)} rows → {relations_output}")
 
     # Summary

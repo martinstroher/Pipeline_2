@@ -12,6 +12,8 @@ import threading
 import time
 
 import pandas as pd
+
+from src.utils.csv_io import read_csv, write_csv
 from concurrent.futures import ThreadPoolExecutor, as_completed
 from tqdm import tqdm
 
@@ -75,7 +77,7 @@ def run_nld_generation(vector_store=None, bm25_retriever=None):
             raise RuntimeError(f"Environment variable {name} is not set.")
 
     # Load terms
-    df_terms = pd.read_csv(input_file, encoding="utf-8-sig", usecols=["Readable_Term"])
+    df_terms = read_csv(input_file, usecols=["Readable_Term"])
     all_terms = df_terms["Readable_Term"].tolist()
     log.info(f"{len(all_terms)} terms loaded from '{input_file}'.")
 
@@ -135,10 +137,10 @@ def run_nld_generation(vector_store=None, bm25_retriever=None):
 
     # Write final consolidated output
     os.makedirs(os.path.dirname(output_file), exist_ok=True)
-    pd.DataFrame(results).to_csv(output_file, index=False, encoding="utf-8-sig")
+    write_csv(pd.DataFrame(results), output_file)
     log.success(f"{len(results)} definitions saved to '{output_file}'")
 
     if errors:
         os.makedirs(os.path.dirname(failure_file), exist_ok=True)
-        pd.DataFrame(errors).to_csv(failure_file, index=False, encoding="utf-8-sig")
+        write_csv(pd.DataFrame(errors), failure_file)
         log.warn(f"{len(errors)} terms need review -> '{failure_file}'")

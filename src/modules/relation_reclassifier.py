@@ -30,6 +30,8 @@ from collections import defaultdict
 
 import pandas as pd
 
+from src.utils.csv_io import read_csv, write_csv
+
 from src.utils import log
 from src.utils.ontology_config import get_config
 from src.utils.relation_validator import (
@@ -243,8 +245,8 @@ def run_relation_reclassification(
         output_path = os.path.join(base_dir, "6d_taxonomy_reclassified.csv")
     log_path = os.path.join(base_dir, "6d_reclassification_log.csv")
 
-    df = pd.read_csv(taxonomy_csv, encoding="utf-8-sig")
-    rel_df = pd.read_csv(relations_csv, encoding="utf-8-sig")
+    df = read_csv(taxonomy_csv)
+    rel_df = read_csv(relations_csv)
 
     # Filter to accepted relations only
     accepted = rel_df[rel_df["Validation_Status"] == "ACCEPTED"]
@@ -462,11 +464,11 @@ def run_relation_reclassification(
 
     # ── Save outputs ────────────────────────────────────────────────────
     os.makedirs(os.path.dirname(output_path) or ".", exist_ok=True)
-    df.to_csv(output_path, index=False, encoding="utf-8-sig")
+    write_csv(df, output_path)
 
     if log_rows:
         log_df = pd.DataFrame(log_rows)
-        log_df.to_csv(log_path, index=False, encoding="utf-8-sig")
+        write_csv(log_df, log_path)
         log.detail(f"Reclassification log: {log_path}")
 
     log.success(

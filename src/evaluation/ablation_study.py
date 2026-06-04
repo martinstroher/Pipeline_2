@@ -16,6 +16,8 @@ from concurrent.futures import ThreadPoolExecutor, as_completed
 from typing import Callable
 
 import pandas as pd
+
+from src.utils.csv_io import read_csv, write_csv
 from dotenv import load_dotenv
 
 load_dotenv()
@@ -114,6 +116,7 @@ def _run_nld_generation(
 
     df = pd.DataFrame(rows)
     df.to_csv(path, index=False, encoding="utf-8-sig")
+    return df
     print(f"  Condition {condition} NLD: {len(df)} terms -> {path}")
     return df
 
@@ -139,9 +142,9 @@ def run_condition_a(terms: list[str], vector_store, bm25_retriever) -> pd.DataFr
     path = _nld_path("A")
     pipeline_nld = os.environ.get("NLD_OUTPUT", "output/4_nld_generated_definitions.csv")
     if not os.path.exists(path) and os.path.exists(pipeline_nld):
-        pipeline_df = pd.read_csv(pipeline_nld, encoding="utf-8-sig")
+        pipeline_df = read_csv(pipeline_nld)
         if set(terms).issubset(set(pipeline_df["Term"].tolist())):
-            pipeline_df.to_csv(path, index=False, encoding="utf-8-sig")
+            write_csv(pipeline_df, path)
             print(f"  Reused pipeline output ({pipeline_nld}) as Condition A NLD.")
             return pipeline_df
 
@@ -174,7 +177,7 @@ def run_condition_c(terms: list[str]) -> pd.DataFrame:
     print("\n=== Condition C: No NLD (Term only) ===")
     rows = [{"Term": t, "NLD": "", "Context_Used": False, "Context": ""} for t in terms]
     df = pd.DataFrame(rows)
-    df.to_csv(_nld_path("C"), index=False, encoding="utf-8-sig")
+    write_csv(df, _nld_path("C"))
     print(f"  Condition C placeholder NLDs: {len(df)} terms -> {_nld_path('C')}")
     return df
 
@@ -276,14 +279,14 @@ def run_categorization(
     if condition == "A" and not os.path.exists(cat_csv):
         pipeline_cat = os.environ.get("CATEGORIZED_OUTPUT", "output/5_categorized_ontology.csv")
         if os.path.exists(pipeline_cat):
-            pcat = pd.read_csv(pipeline_cat, encoding="utf-8-sig")
+            pcat = read_csv(pipeline_cat)
             cat_a = pd.DataFrame({
                 "Term": pcat["Term"], "Category": pcat["Category"],
                 "Reasoning": pcat["Reasoning"], "NLD": pcat["NLD"],
                 "Context_Used": pcat.get("RAG_Context_Used", ""),
                 "Condition": "A",
             })
-            cat_a.to_csv(cat_csv, index=False, encoding="utf-8-sig")
+            write_csv(cat_a, cat_csv)
             print(f"  Reused pipeline output ({pipeline_cat}) as Condition A categorization.")
             return cat_a
 
@@ -324,7 +327,7 @@ def run_categorization(
         time.sleep(2)
 
     df = pd.DataFrame(cat_rows)
-    df.to_csv(cat_csv, index=False, encoding="utf-8-sig")
+    write_csv(df, cat_csv)
     print(f"  Condition {condition} categorized: {len(df)} terms -> {cat_csv}")
     return df
 
@@ -343,7 +346,7 @@ def run_ablation(conditions: list[str] | None = None):
 
     # Load terms (Steps 1-3 output)
     terms_file = os.environ.get("FILTERED_TERMS_OUTPUT", "output/3_filtered_top_terms.csv")
-    terms = pd.read_csv(terms_file, encoding="utf-8-sig")["Readable_Term"].tolist()
+    terms = read_csv(terms_file)["Readable_Term"].tolist()
     print(f"\nAblation study: {len(terms)} terms, conditions: {conditions}")
 
     # Setup RAG (needed for A and D)
@@ -405,17 +408,17 @@ def run_ablation(conditions: list[str] | None = None):
         cat_a_csv = _cat_path("A")
         pipeline_cat = os.environ.get("CATEGORIZED_OUTPUT", "output/5_categorized_ontology.csv")
         if os.path.exists(cat_a_csv):
-            cat_results["A"] = pd.read_csv(cat_a_csv, encoding="utf-8-sig")
+            cat_results["A"] = read_csv(cat_a_csv)
             print(f"\n  Auto-included Condition A from checkpoint: {cat_a_csv}")
         elif os.path.exists(pipeline_cat):
-            pcat = pd.read_csv(pipeline_cat, encoding="utf-8-sig")
+            pcat = read_csv(pipeline_cat)
             cat_a = pd.DataFrame({
                 "Term": pcat["Term"], "Category": pcat["Category"],
                 "Reasoning": pcat["Reasoning"], "NLD": pcat["NLD"],
                 "Context_Used": pcat.get("RAG_Context_Used", ""),
                 "Condition": "A",
             })
-            cat_a.to_csv(cat_a_csv, index=False, encoding="utf-8-sig")
+            write_csv(cat_a, cat_a_csv)
             cat_results["A"] = cat_a
             print(f"\n  Auto-included Condition A from pipeline output: {pipeline_cat}")
 
@@ -429,7 +432,7 @@ def run_ablation(conditions: list[str] | None = None):
     if all_cat:
         merged = pd.concat(all_cat, ignore_index=True)
         merged_path = os.path.join(OUTPUT_DIR, "ablation_merged.csv")
-        merged.to_csv(merged_path, index=False, encoding="utf-8-sig")
+        write_csv(merged, merged_path)
         print(f"\n=== Ablation complete. Merged results: {merged_path} ===")
 
         for cond in sorted(cat_results.keys()):

@@ -24,6 +24,8 @@ import os
 import time
 
 import pandas as pd
+
+from src.utils.csv_io import read_csv, write_csv
 from tqdm import tqdm
 
 from src.utils import log
@@ -169,7 +171,7 @@ def run_relation_extraction(
     log.banner("6b", "Relation Extraction")
 
     # Load categorized terms
-    df = pd.read_csv(categorized_csv, encoding="utf-8-sig")
+    df = read_csv(categorized_csv)
     log.info(f"Loaded {len(df)} terms from {categorized_csv}")
 
     # Filter out errors and NOT_CLASSIFIED, and rows without NLD
@@ -361,7 +363,7 @@ def _make_row(
 def _save_checkpoint(rows: list[dict], path: str) -> None:
     """Save all rows to CSV (overwrites)."""
     os.makedirs(os.path.dirname(path) or ".", exist_ok=True)
-    pd.DataFrame(rows).to_csv(path, index=False, encoding="utf-8-sig")
+    write_csv(pd.DataFrame(rows), path)
 
 
 if __name__ == "__main__":

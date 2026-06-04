@@ -3,6 +3,8 @@ import os
 import time
 
 import pandas as pd
+
+from src.utils.csv_io import read_csv, write_csv
 from tqdm import tqdm
 
 from src.utils.gemini_client import generate
@@ -51,8 +53,8 @@ def run_term_categorization():
             log.error(f"File '{filepath}' not found.")
             return None
         try:
-            df = pd.read_csv(filepath, encoding='utf-8-sig', delimiter=',', header=0,
-                             usecols=['Term', 'NLD', 'Context_Used'])
+            df = read_csv(filepath, delimiter=',', header=0,
+                          usecols=['Term', 'NLD', 'Context_Used'])
 
             log.info(f"{len(df)} terms loaded for categorization.")
             return df
@@ -153,7 +155,7 @@ def run_term_categorization():
         try:
             final_df = pd.DataFrame(classification_results)
 
-            final_df.to_csv(OUTPUT_FILE_PATH, index=False, encoding='utf-8-sig')
+            write_csv(final_df, OUTPUT_FILE_PATH)
             log.success(f"{len(final_df)} terms categorized -> '{OUTPUT_FILE_PATH}'")
         except Exception as e:
             log.error(f"Saving CSV '{OUTPUT_FILE_PATH}': {e}")

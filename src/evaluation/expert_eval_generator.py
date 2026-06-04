@@ -19,6 +19,8 @@ import random
 import hashlib
 
 import pandas as pd
+
+from src.utils.csv_io import read_csv
 from openpyxl.styles import Font, PatternFill, Alignment, Border, Side
 from openpyxl.utils import get_column_letter
 from openpyxl.worksheet.datavalidation import DataValidation
@@ -54,7 +56,7 @@ def select_terms(n_terms: int = 200, seed: int = 42) -> list[str]:
     for cond in ["A", "B", "C", "D"]:
         cat_path = os.path.join(OUTPUT_DIR, f"cat_{cond}.csv")
         if os.path.exists(cat_path):
-            cat_df = pd.read_csv(cat_path, encoding="utf-8-sig")
+            cat_df = read_csv(cat_path)
             err_mask = cat_df["Category"].str.startswith("ERROR", na=False)
             error_terms.update(cat_df.loc[err_mask, "Term"].tolist())
 
@@ -92,11 +94,11 @@ def select_terms_refined(
     """
     rng = random.Random(seed)
 
-    df_cq = pd.read_csv(cq_matrix_csv, encoding="utf-8-sig")
+    df_cq = read_csv(cq_matrix_csv)
 
     # Load categorized CSV for category info
     cat_csv = os.environ.get("CATEGORIZED_LLM_TERMS", "output/5_categorized_ontology.csv")
-    df_cat = pd.read_csv(cat_csv, encoding="utf-8-sig")
+    df_cat = read_csv(cat_csv)
     cat_map = dict(zip(df_cat["Term"], df_cat["Category"]))
     df_cq["Category"] = df_cq["Term"].map(cat_map)
 
@@ -109,7 +111,7 @@ def select_terms_refined(
     for cond in ["A", "B", "C", "D"]:
         cat_path = os.path.join(OUTPUT_DIR, f"cat_{cond}.csv")
         if os.path.exists(cat_path):
-            abl_df = pd.read_csv(cat_path, encoding="utf-8-sig")
+            abl_df = read_csv(cat_path)
             err_mask = abl_df["Category"].str.startswith("ERROR", na=False)
             error_terms.update(abl_df.loc[err_mask, "Term"].tolist())
     df_cq = df_cq[~df_cq["Term"].isin(error_terms)].copy()
@@ -181,12 +183,12 @@ def load_all_conditions() -> dict:
         cat_path = os.path.join(OUTPUT_DIR, f"cat_{cond}.csv")
 
         if os.path.exists(nld_path):
-            data["nld"][cond] = pd.read_csv(nld_path, encoding="utf-8-sig")
+            data["nld"][cond] = read_csv(nld_path)
         else:
             print(f"  Warning: {nld_path} not found, skipping condition {cond}")
 
         if os.path.exists(cat_path):
-            data["cat"][cond] = pd.read_csv(cat_path, encoding="utf-8-sig")
+            data["cat"][cond] = read_csv(cat_path)
         else:
             print(f"  Warning: {cat_path} not found, skipping condition {cond}")
 
@@ -409,7 +411,7 @@ def build_taxonomy_sheet(
         print(f"  Warning: {taxonomy_path} not found, skipping taxonomy sheet")
         return pd.DataFrame(), pd.DataFrame()
 
-    tax_df = pd.read_csv(taxonomy_path, encoding="utf-8-sig")
+    tax_df = read_csv(taxonomy_path)
 
     # Filter to IS-A relationships (rdfs:subClassOf and rdf:type)
     isa_mask = tax_df["Relationship_Type"].isin(["rdfs:subClassOf", "rdf:type"])
@@ -782,7 +784,7 @@ def generate_expert_evaluation(
     if not tax_key_df.empty:
         key_parts.append(tax_key_df)
     key_combined = pd.concat(key_parts, ignore_index=True)
-    key_combined.to_csv(key_path, index=False, encoding="utf-8-sig")
+    write_csv(key_combined, key_path)
 
     # 6. Summary
     n_geores = len(cat_expert_df[cat_expert_df["Tier"] == "GeoReservoir"]) if "Tier" in cat_expert_df.columns else 0
@@ -837,7 +839,7 @@ def generate_refined_evaluation(
     terms, status_map = select_terms_refined(cq_matrix_csv, threshold, seed=seed)
 
     # Build CQ_Count lookup for blinding key
-    df_cq = pd.read_csv(cq_matrix_csv, encoding="utf-8-sig")
+    df_cq = read_csv(cq_matrix_csv)
     cq_count_map = dict(zip(df_cq["Term"], df_cq["CQ_Count"]))
 
     # 2. Load ablation data (for NLD_Quality + Category_Correct sheets)
@@ -885,7 +887,7 @@ def generate_refined_evaluation(
     if not tax_key_df.empty:
         key_parts.append(tax_key_df)
     key_combined = pd.concat(key_parts, ignore_index=True)
-    key_combined.to_csv(key_path, index=False, encoding="utf-8-sig")
+    write_csv(key_combined, key_path)
 
     # 7. Summary
     n_kept = sum(1 for v in status_map.values() if v)

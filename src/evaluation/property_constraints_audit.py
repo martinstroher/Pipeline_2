@@ -19,6 +19,8 @@ from pathlib import Path
 
 import pandas as pd
 
+from src.utils.csv_io import write_csv
+
 from src.utils.ontology_config import get_config
 
 
@@ -46,7 +48,7 @@ def main(output_path: str = "output/property_constraints_audit.csv") -> int:
     df = pd.DataFrame(rows)
     out = Path(output_path)
     out.parent.mkdir(parents=True, exist_ok=True)
-    df.to_csv(out, index=False, encoding="utf-8-sig")
+    write_csv(df, out)
 
     cfg = get_config()
     active_tiers = sorted(cfg.active_provenance_tiers())

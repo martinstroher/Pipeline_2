@@ -6,6 +6,7 @@ from dotenv import load_dotenv
 from tqdm import tqdm
 
 from src.utils import log
+from src.utils.csv_io import read_csv, write_csv
 
 load_dotenv()
 
@@ -23,7 +24,7 @@ def run_term_aggregation():
             log.error(f"File '{filepath}' not found.")
             return None
         try:
-            df = pd.read_csv(filepath, encoding='utf-8-sig', delimiter=',', header=0, usecols=['Entity'])
+            df = read_csv(filepath, delimiter=',', header=0, usecols=['Entity'])
             terms_list = df['Entity'].squeeze().tolist()
             log.info(f"{len(terms_list)} raw terms loaded from '{filepath}'.")
             return terms_list
@@ -82,7 +83,7 @@ def run_term_aggregation():
 
         try:
             final_df = pd.DataFrame(final_results, columns=['Readable_Term', 'Frequency'])
-            final_df.to_csv(OUTPUT_FILE_PATH, index=False, encoding='utf-8-sig')
+            write_csv(final_df, OUTPUT_FILE_PATH)
             log.success(f"{len(final_df)} aggregated terms saved to '{OUTPUT_FILE_PATH}'")
         except Exception as e:
             log.error(f"Saving CSV '{OUTPUT_FILE_PATH}': {e}")

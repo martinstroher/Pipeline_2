@@ -6,6 +6,7 @@ import pandas as pd
 from tqdm import tqdm
 
 from src.utils import log
+from src.utils.csv_io import write_csv
 from src.utils.gemini_client import generate
 from src.utils.prompt_loader import load_prompt
 
@@ -77,6 +78,6 @@ def run_llm_term_extraction():
                     pbar.update(1)
 
         df_raw_results = pd.DataFrame(all_extracted_terms, columns=['Entity'])
-        df_raw_results.to_csv(LLM_OUTPUT_FILE, index=False, encoding='utf-8-sig')
+        write_csv(df_raw_results, LLM_OUTPUT_FILE)
 
         log.success(f"{len(all_extracted_terms)} raw terms extracted -> '{LLM_OUTPUT_FILE}'")

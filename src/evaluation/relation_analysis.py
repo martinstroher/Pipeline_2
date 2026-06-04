@@ -17,12 +17,14 @@ import sys
 
 import pandas as pd
 
+from src.utils.csv_io import read_csv, write_csv
+
 SEED = 42
 SAMPLE_SIZE = 100
 
 
 def load_relations(path: str) -> pd.DataFrame:
-    return pd.read_csv(path, encoding="utf-8-sig")
+    return read_csv(path)
 
 
 def descriptive_stats(df: pd.DataFrame) -> str:
@@ -131,7 +133,7 @@ def run_relation_analysis(relations_csv: str | None = None):
     # 2. Precision sample
     sample = generate_precision_sample(df, SAMPLE_SIZE)
     sample_path = os.path.join(output_dir, "relation_precision_sample.csv")
-    sample.to_csv(sample_path, index=False, encoding="utf-8-sig")
+    write_csv(sample, sample_path)
     print(f"Saved: {sample_path}  ({len(sample)} relations for expert review)")
 
 
