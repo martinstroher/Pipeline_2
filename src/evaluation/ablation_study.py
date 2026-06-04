@@ -101,8 +101,7 @@ def _run_nld_generation(
             print(f"  [{len(completed)}/{total}] {condition}: '{term}' done")
 
     df = pd.DataFrame(rows)
-    df.to_csv(path, index=False, encoding="utf-8-sig")
-    return df
+    write_csv(df, path)
     print(f"  Condition {condition} NLD: {len(df)} terms -> {path}")
     return df
 
