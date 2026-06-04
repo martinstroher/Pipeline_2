@@ -23,26 +23,14 @@ from openpyxl.styles import Font, PatternFill, Alignment, Border, Side
 from openpyxl.utils import get_column_letter
 from openpyxl.worksheet.datavalidation import DataValidation
 
+from src.utils.ontology_config import get_config
+
 OUTPUT_DIR = os.environ.get("ABLATION_OUTPUT_DIR", "output/ablation")
 
-# Ontology tier classification for stratified evaluation
-GEORESERVOIR_CATEGORIES = {
-    "Sedimentary Geological Object", "Depositional Unit", "Channel Unit",
-    "Lobe Unit", "Levee Unit", "Mound Unit", "Overbank Unit",
-    "Sedimentary Rock", "Sediment", "Depositional System", "Channel Surface",
-    "Dimension", "Length", "Thickness", "Geometry", "Geometry Value",
-    "Channel Geometry", "Lobe Geometry", "Mound Geometry", "Wedge Geometry",
-    "Sinuosity", "Facies", "Sedimentary Facies", "Facies Association",
-    "Sedimentary Structure", "Sedimentary Environment", "Lithology",
-    "Formation", "Stratigraphic Unit", "Fossil",
-}
-
-GEOCORE_CATEGORIES = {
-    "Geological Object", "Earth Material", "Rock", "Earth Fluid",
-    "Geological Boundary", "Geological Structure", "Geological Contact",
-    "Geological Process", "Geological Time Interval", "Geological Age",
-}
-
+# Ontology tier classification for stratified evaluation. Sourced from
+# `ontology_config.yaml` — each ontology key contributes its valid categories.
+GEORESERVOIR_CATEGORIES = get_config().categories_for("georeservoir")
+GEOCORE_CATEGORIES = get_config().categories_for("geocore")
 # Everything else falls to BFO tier
 
 
@@ -298,21 +286,15 @@ def _classify_tier(category: str) -> str:
 
 
 def _load_category_descriptions() -> dict[str, str]:
-    """Load descriptions from all three ontology definition files."""
-    defs = {}
-    paths = [
-        os.environ.get("GEORESERVOIR_DEFS_PATH", "resources/georeservoir-definitions.txt"),
-        os.environ.get("GEOCORE_DEFS_PATH", "resources/geocore-definitions.txt"),
-        os.environ.get("BFO_DEFS_PATH", "resources/bfo-definitions.txt"),
-    ]
-    for path in paths:
-        if os.path.exists(path):
-            with open(path, "r", encoding="utf-8") as f:
-                for line in f:
-                    line = line.strip()
-                    if ":" in line:
-                        name, desc = line.split(":", 1)
-                        defs[name.strip()] = desc.strip()
+    """Load descriptions for all upper-ontology classes from ontology_config."""
+    cfg = get_config()
+    defs: dict[str, str] = {}
+    for ontology_key in ("georeservoir", "geocore", "bfo"):
+        for line in cfg.llm_definitions_block(ontology_key).split("\n"):
+            line = line.strip()
+            if ":" in line:
+                name, desc = line.split(":", 1)
+                defs[name.strip()] = desc.strip()
     return defs
 
 

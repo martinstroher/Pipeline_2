@@ -336,9 +336,15 @@ def _apply_actions_to_relations(
     if "Filler" in df.columns:
         df["Filler"] = df["Filler"].replace(rewrite_map)
 
-    # Remove rows for removed terms
-    if removed and "Term" in df.columns:
-        df = df[~df["Term"].isin(removed)]
+    # Remove rows for removed terms — both when the removed term is the
+    # subject (Term) and when it is the object (Filler). Dropping only on
+    # Term would leave dangling restrictions whose filler no longer exists
+    # as a class in the taxonomy, producing phantom orphans under owl:Thing.
+    if removed:
+        if "Term" in df.columns:
+            df = df[~df["Term"].isin(removed)]
+        if "Filler" in df.columns:
+            df = df[~df["Filler"].isin(removed)]
 
     return df
 

@@ -8,6 +8,7 @@ from tqdm import tqdm
 from src.utils.gemini_client import generate
 from src.utils import log
 from src.utils.prompt_loader import load_prompt
+from src.utils.ontology_config import get_config
 
 
 def _extract_category_names(text: str) -> set:
@@ -28,35 +29,20 @@ def run_term_categorization():
     MODEL_TEMPERATURE = float(os.environ.get("LLM_GENERATION_TEMPERATURE", 0))
     INPUT_FILE_PATH = os.environ["CONSOLIDATED_LLM_RESULTS_WITH_NLDS"]
     OUTPUT_FILE_PATH = os.environ["CATEGORIZED_LLM_TERMS"]
-    GEORESERVOIR_DEFS_PATH = os.environ["GEORESERVOIR_DEFS_PATH"]
-    GEOCORE_DEFS_PATH = os.environ["GEOCORE_DEFS_PATH"]
-    BFO_DEFS_PATH = os.environ["BFO_DEFS_PATH"]
 
     log.info(f"Categorizing in batches of {BATCH_SIZE}.")
 
-
-    def load_definitions_from_file(filepath):
-        if not os.path.exists(filepath):
-            log.error(f"Definition file not found: '{filepath}'")
-            return None
-        try:
-            with open(filepath, 'r', encoding='utf-8') as f:
-                return f.read()
-        except Exception as e:
-            log.error(f"Reading definition file '{filepath}': {e}")
-            return None
-
-
-    georeservoir_definitions= load_definitions_from_file(GEORESERVOIR_DEFS_PATH)
-    geocore_definitions = load_definitions_from_file(GEOCORE_DEFS_PATH)
-    bfo_definitions = load_definitions_from_file(BFO_DEFS_PATH)
+    cfg = get_config()
+    georeservoir_definitions = cfg.llm_definitions_block("georeservoir")
+    geocore_definitions = cfg.llm_definitions_block("geocore")
+    bfo_definitions = cfg.llm_definitions_block("bfo")
     if not geocore_definitions or not bfo_definitions:
-        raise RuntimeError("Required ontology definition files could not be loaded.")
+        raise RuntimeError("Required ontology definition blocks are empty in ontology_config.yaml.")
 
     valid_categories = (
-        _extract_category_names(georeservoir_definitions or "")
-        | _extract_category_names(geocore_definitions or "")
-        | _extract_category_names(bfo_definitions or "")
+        _extract_category_names(georeservoir_definitions)
+        | _extract_category_names(geocore_definitions)
+        | _extract_category_names(bfo_definitions)
     )
 
 

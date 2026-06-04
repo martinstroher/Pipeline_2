@@ -24,6 +24,7 @@ from src.utils.rag_setup import setup_rag, get_relevant_documents
 from src.modules.nld_generator import generate_nld, format_docs_for_context
 from src.utils.gemini_client import get_client, generate as gemini_generate
 from src.utils.prompt_loader import load_prompt
+from src.utils.ontology_config import get_config
 
 
 # ---------------------------------------------------------------------------
@@ -196,12 +197,12 @@ def run_condition_d(terms: list[str], vector_store, bm25_retriever) -> pd.DataFr
 # ---------------------------------------------------------------------------
 
 def _load_definitions() -> dict:
-    paths = {
-        "georeservoir": os.environ["GEORESERVOIR_DEFS_PATH"],
-        "geocore": os.environ["GEOCORE_DEFS_PATH"],
-        "bfo": os.environ["BFO_DEFS_PATH"],
+    cfg = get_config()
+    return {
+        "georeservoir": cfg.llm_definitions_block("georeservoir"),
+        "geocore": cfg.llm_definitions_block("geocore"),
+        "bfo": cfg.llm_definitions_block("bfo"),
     }
-    return {key: open(path, "r", encoding="utf-8").read() for key, path in paths.items()}
 
 
 def _build_categorizer_prompt(defs: dict, is_raw_rag: bool = False):

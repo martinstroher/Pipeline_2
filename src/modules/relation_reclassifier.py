@@ -9,6 +9,18 @@ these categories?" → "given these relations, what categories are valid?"
 No LLM calls. No hardcoded inference rules. Fully dynamic — reads
 PROPERTY_CONSTRAINTS and _CATEGORY_TO_METATYPES from relation_validator.py.
 
+Two operating modes (configured via STEP6D_MODE env var or ontology_config.yaml):
+
+  refinement  (default, conservative)
+    - Only moves terms to a strict subclass of the current category.
+    - Requires ≥ `refinement_min_evidence` accepted relations per term.
+    - Action logged as REFINE. Contradictions are logged but not acted on.
+
+  contradiction (legacy, aggressive)
+    - Moves terms whenever evidence implies a different more-specific category,
+      even across unrelated branches.
+    - Action logged as RECLASSIFY.
+
 Input:  6c_taxonomy_cleaned.csv + 6c_relations_cleaned.csv
 Output: 6d_taxonomy_reclassified.csv + 6d_reclassification_log.csv
 """
@@ -19,12 +31,15 @@ from collections import defaultdict
 import pandas as pd
 
 from src.utils import log
+from src.utils.ontology_config import get_config
 from src.utils.relation_validator import (
     PROPERTY_CONSTRAINTS,
     _CATEGORY_TO_METATYPES,
     get_metatypes,
 )
 from src.modules.taxonomy_builder import UPPER_IRIS
+
+_CFG = get_config()
 
 # Case-insensitive category lookup: lowered key → original key
 _CATEGORY_LOOKUP_ORIG = {k.lower(): k for k in _CATEGORY_TO_METATYPES}
@@ -73,15 +88,48 @@ def _collect_evidence(
 # everything look compatible (every category includes Continuant or Occurrent).
 _GENERIC_METATYPES = frozenset({"Continuant", "Occurrent"})
 
+# BFO 2020 axiomatic disjoint pairs at the metatype-label level
+# (mirrors `bfo_disjoint_pairs` in YAML, but expressed as labels for fast
+# evidence-coherence checks).  An evidence set containing BOTH labels of a
+# pair implies the relations cannot all be true of a single individual —
+# treated as a CONTRADICTION.
+_DISJOINT_METATYPE_PAIRS: tuple[frozenset[str], ...] = (
+    frozenset({"Continuant", "Occurrent"}),
+    frozenset({"IndependentContinuant", "SpecificallyDependentContinuant"}),
+    frozenset({"IndependentContinuant", "GenericallyDependentContinuant"}),
+    frozenset({"SpecificallyDependentContinuant", "GenericallyDependentContinuant"}),
+    frozenset({"MaterialEntity", "ImmaterialEntity"}),
+)
+
+
+def _evidence_has_disjoint_contradiction(metaset: frozenset[str]) -> tuple[str, str] | None:
+    """Return the first BFO-disjoint pair both members of which appear in metaset, else None."""
+    for pair in _DISJOINT_METATYPE_PAIRS:
+        if pair <= metaset:
+            a, b = sorted(pair)
+            return (a, b)
+    return None
+
 
 def _distinguishing_metatypes(metatypes: frozenset[str]) -> frozenset[str]:
     """Return the metatype set with overly generic ancestors removed."""
     return metatypes - _GENERIC_METATYPES
 
 
+def _is_strict_subclass(candidate_meta: frozenset[str], current_meta: frozenset[str]) -> bool:
+    """Return True iff `candidate` is a strict BFO subclass of `current`.
+
+    Metatypes are stored as BFO ancestry chains in ontology_config.yaml, so a
+    proper superset of metatypes ⇒ strictly more specific in the BFO hierarchy.
+    Equal metatype sets (sister concepts) are NOT strict subclasses.
+    """
+    return current_meta < candidate_meta  # proper subset (strict superset on candidate side)
+
+
 def _find_best_category(
     implied_metatypes: frozenset[str],
     current_category: str,
+    mode: str = "contradiction",
 ) -> str | None:
     """Find a more specific category compatible with the metatype evidence.
 
@@ -89,30 +137,59 @@ def _find_best_category(
     metatypes (not subset — because categories include ancestor chains like
     Continuant but property constraints don't).
 
-    Returns None if current category is already the best match.
+    `mode` controls how aggressive the move is:
+      * "contradiction": move to ANY more-distinguishing category (legacy)
+      * "refinement":    move ONLY to a strict BFO subclass of current
+                         (when `step6d_strict_subclass=True` in YAML)
+
+    Returns None if current category is already the best match (or no valid
+    candidate exists under the active guardrails).
     Never downgrades to a less specific category.
     Prefers domain-specific categories (GeoCore/GeoReservoir) over raw BFO.
     """
     current_metatypes = get_metatypes(current_category)
 
-    # Check if current category is compatible (metatypes intersect with evidence)
-    if current_metatypes is not None and (current_metatypes & implied_metatypes):
-        # Current is compatible — only reclassify if we find something MORE specific
-        pass
-    elif current_metatypes is not None:
-        # Current category is INCOMPATIBLE with evidence (no intersection)
-        # Must reclassify
-        pass
+    # Refinement guard: if the current category is not in the YAML
+    # (e.g., AI-invented label), we cannot verify the strict-subclass
+    # invariant, so we refuse to act.  Acting blindly would be the very
+    # kind of unsafe move the refinement mode is designed to prevent.
+    if (
+        mode == "refinement"
+        and _CFG.step6d_strict_subclass()
+        and current_metatypes is None
+    ):
+        return None
 
     # Find all compatible categories (metatypes intersect with evidence)
     candidates: list[tuple[str, frozenset[str], int]] = []
     for cat_name, cat_metatypes in _CATEGORY_TO_METATYPES.items():
         overlap = cat_metatypes & implied_metatypes
-        if overlap:
-            # Score: number of distinguishing metatypes in common with evidence.
-            # More specific overlap = better candidate.
-            dist_overlap = _distinguishing_metatypes(overlap)
-            candidates.append((cat_name, cat_metatypes, len(dist_overlap)))
+        if not overlap:
+            continue
+        # In refinement mode + strict-subclass guard: candidate must be a
+        # strict BFO subclass of the current category. Skip otherwise.
+        if (
+            mode == "refinement"
+            and _CFG.step6d_strict_subclass()
+            and current_metatypes is not None
+            and not _is_strict_subclass(cat_metatypes, current_metatypes)
+        ):
+            continue
+        # Refinement-mode evidence-coherence guard: every non-generic
+        # metatype the candidate adds beyond the current must be evidenced.
+        # Prevents moves into structurally similar but semantically wrong
+        # branches (e.g., "Sedimentary Object" → "Lithostratigraphic Unit"
+        # when Site evidence is what really matters).
+        if (
+            mode == "refinement"
+            and current_metatypes is not None
+        ):
+            added = (cat_metatypes - current_metatypes) - _GENERIC_METATYPES
+            if added and not added.issubset(implied_metatypes):
+                continue
+        # Score: number of distinguishing metatypes in common with evidence.
+        dist_overlap = _distinguishing_metatypes(overlap)
+        candidates.append((cat_name, cat_metatypes, len(dist_overlap)))
 
     if not candidates:
         return None
@@ -135,7 +212,9 @@ def _find_best_category(
         if current_dist >= best_dist:
             return None
         # Only reclassify if new category is strictly more specific
-        if len(best_metatypes) >= len(current_metatypes):
+        if len(best_metatypes) >= len(current_metatypes) and not _is_strict_subclass(
+            best_metatypes, current_metatypes
+        ):
             return None
 
     return best_name
@@ -169,9 +248,15 @@ def run_relation_reclassification(
 
     # Filter to accepted relations only
     accepted = rel_df[rel_df["Validation_Status"] == "ACCEPTED"]
+
+    # Mode + guardrails from ontology_config.yaml (env override: STEP6D_MODE)
+    mode = _CFG.step6d_mode()
+    min_evidence = _CFG.step6d_min_evidence() if mode == "refinement" else 1
+    strict_subclass = _CFG.step6d_strict_subclass()
     log.info(
         f"Relation reclassifier: {len(df)} taxonomy entries, "
-        f"{len(accepted)} accepted relations"
+        f"{len(accepted)} accepted relations | "
+        f"mode={mode}, min_evidence={min_evidence}, strict_subclass={strict_subclass}"
     )
 
     # Build lookup indices (case-insensitive)
@@ -187,8 +272,10 @@ def run_relation_reclassification(
     # Process each term
     log_rows: list[dict] = []
     n_reclassified = 0
+    n_refined = 0
     n_contradictions = 0
     n_reparented = 0
+    n_skipped_below_threshold = 0
 
     for idx, row in df.iterrows():
         term = str(row["Term"]).strip()
@@ -199,6 +286,11 @@ def run_relation_reclassification(
         if not evidence:
             continue  # No relations for this term
 
+        # Refinement guard: require ≥ min_evidence accepted relations
+        if len(evidence) < min_evidence:
+            n_skipped_below_threshold += 1
+            continue
+
         # Step B: Intersect all evidence sets
         implied_metatypes = evidence[0]
         for ev in evidence[1:]:
@@ -207,7 +299,6 @@ def run_relation_reclassification(
         if not implied_metatypes:
             # CONTRADICTION: relations imply incompatible metatypes
             n_contradictions += 1
-            # Collect the conflicting property names for the log
             subject_props = [
                 r["Property"] for r in relations_by_subject.get(term.strip().lower(), [])
             ]
@@ -227,18 +318,44 @@ def run_relation_reclassification(
                 "Evidence_Count": len(evidence),
             })
             log.warn(f"  CONTRADICTION: '{term}' — relations imply incompatible metatypes")
+            # In refinement mode we never act on contradictions; just log and continue.
             continue
 
-        # Step C: Find best category
-        best_category = _find_best_category(implied_metatypes, current_category)
+        # Disjoint-contradiction: implied set contains both members of a
+        # BFO disjoint pair (e.g., MaterialEntity AND ImmaterialEntity).
+        # Evidence is internally inconsistent — log and skip.
+        disjoint_hit = _evidence_has_disjoint_contradiction(implied_metatypes)
+        if disjoint_hit is not None:
+            n_contradictions += 1
+            a, b = disjoint_hit
+            log_rows.append({
+                "Action": "CONTRADICTION",
+                "Term": term,
+                "Old_Category": current_category,
+                "New_Category": current_category,
+                "Detail": (
+                    f"BFO disjoint pair both implied: {{{a}, {b}}}. "
+                    f"Implied set: {{{', '.join(sorted(implied_metatypes))}}}"
+                ),
+                "Evidence_Count": len(evidence),
+            })
+            log.warn(f"  CONTRADICTION: '{term}' — disjoint pair both implied ({a}/{b})")
+            continue
+
+        # Step C: Find best category under the active mode
+        best_category = _find_best_category(implied_metatypes, current_category, mode=mode)
         if best_category is None:
-            continue  # Current category is fine
+            continue  # Current category is fine (or no strict-subclass match)
 
         # Reclassify
         df.at[idx, "Category"] = best_category
-        n_reclassified += 1
+        action = "REFINE" if mode == "refinement" else "RECLASSIFY"
+        if action == "REFINE":
+            n_refined += 1
+        else:
+            n_reclassified += 1
         log_rows.append({
-            "Action": "RECLASSIFY",
+            "Action": action,
             "Term": term,
             "Old_Category": current_category,
             "New_Category": best_category,
@@ -354,7 +471,8 @@ def run_relation_reclassification(
 
     log.success(
         f"Relation reclassifier: {n_reclassified} reclassified, "
-        f"{n_contradictions} contradictions, {n_reparented} reparented"
+        f"{n_refined} refined, {n_contradictions} contradictions, "
+        f"{n_reparented} reparented, {n_skipped_below_threshold} below evidence threshold"
     )
     log.detail(f"Output: {output_path}")
 

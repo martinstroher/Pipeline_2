@@ -23,6 +23,9 @@ pymupdf4llm>=0.0.5
 # OWL export
 rdflib>=7.0.0
 
+# Configuration
+PyYAML>=6.0
+
 # Evaluation & statistics
 scipy>=1.11.0
 numpy>=1.24.0

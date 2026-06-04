@@ -1,6 +1,6 @@
 <?xml version="1.0"?>
-<rdf:RDF xmlns="https://www.inf.ufrgs.br/bdi/ontologies/geores/geores-full.owl#"
-     xml:base="https://www.inf.ufrgs.br/bdi/ontologies/geores/geores-full.owl"
+<rdf:RDF xmlns="https://www.inf.ufrgs.br/bdi/ontologies/geores.owl#"
+     xml:base="https://www.inf.ufrgs.br/bdi/ontologies/geores.owl"
      xmlns:dce="http://purl.org/dc/elements/1.1/"
      xmlns:obo="http://purl.obolibrary.org/obo/"
      xmlns:owl="http://www.w3.org/2002/07/owl#"
@@ -11,8 +11,8 @@
      xmlns:skos="http://www.w3.org/2004/02/skos/core#"
      xmlns:dcterms="http://purl.org/dc/terms/"
      xmlns:ontologies="https://www.inf.ufrgs.br/bdi/ontologies/">
-    <owl:Ontology rdf:about="https://www.inf.ufrgs.br/bdi/ontologies/geores/geores-full.owl">
-        <owl:versionIRI rdf:resource="https://www.inf.ufrgs.br/bdi/ontologies/geores/releases/2024-04-07/geores-full.owl"/>
+    <owl:Ontology rdf:about="https://www.inf.ufrgs.br/bdi/ontologies/geores.owl">
+        <owl:versionIRI rdf:resource="https://www.inf.ufrgs.br/bdi/ontologies/geores/releases/2024-04-07/geores.owl"/>
         <dce:contributor>Alcides Lopes</dce:contributor>
         <dce:contributor>Fabrício Henrique Rodrigues</dce:contributor>
         <dce:contributor>Fernando Cicconeto</dce:contributor>

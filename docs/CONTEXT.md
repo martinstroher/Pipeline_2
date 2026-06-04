@@ -129,7 +129,8 @@ The ontology scope is defined by 10 competency questions (CQs) that specify what
 - Accepts optional `hints_csv` parameter with pre-identified SPECIALIZATION pairs from Step 5b. When provided, these are injected into the prompt as parent-child constraints.
 - Processes terms in chunks of up to 150 per LLM call to avoid cross-chunk inconsistency.
 - **Cycle detection:** After each LLM response, parent-chain walks detect any cycles (A→B→A). Cyclic terms are re-parented to the category root with a warning log.
-- Prompt anchors intermediate node names to canonical UPPER_IRIS vocabulary (52 published IRIs from BFO/GeoCore/GeoReservoir), and instructs the LLM to use the Aristotelian genus from NLDs ("X is a Y that Z" → use Y as intermediate node name).
+- Prompt anchors intermediate node names to canonical UPPER_IRIS vocabulary (55 published IRIs from BFO/GeoCore/GeoReservoir), and instructs the LLM to use the Aristotelian genus from NLDs ("X is a Y that Z" → use Y as intermediate node name).
+- **UPPER_IRIS invariant**: every entry must map to a unique published IRI. A module-level assertion raises `RuntimeError` if a duplicate is detected, because aliases would corrupt the OWL exporter's label map and overwrite canonical `rdfs:label` values in the final ontology.
 - **Class vs. individual distinction is resolved here:** named geological time periods (Aptian, Cretaceous), petroleum fields (Lula Field, Búzios), basins (Santos Basin), and formations are assigned `rdf:type` (OWL individuals); generic types/kinds (Grainstone, Fault, Porosity) are assigned `rdfs:subClassOf` (OWL classes).
 - NLDs are carried forward into the output CSV as a column for OWL annotation.
 - Output: `output/6_taxonomy.csv`
@@ -151,7 +152,7 @@ The ontology scope is defined by 10 competency questions (CQs) that specify what
 - **Pass 2 — Cross-category:** Reviews all non-intermediate terms across categories. Actions: CROSS_MERGE (duplicate concepts in different categories), CROSS_MOVE (miscategorised terms).
 - **Pass 3 — Essentiality:** Final quality gate asking which remaining terms do not earn their place in a lean domain ontology.
 - After all passes, orphaned intermediate nodes (no children remaining) are removed, and broken parent references (removed parents) are repaired by re-parenting to the term's Category.
-- Relations CSV is also cleaned: renames and merges propagate to Term/Filler columns, removed terms' relations are dropped.
+- Relations CSV is also cleaned: renames and merges propagate to Term/Filler columns; removed terms' relations are dropped on **both** sides (Term and Filler), so a restriction whose filler was just removed from the taxonomy cannot survive and produce a phantom orphan class under `owl:Thing`.
 - **Robustness:** Structured `_target` metadata in log rows avoids fragile string parsing. Category validation ensures REMOVE reparenting only uses valid parents.
 - Output: `output/6c_taxonomy_cleaned.csv`, `output/6c_critic_log.csv`, `output/6c_relations_cleaned.csv`
 
@@ -163,9 +164,13 @@ The ontology scope is defined by 10 competency questions (CQs) that specify what
 - Intersects all metatype evidence; if intersection is empty → flags as CONTRADICTION for human review.
 - Finds the most specific compatible category from `_CATEGORY_TO_METATYPES`. If current category is less specific or incompatible → reclassifies.
 - After reclassification, checks Parent_Term compatibility with new category and reparents to upper-ontology root if incompatible.
-- **Fully dynamic:** zero hardcoded inference rules. Adding new properties or categories to `relation_validator.py` automatically updates reclassification behaviour.
-- **Robustness:** Never downgrades to a less specific category. Prefers domain-specific categories (GeoCore/GeoReservoir) over raw BFO.
-- Output: `output/6d_taxonomy_reclassified.csv`, `output/6d_reclassification_log.csv`
+- **Fully dynamic:** zero hardcoded inference rules. All property constraints, category definitions, and the operating mode are read from `ontology_config.yaml` via `src/utils/ontology_config.py`.
+- **Two operating modes** (selected by `STEP6D_MODE` env var or `step6d.mode` in YAML):
+  - `refinement` *(default, conservative)*: emits **REFINE** actions only. Candidate categories must be strict BFO subclasses of the current category (proper-superset of metatype chain) and must not introduce non-generic metatypes absent from the evidence. Terms with fewer than `step6d.refinement_min_evidence` (default `2`) accepted relations are skipped. Contradictions are logged but never acted on. Terms whose current category is not in the YAML (e.g., AI-invented labels) are skipped — the strict-subclass invariant cannot be verified, so the term is left as-is rather than risk an unsafe move.
+  - `contradiction` *(legacy, aggressive)*: emits **RECLASSIFY** actions whenever the evidence intersection points to a different more-specific category, even across unrelated branches. No min-evidence gate; no strict-subclass requirement.
+- **Disjoint-contradiction detection:** Implied metatype sets are scanned against the 5 BFO 2020 disjoint pairs (`Continuant`⊥`Occurrent`, `MaterialEntity`⊥`ImmaterialEntity`, etc.). Sets containing both members of a pair are logged as CONTRADICTION (the relations cannot all be true of one individual) and the term is left in place under both modes.
+- **Robustness:** Never downgrades to a less specific category. Prefers domain-specific categories (GeoCore/GeoReservoir) over raw BFO. Refinement mode is the strict default; the contradiction mode is retained only for differential study.
+- Output: `output/6d_taxonomy_reclassified.csv`, `output/6d_reclassification_log.csv` (Action ∈ {REFINE, RECLASSIFY, CONTRADICTION, REPARENT}).
 
 ### `src/modules/owl_exporter.py` — Step 7: OWL Export
 - **Tech**: `rdflib`
@@ -181,6 +186,8 @@ The ontology scope is defined by 10 competency questions (CQs) that specify what
 - **Robustness guards:**
   - IRI generation normalises terms to lowercase before CamelCase conversion, preventing case-collision duplicates (e.g., "Carbonate Mineral" and "carbonate mineral" map to the same IRI).
   - UPPER_IRIS lookup is case-insensitive, so BFO/GeoCore/GeoReservoir terms are matched regardless of capitalisation.
+  - **OWL-sourced labels are canonical**: `rdfs:label` values are taken from the published OWL files (`bfo-core.owl`, `geocore-full.owl`, `geores-full.owl`) and only fall back to UPPER_IRIS friendly names when an OWL has no label for an IRI. This prevents UPPER_IRIS aliases from overwriting the published label.
+  - **Phantom filler guard**: if a relation's Filler is neither a known taxonomy term nor an upper-ontology IRI, the restriction is skipped and a warning is logged with the offending `term --[prop]--> filler` triples. This is a backstop for cases the critic should have handled.
   - Self-referential `rdfs:subClassOf` triples (term IRI = parent IRI) are detected and suppressed.
   - Upper→upper triple suppression: triples where both subject and object resolve to upper-level IRIs (BFO/GeoCore/GeoReservoir) are skipped. Only triples where at least one side is a presalt: entity are emitted — the pipeline does not alter published upper ontologies.
 - Output: `output/7_ontology.ttl`
@@ -214,14 +221,72 @@ The combination of taxonomy axioms and existential restrictions is the standard 
 
 ---
 
+## Configuration — `ontology_config.yaml`
+
+The single source of truth for upper-ontology metadata, BFO disjoint pairs, relation property constraints, and Step 6d behaviour. Loaded once at import time by `src/utils/ontology_config.py` (frozen dataclass + `lru_cache`-backed singleton). All modules read from `get_config()`; nothing else is hardcoded.
+
+### Top-level keys
+- `project`: `namespace`, `prefix`, `version`, BFO `import_iri`
+- `step6d`: Step 6d mode and guardrails — see below
+- `provenance_tiers_active`: ordered list of relation provenance tiers to honour (default: all four)
+- `ontologies`: per-ontology block (`bfo`, `geocore`, `georeservoir`, `ro`) with `namespace`, `prefix`, `owl` (file path), `import_iri`, `eval_tier`, and a `classes:` list (each class with `iri`, `label`, `metatypes`, `llm_definition`, optional `disjoint_pairs`)
+- `verifier_prefixes`: maps `bfo`, `geo`, `presalt` → URI prefixes used by `ontology_verifier.py`
+- `metatype_groups`: 18 named groups (`CONTINUANT`, `OCCURRENT`, `MATERIAL`, `PROCESS`, …) that expand recursively to flat sets of literal BFO metatype labels — used as shorthand in `relations` `domain`/`range` lists
+- `relations`: 71 property constraints (RO + BFO 2020 + GeoCore/GeoReservoir authored + project-specific tightenings). Each entry has `iri`, `domain` (list of group names or literal metatype strings), `range`, `inverse`, `provenance`, `notes`
+
+### Provenance tiers
+Each relation in `relations:` declares its `provenance`:
+- `owl_axiom` — declared in a local OWL file (`bfo-core.owl`, `geocore-full.owl`, `geores-full.owl`)
+- `bfo_shape_axiom` — from BFO 2020 specification documents only
+- `ro_release` — from the Relation Ontology core release (`resources/ro-core.owl`)
+- `spec_curation` — project-specific tightening of a domain/range beyond what the source ontology asserts
+
+Set `RELATION_PROVENANCE_TIERS=owl_axiom,bfo_shape_axiom` (comma-separated, validated against the 4-tier set) to disable RO and project-curated relations at runtime. The validator and Step 6d both honour the active tier set.
+
+The audit script `python -m src.evaluation.property_constraints_audit` writes `output/property_constraints_audit.csv` listing every relation with its provenance and current active/inactive status.
+
+### Step 6d configuration
+```yaml
+step6d:
+  mode: refinement                 # refinement | contradiction
+  refinement_min_evidence: 2       # min # accepted relations to trigger REFINE
+  refinement_only_to_strict_subclass: true
+```
+- `STEP6D_MODE` env var overrides `mode` (validated against `{refinement, contradiction}`)
+- See the Step 6d module description above for the semantics of each mode
+
+### Loader API (selected)
+- `get_config() → OntologyConfig` — cached singleton; `reload_config()` re-reads YAML (used in tests)
+- `cfg.upper_iris()`, `cfg.category_to_metatypes()`, `cfg.categories_for(ontology)` — for taxonomy/category lookups
+- `cfg.llm_definitions_block(ontology)` — flat newline-separated `Label: definition` text passed to LLM prompts (replaces the deleted `resources/*-definitions.txt` files)
+- `cfg.owl_class_paths()` vs `cfg.owl_file_paths()` — class-source OWL files (3) vs all OWL files including property-only ones like `ro-core.owl` (4)
+- `cfg.bfo_disjoint_pairs()` — list of IRI pairs for `owl:disjointWith` axioms
+- `cfg.property_constraints(tier_filter=None)` — dict of `{name: PropertyConstraint}` filtered to the active provenance tiers (default = `cfg.active_provenance_tiers()`)
+- `cfg.all_relations()` — every relation including inactive ones (for the audit script)
+- `cfg.metatype_groups` — pre-expanded literal frozensets
+- `cfg.step6d_mode()`, `cfg.step6d_min_evidence()`, `cfg.step6d_strict_subclass()`
+
+### Environment overrides
+| Variable | Default | Effect |
+|---|---|---|
+| `ONTOLOGY_CONFIG_PATH` | `./ontology_config.yaml` | Path to YAML file (lets tests point at fixtures) |
+| `STEP6D_MODE` | from YAML | `refinement` or `contradiction` |
+| `RELATION_PROVENANCE_TIERS` | from YAML (all four) | Comma-separated subset of `{owl_axiom, bfo_shape_axiom, ro_release, spec_curation}` |
+
+### Parity test
+`test/test_ontology_config_parity.py` runs 24 checks asserting the YAML produces literals identical to the values modules previously hardcoded, plus Phase 4 sanity checks (default mode, evidence threshold, strict-subclass logic, env-override round-trip). Must pass after any YAML or loader change.
+
+---
+
 ## Directory Structure
 
 ```
+ontology_config.yaml      # Single source of truth (upper ontologies, relations, Step 6d config)
 pipeline.py               # Orchestrator + CLI
 src/
   modules/                # Steps 1-7 (extraction → OWL export)
-  utils/                  # RAG setup, PDF conversion, logging, Gemini client, relation validator, prompt loader
-  evaluation/             # Ablation study, Layer 1 & 2 analysis, expert eval
+  utils/                  # ontology_config loader, RAG setup, PDF conversion, logging, Gemini client, relation validator, prompt loader
+  evaluation/             # Ablation study, Layer 1 & 2 analysis, expert eval, property-constraints audit
 prompts/                  # LLM prompt files (system instructions + templates)
 inputs/                   # Source PDFs + generated .md files
 output/                   # Step outputs (1_raw → 7_ontology.ttl)
@@ -230,9 +295,11 @@ output/                   # Step outputs (1_raw → 7_ontology.ttl)
     5b_cleanup_report.csv # Encoding/synonym merges
     5b_cq_matrix.csv      # Per-term CQ scoring matrix
     t0/ t1/ t2/ t3/       # Per-threshold pipeline outputs (Steps 5-7b)
-resources/                # Upper ontology definition text files + reference OWL files
+  property_constraints_audit.csv  # Generated by src.evaluation.property_constraints_audit
+resources/                # Reference OWL files: bfo-core.owl, geocore-full.owl, geores-full.owl, ro-core.owl
 chroma_db_1024/           # Cached ChromaDB vector index (created on first run)
-test/                     # E2E test runner + isolated test environment
+test/                     # E2E test runner + parity test + isolated test environment
+  test_ontology_config_parity.py  # 24 checks — must pass after any YAML/loader change
 ```
 
 ---

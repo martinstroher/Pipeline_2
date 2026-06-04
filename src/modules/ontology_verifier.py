@@ -26,11 +26,14 @@ from rdflib import Graph, Namespace, URIRef
 from rdflib.namespace import OWL, RDF, RDFS
 
 from src.utils import log
+from src.utils.ontology_config import get_config
 
-# Known upper-ontology IRI prefixes
-_BFO_PREFIX = "http://purl.obolibrary.org/obo/"
-_GEO_PREFIX = "https://www.inf.ufrgs.br/bdi/ontologies/"
-_ONTO_PREFIX = "https://w3id.org/presalt-onto#"
+# Known upper-ontology IRI prefixes — sourced from ontology_config.yaml
+_CFG = get_config()
+_VERIFIER_PREFIXES = _CFG.verifier_prefixes
+_BFO_PREFIX = _VERIFIER_PREFIXES["bfo"]
+_GEO_PREFIX = _VERIFIER_PREFIXES["geo"]
+_ONTO_PREFIX = _VERIFIER_PREFIXES["presalt"]
 
 # OOPS! configuration (set OOPS_URL to enable, e.g. https://oops.linkeddata.es/rest
 # or http://localhost:8080/OOPS/rest for Docker: docker run -p 8080:8080 mpovedavillalon/oops:v1)
@@ -293,7 +296,7 @@ def _verify_hermit(ttl_path: str) -> dict:
 
         # Use a fresh world to avoid cross-contamination between runs
         world = owlready2.World()
-        onto = world.get_ontology(_ONTO_PREFIX + "PreSaltOntoLearn").load(
+        onto = world.get_ontology(_ONTO_PREFIX + _CFG.project_name()).load(
             fileobj=open(tmp_file.name, "rb"), format="ntriples"
         )
 

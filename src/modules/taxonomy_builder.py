@@ -23,69 +23,14 @@ from tqdm import tqdm
 from src.utils.gemini_client import get_client, generate
 from src.utils import log
 from src.utils.prompt_loader import load_prompt
+from src.utils.ontology_config import get_config
 
-# Published OWL IRIs for upper-level ontology anchoring
-# Sources: BFO (http://purl.obolibrary.org/obo/bfo.owl)
-#           GeoCore (https://www.inf.ufrgs.br/bdi/ontologies/geocore.owl)
-#           GeoReservoir (https://www.inf.ufrgs.br/bdi/ontologies/geores.owl)
-UPPER_IRIS = {
-    # BFO top-level
-    "entity": "http://purl.obolibrary.org/obo/BFO_0000001",
-    "continuant": "http://purl.obolibrary.org/obo/BFO_0000002",
-    "occurrent": "http://purl.obolibrary.org/obo/BFO_0000003",
-    "independent continuant": "http://purl.obolibrary.org/obo/BFO_0000004",
-    "spatial region": "http://purl.obolibrary.org/obo/BFO_0000006",
-    "temporal region": "http://purl.obolibrary.org/obo/BFO_0000008",
-    "spatiotemporal region": "http://purl.obolibrary.org/obo/BFO_0000011",
-    "process": "http://purl.obolibrary.org/obo/BFO_0000015",
-    "quality": "http://purl.obolibrary.org/obo/BFO_0000019",
-    "specifically dependent continuant": "http://purl.obolibrary.org/obo/BFO_0000020",
-    "fiat object part": "http://purl.obolibrary.org/obo/BFO_0000024",
-    "object aggregate": "http://purl.obolibrary.org/obo/BFO_0000027",
-    "site": "http://purl.obolibrary.org/obo/BFO_0000029",
-    "object": "http://purl.obolibrary.org/obo/BFO_0000030",
-    "generically dependent continuant": "http://purl.obolibrary.org/obo/BFO_0000031",
-    "process boundary": "http://purl.obolibrary.org/obo/BFO_0000035",
-    "one-dimensional temporal region": "http://purl.obolibrary.org/obo/BFO_0000038",
-    "material entity": "http://purl.obolibrary.org/obo/BFO_0000040",
-    "continuant fiat boundary": "http://purl.obolibrary.org/obo/BFO_0000140",
-    "immaterial entity": "http://purl.obolibrary.org/obo/BFO_0000141",
-    "relational quality": "http://purl.obolibrary.org/obo/BFO_0000145",
-    "fiat surface": "http://purl.obolibrary.org/obo/BFO_0000146",
-    # GeoCore (namespace: https://www.inf.ufrgs.br/bdi/ontologies/)
-    "Geological Object": "https://www.inf.ufrgs.br/bdi/ontologies/GEOCORE_0000001",
-    "Sedimentary Geological Object": "https://www.inf.ufrgs.br/bdi/ontologies/GEOCORE_0000001",
-    "Geological Process": "https://www.inf.ufrgs.br/bdi/ontologies/GEOCORE_0000002",
-    "Geological Age": "https://www.inf.ufrgs.br/bdi/ontologies/GEOCORE_0000003",
-    "Geological Structure": "https://www.inf.ufrgs.br/bdi/ontologies/GEOCORE_0000004",
-    "Geological Time Interval": "https://www.inf.ufrgs.br/bdi/ontologies/GEOCORE_0000005",
-    "Earth Material": "https://www.inf.ufrgs.br/bdi/ontologies/GEOCORE_0000006",
-    "Rock": "https://www.inf.ufrgs.br/bdi/ontologies/GEOCORE_0000008",
-    "Earth Fluid": "https://www.inf.ufrgs.br/bdi/ontologies/GEOCORE_0000009",
-    "Geological Boundary": "https://www.inf.ufrgs.br/bdi/ontologies/GEOCORE_0000011",
-    "Geological Contact": "https://www.inf.ufrgs.br/bdi/ontologies/GEOCORE_0000012",
-    # GeoReservoir (namespace: https://www.inf.ufrgs.br/bdi/ontologies/)
-    "Sedimentary Rock": "https://www.inf.ufrgs.br/bdi/ontologies/GEORES_0000032",
-    "Sediment": "https://www.inf.ufrgs.br/bdi/ontologies/GEORES_0000031",
-    "Depositional Unit": "https://www.inf.ufrgs.br/bdi/ontologies/GEORES_0000006",
-    "Channel Unit": "https://www.inf.ufrgs.br/bdi/ontologies/GEORES_0000008",
-    "Lobe Unit": "https://www.inf.ufrgs.br/bdi/ontologies/GEORES_0000014",
-    "Levee Unit": "https://www.inf.ufrgs.br/bdi/ontologies/GEORES_0000013",
-    "Mound Unit": "https://www.inf.ufrgs.br/bdi/ontologies/GEORES_0000015",
-    "Depositional System": "https://www.inf.ufrgs.br/bdi/ontologies/GEORES_0000020",
-    "Sedimentary Facies": "https://www.inf.ufrgs.br/bdi/ontologies/GEORES_0000029",
-    "Facies Association": "https://www.inf.ufrgs.br/bdi/ontologies/GEORES_0000030",
-    "Sedimentary Structure": "https://www.inf.ufrgs.br/bdi/ontologies/GEORES_0000025",
-    "Fossil": "https://www.inf.ufrgs.br/bdi/ontologies/GEORES_0000018",
-    "Facies": "https://www.inf.ufrgs.br/bdi/ontologies/GEORES_0000028",
-    "Geometry": "https://www.inf.ufrgs.br/bdi/ontologies/GEORES_0000023",
-    "Dimension": "https://www.inf.ufrgs.br/bdi/ontologies/GEORES_0000022",
-    "Sinuosity": "https://www.inf.ufrgs.br/bdi/ontologies/GEORES_0000027",
-    "Sedimentary Environment": "https://www.inf.ufrgs.br/bdi/ontologies/GEORES_0000021",
-    "Lithology": "https://www.inf.ufrgs.br/bdi/ontologies/GEORES_0000024",
-    "Formation": "https://www.inf.ufrgs.br/bdi/ontologies/GEORES_0000004",
-    "Stratigraphic Unit": "https://www.inf.ufrgs.br/bdi/ontologies/GEORES_0000002",
-}
+# Published OWL IRIs for upper-level ontology anchoring.
+# Sourced from `ontology_config.yaml` — edit that file to add/remove classes.
+# Backed by BFO (http://purl.obolibrary.org/obo/bfo.owl),
+# GeoCore (https://www.inf.ufrgs.br/bdi/ontologies/geocore.owl),
+# GeoReservoir (https://www.inf.ufrgs.br/bdi/ontologies/geores.owl).
+UPPER_IRIS = get_config().upper_iris()
 
 
 
