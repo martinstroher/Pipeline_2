@@ -1,15 +1,60 @@
-"""Utility to load LLM prompts from the prompts/ directory."""
+"""Utility to load LLM prompts from the prompts/ directory.
+
+Prompts can contain `<<key>>` placeholders that the loader interpolates
+from the active domain profile (see `src/utils/domain_profile.py`). This
+keeps domain-specific text (personas, examples, evaluation labels) out
+of the prompt files so the same pipeline can be retargeted to another
+scientific domain by swapping the profile YAML.
+
+Domain placeholders use `<<…>>` (rather than `{…}`) so they do not
+collide with the runtime `{var}` placeholders that callers later resolve
+via `str.format(...)`.
+"""
 
 import os
+import re
+
+from src.utils.domain_profile import get_profile
 
 _PROMPTS_DIR = os.path.join(os.path.dirname(__file__), "..", "..", "prompts")
 _SEPARATOR = "[PROMPT_TEMPLATE]"
+_PLACEHOLDER_RE = re.compile(r"<<\s*(\w+)\s*>>")
+
+
+def _interpolate(text: str, filename: str) -> str:
+    """Replace `<<key>>` placeholders with values from the domain profile.
+
+    Currently supports:
+      <<persona>>     → profile.persona(<filename without .txt>)
+      <<short_name>>  → profile.short_name
+      <<name>>        → profile.name
+    """
+    if "<<" not in text:
+        return text
+    profile = get_profile()
+    stem = os.path.splitext(filename)[0]
+
+    def repl(match: re.Match) -> str:
+        key = match.group(1)
+        if key == "persona":
+            return profile.persona(stem)
+        if key == "short_name":
+            return profile.short_name
+        if key == "name":
+            return profile.name
+        raise KeyError(
+            f"Prompt '{filename}' references unknown placeholder <<{key}>>. "
+            f"Supported: persona, short_name, name."
+        )
+
+    return _PLACEHOLDER_RE.sub(repl, text)
 
 
 def load_prompt(filename: str) -> tuple[str, str]:
     """Load system instruction and prompt template from a prompt file.
 
-    Returns (system_instruction, prompt_template).
+    Returns (system_instruction, prompt_template) with domain placeholders
+    already interpolated.
     """
     path = os.path.join(_PROMPTS_DIR, filename)
     with open(path, "r", encoding="utf-8") as f:
@@ -21,5 +66,8 @@ def load_prompt(filename: str) -> tuple[str, str]:
     system_part, prompt_part = content.split(_SEPARATOR, 1)
     system_part = system_part.replace("[SYSTEM_INSTRUCTION]", "").strip()
     prompt_part = prompt_part.strip()
+
+    system_part = _interpolate(system_part, filename)
+    prompt_part = _interpolate(prompt_part, filename)
 
     return system_part, prompt_part
