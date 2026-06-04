@@ -20,6 +20,7 @@ personas:
   ablation_categorization_nld: "an expert ontology engineer specializing in foundational (BFO) and geological (GeoCore and GeoReservoir) ontologies. You process data in batches and your response format MUST be a valid JSON array of objects"
   ablation_categorization_rag: "an expert ontology engineer specializing in foundational (BFO) and geological (GeoCore and GeoReservoir) ontologies. You process data in batches and your response format MUST be a valid JSON array of objects"
   cq_scoring: "an ontology scope auditor for a Pre-Salt petroleum geology ontology"
+  cq_synonym_triage: "a senior geoscientist and ontology engineer specialising in Brazilian Pre-Salt petroleum geology. Your task is to classify candidate near-synonym clusters"
   ontology_critic: "a senior geoscientist and ontology engineer specialising in petroleum geology and formal ontology (BFO, GeoCore)"
   ontology_critic_cross: "a senior geoscientist and ontology engineer specialising in petroleum geology and formal ontology (BFO, GeoCore)"
   ontology_critic_essentiality: "a senior geoscientist and ontology engineer performing a final quality gate on a Pre-Salt petroleum geology ontology"

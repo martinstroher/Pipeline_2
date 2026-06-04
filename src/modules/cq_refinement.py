@@ -44,36 +44,7 @@ MAX_CONCURRENT_CQ = int(os.environ.get("MAX_CONCURRENT_CQ", 5))
 VALID_CQS = {f"CQ{i}" for i in range(1, 11)}
 
 _SYSTEM_INSTRUCTION, _PROMPT_TEMPLATE = load_prompt("cq_scoring.txt")
-
-_SYNONYM_SYSTEM = (
-    "You are a senior geoscientist and ontology engineer specialising in "
-    "Brazilian Pre-Salt petroleum geology. Your task is to classify candidate "
-    "near-synonym clusters."
-)
-
-_SYNONYM_PROMPT = """Compare these candidate near-synonyms from a Pre-Salt petroleum geology ontology.
-
-For each cluster, classify the relationship:
-1. SYNONYM — same concept, different surface form. Pick one canonical term.
-2. SPECIALIZATION — one term is a subtype of another. Keep both.
-3. DISTINCT — genuinely different concepts despite lexical overlap. Keep both.
-
-Use the definitions to judge meaning, not just the term names.
-
-## Clusters
-
-{clusters_json}
-
-Return a JSON array with one object per cluster:
-[
-  {{
-    "cluster_id": 0,
-    "classification": "SYNONYM" | "SPECIALIZATION" | "DISTINCT",
-    "canonical_term": "<the term to keep if SYNONYM, else null>",
-    "reasoning": "one sentence"
-  }}
-]
-"""
+_SYNONYM_SYSTEM, _SYNONYM_PROMPT = load_prompt("cq_synonym_triage.txt")
 
 # ---------------------------------------------------------------------------
 # Helpers
