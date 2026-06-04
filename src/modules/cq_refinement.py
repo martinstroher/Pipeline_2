@@ -20,6 +20,7 @@ import unicodedata
 import pandas as pd
 
 from src.utils.csv_io import read_csv, write_csv
+from src.utils.checkpoint import Checkpoint
 from concurrent.futures import ThreadPoolExecutor, as_completed
 from tqdm import tqdm
 
@@ -84,15 +85,6 @@ def _normalize(text: str) -> str:
     return unicodedata.normalize("NFKD", text).encode("ascii", "ignore").decode().lower().strip()
 
 
-def _load_checkpoint(path: str) -> tuple[set, list[dict]]:
-    """Load already-scored terms from a checkpoint CSV."""
-    if not os.path.exists(path):
-        return set(), []
-    try:
-        df = pd.read_csv(path, encoding="utf-8-sig")
-        return set(df["Term"].tolist()), df.to_dict("records")
-    except Exception:
-        return set(), []
 
 
 # ---------------------------------------------------------------------------
@@ -333,7 +325,8 @@ def _score_batch(batch_terms: list[dict], batch_size: int) -> list[dict]:
 def _run_cq_scoring(df: pd.DataFrame) -> pd.DataFrame:
     """Score all terms against CQs with parallel batched calls."""
     # Load checkpoint
-    completed, results = _load_checkpoint(CQ_MATRIX_FILE)
+    ckpt = Checkpoint(CQ_MATRIX_FILE)
+    completed, results = ckpt.load()
     all_terms = df["Term"].tolist()
     if completed:
         log.info(f"CQ scoring: resuming, {len(completed)} terms already scored.")
@@ -382,13 +375,7 @@ def _run_cq_scoring(df: pd.DataFrame) -> pd.DataFrame:
                 with lock:
                     is_first = len(results) == 0
                     results.extend(batch_rows)
-                    pd.DataFrame(batch_rows).to_csv(
-                        CQ_MATRIX_FILE,
-                        mode="a",
-                        header=is_first,
-                        index=False,
-                        encoding="utf-8-sig",
-                    )
+                    ckpt.append_batch(batch_rows, is_first=is_first)
                 pbar.set_postfix_str(batch_terms_str)
             except Exception as e:
                 tqdm.write("")

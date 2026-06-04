@@ -14,6 +14,7 @@ import time
 import pandas as pd
 
 from src.utils.csv_io import read_csv, write_csv
+from src.utils.checkpoint import Checkpoint
 from concurrent.futures import ThreadPoolExecutor, as_completed
 from tqdm import tqdm
 
@@ -53,17 +54,6 @@ def generate_nld(term: str, context: str) -> tuple[str, str]:
     return response.strip(), prompt
 
 
-def _load_checkpoint(path: str) -> tuple[set, list]:
-    """Load completed terms and rows from a checkpoint CSV."""
-    if not os.path.exists(path):
-        return set(), []
-    try:
-        df = pd.read_csv(path, encoding="utf-8-sig")
-        return set(df["Term"].tolist()), df.to_dict("records")
-    except Exception:
-        return set(), []
-
-
 def run_nld_generation(vector_store=None, bm25_retriever=None):
     """Run NLD generation for all filtered terms with concurrent processing."""
     input_file = os.environ.get("FILTERED_TERMS_OUTPUT")
@@ -82,7 +72,8 @@ def run_nld_generation(vector_store=None, bm25_retriever=None):
     log.info(f"{len(all_terms)} terms loaded from '{input_file}'.")
 
     # Load checkpoint
-    completed, results = _load_checkpoint(output_file)
+    ckpt = Checkpoint(output_file)
+    completed, results = ckpt.load()
     if completed:
         log.info(f"Resuming: {len(completed)} terms already processed.")
 
@@ -124,10 +115,7 @@ def run_nld_generation(vector_store=None, bm25_retriever=None):
                 row = future.result()
                 with lock:
                     results.append(row)
-                    pd.DataFrame([row]).to_csv(
-                        output_file, mode="a",
-                        header=(len(results) == 1), index=False, encoding="utf-8-sig",
-                    )
+                    ckpt.append(row, is_first=(len(results) == 1))
                 pbar.set_postfix_str(term[:30])
             except Exception as e:
                 log.error(f"Term '{term}': {e}")

@@ -18,6 +18,7 @@ from typing import Callable
 import pandas as pd
 
 from src.utils.csv_io import read_csv, write_csv
+from src.utils.checkpoint import Checkpoint
 from dotenv import load_dotenv
 
 load_dotenv()
@@ -58,22 +59,6 @@ def _cat_path(condition: str) -> str:
     return os.path.join(OUTPUT_DIR, f"cat_{condition}.csv")
 
 
-def _load_checkpoint(path: str) -> tuple[set, list[dict]]:
-    if os.path.exists(path):
-        try:
-            df = pd.read_csv(path, encoding="utf-8-sig")
-            return set(df["Term"].tolist()), df.to_dict("records")
-        except Exception:
-            pass
-    return set(), []
-
-
-def _append_row(path: str, row: dict, is_first: bool):
-    pd.DataFrame([row]).to_csv(
-        path, mode="a", header=is_first, index=False, encoding="utf-8-sig"
-    )
-
-
 # ---------------------------------------------------------------------------
 # Generic NLD runner (shared by conditions A, B, D)
 # ---------------------------------------------------------------------------
@@ -86,7 +71,8 @@ def _run_nld_generation(
     """Run NLD generation with checkpoint/resume and concurrent workers."""
     print(f"\n=== Condition {condition}: {CONDITION_LABELS[condition]} ===")
     path = _nld_path(condition)
-    completed, rows = _load_checkpoint(path)
+    ckpt = Checkpoint(path)
+    completed, rows = ckpt.load()
     if completed:
         print(f"  Resuming: {len(completed)} terms already done.")
 
@@ -111,7 +97,7 @@ def _run_nld_generation(
             with lock:
                 rows.append(row)
                 completed.add(term)
-                _append_row(path, row, len(rows) == 1)
+                ckpt.append(row, is_first=(len(rows) == 1))
             print(f"  [{len(completed)}/{total}] {condition}: '{term}' done")
 
     df = pd.DataFrame(rows)
@@ -290,7 +276,8 @@ def run_categorization(
             print(f"  Reused pipeline output ({pipeline_cat}) as Condition A categorization.")
             return cat_a
 
-    completed, cat_rows = _load_checkpoint(cat_csv)
+    cat_ckpt = Checkpoint(cat_csv)
+    completed, cat_rows = cat_ckpt.load()
     if completed:
         print(f"  Resuming: {len(completed)} terms already categorized.")
 
@@ -322,7 +309,7 @@ def run_categorization(
             result["Context_Used"] = nld_row.get("Context_Used", "")
             result["Condition"] = condition
             cat_rows.append(result)
-            _append_row(cat_csv, result, not os.path.exists(cat_csv))
+            cat_ckpt.append(result, is_first=not os.path.exists(cat_csv))
 
         time.sleep(2)
 

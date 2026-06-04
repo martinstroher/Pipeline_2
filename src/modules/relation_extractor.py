@@ -26,6 +26,7 @@ import time
 import pandas as pd
 
 from src.utils.csv_io import read_csv, write_csv
+from src.utils.checkpoint import Checkpoint
 from tqdm import tqdm
 
 from src.utils import log
@@ -58,18 +59,6 @@ _ALLOWED_PROPERTIES = {
 # ────────────────────────────────────────────────────────────────────────
 # Helpers
 # ────────────────────────────────────────────────────────────────────────
-
-def _load_checkpoint(path: str) -> tuple[set, list]:
-    """Load completed terms and rows from a checkpoint CSV."""
-    if not os.path.exists(path):
-        return set(), []
-    try:
-        df = pd.read_csv(path, encoding="utf-8-sig")
-        completed = set(df["Term"].unique())
-        return completed, df.to_dict("records")
-    except Exception:
-        return set(), []
-
 
 def _resolve_filler_source(filler: str, known_terms_lower: set[str]) -> str:
     """Deterministic filler source resolution."""
@@ -199,7 +188,8 @@ def run_relation_extraction(
     ))
 
     # Load checkpoint
-    completed, existing_rows = _load_checkpoint(output_path)
+    ckpt = Checkpoint(output_path)
+    completed, existing_rows = ckpt.load()
     if completed:
         log.info(f"Resuming: {len(completed)} terms already processed.")
 
