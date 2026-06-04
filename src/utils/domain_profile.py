@@ -26,6 +26,7 @@ class DomainProfile:
     name: str
     short_name: str
     personas: dict[str, str] = field(default_factory=dict)
+    instruction_rows: tuple[tuple[str, str], ...] = field(default_factory=tuple)
 
     def persona(self, prompt_key: str) -> str:
         """Return persona text for a given prompt key (filename without .txt).
@@ -58,8 +59,14 @@ def get_profile() -> DomainProfile:
         )
     with open(path, "r", encoding="utf-8") as f:
         data = yaml.safe_load(f) or {}
+    workbook = data.get("evaluation_workbook") or {}
+    raw_rows = workbook.get("instruction_rows") or []
+    instruction_rows = tuple(
+        (str(row[0]), str(row[1])) for row in raw_rows if len(row) >= 2
+    )
     return DomainProfile(
         name=data.get("name", ""),
         short_name=data.get("short_name", ""),
         personas=dict(data.get("personas", {})),
+        instruction_rows=instruction_rows,
     )

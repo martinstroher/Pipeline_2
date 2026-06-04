@@ -1,0 +1,198 @@
+[
+  [
+    "EXPERT EVALUATION — PreSaltOntoLearn Pipeline",
+    ""
+  ],
+  [
+    "",
+    ""
+  ],
+  [
+    "PURPOSE",
+    "Evaluate the quality of automatically generated definitions, ontological classifications, and taxonomic hierarchy for Pre-Salt petroleum geology terms. Your evaluations are BLINDED — do not attempt to identify which system produced which output."
+  ],
+  [
+    "",
+    ""
+  ],
+  [
+    "SHEET 2: TERM RELEVANCE",
+    ""
+  ],
+  [
+    "Task",
+    "Rate how relevant each term is to Brazilian Pre-Salt petroleum geology."
+  ],
+  [
+    "",
+    ""
+  ],
+  [
+    "1 — Not relevant",
+    "Term has no connection to Pre-Salt petroleum geology."
+  ],
+  [
+    "2 — Marginal",
+    "Loosely related; general geology term with no Pre-Salt specificity."
+  ],
+  [
+    "3 — Relevant",
+    "Clearly geological, applicable to Pre-Salt context."
+  ],
+  [
+    "4 — Important",
+    "Commonly used in Pre-Salt studies."
+  ],
+  [
+    "5 — Core concept",
+    "Fundamental to Pre-Salt petroleum geology understanding."
+  ],
+  [
+    "",
+    ""
+  ],
+  [
+    "SHEET 3: NLD QUALITY",
+    ""
+  ],
+  [
+    "Task",
+    "For each term, two Natural Language Definitions (NLDs) are shown. Rate the quality of EACH definition independently (1–5), then indicate your overall preference (1, 2, or Tie)."
+  ],
+  [
+    "",
+    ""
+  ],
+  [
+    "1 — Incorrect",
+    "Definition contains fundamental geological errors or is incoherent."
+  ],
+  [
+    "2 — Poor",
+    "Major inaccuracies, severe imprecision, or missing essential properties."
+  ],
+  [
+    "3 — Acceptable",
+    "Broadly correct but with notable gaps or minor inaccuracies."
+  ],
+  [
+    "4 — Good",
+    "Accurate and precise, only minor issues."
+  ],
+  [
+    "5 — Excellent",
+    "Publication-quality definition; correctly captures the concept for Pre-Salt."
+  ],
+  [
+    "Preference",
+    "Choose 1, 2, or Tie based on which definition is better overall."
+  ],
+  [
+    "",
+    ""
+  ],
+  [
+    "SHEET 4: CATEGORY CORRECTNESS",
+    ""
+  ],
+  [
+    "Task",
+    "For each (Term, Category) pair, judge whether the assigned ontological category is correct: Yes, No, or Partial."
+  ],
+  [
+    "",
+    ""
+  ],
+  [
+    "Tier column",
+    "Shows the ontology level: GeoReservoir (domain-specific), GeoCore (mid-level geological), or BFO (abstract foundational)."
+  ],
+  [
+    "GeoReservoir",
+    "Focus your effort here — these are directly in your area of expertise. Full category description is provided."
+  ],
+  [
+    "GeoCore / BFO",
+    "A simplified judgment is sufficient: does the category broadly make sense? Use your geological intuition."
+  ],
+  [
+    "",
+    ""
+  ],
+  [
+    "Yes",
+    "The assigned category correctly classifies this term."
+  ],
+  [
+    "Partial",
+    "Right direction but too broad, too narrow, or wrong layer."
+  ],
+  [
+    "No",
+    "The assigned category is incorrect for this term."
+  ],
+  [
+    "Suggested_Category",
+    "If No or Partial, suggest the correct category."
+  ],
+  [
+    "",
+    ""
+  ],
+  [
+    "SHEET 5: TAXONOMY CORRECTNESS",
+    ""
+  ],
+  [
+    "Task",
+    "Evaluate IS-A parent–child relationships. For each pair, judge: 'Is [Term] a type of [Parent]?'"
+  ],
+  [
+    "",
+    ""
+  ],
+  [
+    "Yes",
+    "The IS-A relationship is geologically correct."
+  ],
+  [
+    "Partial",
+    "Broadly reasonable but imprecise (e.g., too broad or narrow)."
+  ],
+  [
+    "No",
+    "The IS-A relationship is geologically incorrect."
+  ],
+  [
+    "Suggested_Parent",
+    "If No or Partial, suggest a better parent term."
+  ],
+  [
+    "",
+    ""
+  ],
+  [
+    "CALIBRATION EXAMPLES",
+    ""
+  ],
+  [
+    "Relevance",
+    "'Grainstone' → 5 (Core concept). 'Coquina' → 5 (Core concept)."
+  ],
+  [
+    "Category",
+    "'Grainstone' assigned to Sedimentary Rock → Yes."
+  ],
+  [
+    "Taxonomy",
+    "'Grainstone' IS-A 'Carbonate Rock' → Yes. 'Grainstone' IS-A 'Geological Process' → No."
+  ],
+  [
+    "",
+    ""
+  ],
+  [
+    "NOTES",
+    "Use the Notes column to explain non-obvious judgments. Thank you for your expertise!"
+  ]
+]
