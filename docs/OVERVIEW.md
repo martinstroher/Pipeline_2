@@ -182,4 +182,24 @@ The file can be opened in **Protégé** for inspection, visualisation, and reaso
 
 ---
 
+## Retargeting to another scientific domain
+
+The pipeline architecture is domain-agnostic. The Pre-Salt-specific knowledge lives in two YAML files; swap them to apply the same 7-step pipeline to a different scientific domain (biomedicine, materials science, palaeoclimate, etc.):
+
+| YAML | Holds |
+|------|-------|
+| `ontology_config.yaml` | Upper ontologies and their classes (BFO, GeoCore, GeoReservoir for Pre-Salt → e.g. BFO + ChEBI + OBI for biomedicine), 71 relation property constraints with provenance, BFO disjoint pairs, Step 6d behaviour |
+| `domains/<name>/domain_profile.yaml` | Domain-specific text: 11 expert personas for the prompts, 49 instruction rows for the expert evaluation workbook (Likert anchors, calibration examples, project title) |
+
+No Python code needs to change to retarget. Point the loaders at the new files via `ONTOLOGY_CONFIG_PATH` and `DOMAIN_PROFILE_PATH`. Prompts under `prompts/` use `<<persona>>`, `<<name>>`, and `<<short_name>>` placeholders that interpolate from the active profile, so the same prompt files work across domains. The expert workbook generator (`src/evaluation/expert_eval_generator.py`) reads `evaluation_workbook.instruction_rows` from the profile and renders Sheet 1 from it verbatim.
+
+For a new domain you will also need to:
+- Provide your own scientific PDFs in `inputs/`
+- Author or curate competency questions in `resources/competency_questions.txt`
+- Provide reference OWL files for your upper ontologies in `resources/`
+
+This separation between **what the pipeline does** (Python code) and **what the domain is** (two YAML files) is the architectural contribution that distinguishes PreSaltOntoLearn from one-off ontology learning experiments. The same code that produced the Pre-Salt ontology should produce a working ontology for any other scientific domain with the same documentary inputs.
+
+---
+
 ¹ Lopes Junior, A.G. (2024). *Automatic Classification of Domain Entities into Top-Level Ontology Concepts Using Natural Language Definitions.* PhD thesis, PPGC/UFRGS.

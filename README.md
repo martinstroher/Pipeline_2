@@ -31,6 +31,7 @@ cp .env.example .env
 | `EXTRACTION_WORKERS` | Number of parallel workers for Step 1 extraction (default: `5`) |
 | `MINIMUM_FREQUENCY_FILTER` | Minimum document frequency for Step 3 filtering — number of distinct papers a term must appear in (default: `7`; ~8.5% of an 82-paper corpus) |
 | `ONTOLOGY_CONFIG_PATH` | Path to the ontology YAML (default: `./ontology_config.yaml`) — single source of truth for upper ontologies, relations, and Step 6d behaviour |
+| `DOMAIN_PROFILE_PATH` | Path to the domain profile YAML (default: `domains/presalt/domain_profile.yaml`) — personas, workbook instruction rows, and other domain-specific text |
 | `STEP6D_MODE` | Step 6d operating mode: `refinement` (default, strict-subclass + ≥2 evidence) or `contradiction` (legacy, aggressive) |
 | `RELATION_PROVENANCE_TIERS` | Comma-separated subset of `{owl_axiom, bfo_shape_axiom, ro_release, spec_curation}` controlling which property constraints are active (default: all four) |
 
@@ -136,8 +137,11 @@ Self-contained test that:
 
 ```
 ontology_config.yaml      # Single source of truth: upper ontologies, BFO disjoint pairs, 71 relation property constraints, Step 6d config
-pipeline.py               # Main orchestrator + CLI
-prompts/                  # Centralized LLM prompt files (system instruction + template per step)
+domains/
+  presalt/
+    domain_profile.yaml   # Domain-specific text: personas (11 prompts), workbook instruction rows (49 rows). Swap to retarget the pipeline.
+pipeline.py               # Main orchestrator + CLI (thin: helpers for parser, dispatch, refine loop, cleanup, stop-check)
+prompts/                  # Centralized LLM prompt files (system instruction + template per step; use <<persona>> placeholders)
 src/
   modules/
     term_extractor.py     # Step 1: LLM-based term extraction (Gemini 2.5 Pro)
@@ -153,17 +157,20 @@ src/
     owl_exporter.py       # Step 7: rdflib Turtle export, OWL restrictions, upper backbone
     ontology_verifier.py  # Step 7b: Post-export verification (syntax, structure, OOPS!)
   utils/
-    ontology_config.py    # YAML loader: frozen dataclass + lru_cache singleton, env overrides
+    ontology_config.py    # ontology_config.yaml loader: frozen dataclass + lru_cache singleton, env overrides
+    domain_profile.py     # domain_profile.yaml loader: personas + workbook instruction rows
+    csv_io.py             # read_csv / write_csv wrappers (utf-8-sig by default; codifies the BOM-safe contract)
+    checkpoint.py         # Resumable I/O: Checkpoint(path, key_column='Term') with load / append / append_batch
     rag_setup.py          # RAG infrastructure: BGE-M3 dense + BM25 sparse + BGE-Reranker RRF
     pdf_processor.py      # PDF→Markdown conversion (pymupdf4llm)
     log.py                # ANSI colour logging helpers
     gemini_client.py      # Gemini API wrapper (AI Studio + Vertex AI express mode)
-    prompt_loader.py      # Loads system instruction + prompt template from prompts/ files
+    prompt_loader.py      # Loads + interpolates prompts (<<persona|name|short_name>> from active profile)
     relation_validator.py # BFO domain/range validation for extracted relations (sources constraints from ontology_config.yaml)
   evaluation/
     ablation_study.py     # 4-condition ablation runner with checkpointing and encoding-safe I/O
     layer1_analysis.py    # Automated analysis: agreement, Cochran's Q, migration, NOT_CLASSIFIED
-    expert_eval_generator.py  # 5-sheet Excel generator for expert review (200 terms, stratified tiers)
+    expert_eval_generator.py  # 5-sheet Excel generator for expert review (200 terms, stratified tiers; instructions sourced from domain profile)
     expert_eval_analyzer.py   # Layer 2 statistics: Wilcoxon (Friedman-gated), ICC, kappa, taxonomy
     property_constraints_audit.py  # Writes output/property_constraints_audit.csv (relation provenance + active/inactive)
 inputs/                   # Source PDFs (and generated .md files)
@@ -173,4 +180,7 @@ output/                   # Step outputs (1_raw → 7_ontology.ttl)
 resources/                # Reference OWL files: bfo-core.owl, geocore-full.owl, geores-full.owl, ro-core.owl
 test/                     # E2E test runner + isolated config
   test_ontology_config_parity.py  # 24 checks: YAML produces identical literals + Phase 4 sanity checks
+  diff_prompts.py                 # 22 rendered prompts must stay byte-equal to fixtures/prompts_baseline.json
+  diff_instructions_sheet.py      # 49 workbook rows must stay byte-equal to fixtures/instructions_baseline.json
+  regression_t1.py                # Deterministic 6d→7→7b regression vs fixtures/t1_baseline.json
 ```

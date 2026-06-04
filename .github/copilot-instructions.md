@@ -63,12 +63,32 @@
 
 ---
 
+## Configuration — `domains/<name>/domain_profile.yaml`
+
+**`domains/presalt/domain_profile.yaml` is the second source of truth**, this time for **domain-specific text** — expert personas, expert workbook instructions, calibration examples, and Likert anchors. Loaded by `src/utils/domain_profile.py` (same frozen dataclass + `lru_cache` singleton pattern as `ontology_config.py`).
+
+- **Never hardcode** personas, expert-evaluation Likert-anchor labels, calibration examples, or any other domain-specific narrative text in Python. They belong in `domain_profile.yaml`.
+- **`personas:`** is keyed by prompt filename without `.txt`. Each prompt that says "You are <<persona>>" requires an entry; `prompt_loader._interpolate()` raises `KeyError` if missing (fail fast).
+- **`evaluation_workbook.instruction_rows:`** is a list of `[section, details]` pairs rendered verbatim as Sheet 1 of the expert workbook by `expert_eval_generator.build_instructions_sheet()`. 49 rows in the Pre-Salt profile.
+- **Adding a new prompt** requires: (1) a new entry under `personas:` keyed by the prompt filename, (2) re-running `python test/diff_prompts.py` and refreshing `test/fixtures/prompts_baseline.json` if the change is intentional.
+- **Changing the expert workbook instructions** requires: (1) editing `evaluation_workbook.instruction_rows:` in the YAML, (2) re-running `python test/diff_instructions_sheet.py` and refreshing `test/fixtures/instructions_baseline.json` if the change is intentional.
+- **Retargeting to a new domain**: copy `domains/presalt/` to `domains/<your_domain>/`, edit the YAML, set `DOMAIN_PROFILE_PATH=domains/<your_domain>/domain_profile.yaml`. The Python code does not change.
+
+### Env overrides
+- `DOMAIN_PROFILE_PATH` — default `domains/presalt/domain_profile.yaml`; point at a different profile to retarget the pipeline
+
+### Profile discipline
+- After ANY edit to `domain_profile.yaml` or `src/utils/domain_profile.py`, run both `python test/diff_prompts.py` (must stay 22 prompts byte-equal) and `python test/diff_instructions_sheet.py` (must stay 49 rows byte-equal). If the diff fails because the change is *intentional*, regenerate the baselines via `python test/snapshot_prompts.py` and `python test/snapshot_instructions_sheet.py` and commit the new fixtures alongside the change.
+
+---
+
 ## Code Conventions
 
 ### CSV I/O
 - All CSV reads MUST use `encoding="utf-8-sig"` for BOM-safe interoperability.
 - All CSV writes MUST use `encoding="utf-8-sig"`.
 - Use `pandas.read_csv()` / `DataFrame.to_csv()` — never raw `csv` module.
+- **Prefer the wrappers** in `src/utils/csv_io.py`: `read_csv(path)` and `write_csv(df, path)`. They default to `encoding="utf-8-sig"` and `index=False` for writes, so call sites cannot drift from the contract. Raw `pd.read_csv` / `df.to_csv` are acceptable only when a non-default option is genuinely needed (and the encoding must still be passed explicitly).
 
 ### Environment Variables
 - Required variables: access via `os.environ["VAR"]` and validate with `RuntimeError` if missing.
@@ -80,7 +100,7 @@
 - Always pass `response_mime_type="application/json"` for structured outputs.
 - Default temperature: `0.0` (deterministic). Any deviation must be justified and documented.
 - Default model: `gemini-2.5-pro` for all LLM tasks (extraction, generation, categorization).
-- System instructions always define an expert persona (e.g., "You are a senior geoscientist and ontology engineer...").
+- System instructions always define an expert persona via the `<<persona>>` placeholder, which `prompt_loader` interpolates from the active `domain_profile.yaml`. Never embed the persona literal in the prompt file or in code.
 - Batch inputs: `json.dumps(batch_items, indent=2)`. Validate response array length matches input batch size.
 
 ### Error Handling
@@ -90,9 +110,12 @@
 - Categorization errors: use `"ERROR_PARSE"`, `"ERROR_INVALID_JSON"`, `"ERROR_GENERAL"` as Category values — these are filtered out by downstream steps.
 
 ### Checkpoint / Resume
-- Use `_load_checkpoint(path) → (completed_terms: set, rows: list[dict])` pattern.
-- Atomic single-row append: `_append_row(path, row, is_first)` with `header=not os.path.exists(path)`.
-- Resume logic: skip terms already in `completed_terms`, append new results, overwrite with full DataFrame at end.
+- Prefer `src/utils/checkpoint.py` `Checkpoint(path, key_column="Term")` for all resumable per-term step outputs. API:
+  - `load() → (completed_terms: set, rows: list[dict])` — reads existing CSV, returns the set of already-completed key values plus the loaded rows so the caller can resume.
+  - `append(row, is_first=None)` — atomic single-row append; writes the header only when the file is new (`is_first` defaults to `not path.exists()`).
+  - `append_batch(rows, is_first=None)` — same contract for a batch.
+- The legacy `_load_checkpoint` / `_append_row` pattern (`header=not os.path.exists(path)`) is the contract the wrapper codifies; new code should use the wrapper.
+- Resume logic: skip terms already in `completed_terms`, append new results, and write the full DataFrame once at the end so the file is internally consistent if the run is killed.
 
 ### Imports
 - Always absolute imports from `src/` (e.g., `from src.utils import log`). Never relative imports.
