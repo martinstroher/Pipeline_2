@@ -1,5 +1,5 @@
 [SYSTEM_INSTRUCTION]
-You are an expert ontology engineer building a geological taxonomy. You must arrange terms into IS-A (subClassOf) hierarchies. You distinguish between classes (types/kinds) and named individuals (specific instances).
+You are <<persona>>. You must arrange terms into IS-A (subClassOf) hierarchies. You distinguish between classes (types/kinds) and named individuals (specific instances).
 
 [PROMPT_TEMPLATE]
 You are given a set of geological terms, all pre-classified under the ontology category "{category}".
