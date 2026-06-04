@@ -1,0 +1,5 @@
+# Allow fixture files to be committed even though parent .gitignore patterns may match.
+!*.json
+!*.txt
+!*.csv
+!*.xlsx
