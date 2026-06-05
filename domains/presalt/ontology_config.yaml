@@ -958,3 +958,46 @@ relations:
     inverse: null
     provenance: owl_axiom
     notes: "SubPropertyOf has_geometry_type."
+
+# -------------------------------------------------------------------------
+# Property specializations — generic → specific dispatch rules
+# -------------------------------------------------------------------------
+# The LLM is asked to emit generic mereological properties (has_part /
+# part_of). Upper ontologies typically split these into disjoint branches
+# (e.g., BFO: has_continuant_part / has_occurrent_part) and forbid mixing.
+# At extraction time, Python applies the first matching rule per generic
+# property to upgrade it to the correct specialized variant.
+#
+# Rule predicate keys (all reference `metatype_groups:` above):
+#   subject_in        Subject metatypes must intersect the named group.
+#   subject_not_in    Subject metatypes must NOT intersect the named group.
+#   filler_in         Filler metatypes must intersect the named group.
+#   filler_not_in     Filler metatypes must NOT intersect the named group.
+#
+# If no rule matches, the generic property is kept as-is and the downstream
+# validator will reject any cross-category violation.
+property_specializations:
+  - generic: has_part
+    rules:
+      - when: { subject_in: OCCURRENT, filler_in: OCCURRENT }
+        specialize_to: has_occurrent_part
+      - when: { subject_not_in: OCCURRENT, filler_not_in: OCCURRENT }
+        specialize_to: has_continuant_part
+  - generic: part_of
+    rules:
+      - when: { subject_in: OCCURRENT, filler_in: OCCURRENT }
+        specialize_to: occurrent_part_of
+      - when: { subject_not_in: OCCURRENT, filler_not_in: OCCURRENT }
+        specialize_to: continuant_part_of
+
+# -------------------------------------------------------------------------
+# Reclassifier (Step 6d) tuning — upper-ontology agnostic
+# -------------------------------------------------------------------------
+# non_distinguishing_metatypes:
+#   Metatypes too high-level to count as classification evidence. Typically
+#   the very top branches of the upper ontology (e.g., BFO Continuant /
+#   Occurrent, DOLCE Endurant / Perdurant). Subtracted from candidate
+#   metatype sets when scoring "best more-specific category" in Step 6d.
+non_distinguishing_metatypes:
+  - Continuant
+  - Occurrent

@@ -192,6 +192,49 @@ def main() -> int:
         else:
             print(f"[OK]   categorization_block: 3 ordered headers, {len(block.splitlines())} lines")
 
+    # ── Phase 6.9: property_specializations + reclassifier-tuning accessors ──
+    specs = cfg.property_specializations()
+    # Every spec.generic and spec.rules[*].specialize_to must exist in relations:
+    rel_names = set(cfg.all_relations().keys())
+    bad = []
+    for spec in specs:
+        if spec.generic not in rel_names:
+            bad.append(f"generic '{spec.generic}' not in relations")
+        for rule in spec.rules:
+            if rule.specialize_to not in rel_names:
+                bad.append(f"specialize_to '{rule.specialize_to}' (for '{spec.generic}') not in relations")
+    if bad:
+        msg = f"[FAIL] property_specializations integrity: {bad}"
+        _FAILED.append(msg)
+        print(msg)
+    else:
+        print(f"[OK]   property_specializations integrity ({len(specs)} generics, "
+              f"{sum(len(s.rules) for s in specs)} rules total)")
+
+    # non_distinguishing_metatypes accessor
+    nd = cfg.non_distinguishing_metatypes()
+    _assert_eq(
+        "non_distinguishing_metatypes (BFO default)",
+        frozenset({"Continuant", "Occurrent"}),
+        nd,
+    )
+
+    # disjoint_metatype_pairs accessor — derived from YAML, must include all
+    # 5 BFO pairs (Continuant/Occurrent + 4 subclass pairs)
+    derived_pairs = set(cfg.disjoint_metatype_pairs())
+    expected_pairs = {
+        frozenset({"Continuant", "Occurrent"}),
+        frozenset({"IndependentContinuant", "SpecificallyDependentContinuant"}),
+        frozenset({"IndependentContinuant", "GenericallyDependentContinuant"}),
+        frozenset({"SpecificallyDependentContinuant", "GenericallyDependentContinuant"}),
+        frozenset({"MaterialEntity", "ImmaterialEntity"}),
+    }
+    _assert_eq(
+        "disjoint_metatype_pairs (BFO derived)",
+        expected_pairs,
+        derived_pairs,
+    )
+
     # ── Final summary ──
     print()
     if _FAILED:

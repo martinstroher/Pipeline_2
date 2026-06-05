@@ -105,12 +105,8 @@ The ontology scope is defined by 10 competency questions (CQs) that specify what
 
 ### `src/modules/term_categorizer.py` — Step 5: Ontology Classification
 - **Tech**: Gemini 2.5 Pro + RAG retrieval
-- Classifies each term+NLD into one of three upper ontology namespaces using a waterfall:
-  1. **GeoReservoir** (domain-specific petroleum geology)
-  2. **GeoCore** (general geological science)
-  3. **BFO** (Basic Formal Ontology — abstract/process/quality)
-  4. **NOT_CLASSIFIED** (fallback for instruments or out-of-scope terms)
-- Waterfall priority ensures each term maps to the most domain-specific applicable namespace: petroleum-specific terms to GeoReservoir first, general geological terms to GeoCore, and foundational abstractions to BFO.
+- Classifies each term+NLD into one of N upper-ontology categories using an N-tier waterfall driven by `cfg.waterfall_ontologies()`. For Pre-Salt the cascade is GeoReservoir → GeoCore → BFO, with `NOT_CLASSIFIED` as the documented fallback. The categories list and per-category definitions are injected into the prompt as the single `{categories_block}` placeholder rendered by `cfg.categorization_block()`; no category names are hardcoded in the module.
+- Waterfall priority ensures each term maps to the most domain-specific applicable namespace first. Reordering or extending the cascade is a YAML-only edit (`waterfall:` + a new `ontologies.<key>` block) — no Python change is required.
 - Output: `output/5_categorized_ontology.csv`
 
 ### `src/modules/cq_refinement.py` — Step 5b: CQ-Driven Refinement
@@ -221,15 +217,16 @@ The combination of taxonomy axioms and existential restrictions is the standard 
 
 ---
 
-## Configuration — `ontology_config.yaml`
+## Configuration — `domains/<name>/ontology_config.yaml`
 
-The single source of truth for upper-ontology metadata, BFO disjoint pairs, relation property constraints, and Step 6d behaviour. Loaded once at import time by `src/utils/ontology_config.py` (frozen dataclass + `lru_cache`-backed singleton). All modules read from `get_config()`; nothing else is hardcoded.
+The single source of truth for upper-ontology metadata, BFO disjoint pairs, relation property constraints, the categorization waterfall, and Step 6d behaviour. Loaded once at import time by `src/utils/ontology_config.py` (frozen dataclass + `lru_cache`-backed singleton). Default path: `domains/presalt/ontology_config.yaml`; override with `ONTOLOGY_CONFIG_PATH`. All modules read from `get_config()`; nothing else is hardcoded.
 
 ### Top-level keys
 - `project`: `namespace`, `prefix`, `version`, BFO `import_iri`
+- `waterfall`: ordered list of ontology keys (most-specific first) defining the Step 5 cascade. Rendered into the `{categories_block}` placeholder injected into the categorization prompt. Each entry must be a known ontology key with at least one metatype'd class.
 - `step6d`: Step 6d mode and guardrails — see below
 - `provenance_tiers_active`: ordered list of relation provenance tiers to honour (default: all four)
-- `ontologies`: per-ontology block (`bfo`, `geocore`, `georeservoir`, `ro`) with `namespace`, `prefix`, `owl` (file path), `import_iri`, `eval_tier`, and a `classes:` list (each class with `iri`, `label`, `metatypes`, `llm_definition`, optional `disjoint_pairs`)
+- `ontologies`: per-ontology block (`bfo`, `geocore`, `georeservoir`, `ro`) with `display_name` (header used by `categorization_block()`), `namespace`, `prefix`, `owl` (file path), `import_iri`, `eval_tier`, and a `classes:` list (each class with `iri`, `label`, `metatypes`, `llm_definition`, optional `disjoint_pairs`)
 - `verifier_prefixes`: maps `bfo`, `geo`, `presalt` → URI prefixes used by `ontology_verifier.py`
 - `metatype_groups`: 18 named groups (`CONTINUANT`, `OCCURRENT`, `MATERIAL`, `PROCESS`, …) that expand recursively to flat sets of literal BFO metatype labels — used as shorthand in `relations` `domain`/`range` lists
 - `relations`: 71 property constraints (RO + BFO 2020 + GeoCore/GeoReservoir authored + project-specific tightenings). Each entry has `iri`, `domain` (list of group names or literal metatype strings), `range`, `inverse`, `provenance`, `notes`
@@ -258,7 +255,9 @@ step6d:
 ### Loader API (selected)
 - `get_config() → OntologyConfig` — cached singleton; `reload_config()` re-reads YAML (used in tests)
 - `cfg.upper_iris()`, `cfg.category_to_metatypes()`, `cfg.categories_for(ontology)` — for taxonomy/category lookups
-- `cfg.llm_definitions_block(ontology)` — flat newline-separated `Label: definition` text passed to LLM prompts (replaces the deleted `resources/*-definitions.txt` files)
+- `cfg.waterfall_ontologies() → list[str]` — cascade order from the `waterfall:` block
+- `cfg.categorization_block() → str` — renders `### <DisplayName> Categories:\n<defs>` for every waterfall entry, joined with blank lines. Injected verbatim as `{categories_block}` in the categorization prompt.
+- `cfg.llm_definitions_block(ontology)` — flat newline-separated `Label: definition` text for one ontology (used internally by `categorization_block()`)
 - `cfg.owl_class_paths()` vs `cfg.owl_file_paths()` — class-source OWL files (3) vs all OWL files including property-only ones like `ro-core.owl` (4)
 - `cfg.bfo_disjoint_pairs()` — list of IRI pairs for `owl:disjointWith` axioms
 - `cfg.property_constraints(tier_filter=None)` — dict of `{name: PropertyConstraint}` filtered to the active provenance tiers (default = `cfg.active_provenance_tiers()`)
@@ -269,72 +268,84 @@ step6d:
 ### Environment overrides
 | Variable | Default | Effect |
 |---|---|---|
-| `ONTOLOGY_CONFIG_PATH` | `./ontology_config.yaml` | Path to YAML file (lets tests point at fixtures) |
+| `ONTOLOGY_CONFIG_PATH` | `domains/presalt/ontology_config.yaml` | Path to YAML file (lets tests point at fixtures, lets new domains take over) |
 | `STEP6D_MODE` | from YAML | `refinement` or `contradiction` |
 | `RELATION_PROVENANCE_TIERS` | from YAML (all four) | Comma-separated subset of `{owl_axiom, bfo_shape_axiom, ro_release, spec_curation}` |
 
 ### Parity test
-`test/test_ontology_config_parity.py` runs 24 checks asserting the YAML produces literals identical to the values modules previously hardcoded, plus Phase 4 sanity checks (default mode, evidence threshold, strict-subclass logic, env-override round-trip). Must pass after any YAML or loader change.
+`test/test_ontology_config_parity.py` runs 26 checks asserting the YAML produces literals identical to the values modules previously hardcoded, plus the waterfall order and `categorization_block()` header order. Must pass after any YAML or loader change.
 
 ---
 
-## Domain Profile — `domains/<name>/domain_profile.yaml`
+## Study Config — `studies/expert_eval.yaml`
 
-A second YAML alongside `ontology_config.yaml` that decouples **domain-specific text** (expert personas, evaluation labels, calibration examples) from prompt templates and the expert workbook. The goal: retarget the pipeline to a new scientific domain by swapping a single YAML, without editing module code.
-
-Loaded by `src/utils/domain_profile.py` (frozen dataclass + `lru_cache` singleton, same pattern as `ontology_config.py`). Default path: `domains/presalt/domain_profile.yaml`; override with `DOMAIN_PROFILE_PATH`.
+Workbook-prose config for the expert-evaluation study (cross-domain, not Pre-Salt-specific). Loaded by `src/utils/study_config.py` (same frozen-dataclass + `@lru_cache` singleton pattern as `ontology_config.py`).
 
 ### Top-level keys
-- `name`: long domain name (e.g. `"Brazilian Pre-Salt petroleum geology"`) — available as `<<name>>` in prompts
-- `short_name`: short label (e.g. `"Pre-Salt"`) — available as `<<short_name>>` in prompts
-- `personas`: dict keyed by prompt filename without `.txt`. Each value is the descriptive fragment used by the `<<persona>>` placeholder, which prompt templates wrap as `You are <<persona>>.` 11 prompts currently consume this: term extraction, NLD generation, term/ablation categorization, CQ scoring, CQ synonym triage, ontology critic (3 passes), relation extraction, taxonomy building
-- `evaluation_workbook.instruction_rows`: list of `[section, details]` pairs rendered verbatim as Sheet 1 of the expert evaluation workbook (Likert anchors, calibration examples, project title). 49 rows in the Pre-Salt profile
+- `instructions_sheet.rows`: list of `[section, details]` pairs rendered verbatim as Sheet 1 of the expert evaluation workbook (Likert anchors, calibration examples, project title). 49 rows in the current file.
 
 ### Loader API
-- `get_profile() → DomainProfile` — cached singleton
-- `profile.persona(prompt_key)` — returns persona text; raises `KeyError` if missing (fail fast — prompts referencing `<<persona>>` cannot render with an empty string)
-- `profile.instruction_rows` — tuple of `(section, details)` pairs; consumed by `expert_eval_generator.build_instructions_sheet()`
+- `get_study_config() → StudyConfig` — cached singleton
+- `study.instruction_rows` — tuple of `(section, details)` pairs; consumed by `expert_eval_generator.build_instructions_sheet()`
 
-### Prompt interpolation
-`src/utils/prompt_loader.py` runs each loaded prompt file through `_interpolate()` which substitutes `<<persona>>`, `<<name>>`, `<<short_name>>` from the active profile. Unknown placeholders raise `KeyError`. The regression test `test/diff_prompts.py` snapshots all rendered prompts and must remain byte-equal after any profile change (22 prompt parts × byte-identical).
+### Env override
+- `STUDY_CONFIG_PATH` — default `studies/expert_eval.yaml`; point at another file to run a different evaluation study
 
-### Adding a new domain
-1. Create `domains/<your_domain>/domain_profile.yaml` matching the Pre-Salt structure
-2. Provide a persona for every prompt filename in `prompts/`
-3. Provide all 49 `instruction_rows` (Likert anchors + calibration examples for your domain)
-4. Set `DOMAIN_PROFILE_PATH=domains/<your_domain>/domain_profile.yaml`
-5. Also swap `ONTOLOGY_CONFIG_PATH` if your upper ontologies differ from BFO/GeoCore/GeoReservoir
+### Regression test
+`test/diff_instructions_sheet.py` snapshots the rendered Sheet 1 and must remain byte-equal (49 rows) after any change to the YAML. Refresh the baseline via `test/snapshot_instructions_sheet.py` only when the change is intentional.
+
+---
+
+## Prompt System — `domains/<name>/prompts/` + `studies/prompts/`
+
+Prompts are end-to-end artifacts authored per domain. There is no load-time interpolation (the previous `<<persona>>`/`<<name>>`/`<<short_name>>` machinery was removed in Phase 6.5). Each prompt ships with its persona inlined; runtime data is injected by the caller via `str.format(**vars)`.
+
+`src/utils/prompt_loader.py` resolves each filename across two prompt roots in priority order:
+1. `<active-domain>/prompts/` — production pipeline prompts (10 for Pre-Salt)
+2. `studies/prompts/` — cross-domain study prompts (2 ablation-only prompts)
+
+The active domain is derived from the directory containing the active `ontology_config.yaml`. See [domains/README.md](../domains/README.md) for the per-prompt runtime-placeholder contract and the full retargeting guide.
+
+### Retargeting to a new domain
+1. Copy `domains/presalt/` to `domains/<your_domain>/` and edit `ontology_config.yaml` for your upper ontologies, waterfall, and relations
+2. Rewrite every prompt in `domains/<your_domain>/prompts/` with personas and calibration examples for your domain
+3. Optionally edit `studies/expert_eval.yaml` if your evaluation Likert anchors differ
+4. `$env:ONTOLOGY_CONFIG_PATH = "domains/<your_domain>/ontology_config.yaml"` and run the pipeline
 
 ---
 
 ## Directory Structure
 
 ```
-ontology_config.yaml      # Single source of truth (upper ontologies, relations, Step 6d config)
-domains/
-  presalt/
-    domain_profile.yaml   # Domain-specific text: personas, workbook instruction rows
 pipeline.py               # Orchestrator + CLI (thin: _build_parser, _dispatch_subcommand, _run_refinement_pipeline, _clean_outputs, _check_stop helpers)
+domains/                  # Per-domain config + assets. Each subfolder is a complete retargetable bundle.
+  README.md               # Author guide: layout, activation, per-prompt runtime-placeholder contract
+  presalt/
+    ontology_config.yaml  # Single source of truth: waterfall, upper-ontology metadata, BFO disjoint pairs, 71 relations, Step 6d config
+    prompts/              # 10 production prompts (verbatim — personas inlined)
+    resources/            # Upper-ontology OWL files: bfo-core.owl, geocore-full.owl, geores-full.owl, ro-core.owl
+    competency_questions.txt
+studies/                  # Cross-domain study artifacts (not domain-specific)
+  prompts/                # 2 ablation-only prompts
+  expert_eval.yaml        # Expert-evaluation workbook instructions sheet (49 rows)
 src/
   modules/                # Steps 1-7 (extraction → OWL export)
-  utils/                  # ontology_config loader, domain_profile loader, csv_io (utf-8-sig wrappers), checkpoint (resumable I/O), RAG setup, PDF conversion, logging, Gemini client, relation validator, prompt loader (with <<persona>> interpolation)
+  utils/                  # ontology_config + study_config loaders, csv_io, checkpoint, RAG setup, PDF conversion, logging, Gemini client, relation validator, prompt loader (verbatim, no interpolation)
   evaluation/             # Ablation study, Layer 1 & 2 analysis, expert eval, property-constraints audit
-prompts/                  # LLM prompt files (system instructions + templates with <<persona>> placeholders)
 inputs/                   # Source PDFs + generated .md files
-output/                   # Step outputs (1_raw → 7_ontology.ttl)
+output/                   # Step outputs (1_raw → 6d_taxonomy_reclassified.ttl)
   ablation/               # Condition-specific CSVs (cat_A.csv … cat_D.csv)
   refined/                # CQ-driven refinement outputs (--refine)
     5b_cleanup_report.csv # Encoding/synonym merges
     5b_cq_matrix.csv      # Per-term CQ scoring matrix
     t0/ t1/ t2/ t3/       # Per-threshold pipeline outputs (Steps 5-7b)
   property_constraints_audit.csv  # Generated by src.evaluation.property_constraints_audit
-resources/                # Reference OWL files: bfo-core.owl, geocore-full.owl, geores-full.owl, ro-core.owl
 chroma_db_1024/           # Cached ChromaDB vector index (created on first run)
-test/                     # E2E test runner + parity, prompt-diff, instructions-diff fixtures
-  test_ontology_config_parity.py  # 24 checks — must pass after any YAML/loader change
-  diff_prompts.py                 # 22 rendered prompts must stay byte-equal to baseline
+test/                     # Validation suite (run in this order before any production run)
+  test_ontology_config_parity.py  # 26 checks — must pass after any YAML/loader change
   diff_instructions_sheet.py      # 49 workbook instruction rows must stay byte-equal to baseline
   regression_t1.py                # Deterministic 6d→7→7b regression (329 classes / 26 individuals / 3350 triples / 39 upper IRIs)
+  run_e2e_test.py                 # End-to-end smoke test (Steps 0-7 with real LLM calls)
 ```
 
 ---

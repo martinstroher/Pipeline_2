@@ -152,7 +152,7 @@ The winning ablation condition is then used to build the final taxonomy and OWL 
 
 ## What the output looks like
 
-The final file `output/7_ontology.ttl` (OWL Turtle format) contains:
+The final file `output/6d_taxonomy_reclassified.ttl` (OWL Turtle format) contains:
 
 ```turtle
 # Example excerpt
@@ -184,19 +184,24 @@ The file can be opened in **Protégé** for inspection, visualisation, and reaso
 
 ## Retargeting to another scientific domain
 
-The pipeline architecture is domain-agnostic. The Pre-Salt-specific knowledge lives in two YAML files; swap them to apply the same 7-step pipeline to a different scientific domain (biomedicine, materials science, palaeoclimate, etc.):
+The pipeline architecture is domain-agnostic. The Pre-Salt-specific knowledge lives under `domains/presalt/`; copy the folder, rewrite its contents, and the same 7-step pipeline runs on biomedicine, materials science, palaeoclimate, etc.
 
-| YAML | Holds |
+| File / folder | Holds |
 |------|-------|
-| `ontology_config.yaml` | Upper ontologies and their classes (BFO, GeoCore, GeoReservoir for Pre-Salt → e.g. BFO + ChEBI + OBI for biomedicine), 71 relation property constraints with provenance, BFO disjoint pairs, Step 6d behaviour |
-| `domains/<name>/domain_profile.yaml` | Domain-specific text: 11 expert personas for the prompts, 49 instruction rows for the expert evaluation workbook (Likert anchors, calibration examples, project title) |
+| `domains/<name>/ontology_config.yaml` | Upper ontologies and their classes (BFO, GeoCore, GeoReservoir for Pre-Salt → e.g. BFO + ChEBI + OBI for biomedicine), the categorization waterfall, 71 relation property constraints with provenance, BFO disjoint pairs, Step 6d behaviour |
+| `domains/<name>/prompts/` | 10 production prompts (term extraction, NLD generation, categorization, taxonomy, critic, relations, CQ scoring …) authored end-to-end with personas inlined and calibration examples specific to the domain |
+| `domains/<name>/resources/` | Reference OWL files for the upper ontologies (loaded by `owl_exporter.py` for the upper backbone) |
+| `domains/<name>/competency_questions.txt` | CQs used by Step 5b (`--refine`) |
+| `studies/expert_eval.yaml` | Cross-domain workbook prose: 49 instruction-sheet rows. Edit only if your evaluation Likert anchors or calibration examples differ. |
 
-No Python code needs to change to retarget. Point the loaders at the new files via `ONTOLOGY_CONFIG_PATH` and `DOMAIN_PROFILE_PATH`. Prompts under `prompts/` use `<<persona>>`, `<<name>>`, and `<<short_name>>` placeholders that interpolate from the active profile, so the same prompt files work across domains. The expert workbook generator (`src/evaluation/expert_eval_generator.py`) reads `evaluation_workbook.instruction_rows` from the profile and renders Sheet 1 from it verbatim.
+No Python code needs to change to retarget. Point the loader at the new YAML via `ONTOLOGY_CONFIG_PATH=domains/<name>/ontology_config.yaml`; the prompt loader picks up `domains/<name>/prompts/` from the same parent folder automatically. The expert workbook generator (`src/evaluation/expert_eval_generator.py`) reads `instructions_sheet.rows` from `studies/expert_eval.yaml` and renders Sheet 1 from it verbatim.
 
 For a new domain you will also need to:
 - Provide your own scientific PDFs in `inputs/`
-- Author or curate competency questions in `resources/competency_questions.txt`
-- Provide reference OWL files for your upper ontologies in `resources/`
+- Author or curate competency questions in `domains/<name>/competency_questions.txt`
+- Provide reference OWL files for your upper ontologies in `domains/<name>/resources/`
+
+See [domains/README.md](../domains/README.md) for the per-prompt runtime-placeholder contract and a step-by-step retargeting walkthrough.
 
 This separation between **what the pipeline does** (Python code) and **what the domain is** (two YAML files) is the architectural contribution that distinguishes PreSaltOntoLearn from one-off ontology learning experiments. The same code that produced the Pre-Salt ontology should produce a working ontology for any other scientific domain with the same documentary inputs.
 

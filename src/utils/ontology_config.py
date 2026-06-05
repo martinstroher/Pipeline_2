@@ -84,6 +84,39 @@ class PropertyConstraint:
 
 
 @dataclass(frozen=True)
+class SpecializationRule:
+    """Single dispatch rule mapping (subject_metas, filler_metas) -> specialized property."""
+    subject_in: frozenset[str] = frozenset()
+    subject_not_in: frozenset[str] = frozenset()
+    filler_in: frozenset[str] = frozenset()
+    filler_not_in: frozenset[str] = frozenset()
+    specialize_to: str = ""
+
+    def matches(
+        self,
+        subject_metatypes: frozenset[str],
+        filler_metatypes: frozenset[str],
+    ) -> bool:
+        """True iff all configured predicates are satisfied."""
+        if self.subject_in and not (subject_metatypes & self.subject_in):
+            return False
+        if self.subject_not_in and (subject_metatypes & self.subject_not_in):
+            return False
+        if self.filler_in and not (filler_metatypes & self.filler_in):
+            return False
+        if self.filler_not_in and (filler_metatypes & self.filler_not_in):
+            return False
+        return True
+
+
+@dataclass(frozen=True)
+class PropertySpecialization:
+    """All dispatch rules for a single generic property."""
+    generic: str
+    rules: tuple[SpecializationRule, ...]
+
+
+@dataclass(frozen=True)
 class ProjectMeta:
     name: str
     description: str
@@ -104,6 +137,8 @@ class OntologyConfig:
     verifier_prefixes: dict[str, str]
     metatype_groups: dict[str, frozenset[str]]
     relations: dict[str, PropertyConstraint]
+    property_specializations_: tuple[PropertySpecialization, ...]
+    non_distinguishing_metatypes_: frozenset[str]
     _source_path: Path = field(repr=False)
 
     # ─── Convenience accessors ────────────────────────────────────────
@@ -256,6 +291,58 @@ class OntologyConfig:
     def all_relations(self) -> dict[str, PropertyConstraint]:
         """All relations regardless of active tiers — used by the audit script."""
         return dict(self.relations)
+
+    # ─── Property specialization & reclassifier tuning ────────────────
+
+    def property_specializations(self) -> tuple[PropertySpecialization, ...]:
+        """Generic-property dispatch rules (consumed by relation_extractor)."""
+        return self.property_specializations_
+
+    def non_distinguishing_metatypes(self) -> frozenset[str]:
+        """Metatypes too generic to count as classification evidence in Step 6d."""
+        return self.non_distinguishing_metatypes_
+
+    def disjoint_metatype_pairs(self) -> tuple[frozenset[str], ...]:
+        """Upper-ontology disjoint pairs expressed as metatype-label frozensets.
+
+        Derived from `ontologies.<key>.disjoint_pairs` (IRI fragments) by:
+          1. Look up each fragment's class metatypes.
+          2. For ancestor-only classes with no metatypes (e.g., BFO
+             `continuant`/`occurrent`), fall back to the class label
+             converted to PascalCase.
+          3. Take the symmetric difference of the two metatype sets to
+             isolate the distinguishing metatype on each side.
+
+        Returns one frozenset per declared disjoint pair, suitable for
+        evidence-coherence checks of the form `pair <= implied_metatypes`.
+        """
+        def _label_to_meta(label: str) -> str:
+            return "".join(w.capitalize() for w in label.split())
+
+        pairs: list[frozenset[str]] = []
+        for onto in self.ontologies.values():
+            frag_to_metas: dict[str, frozenset[str]] = {}
+            for cls in onto.classes:
+                if cls.metatypes:
+                    frag_to_metas[cls.iri_fragment] = cls.metatypes
+                else:
+                    frag_to_metas[cls.iri_fragment] = frozenset({_label_to_meta(cls.label)})
+            for a_frag, b_frag in onto.disjoint_pairs:
+                a_metas = frag_to_metas.get(a_frag)
+                b_metas = frag_to_metas.get(b_frag)
+                if not a_metas or not b_metas:
+                    continue
+                a_unique = a_metas - b_metas
+                b_unique = b_metas - a_metas
+                if not a_unique or not b_unique:
+                    continue
+                # Pick a deterministic representative per side. For BFO's
+                # well-formed pairs these are singletons; for deeper
+                # pairs in other ontologies, alphabetical-first is stable.
+                a_label = sorted(a_unique)[0]
+                b_label = sorted(b_unique)[0]
+                pairs.append(frozenset({a_label, b_label}))
+        return tuple(pairs)
 
 
 # ─────────────────────────────────────────────────────────────────────────
@@ -412,6 +499,57 @@ def _parse_relations(
     return out
 
 
+def _parse_property_specializations(
+    raw_specs: list,
+    metatype_groups: dict[str, frozenset[str]],
+    relations: dict[str, PropertyConstraint],
+) -> tuple[PropertySpecialization, ...]:
+    """Build PropertySpecialization entries, resolving metatype-group names.
+
+    Validates that:
+      * Every `generic` property is declared in `relations:`.
+      * Every `specialize_to` target is declared in `relations:`.
+      * Every metatype-group token in `subject_in/not_in/filler_in/not_in`
+        resolves to a known group (or to a literal metatype string).
+    """
+    def _resolve(token: str | list[str] | None) -> frozenset[str]:
+        if token is None:
+            return frozenset()
+        if isinstance(token, str):
+            return metatype_groups.get(token, frozenset({token}))
+        # list of group names / literal metatypes
+        out: set[str] = set()
+        for t in token:
+            out |= metatype_groups.get(t, frozenset({t}))
+        return frozenset(out)
+
+    out: list[PropertySpecialization] = []
+    for entry in raw_specs:
+        generic = entry["generic"]
+        if generic not in relations:
+            raise RuntimeError(
+                f"property_specializations: generic '{generic}' not declared in relations:"
+            )
+        rules: list[SpecializationRule] = []
+        for rule_entry in entry.get("rules", []) or []:
+            when = rule_entry.get("when", {}) or {}
+            target = rule_entry["specialize_to"]
+            if target not in relations:
+                raise RuntimeError(
+                    f"property_specializations: specialize_to '{target}' "
+                    f"(for generic '{generic}') not declared in relations:"
+                )
+            rules.append(SpecializationRule(
+                subject_in=_resolve(when.get("subject_in")),
+                subject_not_in=_resolve(when.get("subject_not_in")),
+                filler_in=_resolve(when.get("filler_in")),
+                filler_not_in=_resolve(when.get("filler_not_in")),
+                specialize_to=target,
+            ))
+        out.append(PropertySpecialization(generic=generic, rules=tuple(rules)))
+    return tuple(out)
+
+
 def _build_config(raw: dict, source_path: Path) -> OntologyConfig:
     repo_root = source_path.parent
 
@@ -499,6 +637,14 @@ def _build_config(raw: dict, source_path: Path) -> OntologyConfig:
     metatype_groups = _expand_metatype_groups(raw.get("metatype_groups", {}) or {})
     relations = _parse_relations(raw.get("relations", {}) or {}, metatype_groups)
 
+    # property specializations + reclassifier tuning
+    specializations = _parse_property_specializations(
+        raw.get("property_specializations", []) or [],
+        metatype_groups,
+        relations,
+    )
+    non_distinguishing = frozenset(raw.get("non_distinguishing_metatypes", []) or [])
+
     cfg = OntologyConfig(
         project=project,
         ontologies=ontologies,
@@ -508,6 +654,8 @@ def _build_config(raw: dict, source_path: Path) -> OntologyConfig:
         verifier_prefixes=verifier_prefixes,
         metatype_groups=metatype_groups,
         relations=relations,
+        property_specializations_=specializations,
+        non_distinguishing_metatypes_=non_distinguishing,
         _source_path=source_path,
     )
 

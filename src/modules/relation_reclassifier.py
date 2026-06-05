@@ -2,12 +2,15 @@
 Relation Reclassifier — Step 6d of the PreSaltOntoLearn pipeline.
 
 Deterministic post-processing step that uses accepted relations from Step 6b
-to infer and correct BFO metatype classifications. Reverses the domain/range
-logic from relation_validator.py: instead of "is this relation valid for
-these categories?" → "given these relations, what categories are valid?"
+to infer and correct upper-ontology metatype classifications. Reverses the
+domain/range logic from relation_validator.py: instead of "is this relation
+valid for these categories?" → "given these relations, what categories are
+valid?"
 
-No LLM calls. No hardcoded inference rules. Fully dynamic — reads
-PROPERTY_CONSTRAINTS and _CATEGORY_TO_METATYPES from relation_validator.py.
+No LLM calls. No hardcoded inference rules. Fully dynamic — reads all
+upper-ontology specifics from `domains/<name>/ontology_config.yaml` via
+`get_config()` (category-to-metatype map, property constraints, generic
+metatypes to ignore, and disjoint metatype pairs).
 
 Two operating modes (configured via STEP6D_MODE env var or ontology_config.yaml):
 
@@ -87,25 +90,21 @@ def _collect_evidence(
 
 # Overly generic metatypes that don't carry classification information.
 # Excluded from parent-category compatibility checks because they make
-# everything look compatible (every category includes Continuant or Occurrent).
-_GENERIC_METATYPES = frozenset({"Continuant", "Occurrent"})
+# everything look compatible (every category in a typical upper ontology
+# inherits from one of the top branches). Configured per-domain in YAML
+# under `non_distinguishing_metatypes:`.
+_GENERIC_METATYPES: frozenset[str] = _CFG.non_distinguishing_metatypes()
 
-# BFO 2020 axiomatic disjoint pairs at the metatype-label level
-# (mirrors `bfo_disjoint_pairs` in YAML, but expressed as labels for fast
-# evidence-coherence checks).  An evidence set containing BOTH labels of a
-# pair implies the relations cannot all be true of a single individual —
-# treated as a CONTRADICTION.
-_DISJOINT_METATYPE_PAIRS: tuple[frozenset[str], ...] = (
-    frozenset({"Continuant", "Occurrent"}),
-    frozenset({"IndependentContinuant", "SpecificallyDependentContinuant"}),
-    frozenset({"IndependentContinuant", "GenericallyDependentContinuant"}),
-    frozenset({"SpecificallyDependentContinuant", "GenericallyDependentContinuant"}),
-    frozenset({"MaterialEntity", "ImmaterialEntity"}),
-)
+# Upper-ontology axiomatic disjoint pairs at the metatype-label level.
+# Derived from each ontology's `disjoint_pairs:` (IRI fragments) by
+# reverse-lookup through its `classes:` metatypes. An evidence set
+# containing BOTH labels of a pair implies the relations cannot all be
+# true of a single individual — treated as a CONTRADICTION.
+_DISJOINT_METATYPE_PAIRS: tuple[frozenset[str], ...] = _CFG.disjoint_metatype_pairs()
 
 
 def _evidence_has_disjoint_contradiction(metaset: frozenset[str]) -> tuple[str, str] | None:
-    """Return the first BFO-disjoint pair both members of which appear in metaset, else None."""
+    """Return the first upper-ontology disjoint pair both members of which appear in metaset, else None."""
     for pair in _DISJOINT_METATYPE_PAIRS:
         if pair <= metaset:
             a, b = sorted(pair)
@@ -119,11 +118,12 @@ def _distinguishing_metatypes(metatypes: frozenset[str]) -> frozenset[str]:
 
 
 def _is_strict_subclass(candidate_meta: frozenset[str], current_meta: frozenset[str]) -> bool:
-    """Return True iff `candidate` is a strict BFO subclass of `current`.
+    """Return True iff `candidate` is a strict subclass of `current`.
 
-    Metatypes are stored as BFO ancestry chains in ontology_config.yaml, so a
-    proper superset of metatypes ⇒ strictly more specific in the BFO hierarchy.
-    Equal metatype sets (sister concepts) are NOT strict subclasses.
+    Metatypes are stored as ancestry chains in ontology_config.yaml, so a
+    proper superset of metatypes ⇒ strictly more specific in the upper-
+    ontology hierarchy. Equal metatype sets (sister concepts) are NOT
+    strict subclasses.
     """
     return current_meta < candidate_meta  # proper subset (strict superset on candidate side)
 
@@ -141,13 +141,14 @@ def _find_best_category(
 
     `mode` controls how aggressive the move is:
       * "contradiction": move to ANY more-distinguishing category (legacy)
-      * "refinement":    move ONLY to a strict BFO subclass of current
+      * "refinement":    move ONLY to a strict subclass of current
                          (when `step6d_strict_subclass=True` in YAML)
 
     Returns None if current category is already the best match (or no valid
     candidate exists under the active guardrails).
     Never downgrades to a less specific category.
-    Prefers domain-specific categories (GeoCore/GeoReservoir) over raw BFO.
+    Prefers domain-specific categories (e.g., GeoCore/GeoReservoir) over
+    raw upper-ontology categories.
     """
     current_metatypes = get_metatypes(current_category)
 
@@ -169,7 +170,7 @@ def _find_best_category(
         if not overlap:
             continue
         # In refinement mode + strict-subclass guard: candidate must be a
-        # strict BFO subclass of the current category. Skip otherwise.
+        # strict subclass of the current category. Skip otherwise.
         if (
             mode == "refinement"
             and _CFG.step6d_strict_subclass()
@@ -230,7 +231,8 @@ def run_relation_reclassification(
     output_path: str | None = None,
 ) -> str:
     """
-    Reclassify taxonomy terms using BFO metatype evidence from accepted relations.
+    Reclassify taxonomy terms using upper-ontology metatype evidence from
+    accepted relations.
 
     Args:
         taxonomy_csv: Path to 6c_taxonomy_cleaned.csv
@@ -336,7 +338,7 @@ def run_relation_reclassification(
                 "Old_Category": current_category,
                 "New_Category": current_category,
                 "Detail": (
-                    f"BFO disjoint pair both implied: {{{a}, {b}}}. "
+                    f"Upper-ontology disjoint pair both implied: {{{a}, {b}}}. "
                     f"Implied set: {{{', '.join(sorted(implied_metatypes))}}}"
                 ),
                 "Evidence_Count": len(evidence),
@@ -485,7 +487,7 @@ if __name__ == "__main__":
     import argparse
 
     parser = argparse.ArgumentParser(
-        description="Reclassify taxonomy terms using relation-based BFO metatype evidence"
+        description="Reclassify taxonomy terms using relation-based upper-ontology metatype evidence"
     )
     parser.add_argument("taxonomy_csv", help="Path to 6c_taxonomy_cleaned.csv")
     parser.add_argument("--relations", required=True, help="Path to 6c_relations_cleaned.csv")

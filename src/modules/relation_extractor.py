@@ -2,7 +2,8 @@
 Relation Extractor — Step 6b of the PreSaltOntoLearn pipeline.
 
 Extracts ontological relations from NLDs using an LLM, validates them
-against BFO domain/range constraints, and outputs accepted relations.
+against upper-ontology domain/range constraints, and outputs accepted
+relations.
 
 Input:  5_categorized_ontology.csv (Term, Category, NLD)
 Output: 6b_relations.csv (Term, Category, Property, Property_IRI,
@@ -13,8 +14,10 @@ Design decisions (from 5-subagent consensus):
   - 16 Tier 1 properties offered to the LLM (covers >95% of geological NLDs)
   - Flat sequential batches of 10 terms
   - 2-level confidence: 1.0 (explicit) or 0.8 (implied); <0.8 = don't extract
-  - Post-hoc property specialization: LLM extracts generic has_part →
-    validator upgrades to has_continuant_part / has_occurrent_part
+  - Post-hoc property specialization: LLM emits a generic property (e.g.,
+    has_part); Python upgrades it to the upper-ontology-specific variant
+    (e.g., has_continuant_part) using rules declared under
+    `property_specializations:` in domains/<name>/ontology_config.yaml.
   - Deterministic filler_source resolution in Python (not LLM)
   - Checkpoint/resume with single flat CSV
 """
@@ -31,12 +34,16 @@ from tqdm import tqdm
 
 from src.utils import log
 from src.utils.gemini_client import generate
+from src.utils.ontology_config import get_config
 from src.utils.prompt_loader import load_prompt
 from src.utils.relation_validator import (
     PROPERTY_CONSTRAINTS,
+    get_metatypes,
     validate_relation_full,
     ValidationResult,
 )
+
+_CFG = get_config()
 
 # ────────────────────────────────────────────────────────────────────────
 # Configuration
@@ -72,36 +79,24 @@ def _specialize_property(
     subject_cat: str,
     filler_cat: str | None,
 ) -> str:
-    """Post-hoc property specialization.
+    """Apply YAML-declared specialization rules to a generic property.
 
-    Upgrades generic has_part/part_of to BFO-precise variants
-    based on metatypes of subject and filler.
+    Walks `property_specializations:` in ontology_config.yaml; the first
+    matching rule wins. Returns the original property name if no rule
+    matches (downstream validator will reject any cross-category violation).
     """
-    from src.utils.relation_validator import get_metatypes, BFOMeta
-
-    if property_name not in ("has_part", "part_of"):
-        return property_name
-
     subj_meta = get_metatypes(subject_cat) or frozenset()
     filler_meta = get_metatypes(filler_cat) if filler_cat else frozenset()
-
     if not filler_meta:
         return property_name
 
-    subj_is_occ = bool(subj_meta & {BFOMeta.OCCURRENT, BFOMeta.PROCESS, BFOMeta.PROCESS_BOUNDARY})
-    filler_is_occ = bool(filler_meta & {BFOMeta.OCCURRENT, BFOMeta.PROCESS, BFOMeta.PROCESS_BOUNDARY})
-
-    if property_name == "has_part":
-        if subj_is_occ and filler_is_occ:
-            return "has_occurrent_part"
-        elif not subj_is_occ and not filler_is_occ:
-            return "has_continuant_part"
-    elif property_name == "part_of":
-        if subj_is_occ and filler_is_occ:
-            return "occurrent_part_of"
-        elif not subj_is_occ and not filler_is_occ:
-            return "continuant_part_of"
-
+    for spec in _CFG.property_specializations():
+        if spec.generic != property_name:
+            continue
+        for rule in spec.rules:
+            if rule.matches(subj_meta, filler_meta):
+                return rule.specialize_to
+        break
     return property_name
 
 
