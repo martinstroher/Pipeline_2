@@ -13,12 +13,37 @@ via `str.format(...)`.
 
 import os
 import re
+from pathlib import Path
 
 from src.utils.domain_profile import get_profile
+from src.utils.ontology_config import get_config
 
-_PROMPTS_DIR = os.path.join(os.path.dirname(__file__), "..", "..", "prompts")
+_REPO_ROOT = Path(__file__).resolve().parents[2]
+_STUDIES_PROMPTS_DIR = _REPO_ROOT / "studies" / "prompts"
 _SEPARATOR = "[PROMPT_TEMPLATE]"
 _PLACEHOLDER_RE = re.compile(r"<<\s*(\w+)\s*>>")
+
+
+def _prompt_roots() -> list[Path]:
+    """Active prompt-search roots, in priority order.
+
+    1. <active-domain>/prompts/   — production pipeline prompts (per-domain)
+    2. studies/prompts/           — cross-domain study prompts (ablation, etc.)
+    """
+    domain_dir = get_config()._source_path.parent
+    return [domain_dir / "prompts", _STUDIES_PROMPTS_DIR]
+
+
+def prompt_files() -> list[tuple[str, Path]]:
+    """Return [(filename, full_path), …] across all prompt roots, dedup'd by name."""
+    seen: dict[str, Path] = {}
+    for root in _prompt_roots():
+        if not root.exists():
+            continue
+        for entry in sorted(root.iterdir()):
+            if entry.is_file() and entry.suffix == ".txt" and entry.name not in seen:
+                seen[entry.name] = entry
+    return list(seen.items())
 
 
 def _interpolate(text: str, filename: str) -> str:
@@ -54,9 +79,20 @@ def load_prompt(filename: str) -> tuple[str, str]:
     """Load system instruction and prompt template from a prompt file.
 
     Returns (system_instruction, prompt_template) with domain placeholders
-    already interpolated.
+    already interpolated. Resolves the file across the active prompt roots
+    (active domain first, then `studies/prompts/`).
     """
-    path = os.path.join(_PROMPTS_DIR, filename)
+    path: Path | None = None
+    for root in _prompt_roots():
+        candidate = root / filename
+        if candidate.exists():
+            path = candidate
+            break
+    if path is None:
+        roots = [str(r) for r in _prompt_roots()]
+        raise FileNotFoundError(
+            f"Prompt '{filename}' not found in any prompt root: {roots}"
+        )
     with open(path, "r", encoding="utf-8") as f:
         content = f.read()
 

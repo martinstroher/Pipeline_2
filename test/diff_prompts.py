@@ -12,7 +12,7 @@ import sys
 ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 sys.path.insert(0, ROOT)
 
-from src.utils.prompt_loader import load_prompt, _PROMPTS_DIR  # noqa: E402
+from src.utils.prompt_loader import load_prompt, prompt_files  # noqa: E402
 
 BASELINE_PATH = os.path.join(os.path.dirname(__file__), "fixtures", "prompts_baseline.json")
 
@@ -22,9 +22,7 @@ def main() -> int:
         baseline: dict[str, dict[str, str]] = json.load(f)
 
     current: dict[str, dict[str, str]] = {}
-    for name in sorted(os.listdir(_PROMPTS_DIR)):
-        if not name.endswith(".txt"):
-            continue
+    for name, _path in prompt_files():
         system, template = load_prompt(name)
         current[name] = {"system": system, "template": template}
 
