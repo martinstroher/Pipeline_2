@@ -277,7 +277,7 @@ def _extract_owl_definition(owl_path: Path, iri: str) -> str | None:
 # Loader
 # ─────────────────────────────────────────────────────────────────────────
 
-_DEFAULT_CONFIG_PATH = "ontology_config.yaml"
+_DEFAULT_CONFIG_PATH = Path("domains") / "presalt" / "ontology_config.yaml"
 
 
 def _resolve_config_path() -> Path:
