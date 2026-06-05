@@ -164,15 +164,25 @@ def run_test():
         print("\n[FAIL] Pipeline (Steps 0-7) exited with non-zero return code!")
         sys.exit(result.returncode)
 
-    # Derive Step 6 and 7 paths from the categorized CSV path (mirrors taxonomy_builder logic)
+    # Derive Step 6 and 7 paths from the categorized CSV path (mirrors taxonomy_builder logic).
+    # owl_exporter writes the .ttl next to the *final* taxonomy CSV it was handed, so the
+    # filename depends on which 6-tier step actually ran (6d > 6c > 6 > legacy 7_ontology).
     cat_csv_relative = env.get("CATEGORIZED_LLM_TERMS", "test/output_test/5_categorized_ontology.csv")
     taxonomy_csv_rel = (
         os.path.splitext(cat_csv_relative)[0]
         .replace("5_categorized_ontology", "6_taxonomy") + ".csv"
     )
-    owl_ttl_rel = taxonomy_csv_rel.replace("6_taxonomy", "7_ontology").replace(".csv", ".ttl")
     taxonomy_csv_abs = os.path.join(root_dir, taxonomy_csv_rel)
-    owl_ttl_abs = os.path.join(root_dir, owl_ttl_rel)
+    _ttl_candidates = [
+        taxonomy_csv_rel.replace("6_taxonomy", "6d_taxonomy_reclassified").replace(".csv", ".ttl"),
+        taxonomy_csv_rel.replace("6_taxonomy", "6c_taxonomy_cleaned").replace(".csv", ".ttl"),
+        taxonomy_csv_rel.replace(".csv", ".ttl"),
+        taxonomy_csv_rel.replace("6_taxonomy", "7_ontology").replace(".csv", ".ttl"),
+    ]
+    owl_ttl_abs = next(
+        (os.path.join(root_dir, p) for p in _ttl_candidates if os.path.exists(os.path.join(root_dir, p))),
+        os.path.join(root_dir, _ttl_candidates[0]),
+    )
 
     # 5. Assertions — file existence + content validation
     print("\nPipeline execution finished. Verifying artifacts...\n")
