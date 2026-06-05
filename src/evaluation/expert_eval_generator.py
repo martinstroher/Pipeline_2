@@ -495,17 +495,12 @@ def build_instructions_sheet() -> list[list[str]]:
     """Sheet 1: Evaluation instructions with Likert scale definitions.
 
     Returns raw rows (list of [section, details]) for custom formatting.
-    Content is sourced from the active domain profile's
-    `evaluation_workbook.instruction_rows` so the workbook is retargetable
-    without editing this module.
+    Content is sourced from `studies/expert_eval.yaml`
+    (`instructions_sheet.rows`) so the workbook is retargetable without
+    editing this module.
     """
-    from src.utils.domain_profile import get_profile
-    rows = get_profile().instruction_rows
-    if not rows:
-        raise RuntimeError(
-            "Domain profile has no evaluation_workbook.instruction_rows. "
-            "Add the section to your profile YAML before generating workbooks."
-        )
+    from src.utils.study_config import get_study_config
+    rows = get_study_config().instruction_rows
     return [[section, details] for section, details in rows]
 
 

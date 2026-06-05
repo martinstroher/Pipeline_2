@@ -1,27 +1,22 @@
-"""Utility to load LLM prompts from the prompts/ directory.
+"""Utility to load LLM prompts from per-domain and studies prompt roots.
 
-Prompts can contain `<<key>>` placeholders that the loader interpolates
-from the active domain profile (see `src/utils/domain_profile.py`). This
-keeps domain-specific text (personas, examples, evaluation labels) out
-of the prompt files so the same pipeline can be retargeted to another
-scientific domain by swapping the profile YAML.
+Prompts are end-to-end artifacts authored per domain — they ship with their
+persona, examples, and constraints inline. Runtime data is injected by the
+caller via `str.format(**vars)` on the returned template strings; load-time
+domain interpolation (`<<persona>>` etc.) was removed in Phase 6.5.
 
-Domain placeholders use `<<…>>` (rather than `{…}`) so they do not
-collide with the runtime `{var}` placeholders that callers later resolve
-via `str.format(...)`.
+Resolution order: active-domain prompts first, then cross-domain studies
+prompts. The active domain is determined by the directory containing
+`ontology_config.yaml` (see `src/utils/ontology_config.py`).
 """
 
-import os
-import re
 from pathlib import Path
 
-from src.utils.domain_profile import get_profile
 from src.utils.ontology_config import get_config
 
 _REPO_ROOT = Path(__file__).resolve().parents[2]
 _STUDIES_PROMPTS_DIR = _REPO_ROOT / "studies" / "prompts"
 _SEPARATOR = "[PROMPT_TEMPLATE]"
-_PLACEHOLDER_RE = re.compile(r"<<\s*(\w+)\s*>>")
 
 
 def _prompt_roots() -> list[Path]:
@@ -46,41 +41,11 @@ def prompt_files() -> list[tuple[str, Path]]:
     return list(seen.items())
 
 
-def _interpolate(text: str, filename: str) -> str:
-    """Replace `<<key>>` placeholders with values from the domain profile.
-
-    Currently supports:
-      <<persona>>     → profile.persona(<filename without .txt>)
-      <<short_name>>  → profile.short_name
-      <<name>>        → profile.name
-    """
-    if "<<" not in text:
-        return text
-    profile = get_profile()
-    stem = os.path.splitext(filename)[0]
-
-    def repl(match: re.Match) -> str:
-        key = match.group(1)
-        if key == "persona":
-            return profile.persona(stem)
-        if key == "short_name":
-            return profile.short_name
-        if key == "name":
-            return profile.name
-        raise KeyError(
-            f"Prompt '{filename}' references unknown placeholder <<{key}>>. "
-            f"Supported: persona, short_name, name."
-        )
-
-    return _PLACEHOLDER_RE.sub(repl, text)
-
-
 def load_prompt(filename: str) -> tuple[str, str]:
     """Load system instruction and prompt template from a prompt file.
 
-    Returns (system_instruction, prompt_template) with domain placeholders
-    already interpolated. Resolves the file across the active prompt roots
-    (active domain first, then `studies/prompts/`).
+    Returns (system_instruction, prompt_template). Resolves the file across
+    the active prompt roots (active domain first, then `studies/prompts/`).
     """
     path: Path | None = None
     for root in _prompt_roots():
@@ -102,8 +67,5 @@ def load_prompt(filename: str) -> tuple[str, str]:
     system_part, prompt_part = content.split(_SEPARATOR, 1)
     system_part = system_part.replace("[SYSTEM_INSTRUCTION]", "").strip()
     prompt_part = prompt_part.strip()
-
-    system_part = _interpolate(system_part, filename)
-    prompt_part = _interpolate(prompt_part, filename)
 
     return system_part, prompt_part

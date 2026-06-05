@@ -1,40 +1,19 @@
-# Domain Profile — PreSaltOntoLearn (Brazilian Pre-Salt petroleum geology)
+# Expert-Evaluation Study Configuration — PreSaltOntoLearn
 #
-# This file decouples domain-specific text (expert personas, examples, CQs,
-# evaluation labels) from the pipeline templates so the same code can be
-# retargeted to a different scientific domain by swapping this YAML.
+# Instructions sheet rendered as the first tab of the expert-evaluation
+# workbook produced by src/evaluation/expert_eval_generator.py. Each entry
+# is a [Section, Details] pair shown verbatim.
 #
-# Phase 2a: persona sentences only. The prompts wrap each persona in the
-# template "You are <<persona>>." — that prefix/suffix stays in the prompt
-# file so each persona below is just the descriptive fragment.
+# The 5-sheet workbook structure (Instructions, Term_Relevance, NLD_Quality,
+# Category_Correct, Taxonomy_Correct) is fixed in code. Only the prose lives
+# here. Authors retargeting the pipeline to a new domain rewrite this file
+# to swap Likert anchors, calibration examples, and project name.
+#
+# Load order: src/utils/study_config.py reads this file and exposes
+# `get_study_config().instruction_rows` to the workbook generator.
 
-name: "Brazilian Pre-Salt petroleum geology"
-short_name: "Pre-Salt"
-
-# Persona text injected into each prompt's [SYSTEM_INSTRUCTION] section via
-# the <<persona>> placeholder. Keys map 1:1 to prompt filenames (no .txt).
-personas:
-  term_extraction: "an expert geologist and ontology engineer specializing in South Atlantic Pre-Salt petroleum systems"
-  nld_generation: "a senior geoscientist and ontology engineer. Your expertise spans oil and gas exploration geology, structural geology, stratigraphy, and petroleum systems, with a specific focus on the carbonate reservoirs of the Brazilian Pre-Salt"
-  term_categorization: "an expert ontology engineer specializing in foundational (BFO) and geological (GeoCore and GeoReservoir) ontologies. You process data in batches and your response format MUST be a valid JSON array of objects"
-  ablation_categorization_nld: "an expert ontology engineer specializing in foundational (BFO) and geological (GeoCore and GeoReservoir) ontologies. You process data in batches and your response format MUST be a valid JSON array of objects"
-  ablation_categorization_rag: "an expert ontology engineer specializing in foundational (BFO) and geological (GeoCore and GeoReservoir) ontologies. You process data in batches and your response format MUST be a valid JSON array of objects"
-  cq_scoring: "an ontology scope auditor for a Pre-Salt petroleum geology ontology"
-  cq_synonym_triage: "a senior geoscientist and ontology engineer specialising in Brazilian Pre-Salt petroleum geology. Your task is to classify candidate near-synonym clusters"
-  ontology_critic: "a senior geoscientist and ontology engineer specialising in petroleum geology and formal ontology (BFO, GeoCore)"
-  ontology_critic_cross: "a senior geoscientist and ontology engineer specialising in petroleum geology and formal ontology (BFO, GeoCore)"
-  ontology_critic_essentiality: "a senior geoscientist and ontology engineer performing a final quality gate on a Pre-Salt petroleum geology ontology"
-  relation_extraction: "a senior geoscientist and ontology engineer"
-  taxonomy_building: "an expert ontology engineer building a geological taxonomy"
-
-# Instruction sheet rendered as the first tab of the expert-evaluation workbook.
-# Each entry is a [Section, Details] pair shown verbatim. Domain authors can
-# rewrite Likert anchors, calibration examples, and project name without
-# touching `expert_eval_generator.py`. The 5-sheet structure (Instructions,
-# Term_Relevance, NLD_Quality, Category_Correct, Taxonomy_Correct) is fixed
-# in code; only the prose lives here.
-evaluation_workbook:
-  instruction_rows:
+instructions_sheet:
+  rows:
     - ["EXPERT EVALUATION — PreSaltOntoLearn Pipeline", ""]
     - ["", ""]
     - ["PURPOSE", "Evaluate the quality of automatically generated definitions, ontological classifications, and taxonomic hierarchy for Pre-Salt petroleum geology terms. Your evaluations are BLINDED — do not attempt to identify which system produced which output."]
