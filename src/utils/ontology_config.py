@@ -54,6 +54,7 @@ class ClassDef:
 class OntologyDef:
     """A single upper ontology in scope."""
     key: str
+    display_name: str                    # human-readable label for prompt section headers
     owl_path: Path
     namespace: str
     prefix: str
@@ -97,6 +98,7 @@ class OntologyConfig:
     """Top-level configuration object, loaded once per process."""
     project: ProjectMeta
     ontologies: dict[str, OntologyDef]
+    waterfall: tuple[str, ...]                 # ordered ontology keys, most-specific first
     step6d: Step6dConfig
     provenance_tiers_active: frozenset[str]
     verifier_prefixes: dict[str, str]
@@ -174,6 +176,25 @@ class OntologyConfig:
             definition = cls.llm_definition or _extract_owl_definition(onto.owl_path, cls.iri) or cls.label
             lines.append(f"{cls.label}: {definition}")
         return "\n".join(lines)
+
+    def waterfall_ontologies(self) -> list[str]:
+        """Ordered ontology keys of the categorization waterfall (most specific first)."""
+        return list(self.waterfall)
+
+    def categorization_block(self) -> str:
+        """Render the full `{categories_block}` prompt injection.
+
+        Concatenates `### <DisplayName> Categories:\n<definitions>` sections
+        for every ontology in `waterfall()`, in order, separated by blank
+        lines. This is the SINGLE block that production + ablation
+        categorization prompts inject via the `{categories_block}` placeholder.
+        """
+        sections: list[str] = []
+        for key in self.waterfall:
+            onto = self.ontologies[key]
+            defs = self.llm_definitions_block(key)
+            sections.append(f"### {onto.display_name} Categories:\n{defs}")
+        return "\n\n".join(sections)
 
     def owl_file_paths(self) -> list[Path]:
         """Ordered list of all OWL files in scope (classes + property-only)."""
@@ -419,6 +440,7 @@ def _build_config(raw: dict, source_path: Path) -> OntologyConfig:
         disjoint = tuple((a, b) for a, b in disjoint_raw)
         ontologies[key] = OntologyDef(
             key=key,
+            display_name=entry.get("display_name", key),
             owl_path=owl_path,
             namespace=entry["namespace"],
             prefix=entry["prefix"],
@@ -427,6 +449,25 @@ def _build_config(raw: dict, source_path: Path) -> OntologyConfig:
             classes=classes,
             disjoint_pairs=disjoint,
         )
+
+    # waterfall (must reference known keys with at least one metatype'd class)
+    waterfall_raw = raw.get("waterfall") or []
+    if not waterfall_raw:
+        raise RuntimeError("ontology_config.yaml: top-level `waterfall:` list is required and must be non-empty.")
+    seen_wf: set[str] = set()
+    for key in waterfall_raw:
+        if key in seen_wf:
+            raise RuntimeError(f"waterfall lists ontology '{key}' more than once.")
+        seen_wf.add(key)
+        onto = ontologies.get(key)
+        if onto is None:
+            raise RuntimeError(f"waterfall references unknown ontology key '{key}'.")
+        if not any(c.metatypes for c in onto.classes):
+            raise RuntimeError(
+                f"waterfall ontology '{key}' has no class with `metatypes:` set — "
+                "property-only ontologies cannot participate in classification."
+            )
+    waterfall = tuple(waterfall_raw)
 
     # step6d (env override has priority)
     s = raw.get("step6d", {})
@@ -461,6 +502,7 @@ def _build_config(raw: dict, source_path: Path) -> OntologyConfig:
     cfg = OntologyConfig(
         project=project,
         ontologies=ontologies,
+        waterfall=waterfall,
         step6d=step6d,
         provenance_tiers_active=provenance_tiers,
         verifier_prefixes=verifier_prefixes,

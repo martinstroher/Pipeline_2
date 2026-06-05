@@ -13,18 +13,6 @@ from src.utils.prompt_loader import load_prompt
 from src.utils.ontology_config import get_config
 
 
-def _extract_category_names(text: str) -> set:
-    """Extract category names from definition file (format: 'Name: description')."""
-    names = set()
-    for line in text.strip().splitlines():
-        line = line.strip()
-        if line and ':' in line:
-            name = line.split(':')[0].strip()
-            if name:
-                names.add(name)
-    return names
-
-
 def run_term_categorization():
     BATCH_SIZE = int(os.environ.get("BATCH_SIZE", 1))
     MODEL_NAME = os.environ.get("LLM_GENERATION_MODEL", "gemini-2.5-pro")
@@ -35,17 +23,15 @@ def run_term_categorization():
     log.info(f"Categorizing in batches of {BATCH_SIZE}.")
 
     cfg = get_config()
-    georeservoir_definitions = cfg.llm_definitions_block("georeservoir")
-    geocore_definitions = cfg.llm_definitions_block("geocore")
-    bfo_definitions = cfg.llm_definitions_block("bfo")
-    if not geocore_definitions or not bfo_definitions:
-        raise RuntimeError("Required ontology definition blocks are empty in ontology_config.yaml.")
+    categories_block = cfg.categorization_block()
+    if not categories_block.strip():
+        raise RuntimeError("categorization_block() returned empty — check waterfall: in ontology_config.yaml.")
 
-    valid_categories = (
-        _extract_category_names(georeservoir_definitions)
-        | _extract_category_names(geocore_definitions)
-        | _extract_category_names(bfo_definitions)
-    )
+    valid_categories = {
+        label
+        for key in cfg.waterfall_ontologies()
+        for label in cfg.categories_for(key)
+    }
 
 
     def load_nlds_from_csv(filepath):
@@ -84,9 +70,7 @@ def run_term_categorization():
             json_batch_str = json.dumps(batch_list, indent=2)
 
             try:
-                final_prompt = prompt_template.format(geocore_definitions=geocore_definitions,
-                                                      bfo_definitions=bfo_definitions,
-                                                      georeservoir_definitions= georeservoir_definitions,
+                final_prompt = prompt_template.format(categories_block=categories_block,
                                                       json_batch=json_batch_str)
                 response_text = generate(
                     final_prompt,

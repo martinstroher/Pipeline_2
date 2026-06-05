@@ -184,23 +184,12 @@ def run_condition_d(terms: list[str], vector_store, bm25_retriever) -> pd.DataFr
 # Categorizer (self-contained, supports all 4 conditions)
 # ---------------------------------------------------------------------------
 
-def _load_definitions() -> dict:
-    cfg = get_config()
-    return {
-        "georeservoir": cfg.llm_definitions_block("georeservoir"),
-        "geocore": cfg.llm_definitions_block("geocore"),
-        "bfo": cfg.llm_definitions_block("bfo"),
-    }
-
-
-def _build_categorizer_prompt(defs: dict, is_raw_rag: bool = False):
+def _build_categorizer_prompt(is_raw_rag: bool = False):
     """Return (system_instruction, prompt_template) for the categorizer."""
     filename = "ablation_categorization_rag.txt" if is_raw_rag else "ablation_categorization_nld.txt"
     system_instruction, prompt_template = load_prompt(filename)
     prompt_template = prompt_template.format(
-        georeservoir_definitions=defs["georeservoir"],
-        geocore_definitions=defs["geocore"],
-        bfo_definitions=defs["bfo"],
+        categories_block=get_config().categorization_block(),
         json_batch="{json_batch}",
     )
     return system_instruction, prompt_template
@@ -254,7 +243,7 @@ def _categorize_batch(
 
 
 def run_categorization(
-    condition: str, nld_df: pd.DataFrame, defs: dict, batch_size: int = 5
+    condition: str, nld_df: pd.DataFrame, batch_size: int = 5
 ) -> pd.DataFrame:
     """Run categorization for a given condition's NLD output."""
     print(f"\n--- Categorizing Condition {condition} ({CONDITION_LABELS[condition]}) ---")
@@ -281,7 +270,7 @@ def run_categorization(
         print(f"  Resuming: {len(completed)} terms already categorized.")
 
     is_raw_rag = condition == "D"
-    sys_instr, prompt_tmpl = _build_categorizer_prompt(defs, is_raw_rag=is_raw_rag)
+    sys_instr, prompt_tmpl = _build_categorizer_prompt(is_raw_rag=is_raw_rag)
     model_name = os.environ.get("LLM_GENERATION_MODEL", "gemini-2.5-pro")
     model_temp = float(os.environ.get("LLM_GENERATION_TEMPERATURE", 0))
 
@@ -341,7 +330,6 @@ def run_ablation(conditions: list[str] | None = None):
         print("\nSetting up RAG infrastructure...")
         vector_store, bm25 = setup_rag()
 
-    defs = _load_definitions()
     batch_size = int(os.environ.get("BATCH_SIZE", 5))
 
     # --- NLD generation per condition ---
@@ -379,7 +367,7 @@ def run_ablation(conditions: list[str] | None = None):
         print(f"\n  Running categorization for conditions {cat_conditions} in parallel...")
         with ThreadPoolExecutor(max_workers=len(cat_conditions)) as executor:
             futures = {
-                executor.submit(run_categorization, cond, nld_results[cond], defs, batch_size): cond
+                executor.submit(run_categorization, cond, nld_results[cond], batch_size): cond
                 for cond in cat_conditions
             }
             for future in as_completed(futures):

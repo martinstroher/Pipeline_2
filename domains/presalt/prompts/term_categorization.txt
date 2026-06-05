@@ -20,14 +20,7 @@ Your task is to classify a batch of geological terms based on their Natural Lang
 ---
 **ONTOLOGY CATEGORIES REFERENCE:**
 
-### GeoReservoir Categories:
-{georeservoir_definitions}
-
-### GeoCore Categories:
-{geocore_definitions}
-
-### BFO Categories:
-{bfo_definitions}
+{categories_block}
 
 ---
 **EXAMPLES:**

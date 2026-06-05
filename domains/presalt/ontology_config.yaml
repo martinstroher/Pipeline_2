@@ -64,6 +64,23 @@ provenance_tiers_active:
   - spec_curation
 
 # -------------------------------------------------------------------------
+# Waterfall classification order (most specific → most general)
+# -------------------------------------------------------------------------
+# Step 5 (term categorizer) and the ablation study cascade through these
+# ontologies in order, falling through to the next tier only when no
+# category in the current tier fits. `categorization_block()` renders the
+# definitions of every listed ontology, in this order, into the
+# {categories_block} prompt placeholder.
+#
+# Listed entries MUST appear as keys in `ontologies:` below and MUST have
+# at least one class with a non-empty `metatypes` set. Property-only
+# ontologies (e.g. ro) must NOT be listed here.
+waterfall:
+  - georeservoir
+  - geocore
+  - bfo
+
+# -------------------------------------------------------------------------
 # Ontologies in scope
 # -------------------------------------------------------------------------
 # Per-ontology keys:
@@ -84,6 +101,7 @@ ontologies:
 
   # ─────────────────────────────────────────────────────────────────────
   bfo:
+    display_name: "BFO"
     owl: "resources/bfo-core.owl"
     namespace: "http://purl.obolibrary.org/obo/"
     prefix: "bfo"
@@ -191,6 +209,7 @@ ontologies:
 
   # ─────────────────────────────────────────────────────────────────────
   geocore:
+    display_name: "GeoCore"
     owl: "resources/geocore-full.owl"
     namespace: "https://www.inf.ufrgs.br/bdi/ontologies/"
     prefix: "geocore"
@@ -239,6 +258,7 @@ ontologies:
 
   # ─────────────────────────────────────────────────────────────────────
   georeservoir:
+    display_name: "GeoReservoir"
     owl: "resources/geores-full.owl"
     namespace: "https://www.inf.ufrgs.br/bdi/ontologies/"
     prefix: "georeservoir"

@@ -21,14 +21,7 @@ Your task is to classify a batch of geological terms.
 ---
 **ONTOLOGY CATEGORIES REFERENCE:**
 
-### GeoReservoir Categories:
-{georeservoir_definitions}
-
-### GeoCore Categories:
-{geocore_definitions}
-
-### BFO Categories:
-{bfo_definitions}
+{categories_block}
 
 ---
 **DATA TO CLASSIFY:**

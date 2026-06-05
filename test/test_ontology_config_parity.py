@@ -166,6 +166,32 @@ def main() -> int:
             os.environ["STEP6D_MODE"] = _prev
         reload_config()  # restore default
 
+    # ── Phase 6.3: waterfall + categories_block accessors ──
+    _assert_eq(
+        "waterfall_ontologies() order",
+        ["georeservoir", "geocore", "bfo"],
+        cfg.waterfall_ontologies(),
+    )
+    block = cfg.categorization_block()
+    expected_headers = [
+        "### GeoReservoir Categories:",
+        "### GeoCore Categories:",
+        "### BFO Categories:",
+    ]
+    if not all(h in block for h in expected_headers):
+        msg = f"[FAIL] categorization_block missing expected headers: {expected_headers}"
+        _FAILED.append(msg)
+        print(msg)
+    else:
+        # Verify ordering: each header must appear before the next.
+        positions = [block.find(h) for h in expected_headers]
+        if positions != sorted(positions):
+            msg = f"[FAIL] categorization_block header order wrong: positions={positions}"
+            _FAILED.append(msg)
+            print(msg)
+        else:
+            print(f"[OK]   categorization_block: 3 ordered headers, {len(block.splitlines())} lines")
+
     # ── Final summary ──
     print()
     if _FAILED:
