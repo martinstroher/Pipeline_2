@@ -482,7 +482,7 @@ def run_ontology_critic(
     # ── Repair broken parent references ─────────────────────────────────
     # After all passes, some terms may reference parents that were removed.
     # Re-parent them to their Category (upper-ontology anchor).
-    from src.modules.taxonomy_builder import UPPER_IRIS
+    from src.modules.construct.taxonomy_builder import UPPER_IRIS
     _upper_lower = {k.lower(): k for k in UPPER_IRIS}
     valid_terms = set(df["Term"].values)
 

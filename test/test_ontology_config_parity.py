@@ -43,7 +43,7 @@ def main() -> int:
     cfg = get_config()
 
     # ── UPPER_IRIS parity ──
-    from src.modules.taxonomy_builder import UPPER_IRIS as LEGACY_UPPER_IRIS
+    from src.modules.construct.taxonomy_builder import UPPER_IRIS as LEGACY_UPPER_IRIS
     _assert_eq("UPPER_IRIS dict equality", LEGACY_UPPER_IRIS, cfg.upper_iris())
 
     # ── _CATEGORY_TO_METATYPES parity ──

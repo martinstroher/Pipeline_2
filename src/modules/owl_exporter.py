@@ -32,7 +32,7 @@ GEOCORE_NS = Namespace(_CFG.namespace_for("geocore"))
 GEORESERVOIR_NS = Namespace(_CFG.namespace_for("georeservoir"))
 
 # Import the IRI mapping from taxonomy_builder
-from src.modules.taxonomy_builder import UPPER_IRIS
+from src.modules.construct.taxonomy_builder import UPPER_IRIS
 
 # Build case-insensitive lookup for UPPER_IRIS
 _UPPER_IRIS_LOWER = {k.lower(): v for k, v in UPPER_IRIS.items()}

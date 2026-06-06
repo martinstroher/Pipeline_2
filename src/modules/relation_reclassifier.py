@@ -42,7 +42,7 @@ from src.utils.relation_validator import (
     _CATEGORY_TO_METATYPES,
     get_metatypes,
 )
-from src.modules.taxonomy_builder import UPPER_IRIS
+from src.modules.construct.taxonomy_builder import UPPER_IRIS
 
 _CFG = get_config()
 

@@ -122,7 +122,7 @@ def _dispatch_subcommand(args, parser) -> bool:
         return True
 
     if args.taxonomy:
-        from src.modules.taxonomy_builder import run_taxonomy_builder
+        from src.modules.construct.taxonomy_builder import run_taxonomy_builder
         run_taxonomy_builder(args.taxonomy)
         return True
 
@@ -137,7 +137,7 @@ def _dispatch_subcommand(args, parser) -> bool:
         return True
 
     if args.relations:
-        from src.modules.relation_extractor import run_relation_extraction
+        from src.modules.construct.relation_extractor import run_relation_extraction
         run_relation_extraction(args.relations)
         return True
 
@@ -278,7 +278,7 @@ def _run_refinement_pipeline(args, _stop) -> None:
     threshold_paths = run_cq_refinement(cat_csv)
     if _check_stop(_stop, "5b"): return
 
-    from src.modules.taxonomy_builder import run_taxonomy_builder
+    from src.modules.construct.taxonomy_builder import run_taxonomy_builder
     from src.modules.owl_exporter import run_owl_export
     from src.modules.ontology_verifier import run_ontology_verification
     import pandas as _pd
@@ -305,7 +305,7 @@ def _run_refinement_pipeline(args, _stop) -> None:
         rel_csv = None
         if not args.skip_relations:
             log.banner(f"T{t}-6b", f"Relation Extraction (threshold ≥{t})")
-            from src.modules.relation_extractor import run_relation_extraction
+            from src.modules.construct.relation_extractor import run_relation_extraction
             rel_csv = os.path.join(t_dir, "6b_relations.csv")
             run_relation_extraction(t_cat_csv, output_path=rel_csv)
 
@@ -425,7 +425,7 @@ def main():
         return
 
     log.banner(6, "Taxonomy Builder")
-    from src.modules.taxonomy_builder import run_taxonomy_builder
+    from src.modules.construct.taxonomy_builder import run_taxonomy_builder
     cat_csv = os.environ["CATEGORIZED_LLM_TERMS"]
     run_taxonomy_builder(cat_csv)
     if _check_stop(_stop, "6"): return
@@ -434,7 +434,7 @@ def main():
     relations_csv = None
     if not args.skip_relations:
         log.banner("6b", "Relation Extraction")
-        from src.modules.relation_extractor import run_relation_extraction
+        from src.modules.construct.relation_extractor import run_relation_extraction
         relations_csv = run_relation_extraction(cat_csv)
     else:
         log.info("Step 6b: Relation extraction skipped (--skip-relations)")
