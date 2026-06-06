@@ -14,11 +14,13 @@ from __future__ import annotations
 
 import json
 import os
+from concurrent.futures import ThreadPoolExecutor
 from pathlib import Path
 from typing import Any
 
 import pandas as pd
 import yaml
+from tqdm import tqdm
 
 from src.utils import log
 from src.utils.csv_io import read_csv, write_csv
@@ -153,20 +155,42 @@ def _dispatch_llm_filter(
     subject_ids = [s["term"] for s in active_subjects]
 
     batch_size = int(os.environ.get("VALIDATION_LLM_BATCH_SIZE", "10"))
+    concurrency = max(1, int(os.environ.get("VALIDATION_LLM_CONCURRENCY", "6")))
     subj_type = _subject_type(flt.get("target", "terms"))
-    out: list[Verdict] = []
+
+    chunks: list[tuple[list[dict], list[str]]] = []
     for start in range(0, len(batch), batch_size):
-        chunk = batch[start:start + batch_size]
-        chunk_ids = subject_ids[start:start + batch_size]
-        out.extend(
-            llm_engine.evaluate_batch(
-                prompt,
-                {"batch_json": json.dumps(chunk, ensure_ascii=False)},
-                rule_id=flt["id"],
-                subject_type=subj_type,
-                subject_ids=chunk_ids,
-            )
+        chunks.append((
+            batch[start:start + batch_size],
+            subject_ids[start:start + batch_size],
+        ))
+
+    def _call(args: tuple[list[dict], list[str]]) -> list[Verdict]:
+        chunk, chunk_ids = args
+        return llm_engine.evaluate_batch(
+            prompt,
+            {"batch_json": json.dumps(chunk, ensure_ascii=False)},
+            rule_id=flt["id"],
+            subject_type=subj_type,
+            subject_ids=chunk_ids,
         )
+
+    out: list[Verdict] = []
+    desc = f"  {flt['id']} ({len(chunks)} batches×{batch_size})"
+    if concurrency <= 1 or len(chunks) <= 1:
+        for ch in tqdm(chunks, desc=desc, unit="batch"):
+            out.extend(_call(ch))
+    else:
+        from src.utils.gemini_client import get_client
+        get_client()
+        with ThreadPoolExecutor(max_workers=concurrency) as ex:
+            for result in tqdm(
+                ex.map(_call, chunks),
+                total=len(chunks),
+                desc=f"{desc} x{concurrency}",
+                unit="batch",
+            ):
+                out.extend(result)
     return out
 
 

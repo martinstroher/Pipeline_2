@@ -22,11 +22,13 @@ from __future__ import annotations
 
 import json
 import os
+from concurrent.futures import ThreadPoolExecutor
 from pathlib import Path
 from typing import Any
 
 import pandas as pd
 import yaml
+from tqdm import tqdm
 
 from src.utils import log
 from src.utils.csv_io import read_csv, write_csv
@@ -229,19 +231,42 @@ def _dispatch_llm(rule: dict, subjects: list[dict], ctx: StructuralContext) -> l
         })
 
     batch_size = int(os.environ.get("VALIDATION_LLM_BATCH_SIZE", "10"))
-    out: list[Verdict] = []
+    concurrency = max(1, int(os.environ.get("VALIDATION_LLM_CONCURRENCY", "6")))
+
+    chunks: list[tuple[list[dict], list[str]]] = []
     for start in range(0, len(payloads), batch_size):
-        chunk = payloads[start:start + batch_size]
-        chunk_ids = subject_ids[start:start + batch_size]
-        out.extend(
-            llm_engine.evaluate_batch(
-                prompt,
-                {"batch_json": json.dumps(chunk, ensure_ascii=False)},
-                rule_id=rule["id"],
-                subject_type=subj_type,
-                subject_ids=chunk_ids,
-            )
+        chunks.append((
+            payloads[start:start + batch_size],
+            subject_ids[start:start + batch_size],
+        ))
+
+    def _call(args: tuple[list[dict], list[str]]) -> list[Verdict]:
+        chunk, chunk_ids = args
+        return llm_engine.evaluate_batch(
+            prompt,
+            {"batch_json": json.dumps(chunk, ensure_ascii=False)},
+            rule_id=rule["id"],
+            subject_type=subj_type,
+            subject_ids=chunk_ids,
         )
+
+    out: list[Verdict] = []
+    desc = f"  {rule['id']} ({len(chunks)} batches×{batch_size})"
+    if concurrency <= 1 or len(chunks) <= 1:
+        for ch in tqdm(chunks, desc=desc, unit="batch"):
+            out.extend(_call(ch))
+    else:
+        # Pre-warm gemini client so concurrent first-call doesn't race on init.
+        from src.utils.gemini_client import get_client
+        get_client()
+        with ThreadPoolExecutor(max_workers=concurrency) as ex:
+            for result in tqdm(
+                ex.map(_call, chunks),
+                total=len(chunks),
+                desc=f"{desc} x{concurrency}",
+                unit="batch",
+            ):
+                out.extend(result)
     return out
 
 
