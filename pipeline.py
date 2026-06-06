@@ -346,32 +346,22 @@ def _run_refinement_pipeline(args, _stop) -> None:
             rel_csv = os.path.join(t_dir, "construct_relations.csv")
             run_relation_extraction(t_cat_csv, output_path=rel_csv)
 
-        log.banner(f"T{t}-6c", f"Ontology Critic (threshold ≥{t})")
-        from src.modules.validate.ontology_critic import run_ontology_critic
-        cleaned_tax = os.path.join(t_dir, "validate_critic_taxonomy.csv")
-        cleaned_rel = os.path.join(t_dir, "validate_critic_relations.csv") if rel_csv else None
-        run_ontology_critic(
+        log.banner(f"T{t}-validate", f"Validate (threshold ≥{t})")
+        from src.validate.run import run_validate
+        final_tax, final_rel = run_validate(
             tax_csv,
-            output_path=cleaned_tax,
+            t_dir,
             relations_csv=rel_csv,
-            relations_output=cleaned_rel,
         )
-        if _check_stop(_stop, "6c"): return
+        if _check_stop(_stop, "validate"): return
+        if _check_stop(_stop, "6d"): return  # legacy alias
 
-        reclass_tax = cleaned_tax  # fallback if no relations
-        if cleaned_rel and os.path.exists(cleaned_rel):
-            log.banner(f"T{t}-6d", f"Relation Reclassification (threshold ≥{t})")
-            from src.modules.validate.relation_reclassifier import run_relation_reclassification
-            reclass_tax = os.path.join(t_dir, "validate_reclassified_taxonomy.csv")
-            run_relation_reclassification(
-                cleaned_tax,
-                cleaned_rel,
-                output_path=reclass_tax,
-            )
-        if _check_stop(_stop, "6d"): return
-
-        final_tax = reclass_tax if os.path.exists(reclass_tax) else cleaned_tax
-        final_rel = cleaned_rel if (cleaned_rel and os.path.exists(cleaned_rel)) else rel_csv
+        # Fall back to the construct outputs if validate produced nothing
+        # writable (e.g. all rows dropped — unlikely but defensive).
+        if not (final_tax and os.path.exists(final_tax)):
+            final_tax = tax_csv
+        if rel_csv and not (final_rel and os.path.exists(final_rel)):
+            final_rel = rel_csv
 
         log.banner(f"T{t}-7", f"OWL Export (threshold ≥{t})")
         owl_path = os.path.join(t_dir, "emit_ontology.ttl")
