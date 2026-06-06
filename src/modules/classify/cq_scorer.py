@@ -387,7 +387,7 @@ def _run_threshold_split(
     for t in THRESHOLDS:
         t_dir = os.path.join(REFINED_DIR, f"t{t}")
         os.makedirs(t_dir, exist_ok=True)
-        out_path = os.path.join(t_dir, "5_categorized_ontology.csv")
+        out_path = os.path.join(t_dir, "classify_categories.csv")
 
         df_filtered = df_merged[df_merged["CQ_Count"] >= t].copy()
         # Drop CQ_Count — not part of the standard Step 5 schema

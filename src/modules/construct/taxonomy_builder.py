@@ -9,7 +9,7 @@ Key design decisions:
   - Explicitly distinguishes classes vs named individuals
   - Uses published BFO/GeoCore/GeoReservoir IRIs for upper-level anchoring
 
-Output: 6_taxonomy.csv with columns (Term, Parent_Term, Relationship_Type, Category)
+Output: construct_taxonomy.csv with columns (Term, Parent_Term, Relationship_Type, Category)
 """
 
 import json
@@ -143,7 +143,7 @@ def run_taxonomy_builder(categorized_csv: str, output_path: str | None = None, h
     Build taxonomy from a categorized CSV.
 
     Args:
-        categorized_csv: Path to categorized output (e.g., cat_A.csv or 5_categorized_ontology.csv)
+        categorized_csv: Path to categorized output (e.g., cat_A.csv or classify_categories.csv)
         output_path: Output path (default: derived from input)
         hints_csv: Optional path to specialization hints CSV (General_Term, Specific_Term)
     """
@@ -152,8 +152,8 @@ def run_taxonomy_builder(categorized_csv: str, output_path: str | None = None, h
 
     if output_path is None:
         base = os.path.splitext(categorized_csv)[0]
-        output_path = base.replace("cat_", "6_taxonomy_").replace(
-            "5_categorized_ontology", "6_taxonomy"
+        output_path = base.replace("cat_", "construct_taxonomy_").replace(
+            "classify_categories", "construct_taxonomy"
         ) + ".csv"
 
     df = read_csv(categorized_csv)

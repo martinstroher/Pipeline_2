@@ -52,16 +52,16 @@ def main() -> int:
 
     with tempfile.TemporaryDirectory(prefix="regression_t1_") as tmp:
         # Stage the 6c inputs the regression step needs.
-        for name in ("6c_taxonomy_cleaned.csv", "6c_relations_cleaned.csv"):
+        for name in ("validate_critic_taxonomy.csv", "validate_critic_relations.csv"):
             shutil.copy(os.path.join(BASELINE_DIR, name), os.path.join(tmp, name))
 
-        tax_in = os.path.join(tmp, "6c_taxonomy_cleaned.csv")
-        rel_in = os.path.join(tmp, "6c_relations_cleaned.csv")
+        tax_in = os.path.join(tmp, "validate_critic_taxonomy.csv")
+        rel_in = os.path.join(tmp, "validate_critic_relations.csv")
 
         # ── Step 6d ─────────────────────────────────────────────────
         from src.modules.validate.relation_reclassifier import run_relation_reclassification
         tax_6d = run_relation_reclassification(tax_in, rel_in)
-        log_6d = os.path.join(tmp, "6d_reclassification_log.csv")
+        log_6d = os.path.join(tmp, "validate_reclassification_log.csv")
 
         log_df = pd.read_csv(log_6d, encoding="utf-8-sig")
         counts = log_df["Action"].value_counts().to_dict()
@@ -73,7 +73,7 @@ def main() -> int:
                 _fail(f"6d action {action}: {actual} (baseline {expected}, tol ±5%/±2)")
 
         # CSV column parity (must be superset of baseline)
-        for fname in ("6d_taxonomy_reclassified.csv", "6d_reclassification_log.csv"):
+        for fname in ("validate_reclassified_taxonomy.csv", "validate_reclassification_log.csv"):
             actual_cols = set(pd.read_csv(os.path.join(tmp, fname), encoding="utf-8-sig", nrows=0).columns)
             expected_cols = set(baseline["files"][fname]["columns"])
             missing = expected_cols - actual_cols
@@ -84,10 +84,10 @@ def main() -> int:
 
         # ── Step 7 ──────────────────────────────────────────────────
         from src.modules.emit.owl_exporter import run_owl_export
-        ttl_path = os.path.join(tmp, "7_ontology.ttl")
+        ttl_path = os.path.join(tmp, "emit_ontology.ttl")
         run_owl_export(tax_6d, output_path=ttl_path, relations_csv=rel_in)
         if not os.path.exists(ttl_path):
-            _fail("Step 7 did not produce 7_ontology.ttl")
+            _fail("Step 7 did not produce emit_ontology.ttl")
             return _exit()
         _ok(f"Step 7 wrote {os.path.basename(ttl_path)} ({os.path.getsize(ttl_path)} bytes)")
 
@@ -95,7 +95,7 @@ def main() -> int:
         from src.modules.emit.verifier import run_ontology_verification
         report = run_ontology_verification(
             ttl_path,
-            output_path=os.path.join(tmp, "7b_verification_report.json"),
+            output_path=os.path.join(tmp, "emit_verification.json"),
             skip_oops=True,
             skip_reasoner=True,
         )

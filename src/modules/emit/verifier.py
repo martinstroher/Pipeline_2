@@ -346,7 +346,7 @@ def run_ontology_verification(
     Args:
         ttl_path: Path to .ttl file (output of owl_exporter).
         output_path: Path to save the verification report JSON.
-                     Default: same dir as ttl_path, named 7b_verification_report.json.
+                     Default: same dir as ttl_path, named emit_verification.json.
         skip_oops: If True, skip the OOPS! API call (for offline or test runs).
         skip_reasoner: If True, skip the HermiT reasoner check.
 
@@ -355,7 +355,7 @@ def run_ontology_verification(
     """
     if output_path is None:
         base_dir = os.path.dirname(ttl_path) or "."
-        output_path = os.path.join(base_dir, "7b_verification_report.json")
+        output_path = os.path.join(base_dir, "emit_verification.json")
 
     log.banner("7b", "Ontology Verification")
     log.info(f"Verifying: {ttl_path}")

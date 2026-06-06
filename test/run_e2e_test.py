@@ -166,18 +166,18 @@ def run_test():
 
     # Derive Step 6 and 7 paths from the categorized CSV path (mirrors taxonomy_builder logic).
     # owl_exporter writes the .ttl next to the *final* taxonomy CSV it was handed, so the
-    # filename depends on which 6-tier step actually ran (6d > 6c > 6 > legacy 7_ontology).
-    cat_csv_relative = env.get("CATEGORIZED_LLM_TERMS", "test/output_test/5_categorized_ontology.csv")
+    # filename depends on which 6-tier step actually ran (6d > 6c > 6 > legacy emit_ontology).
+    cat_csv_relative = env.get("CATEGORIZED_LLM_TERMS", "test/output_test/classify_categories.csv")
     taxonomy_csv_rel = (
         os.path.splitext(cat_csv_relative)[0]
-        .replace("5_categorized_ontology", "6_taxonomy") + ".csv"
+        .replace("classify_categories", "construct_taxonomy") + ".csv"
     )
     taxonomy_csv_abs = os.path.join(root_dir, taxonomy_csv_rel)
     _ttl_candidates = [
-        taxonomy_csv_rel.replace("6_taxonomy", "6d_taxonomy_reclassified").replace(".csv", ".ttl"),
-        taxonomy_csv_rel.replace("6_taxonomy", "6c_taxonomy_cleaned").replace(".csv", ".ttl"),
+        taxonomy_csv_rel.replace("construct_taxonomy", "validate_reclassified_taxonomy").replace(".csv", ".ttl"),
+        taxonomy_csv_rel.replace("construct_taxonomy", "validate_critic_taxonomy").replace(".csv", ".ttl"),
         taxonomy_csv_rel.replace(".csv", ".ttl"),
-        taxonomy_csv_rel.replace("6_taxonomy", "7_ontology").replace(".csv", ".ttl"),
+        taxonomy_csv_rel.replace("construct_taxonomy", "emit_ontology").replace(".csv", ".ttl"),
     ]
     owl_ttl_abs = next(
         (os.path.join(root_dir, p) for p in _ttl_candidates if os.path.exists(os.path.join(root_dir, p))),
@@ -204,7 +204,7 @@ def run_test():
         all_passed = False
 
     # --- Step 1: Raw extraction (CSV with .json extension) ---
-    f1 = os.path.join(root_dir, "test/output_test/1_raw_llm_extraction.json")
+    f1 = os.path.join(root_dir, "test/output_test/extract_raw.json")
     if os.path.exists(f1):
         ok = validate_csv(f1, expected_columns=["Entity"], min_rows=1, label="Step 1 (extraction)")
         all_passed = all_passed and ok
@@ -213,7 +213,7 @@ def run_test():
         all_passed = False
 
     # --- Step 2: Aggregated counts ---
-    f2 = os.path.join(root_dir, "test/output_test/2_aggregated_counts.csv")
+    f2 = os.path.join(root_dir, "test/output_test/extract_aggregated.csv")
     if os.path.exists(f2):
         ok = validate_csv(f2, expected_columns=["Readable_Term", "Frequency"], min_rows=1, label="Step 2 (aggregation)")
         if ok:
@@ -230,7 +230,7 @@ def run_test():
         all_passed = False
 
     # --- Step 3: Filtered terms ---
-    f3 = os.path.join(root_dir, "test/output_test/3_filtered_top_terms.csv")
+    f3 = os.path.join(root_dir, "test/output_test/extract_filtered.csv")
     if os.path.exists(f3):
         ok = validate_csv(f3, expected_columns=["Readable_Term", "Frequency"], min_rows=1, label="Step 3 (filter)")
         all_passed = all_passed and ok
@@ -239,7 +239,7 @@ def run_test():
         all_passed = False
 
     # --- Step 4: NLD generation ---
-    f4 = os.path.join(root_dir, "test/output_test/4_nld_generated_definitions.csv")
+    f4 = os.path.join(root_dir, "test/output_test/define_nld.csv")
     if os.path.exists(f4):
         ok = validate_csv(f4, expected_columns=["Term", "NLD", "Context_Used", "Context"], min_rows=1, label="Step 4 (NLD)")
         if ok:
@@ -264,7 +264,7 @@ def run_test():
         all_passed = False
 
     # --- Step 5: Categorization ---
-    f5 = os.path.join(root_dir, "test/output_test/5_categorized_ontology.csv")
+    f5 = os.path.join(root_dir, "test/output_test/classify_categories.csv")
     if os.path.exists(f5):
         ok = validate_csv(
             f5,
@@ -320,7 +320,7 @@ def run_test():
         all_passed = False
 
     # --- Step 6b: Relation Extraction ---
-    f6b = os.path.join(output_dir, "6b_relations.csv")
+    f6b = os.path.join(output_dir, "construct_relations.csv")
     if os.path.exists(f6b):
         ok = validate_csv(
             f6b,
@@ -400,7 +400,7 @@ def run_test():
         all_passed = False
 
     # --- Step 7b: Verification report ---
-    verify_report = os.path.join(output_dir, "7b_verification_report.json")
+    verify_report = os.path.join(output_dir, "emit_verification.json")
     if os.path.exists(verify_report):
         try:
             with open(verify_report, "r", encoding="utf-8") as f:

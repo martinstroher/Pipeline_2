@@ -7,9 +7,9 @@ Produces two outputs:
      (columns: Term, Property, Filler, Evidence, Correct, Notes)
 
 Usage:
-  python pipeline.py --relation-analysis [6b_relations.csv]
+  python pipeline.py --relation-analysis [construct_relations.csv]
   # or directly:
-  python -m src.evaluation.relation_analysis output/6b_relations.csv
+  python -m src.evaluation.relation_analysis output/construct_relations.csv
 """
 
 import os
@@ -111,7 +111,7 @@ def run_relation_analysis(relations_csv: str | None = None):
     if relations_csv is None:
         relations_csv = os.environ.get(
             "RELATIONS_OUTPUT",
-            "output/6b_relations.csv",
+            "output/construct_relations.csv",
         )
 
     if not os.path.exists(relations_csv):

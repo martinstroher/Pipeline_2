@@ -24,8 +24,8 @@ Two operating modes (configured via STEP6D_MODE env var or ontology_config.yaml)
       even across unrelated branches.
     - Action logged as RECLASSIFY.
 
-Input:  6c_taxonomy_cleaned.csv + 6c_relations_cleaned.csv
-Output: 6d_taxonomy_reclassified.csv + 6d_reclassification_log.csv
+Input:  validate_critic_taxonomy.csv + validate_critic_relations.csv
+Output: validate_reclassified_taxonomy.csv + validate_reclassification_log.csv
 """
 
 import os
@@ -235,17 +235,17 @@ def run_relation_reclassification(
     accepted relations.
 
     Args:
-        taxonomy_csv: Path to 6c_taxonomy_cleaned.csv
-        relations_csv: Path to 6c_relations_cleaned.csv
-        output_path: Output path for reclassified taxonomy (default: 6d_taxonomy_reclassified.csv)
+        taxonomy_csv: Path to validate_critic_taxonomy.csv
+        relations_csv: Path to validate_critic_relations.csv
+        output_path: Output path for reclassified taxonomy (default: validate_reclassified_taxonomy.csv)
 
     Returns:
         Path to the reclassified taxonomy CSV
     """
     base_dir = os.path.dirname(taxonomy_csv)
     if output_path is None:
-        output_path = os.path.join(base_dir, "6d_taxonomy_reclassified.csv")
-    log_path = os.path.join(base_dir, "6d_reclassification_log.csv")
+        output_path = os.path.join(base_dir, "validate_reclassified_taxonomy.csv")
+    log_path = os.path.join(base_dir, "validate_reclassification_log.csv")
 
     df = read_csv(taxonomy_csv)
     rel_df = read_csv(relations_csv)
@@ -489,8 +489,8 @@ if __name__ == "__main__":
     parser = argparse.ArgumentParser(
         description="Reclassify taxonomy terms using relation-based upper-ontology metatype evidence"
     )
-    parser.add_argument("taxonomy_csv", help="Path to 6c_taxonomy_cleaned.csv")
-    parser.add_argument("--relations", required=True, help="Path to 6c_relations_cleaned.csv")
+    parser.add_argument("taxonomy_csv", help="Path to validate_critic_taxonomy.csv")
+    parser.add_argument("--relations", required=True, help="Path to validate_critic_relations.csv")
     parser.add_argument("--output", default=None, help="Output path for reclassified taxonomy")
     args = parser.parse_args()
     run_relation_reclassification(

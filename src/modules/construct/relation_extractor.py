@@ -5,8 +5,8 @@ Extracts ontological relations from NLDs using an LLM, validates them
 against upper-ontology domain/range constraints, and outputs accepted
 relations.
 
-Input:  5_categorized_ontology.csv (Term, Category, NLD)
-Output: 6b_relations.csv (Term, Category, Property, Property_IRI,
+Input:  classify_categories.csv (Term, Category, NLD)
+Output: construct_relations.csv (Term, Category, Property, Property_IRI,
         Filler, Filler_Source, Confidence, Evidence, Validation_Status,
         Validation_Reason)
 
@@ -140,8 +140,8 @@ def run_relation_extraction(
     Extract relations from categorized terms.
 
     Args:
-        categorized_csv: Path to 5_categorized_ontology.csv
-        output_path: Output path for 6b_relations.csv
+        categorized_csv: Path to classify_categories.csv
+        output_path: Output path for construct_relations.csv
     """
     if categorized_csv is None:
         categorized_csv = os.environ.get("CATEGORIZED_LLM_TERMS")
@@ -150,7 +150,7 @@ def run_relation_extraction(
 
     if output_path is None:
         base_dir = os.path.dirname(categorized_csv)
-        output_path = os.path.join(base_dir, "6b_relations.csv")
+        output_path = os.path.join(base_dir, "construct_relations.csv")
 
     log.banner("6b", "Relation Extraction")
 
@@ -354,7 +354,7 @@ def _save_checkpoint(rows: list[dict], path: str) -> None:
 if __name__ == "__main__":
     import argparse
     parser = argparse.ArgumentParser(description="Relation Extraction (Step 6b)")
-    parser.add_argument("input_csv", help="Path to categorized CSV (5_categorized_ontology.csv)")
+    parser.add_argument("input_csv", help="Path to categorized CSV (classify_categories.csv)")
     parser.add_argument("--output", default=None, help="Output path for relations CSV")
     args = parser.parse_args()
     run_relation_extraction(args.input_csv, args.output)

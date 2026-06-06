@@ -46,7 +46,7 @@ def select_terms(n_terms: int = 200, seed: int = 42) -> list[str]:
     Falls back to the first N terms if frequency column is flat.
     Excludes terms where any condition produced an ERROR result.
     """
-    terms_file = os.environ.get("FILTERED_TERMS_OUTPUT", "output/3_filtered_top_terms.csv")
+    terms_file = os.environ.get("FILTERED_TERMS_OUTPUT", "output/extract_filtered.csv")
     df = pd.read_csv(terms_file, encoding="utf-8")
     # Sort by frequency descending (should already be sorted, but ensure)
     df = df.sort_values("Frequency", ascending=False).reset_index(drop=True)
@@ -97,7 +97,7 @@ def select_terms_refined(
     df_cq = read_csv(cq_matrix_csv)
 
     # Load categorized CSV for category info
-    cat_csv = os.environ.get("CATEGORIZED_LLM_TERMS", "output/5_categorized_ontology.csv")
+    cat_csv = os.environ.get("CATEGORIZED_LLM_TERMS", "output/classify_categories.csv")
     df_cat = read_csv(cat_csv)
     cat_map = dict(zip(df_cat["Term"], df_cat["Category"]))
     df_cq["Category"] = df_cq["Term"].map(cat_map)
@@ -406,7 +406,7 @@ def build_taxonomy_sheet(
 
     # Load taxonomy
     if taxonomy_path is None:
-        taxonomy_path = os.environ.get("TAXONOMY_OUTPUT", "output/6_taxonomy.csv")
+        taxonomy_path = os.environ.get("TAXONOMY_OUTPUT", "output/construct_taxonomy.csv")
     if not os.path.exists(taxonomy_path):
         print(f"  Warning: {taxonomy_path} not found, skipping taxonomy sheet")
         return pd.DataFrame(), pd.DataFrame()
@@ -760,7 +760,7 @@ def generate_refined_evaluation(
     Args:
         cq_matrix_csv: Path to 5b_cq_matrix.csv.
         threshold: CQ count threshold (e.g., 1).
-        taxonomy_path: Path to the refined threshold's 6_taxonomy.csv.
+        taxonomy_path: Path to the refined threshold's construct_taxonomy.csv.
         seed: Random seed.
         output_dir: Output directory (default: output/refined/).
 

@@ -630,7 +630,7 @@ def fig6_expert_eval():
 
 
 # ═════════════════════════════════════════════════════════════════════════════
-# FIG 7 — TAXONOMY TREE (real data from 7_ontology.ttl)
+# FIG 7 — TAXONOMY TREE (real data from emit_ontology.ttl)
 # ═════════════════════════════════════════════════════════════════════════════
 def fig7_taxonomy_tree():
     """

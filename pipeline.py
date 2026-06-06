@@ -31,19 +31,19 @@ def _clean_outputs() -> None:
 
     log.banner("X", "Fresh Start — Cleaning Previous Run")
     output_dir = os.path.dirname(
-        os.environ.get("LLM_OUTPUT_FILE", "output/1_raw_llm_extraction.json")
+        os.environ.get("LLM_OUTPUT_FILE", "output/extract_raw.json")
     ) or "output"
     output_files = [
-        "1_raw_llm_extraction.json",
-        "2_aggregated_counts.csv",
-        "3_filtered_top_terms.csv",
-        "4_nld_generated_definitions.csv",
-        "4_nld_generation_failures.csv",
-        "5_categorized_ontology.csv",
-        "6_taxonomy.csv",
-        "6b_relations.csv",
-        "7_ontology.ttl",
-        "7b_verification_report.json",
+        "extract_raw.json",
+        "extract_aggregated.csv",
+        "extract_filtered.csv",
+        "define_nld.csv",
+        "define_failures.csv",
+        "classify_categories.csv",
+        "construct_taxonomy.csv",
+        "construct_relations.csv",
+        "emit_ontology.ttl",
+        "emit_verification.json",
     ]
     removed = 0
     for name in output_files:
@@ -103,7 +103,7 @@ def _dispatch_subcommand(args, parser) -> bool:
             from src.evaluation.expert_eval_generator import generate_refined_evaluation
             t = args.threshold
             cq_matrix = os.path.join("output", "refined", "5b_cq_matrix.csv")
-            tax_path = os.path.join("output", "refined", f"t{t}", "6_taxonomy.csv")
+            tax_path = os.path.join("output", "refined", f"t{t}", "construct_taxonomy.csv")
             if not os.path.exists(cq_matrix):
                 parser.error(f"CQ matrix not found: {cq_matrix}. Run --refine first.")
             if not os.path.exists(tax_path):
@@ -196,27 +196,27 @@ def _build_parser() -> argparse.ArgumentParser:
         "--owl",
         type=str,
         default=None,
-        help="Export OWL from taxonomy CSV (e.g., output/ablation/6_taxonomy_A.csv)",
+        help="Export OWL from taxonomy CSV (e.g., output/ablation/construct_taxonomy_A.csv)",
     )
     parser.add_argument(
         "--verify",
         type=str,
         default=None,
-        help="Verify an OWL .ttl file (e.g., output/7_ontology.ttl)",
+        help="Verify an OWL .ttl file (e.g., output/emit_ontology.ttl)",
     )
     parser.add_argument(
         "--relations",
         type=str,
         default=None,
-        help="Extract relations from categorized CSV (e.g., output/5_categorized_ontology.csv)",
+        help="Extract relations from categorized CSV (e.g., output/classify_categories.csv)",
     )
     parser.add_argument(
         "--relation-analysis",
         type=str,
         default=None,
         nargs="?",
-        const="output/6b_relations.csv",
-        help="Run descriptive stats + precision sample on 6b_relations.csv",
+        const="output/construct_relations.csv",
+        help="Run descriptive stats + precision sample on construct_relations.csv",
     )
     parser.add_argument(
         "--skip-relations",
@@ -299,20 +299,20 @@ def _run_refinement_pipeline(args, _stop) -> None:
     for t, t_cat_csv in sorted(threshold_paths.items()):
         t_dir = os.path.dirname(t_cat_csv)
         log.banner(f"T{t}-6", f"Taxonomy Builder (threshold ≥{t})")
-        tax_csv = os.path.join(t_dir, "6_taxonomy.csv")
+        tax_csv = os.path.join(t_dir, "construct_taxonomy.csv")
         run_taxonomy_builder(t_cat_csv, output_path=tax_csv, hints_csv=hints_csv)
 
         rel_csv = None
         if not args.skip_relations:
             log.banner(f"T{t}-6b", f"Relation Extraction (threshold ≥{t})")
             from src.modules.construct.relation_extractor import run_relation_extraction
-            rel_csv = os.path.join(t_dir, "6b_relations.csv")
+            rel_csv = os.path.join(t_dir, "construct_relations.csv")
             run_relation_extraction(t_cat_csv, output_path=rel_csv)
 
         log.banner(f"T{t}-6c", f"Ontology Critic (threshold ≥{t})")
         from src.modules.validate.ontology_critic import run_ontology_critic
-        cleaned_tax = os.path.join(t_dir, "6c_taxonomy_cleaned.csv")
-        cleaned_rel = os.path.join(t_dir, "6c_relations_cleaned.csv") if rel_csv else None
+        cleaned_tax = os.path.join(t_dir, "validate_critic_taxonomy.csv")
+        cleaned_rel = os.path.join(t_dir, "validate_critic_relations.csv") if rel_csv else None
         run_ontology_critic(
             tax_csv,
             output_path=cleaned_tax,
@@ -325,7 +325,7 @@ def _run_refinement_pipeline(args, _stop) -> None:
         if cleaned_rel and os.path.exists(cleaned_rel):
             log.banner(f"T{t}-6d", f"Relation Reclassification (threshold ≥{t})")
             from src.modules.validate.relation_reclassifier import run_relation_reclassification
-            reclass_tax = os.path.join(t_dir, "6d_taxonomy_reclassified.csv")
+            reclass_tax = os.path.join(t_dir, "validate_reclassified_taxonomy.csv")
             run_relation_reclassification(
                 cleaned_tax,
                 cleaned_rel,
@@ -337,11 +337,11 @@ def _run_refinement_pipeline(args, _stop) -> None:
         final_rel = cleaned_rel if (cleaned_rel and os.path.exists(cleaned_rel)) else rel_csv
 
         log.banner(f"T{t}-7", f"OWL Export (threshold ≥{t})")
-        owl_path = os.path.join(t_dir, "7_ontology.ttl")
+        owl_path = os.path.join(t_dir, "emit_ontology.ttl")
         run_owl_export(final_tax, relations_csv=final_rel, output_path=owl_path)
 
         log.banner(f"T{t}-7b", f"Verification (threshold ≥{t})")
-        report_path = os.path.join(t_dir, "7b_verification_report.json")
+        report_path = os.path.join(t_dir, "emit_verification.json")
         report = run_ontology_verification(
             owl_path, output_path=report_path,
             skip_oops=args.skip_oops, skip_reasoner=args.skip_reasoner,
@@ -384,7 +384,7 @@ def main():
 
     # Set up RAG system (force rebuild after --fresh)
     # Skip RAG if --refine and categorized output already exists (5b doesn't need RAG)
-    _cat_exists = os.path.exists(os.environ.get("CATEGORIZED_LLM_TERMS", "output/5_categorized_ontology.csv"))
+    _cat_exists = os.path.exists(os.environ.get("CATEGORIZED_LLM_TERMS", "output/classify_categories.csv"))
     if args.refine and _cat_exists and args.skip_extraction:
         log.info("Skipping RAG setup (not needed for Step 5b with existing outputs)")
         vector_store, bm25 = None, None
@@ -407,7 +407,7 @@ def main():
         if _check_stop(_stop, "3"): return
 
     # When --refine is set and categorized output exists, skip Steps 4-5
-    cat_csv_path = os.environ.get("CATEGORIZED_LLM_TERMS", "output/5_categorized_ontology.csv")
+    cat_csv_path = os.environ.get("CATEGORIZED_LLM_TERMS", "output/classify_categories.csv")
     if args.refine and os.path.exists(cat_csv_path) and _stop != "4" and _stop != "5":
         log.info(f"Skipping Steps 4-5: categorized output exists at '{cat_csv_path}'")
     else:
@@ -445,10 +445,10 @@ def main():
     from src.modules.validate.ontology_critic import run_ontology_critic
     tax_csv = (
         os.path.splitext(cat_csv)[0]
-        .replace("5_categorized_ontology", "6_taxonomy") + ".csv"
+        .replace("classify_categories", "construct_taxonomy") + ".csv"
     )
-    cleaned_tax = tax_csv.replace("6_taxonomy", "6c_taxonomy_cleaned")
-    cleaned_rel = relations_csv.replace("6b_relations", "6c_relations_cleaned") if relations_csv else None
+    cleaned_tax = tax_csv.replace("construct_taxonomy", "validate_critic_taxonomy")
+    cleaned_rel = relations_csv.replace("construct_relations", "validate_critic_relations") if relations_csv else None
     run_ontology_critic(
         tax_csv,
         output_path=cleaned_tax,
@@ -462,7 +462,7 @@ def main():
     if cleaned_rel and os.path.exists(cleaned_rel):
         log.banner("6d", "Relation Reclassification")
         from src.modules.validate.relation_reclassifier import run_relation_reclassification
-        reclass_tax = cleaned_tax.replace("6c_taxonomy_cleaned", "6d_taxonomy_reclassified")
+        reclass_tax = cleaned_tax.replace("validate_critic_taxonomy", "validate_reclassified_taxonomy")
         run_relation_reclassification(
             cleaned_tax,
             cleaned_rel,

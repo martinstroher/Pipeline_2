@@ -125,7 +125,7 @@ def _parse_nld_response(nld_json_str: str, with_context: bool = False) -> tuple[
 def run_condition_a(terms: list[str], vector_store, bm25_retriever) -> pd.DataFrame:
     """Full pipeline: RAG context -> NLD."""
     path = _nld_path("A")
-    pipeline_nld = os.environ.get("NLD_OUTPUT", "output/4_nld_generated_definitions.csv")
+    pipeline_nld = os.environ.get("NLD_OUTPUT", "output/define_nld.csv")
     if not os.path.exists(path) and os.path.exists(pipeline_nld):
         pipeline_df = read_csv(pipeline_nld)
         if set(terms).issubset(set(pipeline_df["Term"].tolist())):
@@ -251,7 +251,7 @@ def run_categorization(
 
     # Reuse main pipeline categorization output for Condition A if available
     if condition == "A" and not os.path.exists(cat_csv):
-        pipeline_cat = os.environ.get("CATEGORIZED_OUTPUT", "output/5_categorized_ontology.csv")
+        pipeline_cat = os.environ.get("CATEGORIZED_OUTPUT", "output/classify_categories.csv")
         if os.path.exists(pipeline_cat):
             pcat = read_csv(pipeline_cat)
             cat_a = pd.DataFrame({
@@ -320,7 +320,7 @@ def run_ablation(conditions: list[str] | None = None):
     os.makedirs(OUTPUT_DIR, exist_ok=True)
 
     # Load terms (Steps 1-3 output)
-    terms_file = os.environ.get("FILTERED_TERMS_OUTPUT", "output/3_filtered_top_terms.csv")
+    terms_file = os.environ.get("FILTERED_TERMS_OUTPUT", "output/extract_filtered.csv")
     terms = read_csv(terms_file)["Readable_Term"].tolist()
     print(f"\nAblation study: {len(terms)} terms, conditions: {conditions}")
 
@@ -380,7 +380,7 @@ def run_ablation(conditions: list[str] | None = None):
     # --- Auto-include Condition A from pipeline output or checkpoint ---
     if "A" not in cat_results:
         cat_a_csv = _cat_path("A")
-        pipeline_cat = os.environ.get("CATEGORIZED_OUTPUT", "output/5_categorized_ontology.csv")
+        pipeline_cat = os.environ.get("CATEGORIZED_OUTPUT", "output/classify_categories.csv")
         if os.path.exists(cat_a_csv):
             cat_results["A"] = read_csv(cat_a_csv)
             print(f"\n  Auto-included Condition A from checkpoint: {cat_a_csv}")

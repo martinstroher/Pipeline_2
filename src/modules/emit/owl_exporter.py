@@ -308,7 +308,7 @@ def run_owl_export(
     """
     if output_path is None:
         base = os.path.splitext(taxonomy_csv)[0]
-        output_path = base.replace("6_taxonomy", "7_ontology") + ".ttl"
+        output_path = base.replace("construct_taxonomy", "emit_ontology") + ".ttl"
 
     df = read_csv(taxonomy_csv)
     log.info(f"OWL Export: {len(df)} taxonomy entries from {taxonomy_csv}")
@@ -573,6 +573,6 @@ if __name__ == "__main__":
     parser.add_argument("taxonomy_csv", help="Path to taxonomy CSV")
     parser.add_argument("--nld", default=None, help="Path to NLD CSV for adding definitions")
     parser.add_argument("--output", default=None, help="Output .ttl path")
-    parser.add_argument("--relations", default=None, help="Path to 6b_relations.csv")
+    parser.add_argument("--relations", default=None, help="Path to construct_relations.csv")
     args = parser.parse_args()
     run_owl_export(args.taxonomy_csv, args.nld, args.output, args.relations)

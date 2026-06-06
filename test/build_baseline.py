@@ -18,13 +18,13 @@ T1_DIR = os.path.join(ROOT, "output", "refined", "t1")
 MANIFEST_PATH = os.path.join(os.path.dirname(__file__), "fixtures", "t1_baseline.json")
 
 CSV_FILES = [
-    "6c_taxonomy_cleaned.csv",
-    "6c_relations_cleaned.csv",
-    "6d_taxonomy_reclassified.csv",
-    "6d_reclassification_log.csv",
+    "validate_critic_taxonomy.csv",
+    "validate_critic_relations.csv",
+    "validate_reclassified_taxonomy.csv",
+    "validate_reclassification_log.csv",
 ]
-TTL_FILE = "7_ontology.ttl"
-REPORT_FILE = "7b_verification_report.json"
+TTL_FILE = "emit_ontology.ttl"
+REPORT_FILE = "emit_verification.json"
 
 
 def _sha256(path: str) -> str:
@@ -63,7 +63,7 @@ def build() -> dict:
     }
 
     # 6d action counts (regression target)
-    log_df = pd.read_csv(os.path.join(T1_DIR, "6d_reclassification_log.csv"), encoding="utf-8-sig")
+    log_df = pd.read_csv(os.path.join(T1_DIR, "validate_reclassification_log.csv"), encoding="utf-8-sig")
     manifest["6d_action_counts"] = log_df["Action"].value_counts().to_dict()
 
     # 7b verification summary (regression target)

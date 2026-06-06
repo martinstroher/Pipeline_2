@@ -8,9 +8,9 @@ Post-processing quality pass that uses an LLM to identify and fix:
   - Ambiguous names (RENAME)
   - Cross-category duplicates (CROSS_MERGE)
 
-Input:  6_taxonomy.csv (with NLDs) + optionally 6b_relations.csv
-Output: 6c_taxonomy_cleaned.csv + 6c_critic_log.csv (audit trail)
-        + optionally 6c_relations_cleaned.csv
+Input:  construct_taxonomy.csv (with NLDs) + optionally construct_relations.csv
+Output: validate_critic_taxonomy.csv + validate_critic_log.csv (audit trail)
+        + optionally validate_critic_relations.csv
 """
 
 import json
@@ -363,9 +363,9 @@ def run_ontology_critic(
     Run the ontology critic on a taxonomy CSV.
 
     Args:
-        taxonomy_csv: Path to 6_taxonomy.csv
-        output_path: Output path for cleaned taxonomy (default: 6c_taxonomy_cleaned.csv)
-        relations_csv: Optional path to 6b_relations.csv to also clean
+        taxonomy_csv: Path to construct_taxonomy.csv
+        output_path: Output path for cleaned taxonomy (default: validate_critic_taxonomy.csv)
+        relations_csv: Optional path to construct_relations.csv to also clean
         relations_output: Output path for cleaned relations
 
     Returns:
@@ -377,8 +377,8 @@ def run_ontology_critic(
 
     base_dir = os.path.dirname(taxonomy_csv)
     if output_path is None:
-        output_path = os.path.join(base_dir, "6c_taxonomy_cleaned.csv")
-    log_path = os.path.join(base_dir, "6c_critic_log.csv")
+        output_path = os.path.join(base_dir, "validate_critic_taxonomy.csv")
+    log_path = os.path.join(base_dir, "validate_critic_log.csv")
 
     MODEL_NAME = os.environ.get("LLM_GENERATION_MODEL", "gemini-2.5-pro")
     MODEL_TEMPERATURE = float(os.environ.get("LLM_GENERATION_TEMPERATURE", 0))
@@ -521,7 +521,7 @@ def run_ontology_critic(
     # Clean relations if provided
     if relations_csv and os.path.exists(relations_csv):
         if relations_output is None:
-            relations_output = os.path.join(base_dir, "6c_relations_cleaned.csv")
+            relations_output = os.path.join(base_dir, "validate_critic_relations.csv")
         rel_df = read_csv(relations_csv)
         n_rel_before = len(rel_df)
         if log_rows:
@@ -550,8 +550,8 @@ if __name__ == "__main__":
     import argparse
 
     parser = argparse.ArgumentParser(description="Run ontology critic on a taxonomy CSV")
-    parser.add_argument("taxonomy_csv", help="Path to 6_taxonomy.csv")
+    parser.add_argument("taxonomy_csv", help="Path to construct_taxonomy.csv")
     parser.add_argument("--output", default=None, help="Output path for cleaned taxonomy")
-    parser.add_argument("--relations", default=None, help="Path to 6b_relations.csv")
+    parser.add_argument("--relations", default=None, help="Path to construct_relations.csv")
     args = parser.parse_args()
     run_ontology_critic(args.taxonomy_csv, output_path=args.output, relations_csv=args.relations)
