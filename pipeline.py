@@ -15,7 +15,7 @@ from src.utils import log
 from src.modules.extract.term_extractor import run_llm_term_extraction
 from src.modules.extract import term_aggregator
 from src.modules.extract.term_filter import filter_top_terms
-from src.modules.nld_generator import run_nld_generation
+from src.modules.define.nld_generator import run_nld_generation
 from src.modules.term_categorizer import run_term_categorization
 from src.utils.rag_setup import setup_rag, DOCS_DIR
 from src.utils.pdf_processor import process_folder as convert_pdfs

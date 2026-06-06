@@ -24,7 +24,7 @@ from dotenv import load_dotenv
 load_dotenv()
 
 from src.utils.rag_setup import setup_rag, get_relevant_documents
-from src.modules.nld_generator import generate_nld, format_docs_for_context
+from src.modules.define.nld_generator import generate_nld, format_docs_for_context
 from src.utils.gemini_client import get_client, generate as gemini_generate
 from src.utils.prompt_loader import load_prompt
 from src.utils.ontology_config import get_config
