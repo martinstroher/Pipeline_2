@@ -127,12 +127,12 @@ def _dispatch_subcommand(args, parser) -> bool:
         return True
 
     if args.owl:
-        from src.modules.owl_exporter import run_owl_export
+        from src.modules.emit.owl_exporter import run_owl_export
         run_owl_export(args.owl)
         return True
 
     if args.verify:
-        from src.modules.ontology_verifier import run_ontology_verification
+        from src.modules.emit.verifier import run_ontology_verification
         run_ontology_verification(args.verify, skip_oops=args.skip_oops, skip_reasoner=args.skip_reasoner)
         return True
 
@@ -279,8 +279,8 @@ def _run_refinement_pipeline(args, _stop) -> None:
     if _check_stop(_stop, "5b"): return
 
     from src.modules.construct.taxonomy_builder import run_taxonomy_builder
-    from src.modules.owl_exporter import run_owl_export
-    from src.modules.ontology_verifier import run_ontology_verification
+    from src.modules.emit.owl_exporter import run_owl_export
+    from src.modules.emit.verifier import run_ontology_verification
     import pandas as _pd
 
     # Specialization hints from synonym triage (may not exist)
@@ -475,12 +475,12 @@ def main():
     final_rel = cleaned_rel if (cleaned_rel and os.path.exists(cleaned_rel)) else relations_csv
 
     log.banner(7, "OWL Export")
-    from src.modules.owl_exporter import run_owl_export
+    from src.modules.emit.owl_exporter import run_owl_export
     owl_path = run_owl_export(final_tax, relations_csv=final_rel)
     if _check_stop(_stop, "7"): return
 
     # Step 7b: Ontology Verification
-    from src.modules.ontology_verifier import run_ontology_verification
+    from src.modules.emit.verifier import run_ontology_verification
     run_ontology_verification(owl_path, skip_oops=args.skip_oops, skip_reasoner=args.skip_reasoner)
 
     log.success("\nPipeline complete.")

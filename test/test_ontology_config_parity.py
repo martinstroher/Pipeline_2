@@ -60,7 +60,7 @@ def main() -> int:
 
     # ── OWL file list parity ──
     # Class-source OWL files (excludes property-only ontologies like ro-core.owl).
-    from src.modules.owl_exporter import ONTO_NS as LEGACY_ONTO_NS
+    from src.modules.emit.owl_exporter import ONTO_NS as LEGACY_ONTO_NS
     expected_owl = {"bfo-core.owl", "geocore-full.owl", "geores-full.owl"}
     _assert_eq("OWL class-source file list", expected_owl, {p.name for p in cfg.owl_class_paths()})
     # Total OWL file list (includes ro-core.owl as property supplier)
@@ -71,7 +71,7 @@ def main() -> int:
     _assert_eq("project namespace", str(LEGACY_ONTO_NS), cfg.project_namespace())
 
     # ── BFO disjoint pairs parity ──
-    from src.modules.owl_exporter import _BFO_DISJOINT as LEGACY_DISJOINT
+    from src.modules.emit.owl_exporter import _BFO_DISJOINT as LEGACY_DISJOINT
     _assert_eq(
         "BFO disjoint pairs (as sorted tuples)",
         sorted(tuple(sorted(p)) for p in LEGACY_DISJOINT),
@@ -79,7 +79,7 @@ def main() -> int:
     )
 
     # ── Verifier prefixes parity ──
-    from src.modules.ontology_verifier import _BFO_PREFIX, _GEO_PREFIX, _ONTO_PREFIX
+    from src.modules.emit.verifier import _BFO_PREFIX, _GEO_PREFIX, _ONTO_PREFIX
     vp = cfg.verifier_prefixes
     _assert_eq("verifier BFO prefix", _BFO_PREFIX, vp.get("bfo"))
     _assert_eq("verifier Geo prefix", _GEO_PREFIX, vp.get("geo"))

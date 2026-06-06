@@ -83,7 +83,7 @@ def main() -> int:
                 _fail(f"{fname} missing columns: {sorted(missing)}")
 
         # ── Step 7 ──────────────────────────────────────────────────
-        from src.modules.owl_exporter import run_owl_export
+        from src.modules.emit.owl_exporter import run_owl_export
         ttl_path = os.path.join(tmp, "7_ontology.ttl")
         run_owl_export(tax_6d, output_path=ttl_path, relations_csv=rel_in)
         if not os.path.exists(ttl_path):
@@ -92,7 +92,7 @@ def main() -> int:
         _ok(f"Step 7 wrote {os.path.basename(ttl_path)} ({os.path.getsize(ttl_path)} bytes)")
 
         # ── Step 7b ─────────────────────────────────────────────────
-        from src.modules.ontology_verifier import run_ontology_verification
+        from src.modules.emit.verifier import run_ontology_verification
         report = run_ontology_verification(
             ttl_path,
             output_path=os.path.join(tmp, "7b_verification_report.json"),
