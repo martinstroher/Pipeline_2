@@ -66,6 +66,39 @@ def _clean_outputs() -> None:
     log.success("Clean start complete — all caches and outputs removed.")
 
 
+# Verb-name aliases for --stop-after. Each verb maps to the last numeric step
+# of that verb so e.g. --stop-after construct stops after construct_relations (6b).
+_STEP_ALIASES: dict[str, str] = {
+    "extract": "3",
+    "define": "4",
+    "classify": "5b",
+    "construct": "6b",
+    "validate": "6d",
+    "emit": "7b",
+}
+
+_NUMERIC_STOP_CHOICES = ("0", "R", "1", "2", "3", "4", "5", "5b", "6", "6b", "6c", "6d", "7", "7b")
+_VERB_STOP_CHOICES = tuple(_STEP_ALIASES.keys())
+
+
+def _resolve_stop_alias(stop: str | None) -> str | None:
+    """Resolve verb-name aliases to numeric step IDs. Emits a deprecation warning
+    when the legacy numeric form is used so callers migrate to verb names.
+    """
+    if stop is None:
+        return None
+    if stop in _STEP_ALIASES:
+        return _STEP_ALIASES[stop]
+    if stop in _NUMERIC_STOP_CHOICES:
+        log.warn(
+            f"--stop-after {stop!r} uses the legacy numeric form; "
+            f"prefer verb names ({', '.join(_VERB_STOP_CHOICES)}). "
+            f"Numeric aliases will be removed in a future release."
+        )
+        return stop
+    return stop
+
+
 def _check_stop(stop: str | None, step: str) -> bool:
     """If `stop` matches `step`, log success and return True so caller can return.
 
@@ -264,8 +297,12 @@ def _build_parser() -> argparse.ArgumentParser:
         "--stop-after",
         type=str,
         default=None,
-        choices=["0", "R", "1", "2", "3", "4", "5", "5b", "6", "6b", "6c", "7", "7b"],
-        help="Stop pipeline after this step (e.g., --stop-after 3 to run only Steps 0-3)",
+        choices=list(_NUMERIC_STOP_CHOICES) + list(_VERB_STOP_CHOICES),
+        help=(
+            "Stop pipeline after this step. Prefer verb names "
+            "(extract|define|classify|construct|validate|emit). "
+            "Numeric step IDs (0|R|1..7b) are accepted as deprecated aliases."
+        ),
     )
     return parser
 
@@ -375,7 +412,7 @@ def main():
         _clean_outputs()
 
     # --- Standard pipeline ---
-    _stop = args.stop_after
+    _stop = _resolve_stop_alias(args.stop_after)
 
     if not args.skip_pdf:
         log.banner(0, "PDF Text Extraction")
