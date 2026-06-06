@@ -144,7 +144,7 @@ def main() -> int:
     _assert_eq("step6d strict_subclass", True, cfg.step6d_strict_subclass())
 
     # _is_strict_subclass logic
-    from src.modules.relation_reclassifier import _is_strict_subclass
+    from src.modules.validate.relation_reclassifier import _is_strict_subclass
     parent = frozenset({"IndependentContinuant", "Continuant"})
     child = frozenset({"MaterialEntity", "IndependentContinuant", "Continuant"})
     sibling = frozenset({"ImmaterialEntity", "IndependentContinuant", "Continuant"})

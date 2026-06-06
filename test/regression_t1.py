@@ -59,7 +59,7 @@ def main() -> int:
         rel_in = os.path.join(tmp, "6c_relations_cleaned.csv")
 
         # ── Step 6d ─────────────────────────────────────────────────
-        from src.modules.relation_reclassifier import run_relation_reclassification
+        from src.modules.validate.relation_reclassifier import run_relation_reclassification
         tax_6d = run_relation_reclassification(tax_in, rel_in)
         log_6d = os.path.join(tmp, "6d_reclassification_log.csv")
 

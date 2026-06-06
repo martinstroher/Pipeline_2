@@ -310,7 +310,7 @@ def _run_refinement_pipeline(args, _stop) -> None:
             run_relation_extraction(t_cat_csv, output_path=rel_csv)
 
         log.banner(f"T{t}-6c", f"Ontology Critic (threshold ≥{t})")
-        from src.modules.ontology_critic import run_ontology_critic
+        from src.modules.validate.ontology_critic import run_ontology_critic
         cleaned_tax = os.path.join(t_dir, "6c_taxonomy_cleaned.csv")
         cleaned_rel = os.path.join(t_dir, "6c_relations_cleaned.csv") if rel_csv else None
         run_ontology_critic(
@@ -324,7 +324,7 @@ def _run_refinement_pipeline(args, _stop) -> None:
         reclass_tax = cleaned_tax  # fallback if no relations
         if cleaned_rel and os.path.exists(cleaned_rel):
             log.banner(f"T{t}-6d", f"Relation Reclassification (threshold ≥{t})")
-            from src.modules.relation_reclassifier import run_relation_reclassification
+            from src.modules.validate.relation_reclassifier import run_relation_reclassification
             reclass_tax = os.path.join(t_dir, "6d_taxonomy_reclassified.csv")
             run_relation_reclassification(
                 cleaned_tax,
@@ -442,7 +442,7 @@ def main():
 
     # Step 6c: Ontology Critic
     log.banner("6c", "Ontology Critic")
-    from src.modules.ontology_critic import run_ontology_critic
+    from src.modules.validate.ontology_critic import run_ontology_critic
     tax_csv = (
         os.path.splitext(cat_csv)[0]
         .replace("5_categorized_ontology", "6_taxonomy") + ".csv"
@@ -461,7 +461,7 @@ def main():
     reclass_tax = cleaned_tax  # fallback if no relations
     if cleaned_rel and os.path.exists(cleaned_rel):
         log.banner("6d", "Relation Reclassification")
-        from src.modules.relation_reclassifier import run_relation_reclassification
+        from src.modules.validate.relation_reclassifier import run_relation_reclassification
         reclass_tax = cleaned_tax.replace("6c_taxonomy_cleaned", "6d_taxonomy_reclassified")
         run_relation_reclassification(
             cleaned_tax,
