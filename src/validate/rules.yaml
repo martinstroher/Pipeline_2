@@ -1,0 +1,192 @@
+# =========================================================================
+# Validation Rules — Cross-domain methodology
+# =========================================================================
+# Single source of truth for the eight published validation rules applied
+# uniformly across all ablation conditions and domains. Each rule cites a
+# foundational source. Loaded by `src/modules/validate/rule_applier.py`.
+#
+# Per the thesis-defence framing (see validator_defense_review.md), this
+# validator is METHODOLOGY, not contribution. It exists to ensure the final
+# ontology meets published standards (BFO disjointness, OntoClean
+# meta-properties, BFO/RO property typing, NeOn structural coherence) and is
+# applied identically to all ablation conditions.
+#
+# Schema:
+#   rules: list[rule]
+#     rule.id              short kebab-case identifier
+#     rule.title           human-readable name
+#     rule.citation        published source ("Smith et al. 2015", etc.)
+#     rule.engine          deterministic | llm | hybrid
+#     rule.target          edges_in_taxonomy | edges_in_relations | terms
+#     rule.prompt          (llm/hybrid only) prompt filename in any
+#                          configured prompt root (studies/prompts/ or
+#                          domains/<active>/prompts/)
+#     rule.decision_on_fail
+#                          REJECT      drop the edge / term outright
+#                          RECLASSIFY  reparent to category root (taxonomy only)
+#                          REFINE      reparent to a strict BFO subclass
+#                                      (refinement-mode only)
+#     rule.exemptions      optional per-rule exemption clauses
+#     rule.notes           free-form
+#
+#   aggregator: decision policy applied by `aggregator.py` (Phase 2.6)
+#
+# Env overrides:
+#   VALIDATION_RULES_PATH   path to this file (default: src/validate/rules.yaml)
+#   VALIDATION_RULES_ACTIVE comma-separated subset of rule ids to enable
+# =========================================================================
+
+rules:
+
+  # --- Deterministic rules (no LLM) -------------------------------------
+
+  - id: bfo_disjointness
+    title: "BFO disjointness axiom respect"
+    citation: "Smith et al. 2015 (BFO 2.0 Core Axioms)"
+    engine: deterministic
+    target: edges_in_taxonomy
+    decision_on_fail: REJECT
+    notes: >
+      Rejects taxonomy edges whose subject category and parent category
+      jointly imply membership in both sides of a published BFO disjoint
+      pair (e.g., MaterialEntity ⊥ ImmaterialEntity). Sourced from
+      `disjoint_pairs:` in each ontology block of ontology_config.yaml.
+
+  - id: property_domain_range
+    title: "BFO/RO property domain and range constraints"
+    citation: "BFO 2020 axioms + RO 2023 release"
+    engine: deterministic
+    target: edges_in_relations
+    decision_on_fail: REJECT
+    notes: >
+      For each relation `term --[property]--> filler`, look up the property
+      in `ontology_config.yaml::relations`, then check that the term's
+      category metatypes ⊆ property.domain metatypes and the filler's
+      metatypes ⊆ property.range metatypes. Mirrors the existing logic in
+      `src/utils/relation_validator.py`.
+
+  - id: relation_evidence_refinement
+    title: "NeOn Stage 3 structural coherence — refine via relation evidence"
+    citation: "Suárez-Figueroa et al. 2012 (NeOn methodology, Stage 3)"
+    engine: deterministic
+    target: edges_in_taxonomy
+    decision_on_fail: REFINE
+    notes: >
+      For each term with ≥2 accepted relations, collect implied metatypes
+      from the property constraints (domain when term is subject, range
+      when term is filler). If the consensus metatype is a strict BFO
+      subclass of the term's current category, propose a REFINE move
+      (logged action `Action=REFINE`). Replaces the current
+      `relation_reclassifier.py` logic verbatim.
+
+  - id: cq_coverage_gate
+    title: "Competency-question coverage gate"
+    citation: "Suárez-Figueroa et al. 2012 (NeOn methodology, CQ-driven scope)"
+    engine: deterministic
+    target: terms
+    decision_on_fail: REJECT
+    notes: >
+      A term that scores zero in the `classify_cq_matrix.csv` (i.e. no CQ
+      is plausibly answered by including it) is removed. Provides a
+      principled, deterministic version of the current critic's
+      "essentiality review".
+    exemptions:
+      relationship_types: [rdf:type]   # never drop named individuals
+
+  # --- LLM rules (OntoClean meta-properties) ----------------------------
+
+  - id: ontoclean_rigidity
+    title: "OntoClean rigidity test (R / -R / ~R)"
+    citation: "Guarino & Welty 2009 (OntoClean — meta-property analysis)"
+    engine: llm
+    target: edges_in_taxonomy
+    prompt: rule_ontoclean_rigidity.txt
+    decision_on_fail: REJECT
+    notes: >
+      Per Guarino & Welty 2009: a rigid property holds for all its
+      instances in every possible world. A child class cannot be rigid (+R)
+      if its parent is anti-rigid (~R). LLM judges the rigidity sign of
+      child and parent from their NLDs and rejects the edge when the
+      rigidity signs are incompatible.
+
+  - id: ontoclean_identity
+    title: "OntoClean identity test (+I / -I)"
+    citation: "Guarino & Welty 2009"
+    engine: llm
+    target: edges_in_taxonomy
+    prompt: rule_ontoclean_identity.txt
+    decision_on_fail: REJECT
+    notes: >
+      A class that carries an identity criterion (+I) cannot subsume a
+      class with no identity criterion (-I) without breaking ontological
+      coherence. LLM judges from NLDs whether the child inherits / carries
+      a coherent identity criterion from the parent.
+
+  - id: ontoclean_unity
+    title: "OntoClean unity test (+U / -U / ~U)"
+    citation: "Guarino & Welty 2009"
+    engine: llm
+    target: edges_in_taxonomy
+    prompt: rule_ontoclean_unity.txt
+    decision_on_fail: REJECT
+    notes: >
+      A child class cannot carry a unity criterion (+U) that conflicts
+      with the parent's unity criterion. LLM checks unity-criterion
+      compatibility between child and parent NLDs.
+
+  - id: ontoclean_dependence
+    title: "OntoClean dependence test (+D / -D)"
+    citation: "Guarino & Welty 2009"
+    engine: llm
+    target: edges_in_taxonomy
+    prompt: rule_ontoclean_dependence.txt
+    decision_on_fail: REJECT
+    notes: >
+      Externally dependent classes (+D) — those whose instances necessarily
+      depend on instances of another class — must not subsume independent
+      classes (-D). LLM checks dependence compatibility from NLDs.
+
+# -------------------------------------------------------------------------
+# Aggregator decision policy (consumed by src/modules/validate/aggregator.py)
+# -------------------------------------------------------------------------
+# Decision order is applied top-to-bottom; the first matching clause wins.
+# `min_count` is the minimum number of distinct rule verdicts of a given
+# status required to trigger the clause. ABSTAIN never triggers an action
+# but is logged for audit.
+aggregator:
+  policy:
+    # Any single deterministic REJECT is fatal for the edge.
+    - if:
+        engine: deterministic
+        status: REJECT
+        min_count: 1
+      action: drop_edge
+
+    # Any deterministic RECLASSIFY/REFINE moves the edge.
+    - if:
+        engine: deterministic
+        status: RECLASSIFY
+        min_count: 1
+      action: reparent_to_category_root
+
+    - if:
+        engine: deterministic
+        status: REFINE
+        min_count: 1
+      action: refine_to_subclass
+
+    # OntoClean is approximate: require ≥2 of the 4 metaproperty rules to
+    # vote REJECT before acting (deliberately conservative to limit false
+    # positives — see Q5 / Gap 1 in validator_defense_review.md).
+    - if:
+        engine: llm
+        status: REJECT
+        min_count: 2
+      action: drop_edge
+
+    # Default: accept.
+    - default: accept
+
+  # Per-condition rejection stats are written to
+  # output/<run>/validate_per_condition_stats.csv for ablation analysis.
+  emit_per_condition_stats: true

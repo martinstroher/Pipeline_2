@@ -1,0 +1,150 @@
+# =========================================================================
+# Domain filters — Pre-Salt engineering filters
+# =========================================================================
+# Per-domain engineering filters applied during validation. Where
+# `src/validate/rules.yaml` encodes published methodology that should not
+# vary between domains, this file encodes opinionated, domain-specific
+# cruft-removal heuristics: things a Pre-Salt geologist would not want as
+# OWL classes (measurements, analytical frameworks, near-duplicates,
+# orphan intermediates, etc.).
+#
+# Active file is selected by the same logic as `ontology_config.yaml`:
+# the loader walks up from `DOMAIN_PROFILE_PATH` (default
+# `domains/presalt/ontology_config.yaml`) and reads `domain_filters.yaml`
+# from the same directory.
+#
+# Schema:
+#   filters: list[filter]
+#     filter.id              short kebab-case identifier
+#     filter.title           human-readable name
+#     filter.engine          structural | llm | hybrid
+#     filter.target          taxonomy | relations | terms
+#     filter.prompt          (llm/hybrid only) prompt filename, resolved
+#                            via prompt_loader (active domain → studies)
+#     filter.action          REMOVE | MERGE | REPARENT
+#     filter.params          engine-specific knobs (see per-filter notes)
+#
+#   exemptions: rules that protect specific edges from ALL filters
+#
+# Each filter writes its verdicts to
+# `validate_filter_verdicts.csv` (one row per filter × candidate).
+# =========================================================================
+
+# -------------------------------------------------------------------------
+# Global exemptions — apply to all filters
+# -------------------------------------------------------------------------
+exemptions:
+  # Named individuals (`rdf:type` edges) describe real-world instances —
+  # proper-name protection. Never targeted by domain filters.
+  proper_names:
+    relationship_types: [rdf:type]
+  # Categories whose terms are always preserved (e.g., the upper-ontology
+  # roots themselves — they appear as Parent_Term for the lower classes).
+  preserved_categories:
+    - "GeoCore"
+    - "GeoReservoir"
+    - "BFO"
+
+filters:
+
+  # --- Structural filters (deterministic) -------------------------------
+
+  - id: single_child_intermediate
+    title: "Single-child intermediate node"
+    engine: structural
+    target: taxonomy
+    action: REMOVE
+    params:
+      min_children_to_keep: 2
+    notes: >
+      An intermediate node whose only purpose is to group one child adds
+      no classification value. Removed; the lone child is reparented to
+      the intermediate's parent.
+
+  - id: orphan_intermediate
+    title: "Intermediate node with no children"
+    engine: structural
+    target: taxonomy
+    action: REMOVE
+    notes: >
+      A node marked `Is_Intermediate=True` that has no children remaining
+      after upstream cleaning serves no structural purpose.
+
+  - id: self_loop
+    title: "Self-referential parent edge (Term == Parent_Term)"
+    engine: structural
+    target: taxonomy
+    action: REPARENT
+    params:
+      reparent_to: category_root
+    notes: >
+      Defensive guard — should never happen, but if a row is malformed
+      such that Term and Parent_Term match, reparent to the Category root
+      to keep the taxonomy acyclic.
+
+  - id: broken_parent
+    title: "Parent_Term not present in taxonomy"
+    engine: structural
+    target: taxonomy
+    action: REPARENT
+    params:
+      reparent_to: category_root
+    notes: >
+      A row whose Parent_Term is not itself a Term in the taxonomy is
+      reparented to its Category root. Otherwise the OWL export would
+      generate a dangling class reference.
+
+  # --- LLM filters (engineering judgement) ------------------------------
+
+  - id: measurement_property
+    title: "Measurement / property class (not a geological entity)"
+    engine: llm
+    target: terms
+    prompt: filter_measurement_property.txt
+    action: REMOVE
+    notes: >
+      Terms representing measurable quantities (temperature, thickness,
+      porosity %, density, grain size, acoustic impedance, displacement,
+      sorting, dip angle) are properties OF entities, not entities. Should
+      be modelled as OWL DatatypeProperty, not OWL Class.
+
+  - id: analytical_framework
+    title: "Analytical / interpretive framework"
+    engine: llm
+    target: terms
+    prompt: filter_analytical_framework.txt
+    action: REMOVE
+    notes: >
+      Terms that describe HOW geologists analyse rocks (depositional model,
+      facies model, stacking pattern, carbonate factory as abstract
+      framework) rather than the rocks themselves. These belong in a
+      methods ontology, not a domain ontology.
+
+  - id: overly_generic
+    title: "Overly generic / vague term"
+    engine: llm
+    target: terms
+    prompt: filter_overly_generic.txt
+    action: REMOVE
+    notes: >
+      Terms so vague they cannot be instantiated or distinguished from
+      their parent ("geological feature", "rock material", "natural
+      phenomenon"). Remove unless they have ≥1 surviving child.
+
+  # --- Hybrid filter (embeddings + LLM adjudication) --------------------
+
+  - id: near_duplicate
+    title: "Near-duplicate term cluster (synonymy / spelling variants)"
+    engine: hybrid
+    target: terms
+    prompt: filter_near_duplicate.txt
+    action: MERGE
+    params:
+      embedding_model: BAAI/bge-m3
+      similarity_threshold: 0.92
+      max_cluster_size: 4
+    notes: >
+      Cosine-similarity sweep over term embeddings produces candidate
+      clusters; LLM adjudicates each cluster to (a) confirm true synonymy
+      and (b) pick the surviving term. Embeddings reused from the RAG
+      pipeline (no extra load).
