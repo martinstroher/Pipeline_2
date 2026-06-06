@@ -152,13 +152,22 @@ def _dispatch_llm_filter(
     ]
     subject_ids = [s["term"] for s in active_subjects]
 
-    return llm_engine.evaluate_batch(
-        prompt,
-        {"batch_json": json.dumps(batch, ensure_ascii=False)},
-        rule_id=flt["id"],
-        subject_type=_subject_type(flt.get("target", "terms")),
-        subject_ids=subject_ids,
-    )
+    batch_size = int(os.environ.get("VALIDATION_LLM_BATCH_SIZE", "10"))
+    subj_type = _subject_type(flt.get("target", "terms"))
+    out: list[Verdict] = []
+    for start in range(0, len(batch), batch_size):
+        chunk = batch[start:start + batch_size]
+        chunk_ids = subject_ids[start:start + batch_size]
+        out.extend(
+            llm_engine.evaluate_batch(
+                prompt,
+                {"batch_json": json.dumps(chunk, ensure_ascii=False)},
+                rule_id=flt["id"],
+                subject_type=subj_type,
+                subject_ids=chunk_ids,
+            )
+        )
+    return out
 
 
 def _dispatch_hybrid(
