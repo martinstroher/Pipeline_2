@@ -13,7 +13,7 @@
     "upper_iris_referenced": 39
   },
   "files": {
-    "6c_relations_cleaned.csv": {
+    "validate_critic_relations.csv": {
       "columns": [
         "Term",
         "Category",
@@ -29,7 +29,7 @@
       "rows": 1106,
       "sha256": "fe76925d6dcef27e42478d120f5937a61ddabdb2b9c5397b7f04d32e9e77eac1"
     },
-    "6c_taxonomy_cleaned.csv": {
+    "validate_critic_taxonomy.csv": {
       "columns": [
         "Term",
         "Parent_Term",
@@ -44,7 +44,7 @@
       "rows": 325,
       "sha256": "90c042c60defc51247e1ea204efeb72a36903f5095cd08b6960e80f4be92d6e0"
     },
-    "6d_reclassification_log.csv": {
+    "validate_reclassification_log.csv": {
       "columns": [
         "Action",
         "Term",
@@ -56,7 +56,7 @@
       "rows": 157,
       "sha256": "d700c95c6dfcc8e959c6dd9b9b1c045f9ab47c2608def2642e6fdfc2179a52b0"
     },
-    "6d_taxonomy_reclassified.csv": {
+    "validate_reclassified_taxonomy.csv": {
       "columns": [
         "Term",
         "Parent_Term",
@@ -71,7 +71,7 @@
       "rows": 325,
       "sha256": "ab693d50feb0b66c6a101fe8a8d80d35a14169caf97d1f6872e55c1441842056"
     },
-    "7_ontology.ttl": {
+    "emit_ontology.ttl": {
       "bytes": 251936,
       "sha256": "bd47af2c557b8016fea1efc59702ebd51072bed6180ec9d9d8769feb255f4e68"
     }
