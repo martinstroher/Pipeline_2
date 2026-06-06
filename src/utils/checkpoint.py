@@ -1,7 +1,7 @@
 """Append-mode CSV checkpointing for resumable pipeline steps.
 
 Centralises the load/append pattern used across `nld_generator`,
-`relation_extractor`, `cq_refinement`, `ablation_study`, and `term_categorizer`.
+`relation_extractor`, `cq_scorer`, `ablation_study`, and `category_assigner`.
 
 Usage:
     cp = Checkpoint("output/4_nld.csv", key_column="Term")

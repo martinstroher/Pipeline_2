@@ -16,7 +16,7 @@ from src.modules.extract.term_extractor import run_llm_term_extraction
 from src.modules.extract import term_aggregator
 from src.modules.extract.term_filter import filter_top_terms
 from src.modules.define.nld_generator import run_nld_generation
-from src.modules.term_categorizer import run_term_categorization
+from src.modules.classify.category_assigner import run_term_categorization
 from src.utils.rag_setup import setup_rag, DOCS_DIR
 from src.utils.pdf_processor import process_folder as convert_pdfs
 
@@ -272,7 +272,7 @@ def _build_parser() -> argparse.ArgumentParser:
 
 def _run_refinement_pipeline(args, _stop) -> None:
     """Run Step 5b (CQ refinement) then per-threshold Steps 6→6b→6c→6d→7→7b."""
-    from src.modules.cq_refinement import run_cq_refinement
+    from src.modules.classify.cq_scorer import run_cq_refinement
     log.banner("5b", "CQ-Driven Refinement")
     cat_csv = os.environ["CATEGORIZED_LLM_TERMS"]
     threshold_paths = run_cq_refinement(cat_csv)
