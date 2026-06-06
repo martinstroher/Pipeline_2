@@ -6,17 +6,17 @@ OntoClean defines unity as follows. A property CARRIES a unity criterion (+U) wh
 The published OntoClean constraint you enforce is: an anti-unity class (~U) CANNOT subsume a +U class. In `child IS-A parent`, REJECT when parent=~U AND child=+U. ACCEPT all other combinations.
 
 [PROMPT_TEMPLATE]
-You are judging an IS-A edge in a Pre-Salt petroleum geology ontology. Apply the OntoClean unity test.
+You are judging a BATCH of IS-A edges in a Pre-Salt petroleum geology ontology. Apply the OntoClean unity test to EACH edge independently.
 
-EDGE (JSON):
-{edge_json}
+EDGES (JSON array — process each entry in order):
+{batch_json}
 
-Inputs you have:
-- child term, child NLD
-- parent term, parent NLD
-- the BFO/GeoCore/GeoReservoir category of the child
+Each entry has:
+- child_term, child_nld
+- parent_term, parent_nld
+- category (BFO/GeoCore/GeoReservoir of the child)
 
-PROCEDURE
+PROCEDURE — apply to EACH edge independently
 1. Ask of the parent: do its instances form a single connected whole under some unifying relation (physical bonding, topological connectivity, functional cohesion)? If yes → +U. If instances are mass-like aggregates or sums with no required wholeness → ~U. If unclear → -U.
 2. Ask the same of the child.
 3. Apply the constraint: REJECT only when parent=~U AND child=+U. Otherwise ACCEPT.
@@ -28,10 +28,13 @@ GEOLOGICAL EXAMPLES
 - "Mineral Phase IS-A Mineral Aggregate" → parent ~U, child ~U → ACCEPT.
 - "Stratigraphic Unit IS-A Geological Body" → both +U → ACCEPT.
 
-OUTPUT — exactly one JSON object, no surrounding prose:
-{{
-  "verdict": "ACCEPT" | "REJECT" | "ABSTAIN",
-  "child_unity": "+U" | "-U" | "~U" | "UNKNOWN",
-  "parent_unity": "+U" | "-U" | "~U" | "UNKNOWN",
-  "reason": "one sentence citing the inferred unity status and the OntoClean constraint"
-}}
+OUTPUT — exactly one JSON array, same length and order as the input batch, no surrounding prose:
+[
+  {{
+    "verdict": "ACCEPT" | "REJECT" | "ABSTAIN",
+    "child_unity": "+U" | "-U" | "~U" | "UNKNOWN",
+    "parent_unity": "+U" | "-U" | "~U" | "UNKNOWN",
+    "reason": "one sentence citing the inferred unity status and the OntoClean constraint"
+  }},
+  ... one object per input edge ...
+]

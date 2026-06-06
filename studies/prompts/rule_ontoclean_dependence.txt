@@ -6,17 +6,17 @@ OntoClean defines dependence as follows. A property is EXTERNALLY DEPENDENT (+D)
 The published OntoClean constraint you enforce is: an independent class (-D) CANNOT be subsumed by a dependent class (+D). In `child IS-A parent`, REJECT when parent=+D AND child=-D. ACCEPT all other combinations. (Independent classes may subsume either; dependent children of dependent parents are fine; dependent children of independent parents are fine.)
 
 [PROMPT_TEMPLATE]
-You are judging an IS-A edge in a Pre-Salt petroleum geology ontology. Apply the OntoClean dependence test.
+You are judging a BATCH of IS-A edges in a Pre-Salt petroleum geology ontology. Apply the OntoClean dependence test to EACH edge independently.
 
-EDGE (JSON):
-{edge_json}
+EDGES (JSON array — process each entry in order):
+{batch_json}
 
-Inputs you have:
-- child term, child NLD
-- parent term, parent NLD
-- the BFO/GeoCore/GeoReservoir category of the child
+Each entry has:
+- child_term, child_nld
+- parent_term, parent_nld
+- category (BFO/GeoCore/GeoReservoir of the child)
 
-PROCEDURE
+PROCEDURE — apply to EACH edge independently
 1. Ask of the parent: does its NLD require, for every instance, the existence of a separate external entity (a different particular, not a part)? If yes → +D. Otherwise → -D.
 2. Ask the same of the child.
 3. Apply the constraint: REJECT only when parent=+D AND child=-D. Otherwise ACCEPT.
@@ -28,10 +28,13 @@ GEOLOGICAL EXAMPLES
 - "Productive Reservoir IS-A Reservoir" → parent +D, child +D → ACCEPT.
 - "Pore Network IS-A Geological Structure" → parent -D, child -D → ACCEPT.
 
-OUTPUT — exactly one JSON object, no surrounding prose:
-{{
-  "verdict": "ACCEPT" | "REJECT" | "ABSTAIN",
-  "child_dependence": "+D" | "-D" | "UNKNOWN",
-  "parent_dependence": "+D" | "-D" | "UNKNOWN",
-  "reason": "one sentence citing the inferred dependence status and the OntoClean constraint"
-}}
+OUTPUT — exactly one JSON array, same length and order as the input batch, no surrounding prose:
+[
+  {{
+    "verdict": "ACCEPT" | "REJECT" | "ABSTAIN",
+    "child_dependence": "+D" | "-D" | "UNKNOWN",
+    "parent_dependence": "+D" | "-D" | "UNKNOWN",
+    "reason": "one sentence citing the inferred dependence status and the OntoClean constraint"
+  }},
+  ... one object per input edge ...
+]

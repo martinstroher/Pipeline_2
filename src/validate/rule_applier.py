@@ -199,34 +199,49 @@ def _dispatch_llm(rule: dict, subjects: list[dict], ctx: StructuralContext) -> l
         return []
     target = rule["target"]
     subj_type = _subject_type(target)
-    out: list[Verdict] = []
-    for subj in subjects:
-        if _is_exempt(rule, subj):
-            continue
-        sid = _subject_id(target, subj)
-        # OntoClean prompts expect a single edge_json payload.
-        edge_payload = {
+    # Drop exempt subjects up-front so batching only includes evaluable edges.
+    active = [s for s in subjects if not _is_exempt(rule, s)]
+    if not active:
+        return []
+
+    # Build one payload entry per active subject. OntoClean prompts accept a
+    # JSON array under {batch_json} and return a JSON array of verdicts.
+    parent_nld_lookup: dict[str, str] = {}
+    if ctx.taxonomy_df is not None:
+        for _, r in ctx.taxonomy_df.iterrows():
+            key = str(r.get("Term", "")).strip().lower()
+            if key:
+                parent_nld_lookup[key] = str(r.get("NLD", "") or "")
+
+    payloads: list[dict] = []
+    subject_ids: list[str] = []
+    for subj in active:
+        subject_ids.append(_subject_id(target, subj))
+        payloads.append({
             "child_term": subj.get("term"),
             "parent_term": subj.get("parent_term"),
             "child_nld": subj.get("nld", ""),
-            "parent_nld": "",  # filled in below if parent NLD is in taxonomy
+            "parent_nld": parent_nld_lookup.get(
+                str(subj.get("parent_term", "")).strip().lower(), ""
+            ),
             "category": subj.get("category"),
             "parent_category": subj.get("parent_category"),
-        }
-        # Pull parent NLD from taxonomy_df if available.
-        if ctx.taxonomy_df is not None:
-            pn = subj.get("parent_term", "").lower()
-            match = ctx.taxonomy_df[ctx.taxonomy_df["Term"].str.lower() == pn]
-            if not match.empty:
-                edge_payload["parent_nld"] = str(match.iloc[0].get("NLD", "") or "")
-        verdict = llm_engine.evaluate(
-            prompt,
-            {"edge_json": json.dumps(edge_payload, ensure_ascii=False)},
-            rule_id=rule["id"],
-            subject_type=subj_type,
-            subject_id=sid,
+        })
+
+    batch_size = int(os.environ.get("VALIDATION_LLM_BATCH_SIZE", "10"))
+    out: list[Verdict] = []
+    for start in range(0, len(payloads), batch_size):
+        chunk = payloads[start:start + batch_size]
+        chunk_ids = subject_ids[start:start + batch_size]
+        out.extend(
+            llm_engine.evaluate_batch(
+                prompt,
+                {"batch_json": json.dumps(chunk, ensure_ascii=False)},
+                rule_id=rule["id"],
+                subject_type=subj_type,
+                subject_ids=chunk_ids,
+            )
         )
-        out.append(verdict)
     return out
 
 

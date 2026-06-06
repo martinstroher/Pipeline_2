@@ -52,7 +52,7 @@ def test_evaluate_single_pass_caches_and_short_circuits():
         with patch("src.validate.engines.llm.generate", side_effect=fake_generate):
             v1 = mod.evaluate(
                 "rule_ontoclean_rigidity.txt",
-                {"edge_json": json.dumps({"term": "A", "parent": "B"})},
+                {"batch_json": json.dumps({"term": "A", "parent": "B"})},
                 rule_id="ontoclean_rigidity",
                 subject_type="edge_taxonomy",
                 subject_id="A-->B",
@@ -60,7 +60,7 @@ def test_evaluate_single_pass_caches_and_short_circuits():
             )
             v2 = mod.evaluate(
                 "rule_ontoclean_rigidity.txt",
-                {"edge_json": json.dumps({"term": "A", "parent": "B"})},
+                {"batch_json": json.dumps({"term": "A", "parent": "B"})},
                 rule_id="ontoclean_rigidity",
                 subject_type="edge_taxonomy",
                 subject_id="A-->B",
@@ -92,7 +92,7 @@ def test_evaluate_reject_verdict_mapping():
         with patch("src.validate.engines.llm.generate", side_effect=fake_generate):
             v = mod.evaluate(
                 "rule_ontoclean_rigidity.txt",
-                {"edge_json": "{}"},
+                {"batch_json": "{}"},
                 rule_id="ontoclean_rigidity",
                 subject_type="edge_taxonomy",
                 subject_id="X-->Y",
@@ -117,7 +117,7 @@ def test_evaluate_unknown_verdict_abstains():
         ):
             v = mod.evaluate(
                 "rule_ontoclean_rigidity.txt",
-                {"edge_json": "{}"},
+                {"batch_json": "{}"},
                 rule_id="ontoclean_rigidity",
                 subject_type="edge_taxonomy",
                 subject_id="X-->Y",
@@ -142,7 +142,7 @@ def test_evaluate_parse_error_returns_abstain():
         ):
             v = mod.evaluate(
                 "rule_ontoclean_rigidity.txt",
-                {"edge_json": "{}"},
+                {"batch_json": "{}"},
                 rule_id="ontoclean_rigidity",
                 subject_type="edge_taxonomy",
                 subject_id="X-->Y",
@@ -170,7 +170,7 @@ def test_evaluate_call_failure_returns_abstain():
         with patch("src.validate.engines.llm.generate", side_effect=boom):
             v = mod.evaluate(
                 "rule_ontoclean_rigidity.txt",
-                {"edge_json": "{}"},
+                {"batch_json": "{}"},
                 rule_id="ontoclean_rigidity",
                 subject_type="edge_taxonomy",
                 subject_id="X-->Y",
