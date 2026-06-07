@@ -1,25 +1,27 @@
 {
-  "input": "test/output_test/6d_taxonomy_reclassified.ttl",
+  "input": "test/output_test\\validate_taxonomy.ttl",
   "layers": {
     "syntax": {
       "layer": "syntax",
       "status": "PASS",
       "errors": [],
-      "triple_count": 250
+      "triple_count": 390
     },
     "structure": {
       "layer": "structure",
       "status": "PASS",
-      "classes": 41,
-      "individuals": 1,
-      "triples": 250,
-      "upper_iris_referenced": 21,
+      "classes": 57,
+      "individuals": 2,
+      "triples": 390,
+      "upper_iris_referenced": 25,
       "upper_iris_list": [
         "http://purl.obolibrary.org/obo/BFO_0000001",
         "http://purl.obolibrary.org/obo/BFO_0000002",
         "http://purl.obolibrary.org/obo/BFO_0000003",
         "http://purl.obolibrary.org/obo/BFO_0000004",
         "http://purl.obolibrary.org/obo/BFO_0000015",
+        "http://purl.obolibrary.org/obo/BFO_0000019",
+        "http://purl.obolibrary.org/obo/BFO_0000020",
         "http://purl.obolibrary.org/obo/BFO_0000027",
         "http://purl.obolibrary.org/obo/BFO_0000029",
         "http://purl.obolibrary.org/obo/BFO_0000030",
@@ -31,29 +33,16 @@
         "https://www.inf.ufrgs.br/bdi/ontologies/GEOCORE_0000004",
         "https://www.inf.ufrgs.br/bdi/ontologies/GEOCORE_0000006",
         "https://www.inf.ufrgs.br/bdi/ontologies/GEOCORE_0000008",
+        "https://www.inf.ufrgs.br/bdi/ontologies/GEOCORE_0000009",
         "https://www.inf.ufrgs.br/bdi/ontologies/GEORES_0000001",
         "https://www.inf.ufrgs.br/bdi/ontologies/GEORES_0000002",
         "https://www.inf.ufrgs.br/bdi/ontologies/GEORES_0000021",
+        "https://www.inf.ufrgs.br/bdi/ontologies/GEORES_0000028",
         "https://www.inf.ufrgs.br/bdi/ontologies/GEORES_0000032",
         "https://www.inf.ufrgs.br/bdi/ontologies/GEORES_0000039"
       ],
-      "issues": [
-        {
-          "type": "MISSING_COMMENT",
-          "severity": "MINOR",
-          "entity": "https://w3id.org/presalt-onto#ContinentalDepositionalSetting",
-          "detail": "Entity has no rdfs:comment (NLD not propagated)."
-        },
-        {
-          "type": "MISSING_COMMENT",
-          "severity": "MINOR",
-          "entity": "https://w3id.org/presalt-onto#Mineral",
-          "detail": "Entity has no rdfs:comment (NLD not propagated)."
-        }
-      ],
-      "issue_summary": {
-        "MINOR": 2
-      }
+      "issues": [],
+      "issue_summary": {}
     },
     "oops_pitfalls": {
       "layer": "oops_pitfalls",
@@ -61,9 +50,9 @@
       "pitfalls": [],
       "pitfall_summary": {},
       "errors": [
-        "OOPS! HTTP error: 500 Server Error:  for url: https://oops.linkeddata.es/rest"
+        "OOPS! unreachable (connection error)"
       ],
-      "oops_url": "https://oops.linkeddata.es/rest"
+      "oops_url": "http://localhost:8080/rest"
     },
     "reasoner": {
       "layer": "reasoner",

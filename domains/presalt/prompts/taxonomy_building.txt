@@ -14,6 +14,8 @@ Your task is to arrange them into an IS-A hierarchy (taxonomy tree).
        * "Dissolution" NLD: "Dissolution is a **diagenetic process** that removes carbonate..."
      → Both share the genus "diagenetic process" → create "Diagenetic Process" as intermediate, with both as children.
      → If only "Dolomitization" were in the group, attach it directly to "{category}" — do NOT create "Diagenetic Process" for a single term.
+   - **No duplicates of input terms (CRITICAL):** Before inventing an intermediate named Y, check the input terms case-insensitively. If any input term in this batch already matches Y (e.g., input term `continental depositional setting` and you were about to invent `Continental Depositional Setting`), DO NOT create the intermediate. Instead, use the existing input term as the parent for its siblings — it already has an NLD and is the canonical form.
+   - **Every intermediate MUST include a one-sentence NLD** in the `intermediate_nld` field (see OUTPUT FORMAT). The NLD follows the Aristotelian "X is a Y that Z" form, e.g., `"Diagenetic Process is a geological process that alters sediments or rocks after deposition."` Intermediates without a defensible one-sentence definition should not be created — attach the terms directly to the category root instead.
 3. **Class vs Individual distinction (CRITICAL):**
    The following are INDIVIDUALS (named instances) → use relationship_type = "rdf:type":
      - Named geological time periods (e.g., "Cretaceous", "Aptian", "Albian", "Pre-Salt")
@@ -38,6 +40,7 @@ Return a JSON array where each object has:
 - "parent_term": immediate parent (either another term, an intermediate class you created, or "{category}")
 - "relationship_type": either "rdfs:subClassOf" (for classes) or "rdf:type" (for individuals)
 - "is_intermediate": false for input terms, true for intermediate classes you created
+- "intermediate_nld": REQUIRED when `is_intermediate` is true — a one-sentence Aristotelian definition of the intermediate class ("X is a Y that Z"). Leave empty string ("") for input terms.
 
 Include intermediate classes you create as separate entries in the array.
 

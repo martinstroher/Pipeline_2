@@ -23,6 +23,10 @@ For every row, return one of three actions:
 - Default to **KEEP**. Only DROP/FIX when you can name the specific defect.
 - Do NOT drop a row just because you would have phrased it differently.
 - Do NOT drop named individuals (named formations, basins, fields, geological time periods) unless they are clearly out of scope.
+- **Intermediate classes** are flagged with `is_intermediate: true`. They were invented by the taxonomy builder to group siblings under a shared genus. Hold them to a higher bar:
+    - DROP an intermediate if it has fewer than **2 surviving children** in this category's taxonomy, OR if its NLD is missing / vacuous / merely restates the parent.
+    - DROP an intermediate if it simply re-states the parent root with a domain adjective (e.g. "Physical Property Of Rock" under `quality`, "Geological Process" under `process`) without adding a real differentia.
+    - When you DROP an intermediate, its children will be automatically re-parented to the category root — do not separately FIX their parents.
 - For **FIX** on a taxonomy row, `new_parent` must be either another term in this category's taxonomy list or the category root itself (`{category}`).
 - For **FIX** on a relation row, `new_property` must be a property already used in the relation rows above OR one of: has_part, part_of, has_participant, participates_in, occurs_in, located_in, derives_from, derives_into, generated_by, constituted_by, has_quality, inheres_in, preceded_by, precedes, generated_in, has_age.
 - Be concise in `reason` — one short sentence.

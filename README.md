@@ -72,8 +72,6 @@ The full pipeline runs Steps 0-7 and writes a Turtle OWL file (`output/6d_taxono
 | *(none)* | Run the full standard pipeline (Steps 0-7) |
 | `--skip-pdf` | Skip PDF→Markdown (Step 0); use existing `.md` files |
 | `--skip-extraction` | Skip extraction/aggregation/filter (Steps 1-3); use existing filtered terms |
-| `--refine` | Run CQ-driven refinement (Step 5b) after classification, then generate ontologies at 4 thresholds |
-| `--threshold T` | CQ threshold for refined expert evaluation (use with `--expert-eval --refine`, T=0/1/2/3) |
 | `--ablation` | Run 4-condition ablation study instead of the standard pipeline |
 | `--conditions A,B,C,D` | Select ablation conditions to run (default: all four) |
 | `--analysis` | Run Layer 1 automated analysis on ablation output |
@@ -136,7 +134,7 @@ Self-contained test that:
 ## Project Structure
 
 ```
-pipeline.py               # Main orchestrator + CLI (thin: helpers for parser, dispatch, refine loop, cleanup, stop-check)
+pipeline.py               # Main orchestrator + CLI (thin: helpers for parser, dispatch, cleanup, stop-check)
 domains/                  # Per-domain config + assets. Each subfolder is a complete retargetable bundle.
   README.md               # Author guide: layout, activation, per-prompt runtime-placeholder contract
   presalt/
@@ -154,7 +152,7 @@ src/
     term_filter.py        # Step 3: Frequency threshold filter
     nld_generator.py      # Step 4: RAG-grounded NLD generation (Gemini 2.5 Pro)
     term_categorizer.py   # Step 5: N-tier waterfall categorization (one {categories_block} placeholder rendered from ontology_config.yaml waterfall:)
-    cq_refinement.py      # Step 5b: CQ-driven refinement (--refine): cleanup + scoring + threshold split
+    cq_refinement.py      # Step 5b: CQ-driven refinement (mandatory): cleanup + scoring + filter at CQ≥1
     taxonomy_builder.py   # Step 6: Group-based LLM hierarchy builder, UPPER_IRIS anchoring
     relation_extractor.py # Step 6b: LLM relation extraction + BFO domain/range validation
     ontology_critic.py    # Step 6c: 3-pass LLM taxonomy quality review (merge/remove/move)

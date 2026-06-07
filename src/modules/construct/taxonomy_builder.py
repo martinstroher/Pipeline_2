@@ -97,14 +97,42 @@ def build_taxonomy_for_group(
 
         rows = []
         for item in result:
+            is_intermediate = bool(item.get("is_intermediate", False))
+            # Intermediates carry their NLD inline (the LLM writes one in the same call);
+            # input terms reuse their existing NLD downstream via nld_lookup.
+            row_nld = item.get("intermediate_nld", "") if is_intermediate else ""
             rows.append({
                 "Term": item.get("term", ""),
                 "Parent_Term": item.get("parent_term", category),
                 "Relationship_Type": item.get("relationship_type", "rdfs:subClassOf"),
                 "Category": category,
-                "Is_Intermediate": item.get("is_intermediate", False),
+                "Is_Intermediate": is_intermediate,
+                "NLD": row_nld,
                 "FALLBACK": False,
             })
+
+        # --- Casing normalization + duplicate-intermediate drop ---
+        # The LLM may invent an intermediate (Title Case) that collides
+        # case-insensitively with an existing input term (lowercase). In that
+        # case the input term wins (it has the canonical NLD); we rewrite any
+        # references to the duplicate and drop the synthetic row.
+        input_terms_lower = {t["term"].lower(): t["term"] for t in terms_with_nlds}
+        for row in rows:
+            parent_lower = str(row["Parent_Term"]).lower()
+            if parent_lower in input_terms_lower:
+                row["Parent_Term"] = input_terms_lower[parent_lower]
+        duplicate_intermediates = set()
+        for row in rows:
+            if row["Is_Intermediate"]:
+                term_lower = str(row["Term"]).lower()
+                if term_lower in input_terms_lower and row["Term"] != input_terms_lower[term_lower]:
+                    duplicate_intermediates.add(row["Term"])
+                    log.detail(
+                        f"Dropped duplicate intermediate '{row['Term']}' in '{category}' "
+                        f"— collides with input term '{input_terms_lower[term_lower]}'"
+                    )
+        if duplicate_intermediates:
+            rows = [r for r in rows if r["Term"] not in duplicate_intermediates]
 
         # --- Cycle detection: break any cycles by re-parenting to category root ---
         child_to_parent = {r["Term"]: r["Parent_Term"] for r in rows}
@@ -132,6 +160,7 @@ def build_taxonomy_for_group(
                 "Relationship_Type": "rdfs:subClassOf",
                 "Category": category,
                 "Is_Intermediate": False,
+                "NLD": "",
                 "FALLBACK": True,
             }
             for t in terms_with_nlds
@@ -198,7 +227,10 @@ def run_taxonomy_builder(categorized_csv: str, output_path: str | None = None, h
             chunk = terms_with_nlds[chunk_start : chunk_start + 150]
             rows = build_taxonomy_for_group(cat, chunk, MODEL_NAME, MODEL_TEMPERATURE, hints=hints)
             for row in rows:
-                row["NLD"] = nld_lookup.get(row["Term"], "")
+                # Input terms get their NLD from the categorized CSV; intermediates
+                # keep the one-sentence NLD the LLM wrote inline.
+                if not row.get("Is_Intermediate"):
+                    row["NLD"] = nld_lookup.get(row["Term"], "")
             all_taxonomy_rows.extend(rows)
             time.sleep(2)
 

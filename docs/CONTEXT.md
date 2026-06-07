@@ -14,7 +14,7 @@ graph TD
     E -->|term_filter.py| F(Filtered CSV)
     F -->|nld_generator.py + RAG| G(NLDs + Definitions CSV)
     G -->|term_categorizer.py + RAG| H(Categorized Ontology CSV)
-    H -->|cq_refinement.py --refine| H2(Filtered Categorized CSVs × T)
+    H -->|cq_scorer.py| H2(Filtered Categorized CSV — CQ≥1)
     H2 -->|taxonomy_builder.py| I(Taxonomy CSV)
     H -->|taxonomy_builder.py| I
     H -->|relation_extractor.py| Rel(Relations CSV)
@@ -109,13 +109,13 @@ The ontology scope is defined by 10 competency questions (CQs) that specify what
 - Waterfall priority ensures each term maps to the most domain-specific applicable namespace first. Reordering or extending the cascade is a YAML-only edit (`waterfall:` + a new `ontologies.<key>` block) — no Python change is required.
 - Output: `output/5_categorized_ontology.csv`
 
-### `src/modules/cq_refinement.py` — Step 5b: CQ-Driven Refinement
+### `src/modules/classify/cq_scorer.py` — Step 5b: CQ-Driven Refinement
 - **Tech**: Gemini 2.5 Pro (synonym triage + CQ scoring)
-- Activated by `--refine` flag. Runs after Step 5 and before Steps 6-7b.
+- Mandatory sub-step of the `classify` verb. Runs after Step 5 and before Step 6; downstream steps consume its filtered output instead of the raw Step 5 CSV.
 - **Sub-step A — Deterministic cleanup:** Detects encoding/accent duplicates (Unicode NFKD normalisation) and hyphenation variants (build-up/buildup). Merges to the longer/accented canonical form.
 - **Sub-step B — Synonym triage:** Groups terms sharing a head noun within the same category (≥50% word overlap). Sends clusters to the LLM for 3-way classification: SYNONYM (merge to canonical), SPECIALIZATION (keep both + emit parent-child hint), or DISTINCT (keep both). NLDs are included so the LLM judges meaning, not just surface form. SPECIALIZATION pairs are written to `5b_specialization_hints.csv` and passed to the taxonomy builder as parent-child constraints.
 - **Sub-step C — CQ scoring:** Each surviving term is scored against 10 competency questions in parallel batches of 5 (`CQ_BATCH_SIZE`). The LLM returns which CQs the term meaningfully contributes to. Checkpoint/resume via `5b_cq_matrix.csv`.
-- **Sub-step D — Threshold split:** Writes filtered categorized CSVs at T=0 (cleanup only), T≥1, T≥2, T≥3 into `output/refined/t{N}/5_categorized_ontology.csv`.
+- **Sub-step D — CQ filter:** Drops every term whose `CQ_Count < 1` (i.e. terms that didn't contribute to any of the 10 competency questions). Writes the kept terms to `output/refined/classify_categories.csv`, which becomes the input to Step 6. There is no threshold sweep — production targets T≥1.
 - **Robustness:** CQ identifiers are validated against a fixed set (CQ1-CQ10). Batch size mismatches raise `ValueError`. JSON parse failures are logged and skipped. ThreadPoolExecutor parallelism is configurable via `MAX_CONCURRENT_CQ`.
 - Output: `output/refined/5b_cleanup_report.csv`, `output/refined/5b_cq_matrix.csv`, `output/refined/5b_specialization_hints.csv`, `output/refined/threshold_summary.csv`, per-threshold CSVs.
 

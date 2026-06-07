@@ -132,19 +132,8 @@ def _dispatch_subcommand(args, parser) -> bool:
         return True
 
     if args.expert_eval:
-        if args.refine and args.threshold is not None:
-            from src.evaluation.expert_eval_generator import generate_refined_evaluation
-            t = args.threshold
-            cq_matrix = os.path.join("output", "refined", "5b_cq_matrix.csv")
-            tax_path = os.path.join("output", "refined", f"t{t}", "construct_taxonomy.csv")
-            if not os.path.exists(cq_matrix):
-                parser.error(f"CQ matrix not found: {cq_matrix}. Run --refine first.")
-            if not os.path.exists(tax_path):
-                parser.error(f"Taxonomy not found: {tax_path}. Run --refine with full pipeline first.")
-            generate_refined_evaluation(cq_matrix, t, tax_path)
-        else:
-            from src.evaluation.expert_eval_generator import generate_expert_evaluation
-            generate_expert_evaluation()
+        from src.evaluation.expert_eval_generator import generate_expert_evaluation
+        generate_expert_evaluation()
         return True
 
     if args.layer2_analysis:
@@ -282,18 +271,6 @@ def _build_parser() -> argparse.ArgumentParser:
         help="Clean start: remove all output files, ChromaDB, and .md inputs. Forces full rebuild.",
     )
     parser.add_argument(
-        "--refine",
-        action="store_true",
-        help="Run CQ-driven refinement: Step 5b cleanup/scoring + multi-threshold generation (Steps 6-7b per threshold).",
-    )
-    parser.add_argument(
-        "--threshold",
-        type=int,
-        default=None,
-        choices=[0, 1, 2, 3],
-        help="Pick a single CQ threshold. With --refine: run Steps 6-7b only for this T. With --expert-eval --refine: generate evaluation workbook for this T.",
-    )
-    parser.add_argument(
         "--stop-after",
         type=str,
         default=None,
@@ -305,89 +282,6 @@ def _build_parser() -> argparse.ArgumentParser:
         ),
     )
     return parser
-
-
-def _run_refinement_pipeline(args, _stop) -> None:
-    """Run Step 5b (CQ refinement) then per-threshold Steps 6→6b→6c→6d→7→7b."""
-    from src.modules.classify.cq_scorer import run_cq_refinement
-    log.banner("5b", "CQ-Driven Refinement")
-    cat_csv = os.environ["CATEGORIZED_LLM_TERMS"]
-    threshold_paths = run_cq_refinement(cat_csv)
-    if _check_stop(_stop, "5b"): return
-
-    from src.modules.construct.taxonomy_builder import run_taxonomy_builder
-    from src.modules.emit.owl_exporter import run_owl_export
-    from src.modules.emit.verifier import run_ontology_verification
-    import pandas as _pd
-
-    # Specialization hints from synonym triage (may not exist)
-    hints_csv = os.path.join("output", "refined", "5b_specialization_hints.csv")
-    if not os.path.exists(hints_csv):
-        hints_csv = None
-
-    if args.threshold is not None:
-        picked = args.threshold
-        if picked not in threshold_paths:
-            log.error(f"Threshold T={picked} not found in 5b output. Available: {sorted(threshold_paths.keys())}")
-            return
-        threshold_paths = {picked: threshold_paths[picked]}
-
-    comparison_rows = []
-    for t, t_cat_csv in sorted(threshold_paths.items()):
-        t_dir = os.path.dirname(t_cat_csv)
-        log.banner(f"T{t}-6", f"Taxonomy Builder (threshold ≥{t})")
-        tax_csv = os.path.join(t_dir, "construct_taxonomy.csv")
-        run_taxonomy_builder(t_cat_csv, output_path=tax_csv, hints_csv=hints_csv)
-
-        rel_csv = None
-        if not args.skip_relations:
-            log.banner(f"T{t}-6b", f"Relation Extraction (threshold ≥{t})")
-            from src.modules.construct.relation_extractor import run_relation_extraction
-            rel_csv = os.path.join(t_dir, "construct_relations.csv")
-            run_relation_extraction(t_cat_csv, output_path=rel_csv)
-
-        log.banner(f"T{t}-validate", f"Validate (threshold ≥{t})")
-        from src.modules.validate.critic import run_critic
-        final_tax, final_rel = run_critic(
-            tax_csv,
-            t_dir,
-            relations_csv=rel_csv,
-        )
-        if _check_stop(_stop, "validate"): return
-        if _check_stop(_stop, "6d"): return  # legacy alias
-
-        # Fall back to the construct outputs if validate produced nothing
-        # writable (e.g. all rows dropped — unlikely but defensive).
-        if not (final_tax and os.path.exists(final_tax)):
-            final_tax = tax_csv
-        if rel_csv and not (final_rel and os.path.exists(final_rel)):
-            final_rel = rel_csv
-
-        log.banner(f"T{t}-7", f"OWL Export (threshold ≥{t})")
-        owl_path = os.path.join(t_dir, "emit_ontology.ttl")
-        run_owl_export(final_tax, relations_csv=final_rel, output_path=owl_path)
-
-        log.banner(f"T{t}-7b", f"Verification (threshold ≥{t})")
-        report_path = os.path.join(t_dir, "emit_verification.json")
-        report = run_ontology_verification(
-            owl_path, output_path=report_path,
-            skip_oops=args.skip_oops, skip_reasoner=args.skip_reasoner,
-        )
-
-        structure = report.get("layers", {}).get("structure", {})
-        comparison_rows.append({
-            "Threshold": f"T>={t}",
-            "Terms": _pd.read_csv(t_cat_csv, encoding="utf-8-sig").shape[0],
-            "Classes": structure.get("classes", 0),
-            "Individuals": structure.get("individuals", 0),
-            "Triples": structure.get("triples", 0),
-            "HermiT": report.get("layers", {}).get("reasoner", {}).get("status", "SKIP"),
-        })
-
-    comp_path = os.path.join("output", "refined", "comparison.csv")
-    _pd.DataFrame(comparison_rows).to_csv(comp_path, index=False, encoding="utf-8-sig")
-    log.success(f"\nComparison report → '{comp_path}'")
-    log.success("\nRefinement pipeline complete.")
 
 
 def main():
@@ -409,16 +303,9 @@ def main():
         convert_pdfs(DOCS_DIR)
         if _check_stop(_stop, "0"): return
 
-    # Set up RAG system (force rebuild after --fresh)
-    # Skip RAG if --refine and categorized output already exists (5b doesn't need RAG)
-    _cat_exists = os.path.exists(os.environ.get("CATEGORIZED_LLM_TERMS", "output/classify_categories.csv"))
-    if args.refine and _cat_exists and args.skip_extraction:
-        log.info("Skipping RAG setup (not needed for Step 5b with existing outputs)")
-        vector_store, bm25 = None, None
-    else:
-        log.banner("R", "RAG Setup")
-        vector_store, bm25 = setup_rag(force_rebuild=args.fresh)
-        if _check_stop(_stop, "R"): return
+    log.banner("R", "RAG Setup")
+    vector_store, bm25 = setup_rag(force_rebuild=args.fresh)
+    if _check_stop(_stop, "R"): return
 
     if not args.skip_extraction:
         log.banner(1, "Term Extraction")
@@ -433,28 +320,30 @@ def main():
         filter_top_terms()
         if _check_stop(_stop, "3"): return
 
-    # When --refine is set and categorized output exists, skip Steps 4-5
-    cat_csv_path = os.environ.get("CATEGORIZED_LLM_TERMS", "output/classify_categories.csv")
-    if args.refine and os.path.exists(cat_csv_path) and _stop != "4" and _stop != "5":
-        log.info(f"Skipping Steps 4-5: categorized output exists at '{cat_csv_path}'")
-    else:
-        log.banner(4, "NLD Generation")
-        run_nld_generation(vector_store=vector_store, bm25_retriever=bm25)
-        if _check_stop(_stop, "4"): return
+    log.banner(4, "NLD Generation")
+    run_nld_generation(vector_store=vector_store, bm25_retriever=bm25)
+    if _check_stop(_stop, "4"): return
 
-        log.banner(5, "Term Categorization")
-        run_term_categorization()
-        if _check_stop(_stop, "5"): return
+    log.banner(5, "Term Categorization")
+    run_term_categorization()
+    if _check_stop(_stop, "5"): return
 
-    # --- CQ-Driven Refinement mode ---
-    if args.refine:
-        _run_refinement_pipeline(args, _stop)
-        return
+    # Step 5b: CQ-driven refinement (mandatory). Cleans duplicates, scores every
+    # surviving term against the 10 competency questions, and writes a filtered
+    # categorized CSV containing only terms with CQ_Count >= 1. Downstream
+    # steps consume that filtered CSV instead of the raw Step 5 output.
+    log.banner("5b", "CQ-Driven Refinement")
+    from src.modules.classify.cq_scorer import run_cq_refinement
+    cat_csv = run_cq_refinement(os.environ["CATEGORIZED_LLM_TERMS"])
+    hints_csv = os.path.join("output", "refined", "5b_specialization_hints.csv")
+    if not os.path.exists(hints_csv):
+        hints_csv = None
+    if _check_stop(_stop, "5b"): return
 
     log.banner(6, "Taxonomy Builder")
     from src.modules.construct.taxonomy_builder import run_taxonomy_builder
-    cat_csv = os.environ["CATEGORIZED_LLM_TERMS"]
-    run_taxonomy_builder(cat_csv)
+    tax_csv = os.path.join(os.path.dirname(cat_csv), "construct_taxonomy.csv")
+    run_taxonomy_builder(cat_csv, output_path=tax_csv, hints_csv=hints_csv)
     if _check_stop(_stop, "6"): return
 
     # Step 6b: Relation Extraction
@@ -462,7 +351,8 @@ def main():
     if not args.skip_relations:
         log.banner("6b", "Relation Extraction")
         from src.modules.construct.relation_extractor import run_relation_extraction
-        relations_csv = run_relation_extraction(cat_csv)
+        relations_csv = os.path.join(os.path.dirname(cat_csv), "construct_relations.csv")
+        run_relation_extraction(cat_csv, output_path=relations_csv)
     else:
         log.info("Step 6b: Relation extraction skipped (--skip-relations)")
     if _check_stop(_stop, "6b"): return

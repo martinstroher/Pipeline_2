@@ -2,14 +2,14 @@
 Step 5b — CQ-Driven Refinement.
 
 Cleans encoding/synonym duplicates, scores each term against 10 competency
-questions, and produces filtered categorized CSVs at multiple CQ-count
-thresholds (T=0, T=1, T=2, T=3).
+questions, and writes a single filtered categorized CSV containing only
+terms that contribute to at least one competency question (CQ_Count >= 1).
 
 Sub-steps:
   A. Deterministic cleanup — encoding dupes, surface-form variants.
   B. Synonym triage — LLM-assisted 3-way classification of near-synonym clusters.
   C. CQ scoring — parallel batched scoring (5 terms/call) against all 10 CQs.
-  D. Threshold split — write filtered CSVs per threshold into output/refined/t{N}/.
+  D. CQ filter — keep only terms with CQ_Count >= 1; write to output/refined/.
 """
 
 import json
@@ -36,8 +36,8 @@ REFINED_DIR = os.path.join("output", "refined")
 CLEANUP_REPORT = os.path.join(REFINED_DIR, "5b_cleanup_report.csv")
 SPECIALIZATION_HINTS = os.path.join(REFINED_DIR, "5b_specialization_hints.csv")
 CQ_MATRIX_FILE = os.path.join(REFINED_DIR, "5b_cq_matrix.csv")
-THRESHOLD_SUMMARY = os.path.join(REFINED_DIR, "threshold_summary.csv")
-THRESHOLDS = [0, 1, 2, 3]
+FILTERED_CATEGORIZED = os.path.join(REFINED_DIR, "classify_categories.csv")
+MIN_CQ_COUNT = 1
 
 CQ_BATCH_SIZE = int(os.environ.get("CQ_BATCH_SIZE", 5))
 MAX_CONCURRENT_CQ = int(os.environ.get("MAX_CONCURRENT_CQ", 5))
@@ -368,45 +368,30 @@ def _run_cq_scoring(df: pd.DataFrame) -> pd.DataFrame:
 
 
 # ---------------------------------------------------------------------------
-# Sub-step D: Threshold split
+# Sub-step D: CQ filter (keep terms with CQ_Count >= MIN_CQ_COUNT)
 # ---------------------------------------------------------------------------
 
 
-def _run_threshold_split(
+def _filter_at_min_cq(
     df_categorized: pd.DataFrame,
     df_cq: pd.DataFrame,
-) -> dict[int, str]:
-    """Write filtered categorized CSVs for each threshold. Returns {T: path}."""
-    # Merge CQ_Count into categorized data
+) -> str:
+    """Drop terms with CQ_Count < MIN_CQ_COUNT; write the filtered CSV."""
     cq_counts = df_cq[["Term", "CQ_Count"]].drop_duplicates(subset="Term")
     df_merged = df_categorized.merge(cq_counts, on="Term", how="left")
     df_merged["CQ_Count"] = df_merged["CQ_Count"].fillna(0).astype(int)
 
-    paths = {}
-    summary_rows = []
-    for t in THRESHOLDS:
-        t_dir = os.path.join(REFINED_DIR, f"t{t}")
-        os.makedirs(t_dir, exist_ok=True)
-        out_path = os.path.join(t_dir, "classify_categories.csv")
+    n_before = len(df_merged)
+    df_filtered = df_merged[df_merged["CQ_Count"] >= MIN_CQ_COUNT].copy()
+    # Drop CQ_Count — not part of the standard Step 5 schema downstream
+    df_filtered = df_filtered.drop(columns=["CQ_Count"])
 
-        df_filtered = df_merged[df_merged["CQ_Count"] >= t].copy()
-        # Drop CQ_Count — not part of the standard Step 5 schema
-        df_filtered = df_filtered.drop(columns=["CQ_Count"])
-        write_csv(df_filtered, out_path)
-
-        n_terms = len(df_filtered)
-        n_cats = df_filtered["Category"].nunique()
-        log.info(f"  T≥{t}: {n_terms} terms, {n_cats} categories → '{out_path}'")
-
-        paths[t] = out_path
-        summary_rows.append({
-            "Threshold": t,
-            "Term_Count": n_terms,
-            "Category_Count": n_cats,
-        })
-
-    write_csv(pd.DataFrame(summary_rows), THRESHOLD_SUMMARY)
-    return paths
+    os.makedirs(REFINED_DIR, exist_ok=True)
+    write_csv(df_filtered, FILTERED_CATEGORIZED)
+    n_terms = len(df_filtered)
+    n_cats = df_filtered["Category"].nunique()
+    log.info(f"CQ filter (≥{MIN_CQ_COUNT}): kept {n_terms}/{n_before} terms across {n_cats} categories → '{FILTERED_CATEGORIZED}'")
+    return FILTERED_CATEGORIZED
 
 
 # ---------------------------------------------------------------------------
@@ -416,14 +401,14 @@ def _run_threshold_split(
 
 def run_cq_refinement(
     categorized_csv: str | None = None,
-) -> dict[int, str]:
-    """Run the full CQ-driven refinement: cleanup → scoring → threshold split.
+) -> str:
+    """Run the full CQ-driven refinement: cleanup → scoring → T≥1 filter.
 
     Args:
         categorized_csv: Path to Step 5 output. Defaults to CATEGORIZED_LLM_TERMS env var.
 
     Returns:
-        Dict mapping threshold T → path to filtered categorized CSV.
+        Path to the filtered categorized CSV (terms with CQ_Count >= MIN_CQ_COUNT).
     """
     if categorized_csv is None:
         categorized_csv = os.environ.get("CATEGORIZED_LLM_TERMS")
@@ -483,9 +468,9 @@ def run_cq_refinement(
     log.banner("5b-C", "CQ Scoring")
     df_cq = _run_cq_scoring(df_clean)
 
-    # ----- Sub-step D: Threshold split -----
-    log.banner("5b-D", "Threshold Split")
-    paths = _run_threshold_split(df_clean, df_cq)
+    # ----- Sub-step D: CQ filter -----
+    log.banner("5b-D", f"CQ Filter (T≥{MIN_CQ_COUNT})")
+    filtered_path = _filter_at_min_cq(df_clean, df_cq)
 
-    log.success(f"Step 5b complete. {len(THRESHOLDS)} threshold variants written to '{REFINED_DIR}/'")
-    return paths
+    log.success(f"Step 5b complete → '{filtered_path}'")
+    return filtered_path

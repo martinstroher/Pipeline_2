@@ -53,11 +53,13 @@ def _term_to_category(tax: pd.DataFrame) -> dict[str, str]:
 def _build_taxonomy_payload(rows: pd.DataFrame) -> list[dict]:
     out = []
     for _, r in rows.iterrows():
+        is_intermediate = bool(r.get("Is_Intermediate", False))
         out.append({
             "id": int(r["_critic_id"]),
             "term": r["Term"],
             "parent_term": r["Parent_Term"],
             "relationship_type": r.get("Relationship_Type", "rdfs:subClassOf"),
+            "is_intermediate": is_intermediate,
             "nld": str(r.get("NLD", ""))[:400],
         })
     return out
@@ -343,13 +345,37 @@ def run_critic(
         time.sleep(1)  # light rate limiting
 
     cleaned_tax, tax_log = _apply_taxonomy_edits(tax, all_tax_edits, valid_categories)
-    cleaned_tax = cleaned_tax.drop(columns=["_critic_id"], errors="ignore")
-    write_csv(cleaned_tax, tax_out)
-    log.success(f"Cleaned taxonomy: {len(cleaned_tax)} rows (was {len(tax)}) → {tax_out}")
+
+    # Track which terms were DROPped from the taxonomy so we can prune relations
+    # that reference them as fillers (otherwise OWL export emits phantom classes).
+    dropped_taxonomy_terms = {
+        str(entry["term"]).strip().lower()
+        for entry in tax_log
+        if entry["action"] == "DROP"
+    }
+
+    cleaned_tax_out = cleaned_tax.drop(columns=["_critic_id"], errors="ignore")
+    write_csv(cleaned_tax_out, tax_out)
+    log.success(f"Cleaned taxonomy: {len(cleaned_tax_out)} rows (was {len(tax)}) → {tax_out}")
 
     rel_log: list[dict] = []
     if rel is not None and rel_out:
         cleaned_rel, rel_log = _apply_relation_edits(rel, all_rel_edits)
+        # Phantom-filler cleanup: drop relations whose filler was DROPped from
+        # the taxonomy in this same pass. Logged as DROP/phantom in audit log.
+        if dropped_taxonomy_terms:
+            phantom_mask = cleaned_rel["Filler"].astype(str).str.strip().str.lower().isin(dropped_taxonomy_terms)
+            phantom_rows = cleaned_rel[phantom_mask]
+            for _, r in phantom_rows.iterrows():
+                rel_log.append({
+                    "id": int(r.get("_critic_id", -1)),
+                    "kind": "relation",
+                    "category": r.get("Category", ""),
+                    "term": r["Term"],
+                    "action": "DROP",
+                    "reason": f"(phantom-filler cleanup — filler '{r['Filler']}' was DROPped from taxonomy)",
+                })
+            cleaned_rel = cleaned_rel[~phantom_mask]
         cleaned_rel = cleaned_rel.drop(columns=["_critic_id"], errors="ignore")
         write_csv(cleaned_rel, rel_out)
         log.success(f"Cleaned relations: {len(cleaned_rel)} rows (was {len(rel)}) → {rel_out}")
