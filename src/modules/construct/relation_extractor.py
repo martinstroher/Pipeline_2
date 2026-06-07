@@ -54,14 +54,6 @@ CONFIDENCE_THRESHOLD = float(os.environ.get("RELATION_CONFIDENCE_THRESHOLD", 0.7
 
 _SYSTEM_INSTRUCTION, _PROMPT_TEMPLATE = load_prompt("relation_extraction.txt")
 
-# Allowed property names in the prompt (for validation of LLM output)
-_ALLOWED_PROPERTIES = {
-    "has_part", "part_of", "has_participant", "participates_in",
-    "occurs_in", "located_in", "derives_from", "derives_into",
-    "generated_by", "constituted_by", "has_quality", "inheres_in",
-    "preceded_by", "precedes", "generated_in", "has_age",
-}
-
 
 # ────────────────────────────────────────────────────────────────────────
 # Helpers
@@ -240,7 +232,7 @@ def run_relation_extraction(
                     evidence = rel.get("evidence", "")
 
                     # Skip unknown properties
-                    if prop_name not in _ALLOWED_PROPERTIES:
+                    if prop_name not in PROPERTY_CONSTRAINTS:
                         row = _make_row(
                             term, category, prop_name, "", filler, "unknown",
                             confidence, evidence, "REJECTED",
