@@ -335,7 +335,7 @@ def main():
     log.banner("5b", "CQ-Driven Refinement")
     from src.modules.classify.cq_scorer import run_cq_refinement
     cat_csv = run_cq_refinement(os.environ["CATEGORIZED_LLM_TERMS"])
-    hints_csv = os.path.join("output", "refined", "5b_specialization_hints.csv")
+    hints_csv = os.path.join(os.path.dirname(cat_csv), "5b_specialization_hints.csv")
     if not os.path.exists(hints_csv):
         hints_csv = None
     if _check_stop(_stop, "5b"): return

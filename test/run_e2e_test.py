@@ -164,24 +164,27 @@ def run_test():
         print("\n[FAIL] Pipeline (Steps 0-7) exited with non-zero return code!")
         sys.exit(result.returncode)
 
-    # Derive Step 6 and 7 paths from the categorized CSV path (mirrors taxonomy_builder logic).
-    # owl_exporter writes the .ttl next to the *final* taxonomy CSV it was handed, so the
-    # filename depends on which 6-tier step actually ran (6d > 6c > 6 > legacy emit_ontology).
+    # Step 5b rebases all post-classify artifacts under <input-dir>/refined/.
+    # That subfolder holds: classify_categories.csv (filtered), construct_taxonomy.csv,
+    # construct_relations.csv, validate_taxonomy.csv, validate_relations.csv,
+    # validate_edits.csv, validate_taxonomy.ttl, emit_verification.json.
     cat_csv_relative = env.get("CATEGORIZED_LLM_TERMS", "test/output_test/classify_categories.csv")
-    taxonomy_csv_rel = (
-        os.path.splitext(cat_csv_relative)[0]
-        .replace("classify_categories", "construct_taxonomy") + ".csv"
-    )
-    taxonomy_csv_abs = os.path.join(root_dir, taxonomy_csv_rel)
+    refined_dir_rel = os.path.join(os.path.dirname(cat_csv_relative), "refined")
+    refined_dir_abs = os.path.join(root_dir, refined_dir_rel)
+    taxonomy_csv_abs = os.path.join(refined_dir_abs, "construct_taxonomy.csv")
+    validate_tax_abs = os.path.join(refined_dir_abs, "validate_taxonomy.csv")
+    validate_rel_abs = os.path.join(refined_dir_abs, "validate_relations.csv")
+    # OWL exporter uses the critic's validate_taxonomy.csv -> validate_taxonomy.ttl by
+    # default (the construct_taxonomy -> emit_ontology rename only fires when the input
+    # name still contains 'construct_taxonomy').
     _ttl_candidates = [
-        taxonomy_csv_rel.replace("construct_taxonomy", "validate_reclassified_taxonomy").replace(".csv", ".ttl"),
-        taxonomy_csv_rel.replace("construct_taxonomy", "validate_critic_taxonomy").replace(".csv", ".ttl"),
-        taxonomy_csv_rel.replace(".csv", ".ttl"),
-        taxonomy_csv_rel.replace("construct_taxonomy", "emit_ontology").replace(".csv", ".ttl"),
+        os.path.join(refined_dir_abs, "validate_taxonomy.ttl"),
+        os.path.join(refined_dir_abs, "emit_ontology.ttl"),
+        os.path.join(refined_dir_abs, "construct_taxonomy.ttl"),
     ]
     owl_ttl_abs = next(
-        (os.path.join(root_dir, p) for p in _ttl_candidates if os.path.exists(os.path.join(root_dir, p))),
-        os.path.join(root_dir, _ttl_candidates[0]),
+        (p for p in _ttl_candidates if os.path.exists(p)),
+        _ttl_candidates[0],
     )
 
     # 5. Assertions — file existence + content validation
@@ -320,7 +323,7 @@ def run_test():
         all_passed = False
 
     # --- Step 6b: Relation Extraction ---
-    f6b = os.path.join(output_dir, "construct_relations.csv")
+    f6b = os.path.join(refined_dir_abs, "construct_relations.csv")
     if os.path.exists(f6b):
         ok = validate_csv(
             f6b,
@@ -400,7 +403,7 @@ def run_test():
         all_passed = False
 
     # --- Step 7b: Verification report ---
-    verify_report = os.path.join(output_dir, "emit_verification.json")
+    verify_report = os.path.join(refined_dir_abs, "emit_verification.json")
     if os.path.exists(verify_report):
         try:
             with open(verify_report, "r", encoding="utf-8") as f:

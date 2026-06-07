@@ -1,19 +1,19 @@
 {
-  "input": "test/output_test\\validate_taxonomy.ttl",
+  "input": "test/output_test\\refined\\validate_taxonomy.ttl",
   "layers": {
     "syntax": {
       "layer": "syntax",
       "status": "PASS",
       "errors": [],
-      "triple_count": 390
+      "triple_count": 367
     },
     "structure": {
       "layer": "structure",
       "status": "PASS",
-      "classes": 57,
+      "classes": 60,
       "individuals": 2,
-      "triples": 390,
-      "upper_iris_referenced": 25,
+      "triples": 367,
+      "upper_iris_referenced": 28,
       "upper_iris_list": [
         "http://purl.obolibrary.org/obo/BFO_0000001",
         "http://purl.obolibrary.org/obo/BFO_0000002",
@@ -36,8 +36,11 @@
         "https://www.inf.ufrgs.br/bdi/ontologies/GEOCORE_0000009",
         "https://www.inf.ufrgs.br/bdi/ontologies/GEORES_0000001",
         "https://www.inf.ufrgs.br/bdi/ontologies/GEORES_0000002",
+        "https://www.inf.ufrgs.br/bdi/ontologies/GEORES_0000003",
+        "https://www.inf.ufrgs.br/bdi/ontologies/GEORES_0000004",
         "https://www.inf.ufrgs.br/bdi/ontologies/GEORES_0000021",
         "https://www.inf.ufrgs.br/bdi/ontologies/GEORES_0000028",
+        "https://www.inf.ufrgs.br/bdi/ontologies/GEORES_0000029",
         "https://www.inf.ufrgs.br/bdi/ontologies/GEORES_0000032",
         "https://www.inf.ufrgs.br/bdi/ontologies/GEORES_0000039"
       ],

@@ -5,11 +5,15 @@ Cleans encoding/synonym duplicates, scores each term against 10 competency
 questions, and writes a single filtered categorized CSV containing only
 terms that contribute to at least one competency question (CQ_Count >= 1).
 
+All artifacts land in a `refined/` subfolder alongside the Step 5 input CSV
+(rebased per run by `_rebase_paths`). In production that resolves to
+`output/refined/`; the e2e test sandbox gets `test/output_test/refined/`.
+
 Sub-steps:
   A. Deterministic cleanup — encoding dupes, surface-form variants.
   B. Synonym triage — LLM-assisted 3-way classification of near-synonym clusters.
   C. CQ scoring — parallel batched scoring (5 terms/call) against all 10 CQs.
-  D. CQ filter — keep only terms with CQ_Count >= 1; write to output/refined/.
+  D. CQ filter — keep only terms with CQ_Count >= 1.
 """
 
 import json
@@ -29,7 +33,10 @@ from src.utils.gemini_client import generate
 from src.utils.prompt_loader import load_prompt
 
 # ---------------------------------------------------------------------------
-# Constants
+# Constants — paths default to output/refined/ and are rebased to
+# <input-csv-dir>/refined/ at run_cq_refinement() entry so the test sandbox
+# (test/output_test/) and any non-default CATEGORIZED_LLM_TERMS location
+# keep all 5b artifacts colocated with their Step 5 input.
 # ---------------------------------------------------------------------------
 
 REFINED_DIR = os.path.join("output", "refined")
@@ -38,6 +45,16 @@ SPECIALIZATION_HINTS = os.path.join(REFINED_DIR, "5b_specialization_hints.csv")
 CQ_MATRIX_FILE = os.path.join(REFINED_DIR, "5b_cq_matrix.csv")
 FILTERED_CATEGORIZED = os.path.join(REFINED_DIR, "classify_categories.csv")
 MIN_CQ_COUNT = 1
+
+
+def _rebase_paths(categorized_csv: str) -> None:
+    """Point module-level output paths at <dirname(categorized_csv)>/refined/."""
+    global REFINED_DIR, CLEANUP_REPORT, SPECIALIZATION_HINTS, CQ_MATRIX_FILE, FILTERED_CATEGORIZED
+    REFINED_DIR = os.path.join(os.path.dirname(categorized_csv) or ".", "refined")
+    CLEANUP_REPORT = os.path.join(REFINED_DIR, "5b_cleanup_report.csv")
+    SPECIALIZATION_HINTS = os.path.join(REFINED_DIR, "5b_specialization_hints.csv")
+    CQ_MATRIX_FILE = os.path.join(REFINED_DIR, "5b_cq_matrix.csv")
+    FILTERED_CATEGORIZED = os.path.join(REFINED_DIR, "classify_categories.csv")
 
 CQ_BATCH_SIZE = int(os.environ.get("CQ_BATCH_SIZE", 5))
 MAX_CONCURRENT_CQ = int(os.environ.get("MAX_CONCURRENT_CQ", 5))
@@ -415,6 +432,7 @@ def run_cq_refinement(
         if not categorized_csv:
             raise RuntimeError("CATEGORIZED_LLM_TERMS env var is not set.")
 
+    _rebase_paths(categorized_csv)
     os.makedirs(REFINED_DIR, exist_ok=True)
 
     # Load Step 5 output
