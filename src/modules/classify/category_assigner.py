@@ -1,6 +1,7 @@
 import json
 import os
-import time
+import threading
+from concurrent.futures import ThreadPoolExecutor, as_completed
 
 import pandas as pd
 
@@ -15,12 +16,13 @@ from src.utils.ontology_config import get_config
 
 def run_term_categorization():
     BATCH_SIZE = int(os.environ.get("BATCH_SIZE", 1))
+    MAX_WORKERS = int(os.environ.get("MAX_CONCURRENT_CATEGORIZE", 5))
     MODEL_NAME = os.environ.get("LLM_GENERATION_MODEL", "gemini-2.5-pro")
     MODEL_TEMPERATURE = float(os.environ.get("LLM_GENERATION_TEMPERATURE", 0))
     INPUT_FILE_PATH = os.environ["CONSOLIDATED_LLM_RESULTS_WITH_NLDS"]
     OUTPUT_FILE_PATH = os.environ["CATEGORIZED_LLM_TERMS"]
 
-    log.info(f"Categorizing in batches of {BATCH_SIZE}.")
+    log.info(f"Categorizing in batches of {BATCH_SIZE} ({MAX_WORKERS} workers).")
 
     cfg = get_config()
     categories_block = cfg.categorization_block()
@@ -56,22 +58,19 @@ def run_term_categorization():
     if df_nlds is not None:
         classification_results = []
         total_terms = len(df_nlds)
+        lock = threading.Lock()
 
-        pbar = tqdm(total=total_terms, desc="Categorizing")
-        for i in range(0, total_terms, BATCH_SIZE):
-            batch_df = df_nlds.iloc[i:i + BATCH_SIZE]
-
-            batch_list = []
-            for index, row in batch_df.iterrows():
-                batch_list.append({
-                    "term": row['Term'],
-                    "nld": row['NLD']
-                })
+        def _process_batch(batch_df: pd.DataFrame) -> list[dict]:
+            batch_list = [
+                {"term": row["Term"], "nld": row["NLD"]}
+                for _, row in batch_df.iterrows()
+            ]
             json_batch_str = json.dumps(batch_list, indent=2)
-
             try:
-                final_prompt = prompt_template.format(categories_block=categories_block,
-                                                      json_batch=json_batch_str)
+                final_prompt = prompt_template.format(
+                    categories_block=categories_block,
+                    json_batch=json_batch_str,
+                )
                 response_text = generate(
                     final_prompt,
                     model=MODEL_NAME,
@@ -84,48 +83,68 @@ def run_term_categorization():
                 if len(response_json) != len(batch_df):
                     raise ValueError("LLM response length does not match batch size.")
 
+                rows = []
                 for idx, result_item in enumerate(response_json):
                     original_row = batch_df.iloc[idx]
-                    category = result_item.get('category', 'ERROR_PARSE')
-                    if (category not in valid_categories
-                            and category != "NOT_CLASSIFIED"
-                            and not category.startswith("ERROR")):
-                        log.warn(f"Unknown category '{category}' for '{original_row['Term']}' — may break IRI lookup")
-
-                    classification_results.append({
-                        'Term': original_row['Term'],
-                        'RAG_Context_Used': original_row['Context_Used'],
-                        'Category': category,
-                        'Reasoning': result_item.get('reasoning', ''),
-                        'NLD': original_row['NLD']
+                    category = result_item.get("category", "ERROR_PARSE")
+                    if (
+                        category not in valid_categories
+                        and category != "NOT_CLASSIFIED"
+                        and not category.startswith("ERROR")
+                    ):
+                        tqdm.write(
+                            f"  [warn] Unknown category '{category}' for "
+                            f"'{original_row['Term']}' — may break IRI lookup"
+                        )
+                    rows.append({
+                        "Term": original_row["Term"],
+                        "RAG_Context_Used": original_row["Context_Used"],
+                        "Category": category,
+                        "Reasoning": result_item.get("reasoning", ""),
+                        "NLD": original_row["NLD"],
                     })
+                return rows
 
             except json.JSONDecodeError:
-                tqdm.write("")
-                log.error("LLM returned invalid JSON. Batch flagged.")
-                for item in batch_list:
-                    classification_results.append({
-                        'Term': item['term'],
-                        'RAG_Context_Used': '',
-                        'Category': 'ERROR_INVALID_JSON',
-                        'Reasoning': 'LLM response was not valid JSON.',
-                        'NLD': item['nld']
-                    })
+                tqdm.write("  [error] LLM returned invalid JSON. Batch flagged.")
+                return [
+                    {
+                        "Term": item["term"],
+                        "RAG_Context_Used": "",
+                        "Category": "ERROR_INVALID_JSON",
+                        "Reasoning": "LLM response was not valid JSON.",
+                        "NLD": item["nld"],
+                    }
+                    for item in batch_list
+                ]
             except Exception as e:
-                tqdm.write("")
-                log.error(f"Classifying batch: {e}")
-                for item in batch_list:
-                    classification_results.append({
-                        'Term': item['term'],
-                        'RAG_Context_Used': '',
-                        'Category': 'ERROR_GENERAL',
-                        'Reasoning': f'Error: {str(e)}',
-                        'NLD': item['nld']
-                    })
+                tqdm.write(f"  [error] Classifying batch: {e}")
+                return [
+                    {
+                        "Term": item["term"],
+                        "RAG_Context_Used": "",
+                        "Category": "ERROR_GENERAL",
+                        "Reasoning": f"Error: {str(e)}",
+                        "NLD": item["nld"],
+                    }
+                    for item in batch_list
+                ]
 
-            pbar.update(len(batch_df))
-            time.sleep(2)
+        batches = [
+            df_nlds.iloc[i : i + BATCH_SIZE]
+            for i in range(0, total_terms, BATCH_SIZE)
+        ]
+        max_workers = min(MAX_WORKERS, len(batches)) if batches else 1
+        log.info(f"Dispatching {len(batches)} batch(es) to {max_workers} worker(s)")
 
+        pbar = tqdm(total=total_terms, desc="Categorizing")
+        with ThreadPoolExecutor(max_workers=max_workers) as pool:
+            futures = {pool.submit(_process_batch, b): b for b in batches}
+            for future in as_completed(futures):
+                rows = future.result()
+                with lock:
+                    classification_results.extend(rows)
+                pbar.update(len(rows))
         pbar.close()
 
         output_dir = os.path.dirname(OUTPUT_FILE_PATH)

@@ -14,7 +14,8 @@ Output: construct_taxonomy.csv with columns (Term, Parent_Term, Relationship_Typ
 
 import json
 import os
-import time
+import threading
+from concurrent.futures import ThreadPoolExecutor, as_completed
 
 import pandas as pd
 
@@ -209,30 +210,49 @@ def run_taxonomy_builder(categorized_csv: str, output_path: str | None = None, h
         log.info(f"Loaded {len(hints)} specialization hints from '{hints_csv}'")
 
     all_taxonomy_rows = []
-    categories = df_valid["Category"].unique()
+    categories = sorted(df_valid["Category"].unique())
+    MAX_WORKERS = int(os.environ.get("MAX_CONCURRENT_TAXONOMY", 5))
+    lock = threading.Lock()
 
-    for cat in tqdm(sorted(categories), desc="Building taxonomy", unit="category"):
+    def _process_category(cat: str) -> list[dict]:
         group = df_valid[df_valid["Category"] == cat]
-
-        terms_with_nlds = []
-        for _, row in group.iterrows():
-            terms_with_nlds.append({
-                "term": row["Term"],
-                "nld": row.get("NLD", ""),
-            })
-
+        terms_with_nlds = [
+            {"term": row["Term"], "nld": row.get("NLD", "")}
+            for _, row in group.iterrows()
+        ]
         nld_lookup = {t["term"]: t.get("nld", "") for t in terms_with_nlds}
-        # Process in chunks of 150 for large groups
+        cat_rows: list[dict] = []
+        # Process in chunks of 150 for large groups (sequential within category)
         for chunk_start in range(0, len(terms_with_nlds), 150):
             chunk = terms_with_nlds[chunk_start : chunk_start + 150]
-            rows = build_taxonomy_for_group(cat, chunk, MODEL_NAME, MODEL_TEMPERATURE, hints=hints)
+            rows = build_taxonomy_for_group(
+                cat, chunk, MODEL_NAME, MODEL_TEMPERATURE, hints=hints,
+            )
             for row in rows:
-                # Input terms get their NLD from the categorized CSV; intermediates
-                # keep the one-sentence NLD the LLM wrote inline.
+                # Input terms get their NLD from the categorized CSV;
+                # intermediates keep the one-sentence NLD the LLM wrote inline.
                 if not row.get("Is_Intermediate"):
                     row["NLD"] = nld_lookup.get(row["Term"], "")
-            all_taxonomy_rows.extend(rows)
-            time.sleep(2)
+            cat_rows.extend(rows)
+        return cat_rows
+
+    max_workers = min(MAX_WORKERS, len(categories)) if categories else 1
+    log.info(
+        f"Building taxonomy for {len(categories)} categories with {max_workers} workers"
+    )
+    with ThreadPoolExecutor(max_workers=max_workers) as pool:
+        futures = {pool.submit(_process_category, cat): cat for cat in categories}
+        with tqdm(total=len(categories), desc="Building taxonomy", unit="category") as pbar:
+            for future in as_completed(futures):
+                cat = futures[future]
+                try:
+                    cat_rows = future.result()
+                    with lock:
+                        all_taxonomy_rows.extend(cat_rows)
+                    pbar.set_postfix_str(cat[:30])
+                except Exception as e:
+                    tqdm.write(f"  [error] Category '{cat}': {e}")
+                pbar.update(1)
 
     # Add upper-level IRI mappings
     for row in all_taxonomy_rows:

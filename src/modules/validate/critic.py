@@ -28,7 +28,8 @@ from __future__ import annotations
 
 import json
 import os
-import time
+import threading
+from concurrent.futures import ThreadPoolExecutor, as_completed
 
 import pandas as pd
 from tqdm import tqdm
@@ -312,14 +313,16 @@ def run_critic(
 
     all_tax_edits: dict[int, dict] = {}
     all_rel_edits: dict[int, dict] = {}
+    edits_lock = threading.Lock()
+    max_workers = int(os.environ.get("MAX_CONCURRENT_CRITIC", 5))
 
-    for cat in tqdm(categories, desc="Critic per category", unit="cat"):
+    def _critique_category(cat: str) -> None:
         tax_group = tax[tax["Category"] == cat]
         rel_group = rel[rel["Category"] == cat] if rel is not None else pd.DataFrame()
 
         # Skip cheap cases — no work for the LLM to do.
         if len(tax_group) < 2 and len(rel_group) == 0:
-            continue
+            return
 
         tax_payload = _build_taxonomy_payload(tax_group)
         rel_payload = _build_relation_payload(rel_group) if not rel_group.empty else []
@@ -328,18 +331,32 @@ def run_critic(
             cat, tax_payload, rel_payload,
             system_instruction, prompt_template, model, temperature,
         )
-        for edit in edits:
-            if not isinstance(edit, dict):
-                continue
-            rid = edit.get("id")
-            kind = edit.get("kind", "taxonomy")
-            if not isinstance(rid, int):
-                continue
-            if kind == "relation":
-                all_rel_edits[rid] = edit
-            else:
-                all_tax_edits[rid] = edit
-        time.sleep(1)  # light rate limiting
+        with edits_lock:
+            for edit in edits:
+                if not isinstance(edit, dict):
+                    continue
+                rid = edit.get("id")
+                kind = edit.get("kind", "taxonomy")
+                if not isinstance(rid, int):
+                    continue
+                if kind == "relation":
+                    all_rel_edits[rid] = edit
+                else:
+                    all_tax_edits[rid] = edit
+
+    workers = min(max_workers, len(categories)) if categories else 1
+    log.info(f"Running critic on {len(categories)} categories with {workers} workers")
+    with ThreadPoolExecutor(max_workers=workers) as pool:
+        futures = {pool.submit(_critique_category, cat): cat for cat in categories}
+        with tqdm(total=len(categories), desc="Critic per category", unit="cat") as pbar:
+            for future in as_completed(futures):
+                cat = futures[future]
+                try:
+                    future.result()
+                    pbar.set_postfix_str(cat[:30])
+                except Exception as e:
+                    tqdm.write(f"  [error] Category '{cat}': {e}")
+                pbar.update(1)
 
     cleaned_tax, tax_log = _apply_taxonomy_edits(tax, all_tax_edits, valid_categories)
 
