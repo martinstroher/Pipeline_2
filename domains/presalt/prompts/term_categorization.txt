@@ -1,16 +1,15 @@
 [SYSTEM_INSTRUCTION]
-You are an expert ontology engineer specializing in foundational (BFO) and geological (GeoCore and GeoReservoir) ontologies. You process data in batches and your response format MUST be a valid JSON array of objects.
+<<personas_upper_ontologist>> You process data in batches and your response format MUST be a valid JSON array of objects.
 
 [PROMPT_TEMPLATE]
-Your task is to classify a batch of geological terms based on their Natural Language Definitions (NLDs).
+Your task is to classify a batch of terms based on their Natural Language Definitions (NLDs).
 
 **METHODOLOGY (Follow Strictly for each item):**
 1.  **Analyze Data:** Read the Term and, if present, its NLD.
-2.  **Prioritize GeoReservoir:** First, attempt to classify the term into one of the `### GeoReservoir Categories`.
-3.  **Fallback to GeoCore:** If and only if no GeoReservoir category is a good fit, then attempt to classify it into one of the `### GeoCore Categories`.
-4.  **Fallback to BFO:** If and only if no GeoCore category fits, then attempt to classify it into one of the `### BFO Categories`.
-5.  **Final Fallback:** If the term does not fit well into ANY of the provided categories (GeoReservoir, GeoCore, or BFO), you MUST use the string `NOT_CLASSIFIED`. Reserve NOT_CLASSIFIED for physical analytical instruments treated as objects (e.g., 'Microscope'). Characterization methods and analytical processes that describe geological observations or workflows (e.g., 'Petrographic Analysis', 'Core Analysis') may fit 'Geological Process' in GeoCore — prefer a real category over NOT_CLASSIFIED when the NLD describes a geological action, observation, or property.
-6.  **Provide Reasoning:** In one short sentence, explain WHY you chose that category based on the NLD.
+2.  **Walk the waterfall (<<domain_waterfall>>):**
+<<examples_categorization_waterfall_steps>>
+3.  **Final Fallback:** If the term does not fit well into ANY of the provided categories, you MUST use the string `NOT_CLASSIFIED`. <<examples_categorization_fallback_hint>>
+4.  **Provide Reasoning:** In one short sentence, explain WHY you chose that category based on the NLD.
 
 **INPUT/OUTPUT FORMAT:**
 -   **INPUT:** A JSON array of objects, where each object has a "term" and optionally an "nld" field.
@@ -25,22 +24,7 @@ Your task is to classify a batch of geological terms based on their Natural Lang
 ---
 **EXAMPLES:**
 
-Input:  [{{"term": "Grainstone",
-          "nld": "Grainstone is a grain-supported sedimentary carbonate rock that lacks micrite matrix, with allochems typically consisting of bivalves, ostracods, or ooids."}}]
-Output: [{{"term": "Grainstone",
-          "category": "Sedimentary Rock",
-          "reasoning": "Directly describes a type of sedimentary rock classified under GeoReservoir."}}]
-
-Input:  [{{"term": "Normal Fault",
-          "nld": "Normal Fault is a geological structure formed by extensional tectonics where the hanging wall moves down relative to the footwall along a dip-slip fault plane."}}]
-Output: [{{"term": "Normal Fault",
-          "category": "Geological Structure",
-          "reasoning": "Describes the internal structural arrangement of a geological object, fitting GeoCore."}}]
-
-Input:  [{{"term": "Core Sample"}}]
-Output: [{{"term": "Core Sample",
-          "category": "NOT_CLASSIFIED",
-          "reasoning": "Analytical instrument used to characterize formations, not an ontological geological concept."}}]
+<<examples_term_categorization>>
 
 ---
 **DATA TO CLASSIFY:**

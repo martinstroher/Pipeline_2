@@ -1,27 +1,23 @@
 [SYSTEM_INSTRUCTION]
-You are an expert geologist and ontology engineer specializing in South Atlantic Pre-Salt petroleum systems.
-Your task is to extract core geological concepts from scientific texts suitable for building a domain ontology.
-This ontology's primary purpose is to assist geologists in describing and comparing analog reservoirs geological settings.
+<<personas_domain_extractor>>
 
 [PROMPT_TEMPLATE]
 **METHODOLOGY**
-1.  **Identify Conceptual Entities:** Identify all terms or phrases representing geological concepts.
-    Focus on identifying *types* or *classes* of entities relevant to petroleum geology and pre-salt context.
+1.  **Identify Conceptual Entities:** Identify all terms or phrases representing concepts of the domain.
+    <<examples_term_extraction_focus>>
     You MUST only extract terms that are explicitly mentioned in the provided text. Do NOT generate terms from your own knowledge.
-2.  **Normalize Terms:** Return all extracted concepts translated to English and, where appropriate, in their singular, base form (e.g., "carbonates" -> "Carbonate", "faults" -> "Fault").
+2.  **Normalize Terms:** Return all extracted concepts translated to English and, where appropriate, in their singular, base form (e.g., <<examples_term_extraction_normalization>>).
     Use title case for concepts.
 3.  **Strict Filtering:** You MUST exclude:
-    * Highly specific identifiers with no ontological value: individual well names (e.g., 'Well 1-BRSA-123'), author names, company names.
-    * Units of measure, numerical values, and codes (e.g., 'mD', 'API', '10%', 'SiO2').
-    * Analytical methods, laboratory techniques, or observational instruments (e.g., 'Thin Section', 'Core Plug', 'Seismic Survey', 'Well Log').
-    Note: Named petroleum fields (e.g., 'Lula Field', 'Búzios'), basin names (e.g., 'Santos Basin'), and named geological formations ARE valid — extract them. They will be classified as OWL named individuals downstream.
-4.  **Focus:** Prioritize terms that represent reusable classes within an ontology framework. Be selective — it is better to miss a marginal term than to include noise. Note: named geological time periods (e.g., Aptian, Cretaceous) are valid and should be extracted — they will be classified as OWL individuals downstream.
+        <<examples_term_extraction_exclusions>>
+    <<examples_term_extraction_inclusions>>
+4.  **Focus:** Prioritize terms that represent reusable classes within an ontology framework. Be selective — it is better to miss a marginal term than to include noise. <<examples_term_extraction_named_individuals>>
 
 **OUTPUT FORMAT:**
 Your response MUST BE a valid JSON array of unique strings.
 
 **Example of output array:**
-["Microbial Carbonate", "Diagenesis", "Source Rock", "Structural Trap", "Porosity", "Lacustrine Environment", "Diagenetic Alteration"]
+<<examples_term_extraction_output>>
 
 ---
 **TEXT TO ANALYZE:**

@@ -1,8 +1,8 @@
 [SYSTEM_INSTRUCTION]
-You are a senior geoscientist and ontology engineer specialising in Brazilian Pre-Salt petroleum geology. Your task is to classify candidate near-synonym clusters.
+<<personas_domain_expert>> Your task is to classify candidate near-synonym clusters.
 
 [PROMPT_TEMPLATE]
-Compare these candidate near-synonyms from a Pre-Salt petroleum geology ontology.
+Compare these candidate near-synonyms from a <<domain_name>> ontology.
 
 For each cluster, classify the relationship:
 1. SYNONYM — same concept, different surface form. Pick one canonical term.

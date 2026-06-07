@@ -1,87 +1,63 @@
 ﻿id,kind,category,term,action,reason
-0,taxonomy,Basin,santos basin,KEEP,"This is a core named individual for the ontology, correctly classified as a Basin."
-1,taxonomy,Geological Structure,petroleum trap,KEEP,Petroleum trap is a type of geological structure.
-2,taxonomy,Geological Structure,structural trap,KEEP,Structural trap is a specific type of petroleum trap.
-3,taxonomy,Geological Structure,fault,KEEP,Fault is a fundamental geological structure.
-4,taxonomy,Geological Structure,migration pathway,DROP,"A migration pathway is a role or function played by a geological structure, not a geological structure itself."
-5,taxonomy,Geological Structure,barrier,DROP,"A barrier is a role or function played by a geological structure, not a geological structure itself."
-6,taxonomy,Earth Fluid,fluid,KEEP,(implicit — not mentioned by critic)
-7,taxonomy,Geological Object,lithosphere,KEEP,"The lithosphere is a fundamental geological object, and 'Earth Material' is an appropriate parent term."
-8,taxonomy,Geological Process,diagenetic process,KEEP,Clear definition and appropriate parent.
-9,taxonomy,Geological Process,deformation,KEEP,Clear definition and appropriate parent.
-10,taxonomy,Geological Process,tectonic process,FIX,"parent → deformation: The NLD for 'tectonic process' describes it as a type of deformation ('deformation of the Earth's lithosphere'), making 'deformation' a more specific parent than 'Geological Process'."
-11,taxonomy,Geological Process,dolomitization,KEEP,Clear definition and appropriate parent.
-12,taxonomy,Geological Process,rifting,KEEP,Clear definition and appropriate parent in the revised hierarchy.
-13,taxonomy,Geological Process,extensional deformation,KEEP,"The NLD explicitly states 'Extensional deformation is a tectonic process', which is consistent with the revised hierarchy where 'tectonic process' is a subclass of 'deformation'."
-14,taxonomy,Sedimentary Environment,Continental Depositional Setting,KEEP,"This intermediate class is well-defined, has multiple children, and provides a clear differentiation from other sedimentary environments."
-15,taxonomy,Sedimentary Environment,lacustrine environment,KEEP,"This term is a valid and important type of continental depositional setting, especially relevant to the Pre-Salt context."
-16,taxonomy,Sedimentary Environment,lake system,KEEP,"This term is a valid and important type of continental depositional setting, especially relevant to the Pre-Salt context."
-17,taxonomy,Earth Material,Mineral,DROP,Intermediate class 'Mineral' will have fewer than two surviving children after dropping 'dissolved mineral'.
-18,taxonomy,Earth Material,carbonate mineral,KEEP,The term is correct and well-defined; its parent will be re-assigned to the category root if its current parent is dropped.
-19,taxonomy,Earth Material,calcite,KEEP,"The term is correct, useful, and non-redundant."
-20,taxonomy,Earth Material,dolomite,KEEP,"The term is correct, useful, and non-redundant."
-21,taxonomy,Earth Material,dissolved mineral,DROP,"A 'dissolved mineral' is not a mineral; it refers to ions in solution, which is a state or outcome, not a type of solid mineral."
-22,taxonomy,Sedimentary Facies,reservoir facies,KEEP,(implicit — not mentioned by critic)
-23,taxonomy,Rock,rock,KEEP,(safety revert — category drop ratio exceeded threshold)
-24,taxonomy,quality,Physical Property Of Rock,KEEP,This intermediate class groups two relevant physical properties of rock and has a clear NLD.
-25,taxonomy,quality,porosity,KEEP,Porosity is a fundamental physical property and quality in petroleum geology.
-26,taxonomy,quality,permeability,KEEP,Permeability is a fundamental physical property and quality in petroleum geology.
-27,taxonomy,quality,reservoir quality,KEEP,Reservoir quality is a key composite quality in petroleum geology.
-28,taxonomy,generically dependent continuant,pre-salt play,KEEP,"A pre-salt play is a conceptual framework or pattern that depends on the existence of geological features but is not a quality or a realizable entity, fitting the definition of a generically dependent continuant."
-29,taxonomy,Stratigraphic Unit,Formation,DROP,Intermediate class 'Formation' has fewer than two children in this category.
-30,taxonomy,Stratigraphic Unit,pre-salt sequence,KEEP,"(FIX rejected — no new_parent) 'pre-salt sequence' is a class, not an individual, so its relationship type should be rdfs:subClassOf."
-31,taxonomy,Stratigraphic Unit,rock layer,KEEP,"Represents a valid, general sub-class of Stratigraphic Unit."
-32,taxonomy,Stratigraphic Unit,regional seal,FIX,"parent → Stratigraphic Unit: Its original parent 'Formation' (id 29) is being dropped, so it must be re-parented to the category root."
-33,taxonomy,Sedimentary Rock,sedimentary rock,KEEP,This row defines the category root and provides a good NLD.
-34,taxonomy,Sedimentary Rock,petroleum reservoir rock,KEEP,"Petroleum reservoir rock is a valid subclass of sedimentary rock, especially in the Pre-Salt context."
-35,taxonomy,Sedimentary Rock,microbialite,KEEP,Microbialite is a valid subclass of sedimentary rock and a key Pre-Salt reservoir facies.
-36,taxonomy,Sedimentary Rock,chemical sedimentary rock,KEEP,Chemical sedimentary rock is a valid subclass of sedimentary rock.
-37,taxonomy,Sedimentary Rock,carbonate reservoir,KEEP,Carbonate reservoir is a valid subclass of petroleum reservoir rock.
-38,taxonomy,Sedimentary Rock,pre-salt reservoir,KEEP,"Pre-salt reservoir is a valid subclass of petroleum reservoir rock, defined by its stratigraphic position."
-39,taxonomy,Sedimentary Rock,evaporite,KEEP,Evaporite is a valid subclass of chemical sedimentary rock and a key Pre-Salt seal.
-0,relation,Earth Material,calcite,KEEP,The relation accurately describes calcite as a constituent of carbonate reservoirs.
-1,relation,Earth Material,calcite,KEEP,The relation accurately describes calcite as a participant in dolomitization.
-2,relation,Earth Material,calcite,KEEP,The relation accurately describes calcite transforming into dolomite during diagenesis.
-3,relation,Earth Material,dolomite,KEEP,The relation accurately describes dolomite as a constituent of carbonate reservoirs.
-4,relation,Earth Material,dolomite,KEEP,The relation accurately describes dolomite being generated by dolomitization.
-5,relation,Earth Material,dolomite,KEEP,The relation accurately describes dolomite as a participant in dolomitization.
-6,relation,Sedimentary Rock,carbonate reservoir,KEEP,A carbonate reservoir is constituted by carbonate minerals.
-7,relation,Sedimentary Rock,carbonate reservoir,KEEP,Porosity is a key quality of a carbonate reservoir.
-8,relation,Sedimentary Rock,microbialite,FIX,Filler→Santos Basin: Proper nouns like 'Santos Basin' should be capitalized.
-9,relation,Sedimentary Rock,petroleum reservoir rock,KEEP,Porosity is a key quality of a petroleum reservoir rock.
-10,relation,Sedimentary Rock,petroleum reservoir rock,KEEP,Permeability is a key quality of a petroleum reservoir rock.
-11,relation,Sedimentary Rock,petroleum reservoir rock,KEEP,Pre-Salt petroleum reservoir rocks are predominantly constituted by carbonate minerals.
-12,relation,Sedimentary Rock,petroleum reservoir rock,DROP,"Microbialite is a type of petroleum reservoir rock (a classification), not a part of it (a part-whole relationship)."
-13,relation,quality,porosity,KEEP,Porosity is a quality that inheres in rock.
-14,relation,Basin,santos basin,KEEP,"The Santos Basin is known to contain carbonate reservoirs, and 'has_continuant_part' is an appropriate mereological relation."
-15,relation,Basin,santos basin,KEEP,"The Santos Basin contains evaporite sequences, and 'has_continuant_part' is an appropriate mereological relation."
-16,relation,Rock,rock,KEEP,Rocks possess porosity as a fundamental quality relevant to petroleum geology.
-17,relation,Rock,rock,KEEP,Rocks possess permeability as a fundamental quality relevant to petroleum geology.
-18,relation,quality,permeability,KEEP,Permeability is a quality that inheres in rock.
-19,relation,Geological Process,diagenetic process,KEEP,The relation accurately reflects the NLD and geological understanding.
-20,relation,Geological Structure,structural trap,KEEP,Faults are integral structural components that constitute a structural trap.
-21,relation,Stratigraphic Unit,pre-salt sequence,KEEP,Valid mereological relation between a stratigraphic unit and its constituent rock type.
-22,relation,Geological Structure,petroleum trap,DROP,"The filler 'migration pathway' is being dropped as a class, and it represents a role rather than a physical part of a petroleum trap."
-23,relation,Geological Process,deformation,KEEP,The relation accurately reflects the NLD and geological understanding.
-24,relation,Geological Process,deformation,DROP,"The evidence 'exemplified by' indicates a taxonomic relationship (subclass), not a mereological one (part-whole)."
-25,relation,Geological Process,tectonic process,KEEP,The relation accurately reflects the NLD and geological understanding.
-26,relation,Geological Process,tectonic process,KEEP,The relation accurately reflects the NLD and geological understanding.
-27,relation,Geological Process,tectonic process,DROP,"The evidence 'like' indicates a taxonomic relationship (subclass), not a mereological one (part-whole)."
-28,relation,Stratigraphic Unit,rock layer,KEEP,Valid compositional relation for a rock layer.
-29,relation,Stratigraphic Unit,rock layer,KEEP,Valid relation describing a rock layer's involvement in a process.
-30,relation,Sedimentary Environment,lacustrine environment,KEEP,"A lacustrine environment is a constituent part of a lake system, making this mereological relationship appropriate."
-31,relation,Sedimentary Rock,pre-salt reservoir,KEEP,Pre-salt reservoirs are often constituted by carbonate minerals.
-32,relation,Sedimentary Rock,pre-salt reservoir,DROP,"Microbialite is a rock type, not a constituent material like a mineral. This misrepresents its role in the reservoir composition."
-33,relation,Sedimentary Rock,pre-salt reservoir,KEEP,Pre-salt reservoirs participate in diagenetic processes like dolomitization.
-34,relation,Sedimentary Rock,evaporite,KEEP,Evaporites derive from dissolved minerals through precipitation.
-35,relation,Sedimentary Rock,chemical sedimentary rock,KEEP,Chemical sedimentary rocks derive from dissolved minerals through precipitation.
-36,relation,Geological Process,rifting,KEEP,The relation accurately reflects the NLD and geological understanding.
-37,relation,Stratigraphic Unit,regional seal,KEEP,Valid compositional relation specific to the Pre-Salt context.
-38,relation,Geological Process,extensional deformation,KEEP,The relation accurately reflects the NLD and geological understanding.
-39,relation,generically dependent continuant,pre-salt play,DROP,A conceptual entity like 'pre-salt play' cannot have a physical entity like 'regional seal' as a mereological part. This relation mixes levels of abstraction inappropriately.
-40,relation,quality,reservoir quality,KEEP,Reservoir quality is a quality that inheres in rock.
-41,relation,quality,reservoir quality,FIX,"Property→constituted_by: Qualities do not have continuant parts; 'constituted_by' better describes that porosity is a constituent of reservoir quality, as implied by the NLD."
-42,relation,quality,reservoir quality,FIX,"Property→constituted_by: Qualities do not have continuant parts; 'constituted_by' better describes that permeability is a constituent of reservoir quality, as implied by the NLD."
-43,relation,Geological Object,lithosphere,KEEP,"The lithosphere is known to participate in deformation processes, as supported by the NLD."
-34,relation,Sedimentary Rock,evaporite,DROP,(phantom-filler cleanup — filler 'dissolved mineral' was DROPped from taxonomy)
-35,relation,Sedimentary Rock,chemical sedimentary rock,DROP,(phantom-filler cleanup — filler 'dissolved mineral' was DROPped from taxonomy)
+0,taxonomy,Basin,santos basin,KEEP,"This is a specific named basin, correctly categorized as a Basin."
+1,taxonomy,Facies,reservoir facies,KEEP,(implicit — not mentioned by critic)
+2,taxonomy,Body of Rock,Rock,KEEP,This is a fundamental and correct taxonomic entry.
+3,taxonomy,Body of Rock,petroleum reservoir rock,KEEP,This is a correct and well-defined subclass of Rock.
+4,taxonomy,Body of Rock,carbonate reservoir,KEEP,"This is a correct and well-defined subclass of petroleum reservoir rock, relevant to the domain."
+5,taxonomy,Earth Material,carbonate mineral,KEEP,Valid class representing a type of Earth Material.
+6,taxonomy,Earth Material,calcite,KEEP,"Valid specific mineral, child of carbonate mineral."
+7,taxonomy,Earth Material,dolomite,KEEP,"Valid specific mineral, child of carbonate mineral."
+8,taxonomy,Earth Material,dissolved mineral,DROP,"A 'dissolved mineral' describes a chemical state or component of a fluid, not a solid Earth Material."
+9,taxonomy,Geological Process,diagenetic process,KEEP,This is a valid subclass of Geological Process with a clear definition.
+10,taxonomy,Geological Process,dolomitization,KEEP,This is a specific diagenetic process and correctly parented.
+11,taxonomy,Geological Process,tectonic process,KEEP,This is a valid subclass of Geological Process with a clear definition.
+12,taxonomy,Geological Process,rifting,KEEP,This is a specific tectonic process and correctly parented.
+13,taxonomy,Geological Structure,petroleum trap,KEEP,Petroleum trap is a valid subclass of Geological Structure and its NLD is appropriate.
+14,taxonomy,Geological Structure,structural trap,KEEP,Structural trap is a valid subclass of petroleum trap and its NLD is appropriate.
+15,taxonomy,Geological Structure,fault,KEEP,Fault is a valid subclass of Geological Structure and its NLD is appropriate.
+16,taxonomy,Geological Object,barrier,KEEP,Represents a significant functional geological concept in petroleum geology.
+17,taxonomy,Geological Object,migration pathway,KEEP,Represents a significant functional geological concept in petroleum geology.
+18,taxonomy,Geological Object,regional seal,KEEP,"Specific type of barrier, appropriate parent term."
+19,taxonomy,Geological Object,lithosphere,KEEP,"Valid geological object, appropriate parent term."
+20,taxonomy,Sedimentary Environment,continental depositional setting,KEEP,"This is a valid and well-defined subclass of Sedimentary Environment, relevant to the Pre-Salt context."
+21,taxonomy,Sedimentary Environment,lacustrine environment,KEEP,"This is a valid and well-defined subclass of continental depositional setting, with specific relevance to Pre-Salt geology."
+22,taxonomy,Earth Fluid,fluid,KEEP,(implicit — not mentioned by critic)
+23,taxonomy,Stratigraphic Unit,pre-salt sequence,KEEP,(implicit — not mentioned by critic)
+24,taxonomy,quality,Physical Property,KEEP,"This intermediate class is well-defined and has two children, serving its purpose to group related qualities."
+25,taxonomy,quality,porosity,KEEP,"Porosity is a fundamental physical property and a quality, correctly classified under 'Physical Property'."
+26,taxonomy,quality,permeability,KEEP,"Permeability is a fundamental physical property and a quality, correctly classified under 'Physical Property'."
+27,taxonomy,quality,reservoir quality,KEEP,"Reservoir quality is a specific type of quality, correctly classified under the root 'quality'."
+28,taxonomy,Sedimentary Rock,sedimentary rock,DROP,The term 'sedimentary rock' is redundant as a subclass of the category root 'Sedimentary Rock'.
+29,taxonomy,Sedimentary Rock,microbialite,FIX,parent → Sedimentary Rock: The original parent 'sedimentary rock' (id 28) is being dropped as redundant; 'microbialite' should be a direct subclass of the category root.
+30,taxonomy,Sedimentary Rock,chemical sedimentary rock,FIX,parent → Sedimentary Rock: The original parent 'sedimentary rock' (id 28) is being dropped as redundant; 'chemical sedimentary rock' should be a direct subclass of the category root.
+31,taxonomy,Sedimentary Rock,evaporite,KEEP,Correct classification and highly relevant to the Pre-Salt domain as a key seal rock.
+32,taxonomy,object aggregate,Geological Play,KEEP,(safety revert — category drop ratio exceeded threshold)
+33,taxonomy,object aggregate,Petroleum Play,KEEP,(safety revert — category drop ratio exceeded threshold)
+34,taxonomy,object aggregate,pre-salt play,KEEP,(safety revert — category drop ratio exceeded threshold)
+35,taxonomy,object aggregate,pre-salt,KEEP,(safety revert — category drop ratio exceeded threshold)
+0,relation,Earth Material,calcite,KEEP,Calcite is a constituent part of carbonate reservoirs.
+1,relation,Earth Material,calcite,KEEP,Calcite is a reactant in the process of dolomitization.
+2,relation,Earth Material,calcite,KEEP,Calcite is a precursor material from which dolomite is formed during replacement.
+3,relation,Earth Material,dolomite,KEEP,Dolomite is a constituent part of carbonate reservoirs.
+4,relation,Earth Material,dolomite,KEEP,Dolomite is a product of the dolomitization process.
+5,relation,Body of Rock,carbonate reservoir,KEEP,The relation accurately describes a constituent of carbonate reservoirs based on the evidence.
+6,relation,Body of Rock,carbonate reservoir,KEEP,The relation accurately describes a constituent of carbonate reservoirs based on the evidence.
+7,relation,Body of Rock,carbonate reservoir,KEEP,The relation accurately describes a primary component that constitutes carbonate reservoirs based on the evidence.
+8,relation,Body of Rock,carbonate reservoir,KEEP,The relation correctly identifies a quality of carbonate reservoirs based on the evidence.
+9,relation,Earth Material,carbonate mineral,KEEP,Carbonate minerals are primary constituents of carbonate reservoirs.
+10,relation,Body of Rock,petroleum reservoir rock,KEEP,The relation correctly identifies a quality of petroleum reservoir rock based on the evidence.
+11,relation,Body of Rock,petroleum reservoir rock,KEEP,The relation correctly identifies a quality of petroleum reservoir rock based on the evidence.
+12,relation,Basin,santos basin,KEEP,The Pre-Salt sequence is a geological unit that is a continuant part of the Santos Basin.
+13,relation,Basin,santos basin,DROP,"The Santos Basin is not located within the Pre-Salt sequence; rather, the Pre-Salt sequence is located within the Santos Basin. This statement is factually incorrect."
+14,relation,Geological Process,dolomitization,KEEP,Dolomite is a key product/component participating in the dolomitization process.
+15,relation,Geological Process,tectonic process,KEEP,The lithosphere is the primary entity undergoing change in a tectonic process.
+16,relation,Geological Object,regional seal,KEEP,"The relation accurately describes the material composition of a regional seal in the Pre-Salt context, supported by the NLD."
+17,relation,Sedimentary Environment,continental depositional setting,DROP,"The relation 'has_continuant_part' is inappropriate here; 'lacustrine environment' is a type of 'continental depositional setting', not a mereological part. This relationship is already captured by the rdfs:subClassOf taxonomy."
+18,relation,Geological Process,rifting,KEEP,The lithosphere is the primary entity undergoing change during rifting.
+19,relation,object aggregate,pre-salt play,KEEP,Microbialite is a key constituent of the pre-salt play's reservoir.
+20,relation,object aggregate,pre-salt play,KEEP,Regional seal is a key component of the pre-salt play.
+21,relation,quality,reservoir quality,FIX,"Property→constituted_by: Reservoir quality is constituted by porosity, not having it as a continuant part, as qualities are abstract entities."
+22,relation,quality,reservoir quality,FIX,"Property→constituted_by: Reservoir quality is constituted by permeability, not having it as a continuant part, as qualities are abstract entities."
+23,relation,object aggregate,pre-salt,DROP,Subject term 'pre-salt' (id 35) is being dropped.
+24,relation,object aggregate,pre-salt,DROP,"Subject term 'pre-salt' (id 35) is being dropped, and the relation is ill-formed for a play concept."
+25,relation,object aggregate,pre-salt,DROP,Subject term 'pre-salt' (id 35) is being dropped.

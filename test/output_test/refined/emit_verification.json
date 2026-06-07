@@ -5,15 +5,15 @@
       "layer": "syntax",
       "status": "PASS",
       "errors": [],
-      "triple_count": 373
+      "triple_count": 312
     },
     "structure": {
       "layer": "structure",
       "status": "PASS",
       "classes": 57,
-      "individuals": 2,
-      "triples": 373,
-      "upper_iris_referenced": 26,
+      "individuals": 1,
+      "triples": 312,
+      "upper_iris_referenced": 25,
       "upper_iris_list": [
         "http://purl.obolibrary.org/obo/BFO_0000001",
         "http://purl.obolibrary.org/obo/BFO_0000002",
@@ -38,7 +38,6 @@
         "https://www.inf.ufrgs.br/bdi/ontologies/GEORES_0000002",
         "https://www.inf.ufrgs.br/bdi/ontologies/GEORES_0000021",
         "https://www.inf.ufrgs.br/bdi/ontologies/GEORES_0000028",
-        "https://www.inf.ufrgs.br/bdi/ontologies/GEORES_0000029",
         "https://www.inf.ufrgs.br/bdi/ontologies/GEORES_0000032",
         "https://www.inf.ufrgs.br/bdi/ontologies/GEORES_0000039"
       ],

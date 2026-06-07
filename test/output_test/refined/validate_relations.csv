@@ -1,37 +1,22 @@
 ﻿Term,Category,Property,Property_IRI,Filler,Filler_Source,Confidence,Evidence,Validation_Status,Validation_Reason
-calcite,Earth Material,continuant_part_of,http://purl.obolibrary.org/obo/BFO_0000176,carbonate reservoir,domain_term,1.0,primary constituent of carbonate reservoir rocks,ACCEPTED,Valid.
-calcite,Earth Material,participates_in,http://purl.obolibrary.org/obo/BFO_0000056,dolomitization,domain_term,1.0,such as dolomitization,ACCEPTED,Valid.
-calcite,Earth Material,derives_into,http://purl.obolibrary.org/obo/RO_0001001,dolomite,domain_term,0.8,involves its replacement by dolomite,ACCEPTED,Valid.
-dolomite,Earth Material,continuant_part_of,http://purl.obolibrary.org/obo/BFO_0000176,carbonate reservoir,domain_term,1.0,component of carbonate reservoir rocks,ACCEPTED,Valid.
-dolomite,Earth Material,generated_by,https://www.inf.ufrgs.br/bdi/ontologies/GEOCORE_0000013,dolomitization,domain_term,1.0,formed through the diagenetic process of dolomitization,ACCEPTED,Valid.
-dolomite,Earth Material,participates_in,http://purl.obolibrary.org/obo/BFO_0000056,dolomitization,domain_term,1.0,replaces calcite during dolomitization,ACCEPTED,Valid.
-carbonate reservoir,Sedimentary Rock,constituted_by,https://www.inf.ufrgs.br/bdi/ontologies/GEOCORE_0000017,carbonate mineral,domain_term,1.0,composed of carbonate minerals,ACCEPTED,Valid.
-carbonate reservoir,Sedimentary Rock,has_quality,http://purl.obolibrary.org/obo/RO_0000086,porosity,domain_term,1.0,controlled by porosity,ACCEPTED,Valid.
-microbialite,Sedimentary Rock,located_in,http://purl.obolibrary.org/obo/BFO_0000171,Santos Basin,domain_term,1.0,in the Santos Basin Pre-Salt sequences,ACCEPTED,Valid.
-petroleum reservoir rock,Sedimentary Rock,has_quality,http://purl.obolibrary.org/obo/RO_0000086,porosity,domain_term,1.0,possesses sufficient porosity,ACCEPTED,Valid.
-petroleum reservoir rock,Sedimentary Rock,has_quality,http://purl.obolibrary.org/obo/RO_0000086,permeability,domain_term,1.0,and permeability to transmit hydrocarbons,ACCEPTED,Valid.
-petroleum reservoir rock,Sedimentary Rock,constituted_by,https://www.inf.ufrgs.br/bdi/ontologies/GEOCORE_0000017,carbonate mineral,domain_term,1.0,predominantly carbonate minerals,ACCEPTED,Valid.
-porosity,quality,inheres_in,http://purl.obolibrary.org/obo/BFO_0000197,rock,domain_term,1.0,physical property of rock,ACCEPTED,Valid.
-santos basin,Basin,has_continuant_part,http://purl.obolibrary.org/obo/BFO_0000178,carbonate reservoir,domain_term,1.0,characterized by significant Pre-Salt carbonate reservoirs,ACCEPTED,Valid.
-santos basin,Basin,has_continuant_part,http://purl.obolibrary.org/obo/BFO_0000178,evaporite,domain_term,1.0,sealed by thick evaporite sequences,ACCEPTED,Valid.
-rock,Rock,has_quality,http://purl.obolibrary.org/obo/RO_0000086,porosity,domain_term,1.0,"physical properties, such as porosity",ACCEPTED,Valid.
-rock,Rock,has_quality,http://purl.obolibrary.org/obo/RO_0000086,permeability,domain_term,1.0,"physical properties, such as porosity and permeability",ACCEPTED,Valid.
-permeability,quality,inheres_in,http://purl.obolibrary.org/obo/BFO_0000197,rock,domain_term,1.0,physical property of rock,ACCEPTED,Valid.
-diagenetic process,Geological Process,occurs_in,http://purl.obolibrary.org/obo/BFO_0000066,rock,domain_term,1.0,occurring in sediments or rocks,ACCEPTED,Valid.
-structural trap,Geological Structure,has_continuant_part,http://purl.obolibrary.org/obo/BFO_0000178,fault,domain_term,1.0,involve folds or faults,ACCEPTED,Valid.
-pre-salt sequence,Stratigraphic Unit,has_continuant_part,http://purl.obolibrary.org/obo/BFO_0000178,microbialite,domain_term,1.0,primarily microbialites,ACCEPTED,Valid.
-deformation,Geological Process,has_participant,http://purl.obolibrary.org/obo/BFO_0000057,rock,domain_term,1.0,"alters the shape, volume, or orientation of rock bodies",ACCEPTED,Valid.
-tectonic process,Geological Process,has_participant,http://purl.obolibrary.org/obo/BFO_0000057,lithosphere,domain_term,1.0,deformation of the Earth's lithosphere,ACCEPTED,Valid.
-tectonic process,Geological Process,has_participant,http://purl.obolibrary.org/obo/BFO_0000057,rock layer,domain_term,1.0,deformation of ... rock layers,ACCEPTED,Valid. | Warnings: Evidence is paraphrased (not exact quote from NLD). Word overlap: 60%.
-rock layer,Stratigraphic Unit,constituted_by,https://www.inf.ufrgs.br/bdi/ontologies/GEOCORE_0000017,rock,domain_term,1.0,body of rock,ACCEPTED,Valid.
-rock layer,Stratigraphic Unit,participates_in,http://purl.obolibrary.org/obo/BFO_0000056,deformation,domain_term,1.0,deformed by tectonic processes,ACCEPTED,Valid.
-lacustrine environment,Sedimentary Environment,continuant_part_of,http://purl.obolibrary.org/obo/BFO_0000176,lake system,domain_term,0.8,associated with lake systems,ACCEPTED,Valid.
-pre-salt reservoir,Sedimentary Rock,constituted_by,https://www.inf.ufrgs.br/bdi/ontologies/GEOCORE_0000017,carbonate mineral,domain_term,1.0,composed of carbonate minerals,ACCEPTED,Valid.
-pre-salt reservoir,Sedimentary Rock,participates_in,http://purl.obolibrary.org/obo/BFO_0000056,dolomitization,domain_term,0.8,quality is influenced by diagenetic processes such as dolomitization,ACCEPTED,Valid.
-rifting,Geological Process,has_participant,http://purl.obolibrary.org/obo/BFO_0000057,lithosphere,domain_term,1.0,of the lithosphere,ACCEPTED,Valid.
-regional seal,Stratigraphic Unit,constituted_by,https://www.inf.ufrgs.br/bdi/ontologies/GEOCORE_0000017,evaporite,domain_term,0.8,primarily fulfilled by thick evaporite sequences,ACCEPTED,Valid.
-extensional deformation,Geological Process,has_participant,http://purl.obolibrary.org/obo/BFO_0000057,lithosphere,domain_term,1.0,involves the stretching and thinning of the Earth's lithosphere,ACCEPTED,Valid.
-reservoir quality,quality,inheres_in,http://purl.obolibrary.org/obo/BFO_0000197,rock,domain_term,1.0,describes a rock's capacity,ACCEPTED,Valid.
-reservoir quality,quality,constituted_by,http://purl.obolibrary.org/obo/BFO_0000178,porosity,domain_term,0.8,primarily controlled by its porosity,ACCEPTED,Valid.
-reservoir quality,quality,constituted_by,http://purl.obolibrary.org/obo/BFO_0000178,permeability,domain_term,0.8,primarily controlled by its permeability,ACCEPTED,Valid. | Warnings: Evidence is paraphrased (not exact quote from NLD). Word overlap: 80%.
-lithosphere,Geological Object,participates_in,http://purl.obolibrary.org/obo/BFO_0000056,deformation,domain_term,1.0,undergo significant deformation,ACCEPTED,Valid.
+calcite,Earth Material,continuant_part_of,http://purl.obolibrary.org/obo/BFO_0000176,carbonate reservoir,domain_term,1.0,primary component of carbonate reservoir rocks,ACCEPTED,Valid.
+calcite,Earth Material,participates_in,http://purl.obolibrary.org/obo/BFO_0000056,dolomitization,domain_term,1.0,replaced by dolomite during the diagenetic process of dolomitization,ACCEPTED,Valid.
+calcite,Earth Material,derives_into,http://purl.obolibrary.org/obo/RO_0001001,dolomite,domain_term,1.0,replaced by dolomite during the diagenetic process of dolomitization,ACCEPTED,Valid.
+dolomite,Earth Material,continuant_part_of,http://purl.obolibrary.org/obo/BFO_0000176,carbonate reservoir,domain_term,1.0,common component of carbonate reservoir rocks,ACCEPTED,Valid.
+dolomite,Earth Material,generated_by,https://www.inf.ufrgs.br/bdi/ontologies/GEOCORE_0000013,dolomitization,domain_term,1.0,formed through the diagenetic replacement of calcite during dolomitization,ACCEPTED,Valid.
+carbonate reservoir,Body of Rock,constituted_by,https://www.inf.ufrgs.br/bdi/ontologies/GEOCORE_0000017,calcite,domain_term,1.0,composed of carbonate minerals such as calcite,ACCEPTED,Valid.
+carbonate reservoir,Body of Rock,constituted_by,https://www.inf.ufrgs.br/bdi/ontologies/GEOCORE_0000017,dolomite,domain_term,1.0,composed of carbonate minerals such as ... dolomite,ACCEPTED,Valid. | Warnings: Evidence is paraphrased (not exact quote from NLD). Word overlap: 75%.
+carbonate reservoir,Body of Rock,constituted_by,https://www.inf.ufrgs.br/bdi/ontologies/GEOCORE_0000017,microbialite,domain_term,1.0,predominantly formed by microbialites,ACCEPTED,Valid.
+carbonate reservoir,Body of Rock,has_quality,http://purl.obolibrary.org/obo/RO_0000086,porosity,domain_term,1.0,"quality, including porosity",ACCEPTED,Valid.
+carbonate mineral,Earth Material,continuant_part_of,http://purl.obolibrary.org/obo/BFO_0000176,carbonate reservoir,domain_term,1.0,primary constituents of carbonate reservoir rocks,ACCEPTED,Valid.
+petroleum reservoir rock,Body of Rock,has_quality,http://purl.obolibrary.org/obo/RO_0000086,porosity,domain_term,1.0,controlled by its porosity,ACCEPTED,Valid.
+petroleum reservoir rock,Body of Rock,has_quality,http://purl.obolibrary.org/obo/RO_0000086,permeability,domain_term,1.0,controlled by its ... permeability,ACCEPTED,Valid. | Warnings: Evidence is paraphrased (not exact quote from NLD). Word overlap: 60%.
+santos basin,Basin,has_continuant_part,http://purl.obolibrary.org/obo/BFO_0000178,pre-salt sequence,domain_term,1.0,Within its Pre-Salt sequences,ACCEPTED,Valid.
+dolomitization,Geological Process,has_participant,http://purl.obolibrary.org/obo/BFO_0000057,dolomite,domain_term,1.0,involves the replacement of calcite by dolomite,ACCEPTED,Valid.
+tectonic process,Geological Process,has_participant,http://purl.obolibrary.org/obo/BFO_0000057,lithosphere,domain_term,1.0,involves the deformation of the Earth's lithosphere,ACCEPTED,Valid.
+regional seal,Geological Object,constituted_by,https://www.inf.ufrgs.br/bdi/ontologies/GEOCORE_0000017,evaporite,domain_term,1.0,role is predominantly fulfilled by thick evaporite sequences,ACCEPTED,Valid.
+rifting,Geological Process,has_participant,http://purl.obolibrary.org/obo/BFO_0000057,lithosphere,domain_term,1.0,deformation of the lithosphere,ACCEPTED,Valid.
+pre-salt play,object aggregate,has_continuant_part,http://purl.obolibrary.org/obo/BFO_0000178,microbialite,domain_term,1.0,primarily microbialites,ACCEPTED,Valid.
+pre-salt play,object aggregate,has_continuant_part,http://purl.obolibrary.org/obo/BFO_0000178,regional seal,domain_term,1.0,sealed by regional evaporites,ACCEPTED,Valid.
+reservoir quality,quality,constituted_by,http://purl.obolibrary.org/obo/BFO_0000178,porosity,domain_term,1.0,controlled by porosity,ACCEPTED,Valid.
+reservoir quality,quality,constituted_by,http://purl.obolibrary.org/obo/BFO_0000178,permeability,domain_term,1.0,and permeability,ACCEPTED,Valid.

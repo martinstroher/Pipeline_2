@@ -1,30 +1,21 @@
 [SYSTEM_INSTRUCTION]
-You are an expert ontology engineer building a geological taxonomy. You must arrange terms into IS-A (subClassOf) hierarchies. You distinguish between classes (types/kinds) and named individuals (specific instances).
+<<personas_upper_ontologist>> You arrange terms into IS-A (subClassOf) hierarchies. You distinguish between classes (types/kinds) and named individuals (specific instances).
 
 [PROMPT_TEMPLATE]
-You are given a set of geological terms, all pre-classified under the ontology category "{category}".
+You are given a set of terms, all pre-classified under the ontology category "{category}".
 Your task is to arrange them into an IS-A hierarchy (taxonomy tree).
 
 **RULES:**
 1. Every term MUST have exactly one parent. The root parent is "{category}" (the category itself).
 2. Create an intermediate class only when **two or more** terms in this group share the same proximate genus Y in their NLDs. If only one term has a given genus, attach it directly to the parent — do NOT create a one-child intermediate node.
    - **NLD-guided naming:** Use the shared genus Y as the intermediate class name (Title Case).
-     Example — given two terms in the group:
-       * "Dolomitization" NLD: "Dolomitization is a **diagenetic process** that replaces calcite..."
-       * "Dissolution" NLD: "Dissolution is a **diagenetic process** that removes carbonate..."
-     → Both share the genus "diagenetic process" → create "Diagenetic Process" as intermediate, with both as children.
-     → If only "Dolomitization" were in the group, attach it directly to "{category}" — do NOT create "Diagenetic Process" for a single term.
+     <<examples_taxonomy_shared_genus>>
    - **No duplicates of input terms (CRITICAL):** Before inventing an intermediate named Y, check the input terms case-insensitively. If any input term in this batch already matches Y (e.g., input term `continental depositional setting` and you were about to invent `Continental Depositional Setting`), DO NOT create the intermediate. Instead, use the existing input term as the parent for its siblings — it already has an NLD and is the canonical form.
-   - **Every intermediate MUST include a one-sentence NLD** in the `intermediate_nld` field (see OUTPUT FORMAT). The NLD follows the Aristotelian "X is a Y that Z" form, e.g., `"Diagenetic Process is a geological process that alters sediments or rocks after deposition."` Intermediates without a defensible one-sentence definition should not be created — attach the terms directly to the category root instead.
+   - **Every intermediate MUST include a one-sentence NLD** in the `intermediate_nld` field (see OUTPUT FORMAT). The NLD follows the Aristotelian "X is a Y that Z" form. Intermediates without a defensible one-sentence definition should not be created — attach the terms directly to the category root instead.
 3. **Class vs Individual distinction (CRITICAL):**
-   The following are INDIVIDUALS (named instances) → use relationship_type = "rdf:type":
-     - Named geological time periods (e.g., "Cretaceous", "Aptian", "Albian", "Pre-Salt")
-     - Named petroleum fields (e.g., "Lula Field", "Búzios Field", "Tupi")
-     - Named basins (e.g., "Santos Basin", "Campos Basin")
-     - Named geological formations (e.g., "Barra Velha Formation", "Itapema Formation")
-   General types/kinds (e.g., "Grainstone", "Fault", "Porosity", "Carbonate Reservoir") are CLASSES → use relationship_type = "rdfs:subClassOf".
+   <<examples_taxonomy_individual_types>>
 4. Intermediate classes you create should use Title Case.
-   NOTE: BFO canonical labels are ALL LOWERCASE (e.g., "process", "quality", "entity"). GeoCore and GeoReservoir canonical labels use Title Case (e.g., "Geological Object"). Use the EXACT case as listed in the canonical vocabulary below; do NOT apply Title Case to BFO entries.
+   NOTE: <<examples_taxonomy_case_note>>
 5. Keep the hierarchy depth reasonable (2-4 levels below the category root).
 6. **Canonical vocabulary:** When one of the following established class names is the natural parent
    for a term or intermediate node, use it verbatim (exact label and case as listed):
