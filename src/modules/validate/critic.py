@@ -1,10 +1,9 @@
-"""Simplified ontology critic — Option 3 of the validate verb.
+"""Simplified ontology critic — the `validate` verb.
 
-Replaces the legacy multi-pass critic + rule engine + relation reclassifier
-with a single LLM call per category that judges every taxonomy and relation
+A single LLM call per category that judges every taxonomy and relation
 row as KEEP / DROP / FIX, with a full audit log.
 
-I/O contract matches `src.validate.run.run_validate`:
+I/O contract:
     run_critic(taxonomy_csv, output_dir, *, relations_csv=None)
         -> (final_taxonomy_path, final_relations_path_or_None)
 
@@ -21,6 +20,8 @@ Safety guards:
     - Any taxonomy child whose parent was DROPped is re-parented to the
       category root so the tree stays connected.
     - Rows the LLM forgets to mention are treated as implicit KEEP.
+    - After taxonomy edits are applied, any relation whose Filler was DROPped
+      is also dropped (phantom-filler cleanup, logged as DROP/phantom).
 """
 
 from __future__ import annotations
@@ -269,11 +270,7 @@ def run_critic(
     *,
     relations_csv: str | None = None,
 ) -> tuple[str, str | None]:
-    """Run the simplified single-call-per-category critic.
-
-    Drop-in replacement for `src.validate.run.run_validate` — same signature
-    and return shape.
-    """
+    """Run the simplified single-call-per-category critic."""
     from dotenv import load_dotenv
     load_dotenv()
     get_client()

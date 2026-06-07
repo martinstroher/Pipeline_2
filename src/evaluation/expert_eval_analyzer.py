@@ -648,84 +648,6 @@ def analyze_cross_layer(
 
 
 # ---------------------------------------------------------------------------
-# CQ Filter Validation (kept vs removed)
-# ---------------------------------------------------------------------------
-
-def analyze_cq_filter_validation(
-    experts: dict,
-    key_df: pd.DataFrame,
-) -> dict:
-    """Mann-Whitney U test on term relevance: kept vs removed.
-
-    Tests whether CQ-filtered (kept) terms receive significantly higher
-    relevance ratings from experts than removed terms.
-
-    Only runs if the blinding key contains a CQ_Filter section
-    (produced by generate_refined_evaluation).
-
-    Returns dict with Mann-Whitney U, p-value, rank-biserial correlation,
-    and descriptive stats per group.
-    """
-    cq_key = key_df[key_df["Sheet"] == "CQ_Filter"]
-    if cq_key.empty:
-        return {"skipped": True, "reason": "No CQ_Filter section in blinding key"}
-
-    status_map = dict(zip(cq_key["Term"], cq_key["CQ_Status"]))
-    cq_count_map = dict(zip(cq_key["Term"], cq_key["CQ_Count"]))
-
-    # Collect per-term mean relevance across experts
-    term_scores: dict[str, list[float]] = {}
-    for expert_id, data in experts.items():
-        rel_df = data["relevance"]
-        for _, row in rel_df.iterrows():
-            term = row["Term"]
-            score = row.get("Relevance (1-5)", np.nan)
-            if pd.notna(score) and term in status_map:
-                term_scores.setdefault(term, []).append(float(score))
-
-    term_means = {t: np.mean(v) for t, v in term_scores.items()}
-
-    kept_scores = [term_means[t] for t in term_means if status_map.get(t) == "kept"]
-    removed_scores = [term_means[t] for t in term_means if status_map.get(t) == "removed"]
-
-    results = {
-        "descriptive": {
-            "n_kept": len(kept_scores),
-            "n_removed": len(removed_scores),
-            "kept_mean": round(float(np.mean(kept_scores)), 4) if kept_scores else None,
-            "kept_median": round(float(np.median(kept_scores)), 4) if kept_scores else None,
-            "removed_mean": round(float(np.mean(removed_scores)), 4) if removed_scores else None,
-            "removed_median": round(float(np.median(removed_scores)), 4) if removed_scores else None,
-        },
-    }
-
-    if len(kept_scores) >= 5 and len(removed_scores) >= 5:
-        u_stat, p_value = stats.mannwhitneyu(
-            kept_scores, removed_scores, alternative="greater"
-        )
-        # Rank-biserial correlation as effect size: r = 1 - 2U/(n1*n2)
-        n1, n2 = len(kept_scores), len(removed_scores)
-        rank_biserial = 1.0 - (2.0 * u_stat) / (n1 * n2)
-
-        results["mann_whitney_u"] = {
-            "U": round(float(u_stat), 2),
-            "p_value": round(float(p_value), 6),
-            "rank_biserial_r": round(float(rank_biserial), 4),
-            "alternative": "greater (kept > removed)",
-            "interpretation": (
-                "significant" if p_value < 0.05 else "not significant"
-            ),
-        }
-    else:
-        results["mann_whitney_u"] = {
-            "skipped": True,
-            "reason": f"Insufficient data (kept={len(kept_scores)}, removed={len(removed_scores)})",
-        }
-
-    return results
-
-
-# ---------------------------------------------------------------------------
 # Main Orchestrator
 # ---------------------------------------------------------------------------
 
@@ -815,22 +737,6 @@ def run_layer2_analysis(
     if "nld_vs_category" in cross:
         c = cross["nld_vs_category"]
         print(f"   NLD quality <-> Category correctness: rho={c['spearman_rho']}, p={c['p_value']}")
-
-    # 6. CQ Filter Validation (only if blinding key has CQ_Filter section)
-    has_cq = "CQ_Filter" in key_df["Sheet"].values if "Sheet" in key_df.columns else False
-    if has_cq:
-        print("\n6. CQ Filter Validation (kept vs removed):")
-        cq = analyze_cq_filter_validation(experts, key_df)
-        results["cq_filter_validation"] = cq
-        if "descriptive" in cq:
-            d = cq["descriptive"]
-            print(f"   Kept: n={d['n_kept']}, mean={d['kept_mean']}, median={d['kept_median']}")
-            print(f"   Removed: n={d['n_removed']}, mean={d['removed_mean']}, median={d['removed_median']}")
-        if "mann_whitney_u" in cq and "U" in cq["mann_whitney_u"]:
-            m = cq["mann_whitney_u"]
-            print(f"   Mann-Whitney U={m['U']}, p={m['p_value']}, r={m['rank_biserial_r']} ({m['interpretation']})")
-    else:
-        print("\n6. CQ Filter Validation: Skipped (no CQ_Filter section in blinding key)")
 
     # Save results
     results_path = os.path.join(output_dir, "layer2_results.json")

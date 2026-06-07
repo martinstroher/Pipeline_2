@@ -57,9 +57,11 @@ The full pipeline runs Steps 0-7 and writes a Turtle OWL file (`output/6d_taxono
 | 5 | `term_categorizer.py` | Step 4 CSV | `output/5_categorized_ontology.csv` |
 | 6 | `taxonomy_builder.py` | Step 5 CSV | `output/6_taxonomy.csv` |
 | 6b | `relation_extractor.py` | Step 5 CSV | `output/6b_relations.csv` |
-| 6c | `ontology_critic.py` | Step 6 + 6b CSVs | `output/6c_taxonomy_cleaned.csv` |
-| 6d | `relation_reclassifier.py` | Step 6c CSVs | `output/6d_taxonomy_reclassified.csv` |
-| 7 | `owl_exporter.py` | Step 6d CSV + Step 6c relations | `output/6d_taxonomy_reclassified.ttl` |
+| 6 | `taxonomy_builder.py` | Step 5b CSV | `output/refined/construct_taxonomy.csv` |
+| 6b | `relation_extractor.py` | Step 5b CSV | `output/refined/construct_relations.csv` |
+| validate | `validate/critic.py` | Steps 6 + 6b CSVs | `output/refined/validate_taxonomy.csv` + `validate_relations.csv` + `validate_edits.csv` |
+| 7 | `owl_exporter.py` | validate CSVs | `output/refined/emit_ontology.ttl` |
+| 7b | `emit/verifier.py` | OWL file | `output/refined/emit_verification.json` |
 
 **Step R (RAG setup)** runs once after Step 0 and provides retrieval context to Steps 4 and 5. ChromaDB is cached to disk (`chroma_db_1024/`) on first run; subsequent runs load from cache. BM25 is always rebuilt in-memory.
 
@@ -138,8 +140,8 @@ pipeline.py               # Main orchestrator + CLI (thin: helpers for parser, d
 domains/                  # Per-domain config + assets. Each subfolder is a complete retargetable bundle.
   README.md               # Author guide: layout, activation, per-prompt runtime-placeholder contract
   presalt/
-    ontology_config.yaml  # Single source of truth: waterfall, upper-ontology metadata, BFO disjoint pairs, 71 relation property constraints, Step 6d config
-    prompts/              # 10 production prompts (verbatim — personas inlined, no load-time interpolation)
+    ontology_config.yaml  # Single source of truth: waterfall, upper-ontology metadata, BFO disjoint pairs, 71 relation property constraints
+    prompts/              # 8 production prompts (verbatim — personas inlined, no load-time interpolation)
     resources/            # Upper-ontology OWL files: bfo-core.owl, geocore-full.owl, geores-full.owl, ro-core.owl
     competency_questions.txt  # CQs evaluated by Step 5b
 studies/                  # Cross-domain study artifacts (not Pre-Salt-specific)
@@ -147,18 +149,23 @@ studies/                  # Cross-domain study artifacts (not Pre-Salt-specific)
   expert_eval.yaml        # Expert-evaluation workbook instructions sheet (49 rows)
 src/
   modules/
-    term_extractor.py     # Step 1: LLM-based term extraction (Gemini 2.5 Pro)
-    term_aggregator.py    # Step 2: Frequency aggregation + spaCy lemmatization
-    term_filter.py        # Step 3: Frequency threshold filter
-    nld_generator.py      # Step 4: RAG-grounded NLD generation (Gemini 2.5 Pro)
-    term_categorizer.py   # Step 5: N-tier waterfall categorization (one {categories_block} placeholder rendered from ontology_config.yaml waterfall:)
-    cq_refinement.py      # Step 5b: CQ-driven refinement (mandatory): cleanup + scoring + filter at CQ≥1
-    taxonomy_builder.py   # Step 6: Group-based LLM hierarchy builder, UPPER_IRIS anchoring
-    relation_extractor.py # Step 6b: LLM relation extraction + BFO domain/range validation
-    ontology_critic.py    # Step 6c: 3-pass LLM taxonomy quality review (merge/remove/move)
-    relation_reclassifier.py # Step 6d: Deterministic BFO metatype reclassification (refinement | contradiction modes)
-    owl_exporter.py       # Step 7: rdflib Turtle export, OWL restrictions, upper backbone
-    ontology_verifier.py  # Step 7b: Post-export verification (syntax, structure, OOPS!, HermiT)
+    extract/
+      term_extractor.py     # Step 1: LLM-based term extraction (Gemini 2.5 Pro)
+      term_aggregator.py    # Step 2: Frequency aggregation + spaCy lemmatization
+      term_filter.py        # Step 3: Frequency threshold filter
+    define/
+      nld_generator.py      # Step 4: RAG-grounded NLD generation (Gemini 2.5 Pro)
+    classify/
+      category_assigner.py  # Step 5: N-tier waterfall categorization
+      cq_scorer.py          # Step 5b: CQ-driven refinement (mandatory): cleanup + scoring + filter at CQ>=1
+    construct/
+      taxonomy_builder.py   # Step 6: Group-based LLM hierarchy builder, UPPER_IRIS anchoring
+      relation_extractor.py # Step 6b: LLM relation extraction + BFO domain/range validation
+    validate/
+      critic.py             # validate: single LLM critic per category (KEEP / DROP / FIX), phantom-filler cleanup
+    emit/
+      owl_exporter.py       # Step 7: rdflib Turtle export, OWL restrictions, upper backbone
+      verifier.py           # Step 7b: Post-export verification (syntax, structure, OOPS!, HermiT)
   utils/
     ontology_config.py    # ontology_config.yaml loader: frozen dataclass + lru_cache singleton, env overrides; exposes waterfall_ontologies() + categorization_block()
     study_config.py       # expert_eval.yaml loader: instructions sheet rows for the expert workbook

@@ -143,16 +143,6 @@ def main() -> int:
         print(f"[OK]   step6d_min_evidence >= 2 (got {cfg.step6d_min_evidence()})")
     _assert_eq("step6d strict_subclass", True, cfg.step6d_strict_subclass())
 
-    # _is_strict_subclass logic
-    from src.modules.validate.relation_reclassifier import _is_strict_subclass
-    parent = frozenset({"IndependentContinuant", "Continuant"})
-    child = frozenset({"MaterialEntity", "IndependentContinuant", "Continuant"})
-    sibling = frozenset({"ImmaterialEntity", "IndependentContinuant", "Continuant"})
-    _assert_eq("strict_subclass child⊃parent", True, _is_strict_subclass(child, parent))
-    _assert_eq("strict_subclass parent⊃child", False, _is_strict_subclass(parent, child))
-    _assert_eq("strict_subclass sibling⊃sibling", False, _is_strict_subclass(sibling, child))
-    _assert_eq("strict_subclass equal", False, _is_strict_subclass(parent, parent))
-
     # Env-override toggle: STEP6D_MODE=contradiction must round-trip
     _prev = os.environ.get("STEP6D_MODE")
     os.environ["STEP6D_MODE"] = "contradiction"

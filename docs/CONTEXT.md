@@ -117,9 +117,9 @@ The ontology scope is defined by 10 competency questions (CQs) that specify what
 - **Sub-step C — CQ scoring:** Each surviving term is scored against 10 competency questions in parallel batches of 5 (`CQ_BATCH_SIZE`). The LLM returns which CQs the term meaningfully contributes to. Checkpoint/resume via `5b_cq_matrix.csv`.
 - **Sub-step D — CQ filter:** Drops every term whose `CQ_Count < 1` (i.e. terms that didn't contribute to any of the 10 competency questions). Writes the kept terms to `output/refined/classify_categories.csv`, which becomes the input to Step 6. There is no threshold sweep — production targets T≥1.
 - **Robustness:** CQ identifiers are validated against a fixed set (CQ1-CQ10). Batch size mismatches raise `ValueError`. JSON parse failures are logged and skipped. ThreadPoolExecutor parallelism is configurable via `MAX_CONCURRENT_CQ`.
-- Output: `output/refined/5b_cleanup_report.csv`, `output/refined/5b_cq_matrix.csv`, `output/refined/5b_specialization_hints.csv`, `output/refined/threshold_summary.csv`, per-threshold CSVs.
+- Output: `output/refined/5b_cleanup_report.csv`, `output/refined/5b_cq_matrix.csv`, `output/refined/5b_specialization_hints.csv`, `output/refined/classify_categories.csv`
 
-### `src/modules/taxonomy_builder.py` — Step 6: Taxonomy Construction
+### `src/modules/construct/taxonomy_builder.py` — Step 6: Taxonomy Construction
 - **Tech**: Gemini 2.5 Pro
 - Builds a hierarchical taxonomy per ontology group (GeoReservoir, GeoCore, BFO) using NLDs for naming.
 - Accepts optional `hints_csv` parameter with pre-identified SPECIALIZATION pairs from Step 5b. When provided, these are injected into the prompt as parent-child constraints.
@@ -139,36 +139,18 @@ The ontology scope is defined by 10 competency questions (CQs) that specify what
 - Post-hoc property specialisation: generic `has_part`/`part_of` upgraded to BFO-precise `has_continuant_part`/`has_occurrent_part` based on subject/filler metatypes.
 - Filler source resolution: deterministic Python-side tagging (`domain_term` vs `external`).
 - **Robustness:** Checkpoint/resume with single flat CSV. Batch size mismatch raises `ValueError`. Unknown properties are rejected.
-- Output: `output/6b_relations.csv`
+- Output: `output/refined/construct_relations.csv`
 
-### `src/modules/ontology_critic.py` — Step 6c: Ontology Critic
-- **Tech**: Gemini 2.5 Pro (3-pass LLM review)
-- Post-processing quality pass that reviews the taxonomy for redundancy, misplacements, and vague terms.
-- **Pass 1 — Intra-category:** Reviews each category branch independently. Actions: MERGE (near-duplicates), MOVE (misplaced siblings), REMOVE (vague/abstract terms), RENAME (ambiguous names).
-- **Pass 2 — Cross-category:** Reviews all non-intermediate terms across categories. Actions: CROSS_MERGE (duplicate concepts in different categories), CROSS_MOVE (miscategorised terms).
-- **Pass 3 — Essentiality:** Final quality gate asking which remaining terms do not earn their place in a lean domain ontology.
-- After all passes, orphaned intermediate nodes (no children remaining) are removed, and broken parent references (removed parents) are repaired by re-parenting to the term's Category.
-- Relations CSV is also cleaned: renames and merges propagate to Term/Filler columns; removed terms' relations are dropped on **both** sides (Term and Filler), so a restriction whose filler was just removed from the taxonomy cannot survive and produce a phantom orphan class under `owl:Thing`.
-- **Robustness:** Structured `_target` metadata in log rows avoids fragile string parsing. Category validation ensures REMOVE reparenting only uses valid parents.
-- Output: `output/6c_taxonomy_cleaned.csv`, `output/6c_critic_log.csv`, `output/6c_relations_cleaned.csv`
+### `src/modules/validate/critic.py` — validate: Single-Call Critic per Category
+- **Tech**: Gemini 2.5 Pro (one call per category)
+- Replaces the legacy multi-pass critic (`ontology_critic`) and the deterministic relation reclassifier (`relation_reclassifier`) with a single LLM call per category that emits KEEP / DROP / FIX per row, plus a full audit log to `validate_edits.csv`.
+- Sees, for each category: every term + NLD, the current parent-child taxonomy edges (with `is_intermediate` flags), and the relations involving those terms.
+- **Intermediate guardrail:** drops invented intermediate nodes that have fewer than 2 surviving children OR whose `intermediate_nld` is missing, vacuous, or merely restates the parent.
+- **Phantom-filler cleanup:** after taxonomy edits are applied, any relation whose `Filler` matches a DROPped term is also dropped and recorded as `DROP/phantom`. This prevents the OWL exporter from materialising orphan filler classes under `owl:Thing`.
+- **Safety guards:** (1) if a category's edits would drop more than 50% of its taxonomy rows, the whole category reverts to its pre-critic state; (2) any taxonomy child whose parent was DROPped is re-parented to the category root so the tree stays connected; (3) rows the LLM forgets to mention are treated as implicit KEEP.
+- Output: `output/refined/validate_taxonomy.csv`, `output/refined/validate_relations.csv`, `output/refined/validate_edits.csv`
 
-### `src/modules/relation_reclassifier.py` — Step 6d: Relation-Based Reclassification
-- **Tech**: Deterministic Python (no LLM)
-- Post-processing step that uses accepted relations from Step 6b to infer and correct BFO metatype classifications.
-- Reverses the domain/range validation logic from `relation_validator.py`: instead of "is this relation valid for these categories?" → "given these relations, what categories are valid?"
-- For each term, collects all ACCEPTED relations where it appears as subject (→ accumulates property domain constraints) or filler (→ accumulates property range constraints).
-- Intersects all metatype evidence; if intersection is empty → flags as CONTRADICTION for human review.
-- Finds the most specific compatible category from `_CATEGORY_TO_METATYPES`. If current category is less specific or incompatible → reclassifies.
-- After reclassification, checks Parent_Term compatibility with new category and reparents to upper-ontology root if incompatible.
-- **Fully dynamic:** zero hardcoded inference rules. All property constraints, category definitions, and the operating mode are read from `ontology_config.yaml` via `src/utils/ontology_config.py`.
-- **Two operating modes** (selected by `STEP6D_MODE` env var or `step6d.mode` in YAML):
-  - `refinement` *(default, conservative)*: emits **REFINE** actions only. Candidate categories must be strict BFO subclasses of the current category (proper-superset of metatype chain) and must not introduce non-generic metatypes absent from the evidence. Terms with fewer than `step6d.refinement_min_evidence` (default `2`) accepted relations are skipped. Contradictions are logged but never acted on. Terms whose current category is not in the YAML (e.g., AI-invented labels) are skipped — the strict-subclass invariant cannot be verified, so the term is left as-is rather than risk an unsafe move.
-  - `contradiction` *(legacy, aggressive)*: emits **RECLASSIFY** actions whenever the evidence intersection points to a different more-specific category, even across unrelated branches. No min-evidence gate; no strict-subclass requirement.
-- **Disjoint-contradiction detection:** Implied metatype sets are scanned against the 5 BFO 2020 disjoint pairs (`Continuant`⊥`Occurrent`, `MaterialEntity`⊥`ImmaterialEntity`, etc.). Sets containing both members of a pair are logged as CONTRADICTION (the relations cannot all be true of one individual) and the term is left in place under both modes.
-- **Robustness:** Never downgrades to a less specific category. Prefers domain-specific categories (GeoCore/GeoReservoir) over raw BFO. Refinement mode is the strict default; the contradiction mode is retained only for differential study.
-- Output: `output/6d_taxonomy_reclassified.csv`, `output/6d_reclassification_log.csv` (Action ∈ {REFINE, RECLASSIFY, CONTRADICTION, REPARENT}).
-
-### `src/modules/owl_exporter.py` — Step 7: OWL Export
+### `src/modules/emit/owl_exporter.py` — Step 7: OWL Export
 - **Tech**: `rdflib`
 - Converts the taxonomy CSV to a Protege-compatible OWL Turtle file.
 - `owl:Class` entries get `rdfs:label`, `rdfs:comment` (NLD, from the taxonomy CSV NLD column), and `rdfs:subClassOf` triples pointing to published BFO/GeoCore/GeoReservoir IRIs.

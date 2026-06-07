@@ -13,15 +13,13 @@ described below, and point the loaders at the new path via env vars.
 ```
 domains/<your_domain>/
 ├── ontology_config.yaml          # Upper-ontology metadata + relation constraints + waterfall
-├── prompts/                      # 10 production-pipeline prompts
+├── prompts/                      # 8 production-pipeline prompts
 │   ├── term_extraction.txt
 │   ├── nld_generation.txt
 │   ├── term_categorization.txt
 │   ├── taxonomy_building.txt
 │   ├── relation_extraction.txt
-│   ├── ontology_critic.txt
-│   ├── ontology_critic_cross.txt
-│   ├── ontology_critic_essentiality.txt
+│   ├── critic.txt
 │   ├── cq_scoring.txt
 │   └── cq_synonym_triage.txt
 ├── bfo-core.ttl                  # Upper ontologies imported by Step 7
@@ -72,9 +70,7 @@ call time.
 | `term_categorization.txt` | `{categories_block}`, `{json_batch}` |
 | `taxonomy_building.txt` | `{category}`, `{upper_vocab}`, `{terms_json}` |
 | `relation_extraction.txt` | `{known_terms}`, `{json_batch}`, `{batch_size}` |
-| `ontology_critic.txt` | `{category}`, `{n_entries}`, `{branch_json}` |
-| `ontology_critic_cross.txt` | `{n_terms}`, `{terms_json}` |
-| `ontology_critic_essentiality.txt` | `{n_terms}`, `{terms_json}` |
+| `critic.txt` | `{category}`, `{n_terms}`, `{terms_json}`, `{taxonomy_json}`, `{relations_json}` |
 | `cq_scoring.txt` | `{batch_size}`, `{terms_json}` |
 | `cq_synonym_triage.txt` | `{clusters_json}` |
 | `ablation_categorization_nld.txt` (studies/) | `{categories_block}`, `{json_batch}` |
