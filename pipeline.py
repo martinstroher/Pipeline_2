@@ -347,8 +347,8 @@ def _run_refinement_pipeline(args, _stop) -> None:
             run_relation_extraction(t_cat_csv, output_path=rel_csv)
 
         log.banner(f"T{t}-validate", f"Validate (threshold ≥{t})")
-        from src.validate.run import run_validate
-        final_tax, final_rel = run_validate(
+        from src.modules.validate.critic import run_critic
+        final_tax, final_rel = run_critic(
             tax_csv,
             t_dir,
             relations_csv=rel_csv,
@@ -467,39 +467,28 @@ def main():
         log.info("Step 6b: Relation extraction skipped (--skip-relations)")
     if _check_stop(_stop, "6b"): return
 
-    # Step 6c: Ontology Critic
-    log.banner("6c", "Ontology Critic")
-    from src.modules.validate.ontology_critic import run_ontology_critic
+    # Step validate: single LLM critic per category (KEEP / DROP / FIX)
+    log.banner("validate", "Validate (single LLM critic per category)")
+    from src.modules.validate.critic import run_critic
     tax_csv = (
         os.path.splitext(cat_csv)[0]
         .replace("classify_categories", "construct_taxonomy") + ".csv"
     )
-    cleaned_tax = tax_csv.replace("construct_taxonomy", "validate_critic_taxonomy")
-    cleaned_rel = relations_csv.replace("construct_relations", "validate_critic_relations") if relations_csv else None
-    run_ontology_critic(
+    output_dir = os.path.dirname(tax_csv)
+    final_tax, final_rel = run_critic(
         tax_csv,
-        output_path=cleaned_tax,
+        output_dir,
         relations_csv=relations_csv,
-        relations_output=cleaned_rel,
     )
-    if _check_stop(_stop, "6c"): return
+    if _check_stop(_stop, "validate"): return
+    if _check_stop(_stop, "6c"): return  # legacy alias
+    if _check_stop(_stop, "6d"): return  # legacy alias
 
-    # Step 6d: Relation-based reclassification
-    reclass_tax = cleaned_tax  # fallback if no relations
-    if cleaned_rel and os.path.exists(cleaned_rel):
-        log.banner("6d", "Relation Reclassification")
-        from src.modules.validate.relation_reclassifier import run_relation_reclassification
-        reclass_tax = cleaned_tax.replace("validate_critic_taxonomy", "validate_reclassified_taxonomy")
-        run_relation_reclassification(
-            cleaned_tax,
-            cleaned_rel,
-            output_path=reclass_tax,
-        )
-    if _check_stop(_stop, "6d"): return
-
-    # Use best available outputs for OWL export
-    final_tax = reclass_tax if os.path.exists(reclass_tax) else cleaned_tax
-    final_rel = cleaned_rel if (cleaned_rel and os.path.exists(cleaned_rel)) else relations_csv
+    # Defensive fallbacks if critic produced nothing writable.
+    if not (final_tax and os.path.exists(final_tax)):
+        final_tax = tax_csv
+    if relations_csv and not (final_rel and os.path.exists(final_rel)):
+        final_rel = relations_csv
 
     log.banner(7, "OWL Export")
     from src.modules.emit.owl_exporter import run_owl_export
