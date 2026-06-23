@@ -30,10 +30,9 @@ cp .env.example .env
 | `OOPS_URL` | OOPS! REST API endpoint for pitfall scanning (e.g. `http://localhost:8080/OOPS/rest`) |
 | `EXTRACTION_WORKERS` | Number of parallel workers for Step 1 extraction (default: `5`) |
 | `MINIMUM_FREQUENCY_FILTER` | Minimum document frequency for Step 3 filtering — number of distinct papers a term must appear in (default: `7`; ~8.5% of an 82-paper corpus) |
-| `ONTOLOGY_CONFIG_PATH` | Path to the ontology YAML (default: `domains/presalt/ontology_config.yaml`) — single source of truth for upper ontologies, relations, and Step 6d behaviour. Swap to retarget the pipeline to another domain. |
+| `ONTOLOGY_CONFIG_PATH` | Path to the ontology YAML (default: `domains/presalt/ontology_config.yaml`) — single source of truth for upper ontologies, relations, and the critic's class budget. Swap to retarget the pipeline to another domain. |
 | `STUDY_CONFIG_PATH` | Path to the expert-evaluation workbook config (default: `studies/expert_eval.yaml`) — instructions sheet rendered as Sheet 1 of the expert workbook |
-| `STEP6D_MODE` | Step 6d operating mode: `refinement` (default, strict-subclass + ≥2 evidence) or `contradiction` (legacy, aggressive) |
-| `RELATION_PROVENANCE_TIERS` | Comma-separated subset of `{owl_axiom, bfo_shape_axiom, ro_release, spec_curation}` controlling which property constraints are active (default: all four) |
+| `RELATION_PROVENANCE_TIERS` | Comma-separated subset of `{owl_axiom, bfo_shape_axiom, ro_release, critic_minted}` controlling which property constraints are active (default: all four) |
 
 ### Run
 Place PDF files in `inputs/`, then:
@@ -162,7 +161,7 @@ src/
       taxonomy_builder.py   # Step 6: Group-based LLM hierarchy builder, UPPER_IRIS anchoring
       relation_extractor.py # Step 6b: LLM relation extraction + BFO domain/range validation
     validate/
-      critic.py             # validate: single LLM critic per category (KEEP / DROP / FIX), phantom-filler cleanup
+      critic.py             # validate: two-pass critic per category (taxonomy then relations), phantom-filler cleanup
     emit/
       owl_exporter.py       # Step 7: rdflib Turtle export, OWL restrictions, upper backbone
       verifier.py           # Step 7b: Post-export verification (syntax, structure, OOPS!, HermiT)

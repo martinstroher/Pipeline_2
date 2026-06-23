@@ -292,11 +292,200 @@ def _detect_and_repair_disjointness(g: Graph, df: pd.DataFrame) -> list[dict]:
     return repairs
 
 
+# ── Critic-driven emission helpers (added for the `validate` verb) ────────
+#
+# All IRIs are pulled from ontology_config at call time via cfg.upper_iris()
+# and cfg.all_relations() — no constants. If the config drops a relevant
+# class/property, the helper logs and skips rather than emitting bad RDF.
+
+def _emit_minted_properties(g: Graph, minted_csv: str) -> int:
+    """Declare each critic-minted ObjectProperty with subPropertyOf, domain, range.
+
+    Reads `validate_minted_properties.csv` (columns:
+    Name, IRI, ParentProperty, Domain, Range, Justification, Timestamp).
+    """
+    if not minted_csv or not os.path.exists(minted_csv):
+        return 0
+    df = read_csv(minted_csv)
+    if df.empty:
+        return 0
+    relations = _CFG.all_relations()
+    upper = {k.lower(): v for k, v in _CFG.upper_iris().items()}
+    n = 0
+    for _, r in df.iterrows():
+        iri_str = str(r.get("IRI", "")).strip()
+        name = str(r.get("Name", "")).strip()
+        if not iri_str or not name:
+            continue
+        prop_uri = URIRef(iri_str)
+        g.add((prop_uri, RDF.type, OWL.ObjectProperty))
+        g.add((prop_uri, RDFS.label, Literal(name.replace("_", " "), lang="en")))
+        justification = str(r.get("Justification", "")).strip()
+        if justification:
+            g.add((prop_uri, RDFS.comment, Literal(f"[critic_minted] {justification}", lang="en")))
+        parent = str(r.get("ParentProperty", "")).strip()
+        if parent and parent in relations:
+            g.add((prop_uri, RDFS.subPropertyOf, URIRef(relations[parent].iri)))
+        # Domain/Range can be a metatype label or an upper-class label.
+        for col, pred in (("Domain", RDFS.domain), ("Range", RDFS.range)):
+            label = str(r.get(col, "")).strip()
+            if not label:
+                continue
+            upper_iri = upper.get(label.lower())
+            if upper_iri:
+                g.add((prop_uri, pred, URIRef(upper_iri)))
+        n += 1
+    return n
+
+
+def _emit_named_individuals(g: Graph, instances_csv: str) -> int:
+    """Emit `<term> a owl:NamedIndividual, <target_class>` for each row in
+    `validate_instances.csv` (columns: Term, Target_Class, Mint_Parent, …).
+
+    Target_Class is matched against `cfg.upper_iris()` (case-insensitive,
+    stripping a `bfo:`/`geocore:`/`georeservoir:`/`presalt:` prefix and
+    de-CamelCasing if present). If it does not resolve but the row carries a
+    `Mint_Parent` that does, a new domain class `<project>:<Target_Class>` is
+    minted as a subclass of that parent and the individual is typed under it.
+    If neither resolves, the row is skipped with a warning.
+    """
+    if not instances_csv or not os.path.exists(instances_csv):
+        return 0
+    df = read_csv(instances_csv)
+    if df.empty:
+        return 0
+    upper = {k.lower(): v for k, v in _CFG.upper_iris().items()}
+
+    def _resolve_upper(label: str) -> str | None:
+        """Resolve a possibly-prefixed / CamelCase label to an upper-class IRI."""
+        if not label:
+            return None
+        core = label.split(":", 1)[-1] if ":" in label else label
+        candidates = [core, core.lower(),
+                      re.sub(r"(?<!^)([A-Z])", r" \1", core).strip().lower()]
+        return next((upper[c] for c in candidates if c in upper), None)
+
+    n = 0
+    for _, r in df.iterrows():
+        term = str(r.get("Term", "")).strip()
+        target = str(r.get("Target_Class", "")).strip()
+        if not term or not target:
+            continue
+        resolved = _resolve_upper(target)
+        type_iri = URIRef(resolved) if resolved else None
+        if type_iri is None:
+            # Fallback: critic proposed a new domain kind. Mint
+            # <project>:<target> as a subclass of the resolved mint_parent.
+            mint_parent_iri = _resolve_upper(str(r.get("Mint_Parent", "")).strip())
+            if mint_parent_iri:
+                target_label = target.split(":", 1)[-1] if ":" in target else target
+                type_iri = _mint_presalt_iri(target_label)
+                g.add((type_iri, RDF.type, OWL.Class))
+                g.add((type_iri, RDFS.label, Literal(target_label, lang="en")))
+                g.add((type_iri, RDFS.subClassOf, URIRef(mint_parent_iri)))
+                g.add((type_iri, RDFS.comment,
+                       Literal("[critic CONVERT_TO_INSTANCE minted target class]", lang="en")))
+        if type_iri is None:
+            log.warn(f"  validate_instances: cannot resolve target class '{target}' for '{term}' "
+                     f"(no usable Mint_Parent) — skipping")
+            continue
+        term_iri = _term_to_iri(term)
+        g.add((term_iri, RDF.type, OWL.NamedIndividual))
+        g.add((term_iri, RDF.type, type_iri))
+        g.add((term_iri, RDFS.label, Literal(term, lang="en")))
+        reason = str(r.get("Reason", "")).strip()
+        if reason:
+            g.add((term_iri, RDFS.comment, Literal(f"[critic CONVERT_TO_INSTANCE] {reason}", lang="en")))
+        n += 1
+    return n
+
+
+def _emit_companion_axioms(g: Graph) -> int:
+    """Emit BFO companion restrictions for presalt classes that descend from
+    Quality or Role but lack the canonical inheres_in / realized_in restriction.
+
+    Quality descendants → `inheres_in some IndependentContinuant`
+    Role descendants    → `realized_in some Process`
+
+    All IRIs are resolved at call time from ontology_config. If any required
+    class/property is absent from config, this function is a no-op for that
+    side.
+    """
+    upper = {k.lower(): v for k, v in _CFG.upper_iris().items()}
+    relations = _CFG.all_relations()
+    quality_iri = upper.get("quality")
+    role_iri = upper.get("role")
+    inheres_in_pc = relations.get("inheres_in")
+    realized_in_pc = relations.get("realized_in")
+    independent_iri = upper.get("independent continuant")
+    process_iri = upper.get("process")
+
+    def _has_restriction_with_prop(cls: URIRef, prop_iri: str) -> bool:
+        for _, _, obj in g.triples((cls, RDFS.subClassOf, None)):
+            if isinstance(obj, BNode):
+                for _, _, p in g.triples((obj, OWL.onProperty, None)):
+                    if str(p) == prop_iri:
+                        return True
+        return False
+
+    def _ancestors_contain(cls: URIRef, target_iri: str, max_depth: int = 12) -> bool:
+        seen: set[str] = set()
+        stack: list[URIRef] = [cls]
+        depth = 0
+        while stack and depth < max_depth:
+            depth += 1
+            nxt: list[URIRef] = []
+            for c in stack:
+                for _, _, parent in g.triples((c, RDFS.subClassOf, None)):
+                    if not isinstance(parent, URIRef):
+                        continue
+                    p_str = str(parent)
+                    if p_str == target_iri:
+                        return True
+                    if p_str in seen:
+                        continue
+                    seen.add(p_str)
+                    nxt.append(parent)
+            stack = nxt
+        return False
+
+    # Collect presalt classes (declared in our namespace).
+    presalt_ns_str = str(ONTO_NS)
+    presalt_classes: set[URIRef] = {
+        s for s in g.subjects(RDF.type, OWL.Class) if isinstance(s, URIRef) and str(s).startswith(presalt_ns_str)
+    }
+
+    n_emitted = 0
+    pairs: list[tuple[str | None, "PropertyConstraint | None", str | None, str]] = [
+        (quality_iri, inheres_in_pc, independent_iri, "inheres_in"),
+        (role_iri, realized_in_pc, process_iri, "realized_in"),
+    ]
+    for ancestor_iri, prop_pc, filler_iri, prop_name in pairs:
+        if not ancestor_iri or prop_pc is None or not filler_iri:
+            log.detail(f"  companion-axiom skip: missing config for {prop_name} pair")
+            continue
+        prop_iri_str = prop_pc.iri
+        for cls in presalt_classes:
+            if not _ancestors_contain(cls, ancestor_iri):
+                continue
+            if _has_restriction_with_prop(cls, prop_iri_str):
+                continue
+            bn = BNode()
+            g.add((bn, RDF.type, OWL.Restriction))
+            g.add((bn, OWL.onProperty, URIRef(prop_iri_str)))
+            g.add((bn, OWL.someValuesFrom, URIRef(filler_iri)))
+            g.add((cls, RDFS.subClassOf, bn))
+            n_emitted += 1
+    return n_emitted
+
+
 def run_owl_export(
     taxonomy_csv: str,
     nld_csv: str | None = None,
     output_path: str | None = None,
     relations_csv: str | None = None,
+    minted_csv: str | None = None,
+    instances_csv: str | None = None,
 ):
     """
     Export taxonomy to OWL Turtle format.
@@ -305,10 +494,26 @@ def run_owl_export(
         taxonomy_csv: Path to taxonomy CSV (output of taxonomy_builder)
         nld_csv: Optional path to NLD CSV (for adding definitions as rdfs:comment)
         output_path: Output .ttl path (default: derived from input)
+        relations_csv: Optional path to relations CSV (existential restrictions)
+        minted_csv: Optional path to validate_minted_properties.csv (critic-minted
+                    object properties). Auto-derived from taxonomy_csv's dir if None.
+        instances_csv: Optional path to validate_instances.csv (CONVERT_TO_INSTANCE
+                       rows). Auto-derived from taxonomy_csv's dir if None.
     """
     if output_path is None:
         base = os.path.splitext(taxonomy_csv)[0]
         output_path = base.replace("construct_taxonomy", "emit_ontology") + ".ttl"
+
+    # Auto-derive critic-output paths from the taxonomy CSV's directory if not passed.
+    tax_dir = os.path.dirname(taxonomy_csv) or "."
+    if minted_csv is None:
+        candidate = os.path.join(tax_dir, "validate_minted_properties.csv")
+        if os.path.exists(candidate):
+            minted_csv = candidate
+    if instances_csv is None:
+        candidate = os.path.join(tax_dir, "validate_instances.csv")
+        if os.path.exists(candidate):
+            instances_csv = candidate
 
     df = read_csv(taxonomy_csv)
     log.info(f"OWL Export: {len(df)} taxonomy entries from {taxonomy_csv}")
@@ -544,6 +749,31 @@ def run_owl_export(
     if repairs:
         log.info(f"Disjointness repairs: {len(repairs)} conflicting edges removed")
 
+    # ── Critic-driven additions: minted properties, instances, companion axioms ──
+    if minted_csv:
+        n_minted = _emit_minted_properties(g, minted_csv)
+        if n_minted:
+            log.detail(f"Emitted {n_minted} critic-minted object properties from {minted_csv}")
+    if instances_csv:
+        n_inst = _emit_named_individuals(g, instances_csv)
+        if n_inst:
+            log.detail(f"Emitted {n_inst} CONVERT_TO_INSTANCE individuals from {instances_csv}")
+    n_companion = _emit_companion_axioms(g)
+    if n_companion:
+        log.detail(f"Emitted {n_companion} BFO companion-axiom restrictions (Quality/Role descendants)")
+
+    # ── Third backbone pass: link any upper classes introduced by minted
+    #    target classes / instances / companion axioms up to BFO. ──
+    post_uppers = set()
+    for pred in (RDF.type, RDFS.subClassOf):
+        for _, _, o in g.triples((None, pred, None)):
+            o_str = str(o)
+            if o_str in _UPPER_IRI_VALUES:
+                post_uppers.add(o_str)
+    n_post = _add_upper_backbone(g, post_uppers)
+    if n_post:
+        log.detail(f"Added {n_post} backbone triples for critic-introduced upper classes")
+
     # ── BFO disjointness axioms ──
     for iri_a, iri_b in _BFO_DISJOINT:
         g.add((URIRef(iri_a), OWL.disjointWith, URIRef(iri_b)))
@@ -574,5 +804,10 @@ if __name__ == "__main__":
     parser.add_argument("--nld", default=None, help="Path to NLD CSV for adding definitions")
     parser.add_argument("--output", default=None, help="Output .ttl path")
     parser.add_argument("--relations", default=None, help="Path to construct_relations.csv")
+    parser.add_argument("--minted", default=None, help="Path to validate_minted_properties.csv")
+    parser.add_argument("--instances", default=None, help="Path to validate_instances.csv")
     args = parser.parse_args()
-    run_owl_export(args.taxonomy_csv, args.nld, args.output, args.relations)
+    run_owl_export(
+        args.taxonomy_csv, args.nld, args.output, args.relations,
+        minted_csv=args.minted, instances_csv=args.instances,
+    )

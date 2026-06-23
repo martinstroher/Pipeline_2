@@ -141,14 +141,21 @@ The ontology scope is defined by 10 competency questions (CQs) that specify what
 - **Robustness:** Checkpoint/resume with single flat CSV. Batch size mismatch raises `ValueError`. Unknown properties are rejected.
 - Output: `output/refined/construct_relations.csv`
 
-### `src/modules/validate/critic.py` — validate: Single-Call Critic per Category
-- **Tech**: Gemini 2.5 Pro (one call per category)
-- Replaces the legacy multi-pass critic (`ontology_critic`) and the deterministic relation reclassifier (`relation_reclassifier`) with a single LLM call per category that emits KEEP / DROP / FIX per row, plus a full audit log to `validate_edits.csv`.
-- Sees, for each category: every term + NLD, the current parent-child taxonomy edges (with `is_intermediate` flags), and the relations involving those terms.
-- **Intermediate guardrail:** drops invented intermediate nodes that have fewer than 2 surviving children OR whose `intermediate_nld` is missing, vacuous, or merely restates the parent.
-- **Phantom-filler cleanup:** after taxonomy edits are applied, any relation whose `Filler` matches a DROPped term is also dropped and recorded as `DROP/phantom`. This prevents the OWL exporter from materialising orphan filler classes under `owl:Thing`.
-- **Safety guards:** (1) if a category's edits would drop more than 50% of its taxonomy rows, the whole category reverts to its pre-critic state; (2) any taxonomy child whose parent was DROPped is re-parented to the category root so the tree stays connected; (3) rows the LLM forgets to mention are treated as implicit KEEP.
-- Output: `output/refined/validate_taxonomy.csv`, `output/refined/validate_relations.csv`, `output/refined/validate_edits.csv`
+### `src/modules/validate/critic.py` — validate: Two-Pass Critic per Category
+- **Tech**: Gemini 2.5 Pro. Two LLM calls per category run **sequentially** (taxonomy then relations); the categories themselves run in parallel via `ThreadPoolExecutor` (concurrency capped by `MAX_CONCURRENT_CRITIC`, default 5).
+- Replaces the legacy multi-pass critic (`ontology_critic`) and the deterministic relation reclassifier (`relation_reclassifier`). The work is split into two focused calls so each prompt does one job:
+  - **Taxonomy critic** (`critic_taxonomy.txt`): judges IS-A rows, emitting one verdict per row (`KEEP | REPARENT | DROP_AS_MIXIN | DROP_AS_REDUNDANT | CONVERT_TO_INSTANCE`). It sees every term + NLD, the relations on those terms as **read-only context** (for Probe 3 and REPARENT evidence), and the allowed target-class list. **Option-E output:** each row carries a probe trace (`probe1_genus_ok`, `probe2_bucket`, `probe3_rewrite`) that forces the reasoning before the verdict; every `DROP_AS_MIXIN` carries a `carried_by` recording the BFO entity the differentia encoded.
+  - **Relation critic** (`critic_relations.txt`): judges object-property rows (`KEEP | DROP | FIX`; `FIX` may carry a `mint` block). It sees the relations + menu (the relations flagged `critic_menu: true` in `ontology_config.yaml` — 20 for Pre-Salt; mereology is offered only in generic form, `has_part`/`part_of`) + previously minted properties, the taxonomy NLDs as context, and a **handoff** of the taxonomy decisions so its edits stay consistent (e.g. it knows a term is now an individual, or was dropped).
+- **Post-critic mereology normalisation:** specialised parthood (`has_continuant_part` vs `has_occurrent_part`) is a pure function of the subject/filler metatypes and must stay correct after any FIX. After the relation edits are applied, every surviving relation's property is genericised then re-specialised against its current subject/filler categories (`relation_validator.normalize_property`). This makes correct mereology an invariant regardless of what the critic did, so the critic only ever reasons about generic `has_part`/`part_of`.
+- **Completeness guard:** after each call, the set of returned ids is diffed against the ids sent; any omitted id is re-asked once (only the missing rows). Rows still missing fall back to implicit `KEEP`. This prevents large categories from being silently under-reviewed.
+- **REPARENT:** evidence-based — the model moves a term only when its NLD or relation context justifies a better genus, citing the evidence in `reason`. (The earlier hard ≥2-citation floor was removed; REPARENT is non-destructive and fully logged.)
+- **CONVERT_TO_INSTANCE flow:** the row is removed from `validate_taxonomy.csv` and recorded in `validate_instances.csv` with `Term, Target_Class, Mint_Parent, Original_Category, Original_Parent, Reason`. `Target_Class` is chosen from the upper-class list; if nothing fits the model may name a new class plus a `mint_parent`. The OWL exporter resolves the target against `cfg.upper_iris()` or mints `<project>:<Target_Class> ⊑ <mint_parent>`, then emits the term as `owl:NamedIndividual`.
+- **FIX / minting flow:** when no menu property fits, the relation critic mints a new ObjectProperty (with `parent_property`, `domain`, `range`, `justification`). Mints are persisted to `validate_minted_properties.csv` (deduplicated on IRI across runs) and re-loaded into the menu on the next run, tagged provenance `critic_minted`.
+- **Phantom-filler cleanup:** after taxonomy edits are applied, any relation whose `Filler` matches a DROPped term is also dropped and recorded as `DROP/phantom`, preventing the OWL exporter from materialising orphan filler classes under `owl:Thing`.
+- **Safety guards:** (1) any taxonomy child whose parent was DROPped is re-parented to the category root so the tree stays connected; (2) ids the model omits are re-asked, then default to implicit `KEEP`; nothing is silently undone — the audit log is the safety net.
+- **Archive:** every raw LLM response is appended to `output/refined/validate_responses_archive/<timestamp>.jsonl` (one row per call, tagged `call: taxonomy|relation`) for post-hoc inspection.
+- **Audit log:** `validate_edits.csv` records every decision; taxonomy rows additionally carry the probe trace (`probe1_genus_ok`, `probe2_bucket`, `probe3_rewrite`, `carried_by`).
+- Output: `output/refined/validate_taxonomy.csv`, `output/refined/validate_relations.csv`, `output/refined/validate_edits.csv`, `output/refined/validate_instances.csv`, `output/refined/validate_minted_properties.csv`
 
 ### `src/modules/emit/owl_exporter.py` — Step 7: OWL Export
 - **Tech**: `rdflib`
@@ -157,6 +164,10 @@ The ontology scope is defined by 10 competency questions (CQs) that specify what
 - `owl:NamedIndividual` entries (named fields, basins, formations, time periods) get `rdf:type` triples pointing to their parent class.
 - Intermediate (synthesised) nodes get `rdfs:label` only (no NLD comment).
 - Accepted relations from Step 6b are encoded as `owl:Restriction` blank nodes (`owl:onProperty` + `owl:someValuesFrom`), adding existential axioms to domain classes.
+- **Critic-driven additions** (auto-loaded from `<output_dir>` if present):
+  - `validate_minted_properties.csv` → each row is emitted as `owl:ObjectProperty` with `rdfs:subPropertyOf <ParentProperty>`, `rdfs:domain <Domain>`, `rdfs:range <Range>`, `rdfs:label`, and `rdfs:comment "[critic_minted] <Justification>"`.
+  - `validate_instances.csv` → each row is emitted as `owl:NamedIndividual rdf:type <Target_Class>` (target class resolved against `cfg.upper_iris()` by label, case-insensitive; rows with an unresolvable class are skipped with a warning).
+  - **BFO companion axioms:** every presalt class whose transitive `rdfs:subClassOf` chain includes BFO Quality gets `inheres_in some IndependentContinuant`; every Role descendant gets `realized_in some Process`. IRIs are resolved from `ontology_config.yaml` at call time, so a different domain profile can disable either side simply by omitting the relevant relation or class.
 - **Upper-ontology backbone:** Parses reference OWL files (`bfo-core.owl`, `geocore-full.owl`, `geores-full.owl`) and walks parent chains to add `rdfs:subClassOf` triples anchoring GeoCore/GeoReservoir classes to their BFO roots, plus `rdfs:label` annotations for all intermediate upper-level IRIs.
 - The ontology header declares `owl:imports <http://purl.obolibrary.org/obo/bfo.owl>`.
 - **Disjointness conflict detection & auto-repair:** After building the upper-ontology backbone, detects presalt: classes that inherit from both sides of a BFO disjoint pair (e.g., MaterialEntity ⊥ ImmaterialEntity). Uses the term's Category from the taxonomy to determine which parent lineage to keep and removes the conflicting `rdfs:subClassOf` edge. Runs up to 3 repair passes to handle cascading conflicts. Each repair is logged as a warning. BFO disjointness axioms are always added to the ontology.
@@ -201,12 +212,11 @@ The combination of taxonomy axioms and existential restrictions is the standard 
 
 ## Configuration — `domains/<name>/ontology_config.yaml`
 
-The single source of truth for upper-ontology metadata, BFO disjoint pairs, relation property constraints, the categorization waterfall, and Step 6d behaviour. Loaded once at import time by `src/utils/ontology_config.py` (frozen dataclass + `lru_cache`-backed singleton). Default path: `domains/presalt/ontology_config.yaml`; override with `ONTOLOGY_CONFIG_PATH`. All modules read from `get_config()`; nothing else is hardcoded.
+The single source of truth for upper-ontology metadata, BFO disjoint pairs, relation property constraints, the categorization waterfall, and the critic-driven `validate` step's class budget. Loaded once at import time by `src/utils/ontology_config.py` (frozen dataclass + `lru_cache`-backed singleton). Default path: `domains/presalt/ontology_config.yaml`; override with `ONTOLOGY_CONFIG_PATH`. All modules read from `get_config()`; nothing else is hardcoded.
 
 ### Top-level keys
 - `project`: `namespace`, `prefix`, `version`, BFO `import_iri`
 - `waterfall`: ordered list of ontology keys (most-specific first) defining the Step 5 cascade. Rendered into the `{categories_block}` placeholder injected into the categorization prompt. Each entry must be a known ontology key with at least one metatype'd class.
-- `step6d`: Step 6d mode and guardrails — see below
 - `provenance_tiers_active`: ordered list of relation provenance tiers to honour (default: all four)
 - `ontologies`: per-ontology block (`bfo`, `geocore`, `georeservoir`, `ro`) with `display_name` (header used by `categorization_block()`), `namespace`, `prefix`, `owl` (file path), `import_iri`, `eval_tier`, and a `classes:` list (each class with `iri`, `label`, `metatypes`, `llm_definition`, optional `disjoint_pairs`)
 - `verifier_prefixes`: maps `bfo`, `geo`, `presalt` → URI prefixes used by `ontology_verifier.py`
@@ -218,21 +228,11 @@ Each relation in `relations:` declares its `provenance`:
 - `owl_axiom` — declared in a local OWL file (`bfo-core.owl`, `geocore-full.owl`, `geores-full.owl`)
 - `bfo_shape_axiom` — from BFO 2020 specification documents only
 - `ro_release` — from the Relation Ontology core release (`resources/ro-core.owl`)
-- `spec_curation` — project-specific tightening of a domain/range beyond what the source ontology asserts
+- `critic_minted` — added at run time by the `validate` step (the LLM critic) when no menu property fits an attested filler. New mints are persisted to `output/validate_minted_properties.csv` and re-loaded into the menu on subsequent runs.
 
-Set `RELATION_PROVENANCE_TIERS=owl_axiom,bfo_shape_axiom` (comma-separated, validated against the 4-tier set) to disable RO and project-curated relations at runtime. The validator and Step 6d both honour the active tier set.
+Set `RELATION_PROVENANCE_TIERS=owl_axiom,bfo_shape_axiom` (comma-separated, validated against the 4-tier set) to disable RO and critic-minted relations at runtime. The validator and the critic both honour the active tier set.
 
 The audit script `python -m src.evaluation.property_constraints_audit` writes `output/property_constraints_audit.csv` listing every relation with its provenance and current active/inactive status.
-
-### Step 6d configuration
-```yaml
-step6d:
-  mode: refinement                 # refinement | contradiction
-  refinement_min_evidence: 2       # min # accepted relations to trigger REFINE
-  refinement_only_to_strict_subclass: true
-```
-- `STEP6D_MODE` env var overrides `mode` (validated against `{refinement, contradiction}`)
-- See the Step 6d module description above for the semantics of each mode
 
 ### Loader API (selected)
 - `get_config() → OntologyConfig` — cached singleton; `reload_config()` re-reads YAML (used in tests)
@@ -245,14 +245,12 @@ step6d:
 - `cfg.property_constraints(tier_filter=None)` — dict of `{name: PropertyConstraint}` filtered to the active provenance tiers (default = `cfg.active_provenance_tiers()`)
 - `cfg.all_relations()` — every relation including inactive ones (for the audit script)
 - `cfg.metatype_groups` — pre-expanded literal frozensets
-- `cfg.step6d_mode()`, `cfg.step6d_min_evidence()`, `cfg.step6d_strict_subclass()`
 
 ### Environment overrides
 | Variable | Default | Effect |
 |---|---|---|
 | `ONTOLOGY_CONFIG_PATH` | `domains/presalt/ontology_config.yaml` | Path to YAML file (lets tests point at fixtures, lets new domains take over) |
-| `STEP6D_MODE` | from YAML | `refinement` or `contradiction` |
-| `RELATION_PROVENANCE_TIERS` | from YAML (all four) | Comma-separated subset of `{owl_axiom, bfo_shape_axiom, ro_release, spec_curation}` |
+| `RELATION_PROVENANCE_TIERS` | from YAML (all four) | Comma-separated subset of `{owl_axiom, bfo_shape_axiom, ro_release, critic_minted}` |
 
 ### Parity test
 `test/test_ontology_config_parity.py` runs 26 checks asserting the YAML produces literals identical to the values modules previously hardcoded, plus the waterfall order and `categorization_block()` header order. Must pass after any YAML or loader change.
@@ -303,7 +301,7 @@ pipeline.py               # Orchestrator + CLI (thin: _build_parser, _dispatch_s
 domains/                  # Per-domain config + assets. Each subfolder is a complete retargetable bundle.
   README.md               # Author guide: layout, activation, per-prompt runtime-placeholder contract
   presalt/
-    ontology_config.yaml  # Single source of truth: waterfall, upper-ontology metadata, BFO disjoint pairs, 71 relations, Step 6d config
+    ontology_config.yaml  # Single source of truth: waterfall, upper-ontology metadata, BFO disjoint pairs, 71 relations
     prompts/              # 10 production prompts (verbatim — personas inlined)
     resources/            # Upper-ontology OWL files: bfo-core.owl, geocore-full.owl, geores-full.owl, ro-core.owl
     competency_questions.txt

@@ -1,0 +1,121 @@
+# =========================================================================
+# Domain filters — engineering cleanups applied during validation.
+# =========================================================================
+# Per-domain engineering filters that run during Step 6c validation.
+# Where `src/validate/rules.yaml` encodes published methodology that
+# should not vary between domains, this file encodes opinionated,
+# domain-specific cruft-removal heuristics.
+#
+# This template ships with the 6 cheap structural filters enabled.
+# LLM-based filters (measurement_property, analytical_framework,
+# overly_generic, near_duplicate, sibling_redundancy, etc.) are
+# commented out — opt in once you understand your costs.
+#
+# See domains/presalt/domain_filters.yaml for the full set with
+# notes on each filter.
+# =========================================================================
+
+# -------------------------------------------------------------------------
+# Global exemptions — apply to all filters.
+# -------------------------------------------------------------------------
+exemptions:
+  proper_names:
+    relationship_types: [rdf:type]
+  # REPLACE if your waterfall is not BFO-only — list every category that
+  # represents an upper-ontology root (those must never be removed).
+  preserved_categories:
+    - "BFO"
+
+# -------------------------------------------------------------------------
+# Filters (structural — deterministic, no LLM cost).
+# -------------------------------------------------------------------------
+filters:
+
+  - id: case_collision
+    title: "Case-only duplicate spellings of the same term"
+    engine: structural
+    target: branches
+    subject: taxonomy
+    group_by: __lowercase_term__
+    actions: [rename]
+    min_group_size: 2
+    action: MERGE
+
+  - id: string_variant_merge
+    title: "Diacritic/punctuation variants under the same parent"
+    engine: structural
+    target: branches
+    subject: taxonomy
+    group_by: __nfkd_term_and_parent__
+    actions: [rename]
+    min_group_size: 2
+    action: MERGE
+
+  - id: single_child_intermediate
+    title: "Single-child intermediate node"
+    engine: structural
+    target: taxonomy
+    action: REMOVE
+    params:
+      min_children_to_keep: 2
+
+  - id: orphan_intermediate
+    title: "Intermediate node with no children"
+    engine: structural
+    target: taxonomy
+    action: REMOVE
+
+  - id: self_loop
+    title: "Self-referential parent edge (Term == Parent_Term)"
+    engine: structural
+    target: taxonomy
+    action: REPARENT
+    params:
+      reparent_to: category_root
+
+  - id: broken_parent
+    title: "Parent_Term not present in taxonomy"
+    engine: structural
+    target: taxonomy
+    action: REPARENT
+    params:
+      reparent_to: category_root
+
+# -------------------------------------------------------------------------
+# LLM filters — opt in by un-commenting. Each call to one of these is
+# one Gemini-2.5-pro call per candidate (cached after first run).
+# Costs scale with your candidate count: ~$0.001-0.01 per term per filter.
+# See domains/presalt/domain_filters.yaml for the full configuration of each.
+# -------------------------------------------------------------------------
+
+#  - id: measurement_property
+#    title: "Measurement / property class (not an entity)"
+#    engine: llm
+#    target: terms
+#    prompt: filter_measurement_property.txt
+#    action: REMOVE
+#
+#  - id: analytical_framework
+#    title: "Analytical / interpretive framework"
+#    engine: llm
+#    target: terms
+#    prompt: filter_analytical_framework.txt
+#    action: REMOVE
+#
+#  - id: overly_generic
+#    title: "Overly generic / vague term"
+#    engine: llm
+#    target: terms
+#    prompt: filter_overly_generic.txt
+#    action: REMOVE
+#
+#  - id: near_duplicate
+#    title: "Near-duplicate term cluster (synonymy / spelling variants)"
+#    engine: hybrid
+#    target: terms
+#    prompt: filter_near_duplicate.txt
+#    action: MERGE
+#    params:
+#      embedding_model: BAAI/bge-m3
+#      similarity_threshold: 0.88
+#      max_cluster_size: 8

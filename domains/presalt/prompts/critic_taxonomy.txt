@@ -1,0 +1,145 @@
+[SYSTEM_INSTRUCTION]
+<<personas_critic_auditor>>
+
+[PROMPT_TEMPLATE]
+You are auditing the IS-A (subclass) structure of the **{category}** branch of an upper-ontology-aligned taxonomy. Your goal is to keep what is correct, reposition what is wrong, and drop what is vacuous.
+
+You judge ONLY taxonomy rows here. The relation rows are shown as **read-only context** (they tell you how each term is described by object properties) — do NOT vote on them; a separate pass handles relations.
+
+## Taxonomy rows to judge (subject → parent_term, with NLD)
+{terms_json}
+
+## Relation context (read-only — informs Probe 3 and REPARENT evidence; do NOT vote)
+{relations_context_json}
+
+## Allowed target classes for CONVERT_TO_INSTANCE (pick one for `target_class`, or for `mint_parent` when minting)
+{target_classes_json}
+
+────────────────────────────────────────────────────────────
+## Three structural probes — RUN ON EVERY TAXONOMY ROW
+────────────────────────────────────────────────────────────
+
+### Probe 1 — Genus / differentia separability
+Read the NLD as Aristotelian form `X is a Y that <differentia>`.
+- Does the genus `Y` stand alone as a real kind (independently nameable, not a mixin)?
+- Is the `<differentia>` a **contingent** property of `Y` (i.e., `Y` could exist without it and still be a `Y`)?
+If yes to both → genus/differentia is clean.
+If the differentia is **necessary** to be a `Y` → the row may be a vacuous restatement of the parent.
+
+### Probe 2 — BFO-bucket categorisation of the differentia
+Classify the differentia text into exactly one bucket:
+`Quality | Role | Site | Process | TemporalRegion | None`
+- **Quality** — an inhering property (colour, viscosity, organic-richness)
+- **Role** — an externally-grounded function the bearer plays in a wider system (husband, source of supply, seal)
+- **Site** — a place or geometric region the bearer occupies
+- **Process** — an unfolding occurrent the bearer participates in
+- **TemporalRegion** — a span or instant of time
+- **None** — the differentia is itself an essential structural feature (genuine subkind)
+
+Anything other than `None` → **mixin candidate**: the differentia is a separate BFO entity inhering in / realised by / occupied by / participated in the bearer, not a subkind discriminator.
+
+### Probe 3 — Counterfactual relational rewrite
+Try to restate the row as `<parent> + <relation> some <differentia-as-entity>` (a generic BFO verb such as `has_quality`, `has_role`, `located_in`, `participates_in`, `occupies_temporal_region`).
+- If such a rewrite produces a sentence with the **same truth conditions** as the NLD → confirmed mixin; the IS-A row is wrong and a relation should carry the meaning.
+- If no relation can capture it cleanly → the term is a genuine subkind; KEEP.
+
+────────────────────────────────────────────────────────────
+## Eight checks (taxonomy rows)
+────────────────────────────────────────────────────────────
+
+1. **Rigidity.** Is `Term` rigid (every instance is necessarily of this kind for as long as it exists)? Non-rigid kinds (`Husband`, `Student`, `SourceRock`) are usually **Roles**, not subclasses of the bearer.
+2. **Quality-as-class.** Does the NLD describe a property the bearer **has** (colour, density, organic content) rather than something the bearer **is**? If yes → mixin; either DROP_AS_MIXIN or KEEP with an emitted `inheres_in` restriction on the child.
+3. **Role-as-class.** Does the NLD describe a function the bearer plays in a system (`acts as a barrier`, `produces hydrocarbons`, `yields water`)? If yes → REPARENT under `role` (the bearer remains a separate class).
+4. **Mixin via Probes 1–3.** If all three probes flag the row → DROP_AS_MIXIN.
+5. **Redundancy.** Does the term collapse to an existing sibling, parent, or near-synonym in the same category? → DROP_AS_REDUNDANT, citing the surviving sibling.
+6. **Weak intermediate.** Rows with `is_intermediate: true` invented by the builder must have ≥2 surviving children AND a real differentia. If not → DROP_AS_REDUNDANT (children auto-reparent to category root).
+7. **Proper-noun instance.** Is the term a proper noun naming exactly one thing (a formation, a basin, a geological age, a specific event)? → CONVERT_TO_INSTANCE with a `target_class`.
+8. **Interface / analytical-framework as class.** Is the term a methodology, model, framework, classification scheme, or measurement unit dressed up as a domain entity? → DROP_AS_MIXIN.
+
+────────────────────────────────────────────────────────────
+## Five verdicts (taxonomy rows)
+────────────────────────────────────────────────────────────
+
+- **KEEP** — passes all probes / checks, parent is correct.
+- **REPARENT** — term is real but mis-parented. Move it only when the term's NLD and/or its relation context clearly justify a better genus.
+    - Provide `new_parent`. Cite the evidence in `reason`: a relation `id` from the context, a probe result, or the NLD phrase that fixes the genus.
+    - **Lateral moves to arbitrary siblings are discouraged** — the new parent should be a better genus justified by Probe 2 / Probe 3, not a sideways guess at the same depth.
+    - If you cannot justify the move from the NLD or relations → KEEP, do not bluff.
+- **DROP_AS_MIXIN** — the differentia is a separable BFO entity (Probe 2 bucket ≠ None), not a subkind. Cite which bucket. **MUST carry `carried_by`** — the BFO entity the differentia encodes, recorded as `{{"property": "has_quality", "filler": "OrganicRichness"}}`. This documents where the meaning lives (the term itself is removed; the relation pass uses this to stay consistent).
+- **DROP_AS_REDUNDANT** — the term is indistinguishable from a sibling/parent in this category. Cite the surviving term.
+- **CONVERT_TO_INSTANCE** — the term is a proper-noun individual (names exactly one thing: a formation, field, basin, geological age, plate, specific event). MUST carry `target_class`:
+    - Choose the single best fit from the **Allowed target classes** list above — the most specific listed class that still correctly types the individual (e.g. a geological age → `temporal region`; a named field / high / basin → `site`; a named plate / continent / rock body → `object`).
+    - ONLY if no listed class is specific enough AND a more precise kind is clearly warranted, set `target_class` to a NEW class name (e.g. `TectonicPlate`) and add `mint_parent` naming the listed class it falls under. The exporter mints `<project>:<target_class>` ⊑ `<mint_parent>` and types the individual under it.
+    - The term is emitted as `owl:NamedIndividual rdf:type <resolved class>`.
+
+────────────────────────────────────────────────────────────
+## Abstention rules (when to default to KEEP)
+────────────────────────────────────────────────────────────
+
+A. **Vocabulary disagreement.** Do NOT drop a row just because you would phrase it differently. KEEP unless you can cite a probe or a check.
+B. **Upper-ontology disagreement with the source taxonomy.** If a term sits under a category root you would not have chosen but a real argument exists either way → KEEP. REPARENT only when the NLD or relations clearly justify a better genus.
+C. **Named individuals.** Do NOT drop named individuals (<<examples_critic_named_individuals>>) unless clearly out of scope. Prefer CONVERT_TO_INSTANCE.
+
+────────────────────────────────────────────────────────────
+## Generic worked examples (BFO-spec; not domain-specific)
+────────────────────────────────────────────────────────────
+
+- **`Color is a Quality that depends on a material entity`** → Probe 2: differentia bucket = `None` (it's the bearer relation that is the meaning). Probe 3 rewrite: `Color inheres_in some MaterialEntity`. Verdict: KEEP under `quality`; the `inheres_in` restriction is emitted automatically by the OWL exporter.
+- **`Husband is a Man that is married to a woman`** → Probe 1: differentia is non-rigid (men can be unmarried and still be men). Probe 2: bucket = `Role`. Probe 3: `Man + has_role some HusbandRole` preserves truth conditions. Verdict: REPARENT `Husband` under `role` (HusbandRole).
+- **`The year 1969 is a TemporalRegion that contains the first Moon landing`** → Probe 1: proper-noun individual. Verdict: CONVERT_TO_INSTANCE with `target_class: temporal region`.
+- **`OrganicRichShale is a Shale that has high organic content`** → Probe 2: bucket = `Quality` (organic-richness inheres in the shale). Probe 3: `Shale + has_quality some OrganicRichness` preserves truth conditions. Verdict: DROP_AS_MIXIN, `carried_by: {{"property": "has_quality", "filler": "OrganicRichness"}}`.
+- **`RockTypeClassification is a Framework that organises rocks`** → Check 8: analytical framework. Verdict: DROP_AS_MIXIN, `carried_by: {{"property": "is_about", "filler": "Rock"}}`.
+- **Two siblings `ColumnarStromatolite` and `ColumnStromatolite`** with near-identical NLDs → Check 5: redundancy. Verdict: DROP_AS_REDUNDANT for one, citing the survivor.
+
+────────────────────────────────────────────────────────────
+## Output schema
+────────────────────────────────────────────────────────────
+
+For EVERY taxonomy row, fill the three probe fields, THEN choose the verdict they imply. Return ONLY a JSON object with this exact shape:
+
+```json
+{{
+  "edits": [
+    {{"id": 12,
+      "probe1_genus_ok": true, "probe2_bucket": "None", "probe3_rewrite": "",
+      "action": "KEEP",
+      "reason": "genus/differentia clean; genuine subkind"}},
+
+    {{"id": 17,
+      "probe1_genus_ok": true, "probe2_bucket": "Role",
+      "probe3_rewrite": "Man has_role some HusbandRole",
+      "action": "REPARENT", "new_parent": "role",
+      "reason": "non-rigid; differentia is a Role (probe 2)"}},
+
+    {{"id": 18,
+      "probe1_genus_ok": true, "probe2_bucket": "Quality",
+      "probe3_rewrite": "Shale has_quality some OrganicRichness",
+      "action": "DROP_AS_MIXIN",
+      "carried_by": {{"property": "has_quality", "filler": "OrganicRichness"}},
+      "reason": "differentia is an inhering Quality (probe 2)"}},
+
+    {{"id": 19,
+      "probe1_genus_ok": false, "probe2_bucket": "None", "probe3_rewrite": "",
+      "action": "DROP_AS_REDUNDANT",
+      "reason": "indistinguishable from sibling 'ColumnarStromatolite' (id=12)"}},
+
+    {{"id": 20,
+      "probe1_genus_ok": true, "probe2_bucket": "TemporalRegion", "probe3_rewrite": "",
+      "action": "CONVERT_TO_INSTANCE", "target_class": "temporal region",
+      "reason": "proper-noun geological age; one instance only"}},
+
+    {{"id": 21,
+      "probe1_genus_ok": true, "probe2_bucket": "None", "probe3_rewrite": "",
+      "action": "CONVERT_TO_INSTANCE", "target_class": "TectonicPlate", "mint_parent": "object",
+      "reason": "proper-noun lithospheric plate; no listed class is specific enough"}}
+  ]
+}}
+```
+
+### Output constraints
+- Every taxonomy row in the input MUST appear exactly once in `edits`. Do not omit rows. Do not invent ids.
+- `probe2_bucket` is exactly one of: `Quality | Role | Site | Process | TemporalRegion | None`.
+- `probe3_rewrite` is the rewrite sentence when bucket ≠ None, else `""`.
+- `reason` is one short sentence (≤200 chars) and MUST cite probes/checks where applicable.
+- For REPARENT: if you cannot justify the new parent from the NLD or relations, KEEP — do not bluff.
+- For DROP_AS_MIXIN: `carried_by` is REQUIRED.

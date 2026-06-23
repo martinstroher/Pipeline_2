@@ -129,33 +129,6 @@ def main() -> int:
     else:
         print(f"[OK]   metatype_groups expanded (CONTINUANT={len(cont_set)}, OCCURRENT={len(occ_set)})")
 
-    # ── Phase 4: Step 6d mode + guardrail sanity ──
-    import os
-    from src.utils.ontology_config import reload_config
-
-    # Default mode = refinement, min_evidence ≥ 2, strict_subclass = True
-    _assert_eq("step6d default mode", "refinement", cfg.step6d_mode())
-    if cfg.step6d_min_evidence() < 2:
-        msg = f"[FAIL] step6d_min_evidence < 2 (got {cfg.step6d_min_evidence()})"
-        _FAILED.append(msg)
-        print(msg)
-    else:
-        print(f"[OK]   step6d_min_evidence >= 2 (got {cfg.step6d_min_evidence()})")
-    _assert_eq("step6d strict_subclass", True, cfg.step6d_strict_subclass())
-
-    # Env-override toggle: STEP6D_MODE=contradiction must round-trip
-    _prev = os.environ.get("STEP6D_MODE")
-    os.environ["STEP6D_MODE"] = "contradiction"
-    try:
-        cfg2 = reload_config()
-        _assert_eq("step6d mode env override", "contradiction", cfg2.step6d_mode())
-    finally:
-        if _prev is None:
-            os.environ.pop("STEP6D_MODE", None)
-        else:
-            os.environ["STEP6D_MODE"] = _prev
-        reload_config()  # restore default
-
     # ── Phase 6.3: waterfall + categories_block accessors ──
     _assert_eq(
         "waterfall_ontologies() order",
@@ -210,7 +183,7 @@ def main() -> int:
     )
 
     # disjoint_metatype_pairs accessor — derived from YAML, must include all
-    # 5 BFO pairs (Continuant/Occurrent + 4 subclass pairs)
+    # 6 BFO pairs (Continuant/Occurrent + 4 subclass pairs + Quality⊥RealizableEntity)
     derived_pairs = set(cfg.disjoint_metatype_pairs())
     expected_pairs = {
         frozenset({"Continuant", "Occurrent"}),
@@ -218,6 +191,7 @@ def main() -> int:
         frozenset({"IndependentContinuant", "GenericallyDependentContinuant"}),
         frozenset({"SpecificallyDependentContinuant", "GenericallyDependentContinuant"}),
         frozenset({"MaterialEntity", "ImmaterialEntity"}),
+        frozenset({"Quality", "RealizableEntity"}),
     }
     _assert_eq(
         "disjoint_metatype_pairs (BFO derived)",

@@ -66,18 +66,17 @@ def _clean_outputs() -> None:
     log.success("Clean start complete — all caches and outputs removed.")
 
 
-# Verb-name aliases for --stop-after. Each verb maps to the last numeric step
-# of that verb so e.g. --stop-after construct stops after construct_relations (6b).
+# Verb-name aliases for --stop-after. Each verb maps to the canonical step ID.
 _STEP_ALIASES: dict[str, str] = {
     "extract": "3",
     "define": "4",
     "classify": "5b",
     "construct": "6b",
-    "validate": "6d",
+    "validate": "validate",
     "emit": "7b",
 }
 
-_NUMERIC_STOP_CHOICES = ("0", "R", "1", "2", "3", "4", "5", "5b", "6", "6b", "6c", "6d", "7", "7b")
+_NUMERIC_STOP_CHOICES = ("0", "R", "1", "2", "3", "4", "5", "5b", "6", "6b", "7", "7b")
 _VERB_STOP_CHOICES = tuple(_STEP_ALIASES.keys())
 
 
@@ -357,8 +356,8 @@ def main():
         log.info("Step 6b: Relation extraction skipped (--skip-relations)")
     if _check_stop(_stop, "6b"): return
 
-    # Step validate: single LLM critic per category (KEEP / DROP / FIX)
-    log.banner("validate", "Validate (single LLM critic per category)")
+    # Step validate: two-pass critic per category (taxonomy then relations)
+    log.banner("validate", "Validate (taxonomy + relation critic per category)")
     from src.modules.validate.critic import run_critic
     tax_csv = (
         os.path.splitext(cat_csv)[0]
@@ -371,8 +370,6 @@ def main():
         relations_csv=relations_csv,
     )
     if _check_stop(_stop, "validate"): return
-    if _check_stop(_stop, "6c"): return  # legacy alias
-    if _check_stop(_stop, "6d"): return  # legacy alias
 
     # Defensive fallbacks if critic produced nothing writable.
     if not (final_tax and os.path.exists(final_tax)):

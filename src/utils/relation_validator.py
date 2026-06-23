@@ -75,13 +75,78 @@ def get_metatypes(category: str) -> frozenset[str] | None:
     return _CATEGORY_LOOKUP.get(category.strip().lower())
 
 
+# ------------------------------------------------------------------------
+# §2b  Mereological property specialization (single source of truth)
+# ------------------------------------------------------------------------
+# Generic mereology (`has_part` / `part_of`) is split into disjoint BFO
+# branches (continuant vs occurrent) that must not be mixed. The split is a
+# pure function of the subject's and filler's metatypes, declared in
+# `property_specializations:`. Both the extraction step (LLM emits generic)
+# and the validate step (re-normalise after the critic) call these helpers so
+# the logic lives in exactly one place.
+
+# Reverse map {specialized_name -> generic_parent}, built once from config.
+_SPECIALIZED_TO_GENERIC: dict[str, str] = {
+    rule.specialize_to: spec.generic
+    for spec in get_config().property_specializations()
+    for rule in spec.rules
+    if rule.specialize_to
+}
+
+
+def genericize_property(property_name: str) -> str:
+    """Map a specialized parthood property back to its generic parent
+    (`has_continuant_part` -> `has_part`); return unchanged if not specialized."""
+    return _SPECIALIZED_TO_GENERIC.get(property_name, property_name)
+
+
+def specialize_property(
+    property_name: str,
+    subject_cat: str,
+    filler_cat: str | None,
+) -> str:
+    """Apply `property_specializations:` rules to a generic property.
+
+    The first rule whose `when:` predicates match the subject/filler metatypes
+    wins. Returns `property_name` unchanged if it has no rules, if no rule
+    matches (e.g. a forbidden mixed continuant/occurrent pair — left generic so
+    the validator rejects it), or if the filler's metatypes are unresolvable.
+    """
+    subj_meta = get_metatypes(subject_cat) or frozenset()
+    filler_meta = get_metatypes(filler_cat) if filler_cat else frozenset()
+    if not filler_meta:
+        return property_name
+    for spec in get_config().property_specializations():
+        if spec.generic != property_name:
+            continue
+        for rule in spec.rules:
+            if rule.matches(subj_meta, filler_meta):
+                return rule.specialize_to
+        break
+    return property_name
+
+
+def normalize_property(
+    property_name: str,
+    subject_cat: str,
+    filler_cat: str | None,
+) -> str:
+    """Idempotent mereology normaliser: genericize any specialized parthood,
+    then re-specialize for the current subject/filler categories.
+
+    Safe to call on any property at any pipeline stage. Non-mereological
+    properties (no specialization rules) pass through unchanged.
+    """
+    return specialize_property(genericize_property(property_name), subject_cat, filler_cat)
+
+
 
 # ------------------------------------------------------------------------
 # §3  Property Domain/Range Constraints (loaded from ontology_config.yaml)
 # ------------------------------------------------------------------------
 # All 71 constraints are defined declaratively in ontology_config.yaml under
 # the relations: section, with per-entry provenance tagging (owl_axiom /
-# ro_release / bfo_shape_axiom / spec_curation). Entries are filtered at
+# ro_release / bfo_shape_axiom / critic_minted). Entries are filtered at
 # load time against the active provenance tier set
 # (env var RELATION_PROVENANCE_TIERS, default: all four tiers active).
 #

@@ -1,0 +1,14 @@
+# Competency Questions
+#
+# Write 5-10 questions your ontology should be able to answer. The
+# CQ-driven refinement step (Step 5b, `--refine`) scores each term against
+# this list to decide which terms are core, peripheral, or off-domain.
+#
+# Format: one question per line, with the prefix "CQN — ".
+#
+# Pattern: "What are the <kind> of the <domain>?", "What <relations>
+# hold between <entities>?", "What <properties> characterise <entities>?"
+
+CQ1 — REPLACE: What are the main entities of my domain?
+CQ2 — REPLACE: What relationships hold between those entities?
+CQ3 — REPLACE: What properties characterise those entities?

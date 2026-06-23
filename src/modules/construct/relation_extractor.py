@@ -39,6 +39,7 @@ from src.utils.prompt_loader import load_prompt
 from src.utils.relation_validator import (
     PROPERTY_CONSTRAINTS,
     get_metatypes,
+    specialize_property,
     validate_relation_full,
     ValidationResult,
 )
@@ -71,25 +72,10 @@ def _specialize_property(
     subject_cat: str,
     filler_cat: str | None,
 ) -> str:
-    """Apply YAML-declared specialization rules to a generic property.
-
-    Walks `property_specializations:` in ontology_config.yaml; the first
-    matching rule wins. Returns the original property name if no rule
-    matches (downstream validator will reject any cross-category violation).
-    """
-    subj_meta = get_metatypes(subject_cat) or frozenset()
-    filler_meta = get_metatypes(filler_cat) if filler_cat else frozenset()
-    if not filler_meta:
-        return property_name
-
-    for spec in _CFG.property_specializations():
-        if spec.generic != property_name:
-            continue
-        for rule in spec.rules:
-            if rule.matches(subj_meta, filler_meta):
-                return rule.specialize_to
-        break
-    return property_name
+    """Thin wrapper around the shared specializer in `relation_validator` (kept
+    for call-site stability). The canonical logic lives there so the validate
+    step can re-normalise the same way."""
+    return specialize_property(property_name, subject_cat, filler_cat)
 
 
 # ────────────────────────────────────────────────────────────────────────

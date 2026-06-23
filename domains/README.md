@@ -19,7 +19,8 @@ domains/<your_domain>/
 │   ├── term_categorization.txt
 │   ├── taxonomy_building.txt
 │   ├── relation_extraction.txt
-│   ├── critic.txt
+│   ├── critic_taxonomy.txt
+│   ├── critic_relations.txt
 │   ├── cq_scoring.txt
 │   └── cq_synonym_triage.txt
 ├── bfo-core.ttl                  # Upper ontologies imported by Step 7
@@ -70,7 +71,8 @@ call time.
 | `term_categorization.txt` | `{categories_block}`, `{json_batch}` |
 | `taxonomy_building.txt` | `{category}`, `{upper_vocab}`, `{terms_json}` |
 | `relation_extraction.txt` | `{known_terms}`, `{json_batch}`, `{batch_size}` |
-| `critic.txt` | `{category}`, `{n_terms}`, `{terms_json}`, `{taxonomy_json}`, `{relations_json}` |
+| `critic_taxonomy.txt` | `{category}`, `{terms_json}`, `{relations_context_json}`, `{target_classes_json}` |
+| `critic_relations.txt` | `{category}`, `{relations_json}`, `{relations_menu_json}`, `{previously_minted_json}`, `{taxonomy_context_json}`, `{taxonomy_decisions_json}` |
 | `cq_scoring.txt` | `{batch_size}`, `{terms_json}` |
 | `cq_synonym_triage.txt` | `{clusters_json}` |
 | `ablation_categorization_nld.txt` (studies/) | `{categories_block}`, `{json_batch}` |
@@ -101,7 +103,7 @@ See `.github/copilot-instructions.md` for the field-by-field spec. Key rules:
 - Each ontology entry needs `display_name:`, `prefix:`, `iri:`, and a `classes:`
   list. Classes used in categorization need `metatype:` (e.g., `MaterialEntity`).
 - `relations:` is the 71-entry property-constraint registry. Each entry needs
-  explicit `provenance ∈ {owl_axiom, bfo_shape_axiom, ro_release, spec_curation}`.
+  explicit `provenance ∈ {owl_axiom, bfo_shape_axiom, ro_release, critic_minted}`.
 
 ## Validation gates
 

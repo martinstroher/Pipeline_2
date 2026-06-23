@@ -6,6 +6,16 @@ Uses ANSI escape codes (Windows 10+ terminals support them natively).
 
 import sys
 
+# On Windows, stdout/stderr may default to cp1252 even when source strings
+# contain Unicode (e.g. arrows, em-dashes from LLM responses). Reconfigure
+# the underlying streams to use UTF-8 with `errors="replace"` so a stray
+# character can never crash the pipeline mid-step.
+for _stream in (sys.stdout, sys.stderr):
+    try:
+        _stream.reconfigure(encoding="utf-8", errors="replace")
+    except Exception:
+        pass
+
 _RESET = "\033[0m"
 _BOLD = "\033[1m"
 _RED = "\033[91m"

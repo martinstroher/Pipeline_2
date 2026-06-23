@@ -43,22 +43,23 @@
 
 ## Configuration — `ontology_config.yaml`
 
-**`ontology_config.yaml` at the repo root is the single source of truth** for upper-ontology metadata (BFO, GeoCore, GeoReservoir, RO), BFO disjoint pairs, the 71 relation property constraints, and Step 6d behaviour. It is loaded once at import time by `src/utils/ontology_config.py` (frozen dataclass + `lru_cache`-backed singleton).
+**`ontology_config.yaml` at the repo root is the single source of truth** for upper-ontology metadata (BFO, GeoCore, GeoReservoir, RO), BFO disjoint pairs, the 71 relation property constraints, and the critic-driven `validate` step's class budget. It is loaded once at import time by `src/utils/ontology_config.py` (frozen dataclass + `lru_cache`-backed singleton).
 
 - **Never hardcode** category lists, IRIs, metatype mappings, prefixes, BFO definitions, property constraints, or disjoint pairs in any module. Source them from `get_config()` instead.
 - The deleted `resources/{bfo,geocore,georeservoir}-definitions.txt` files are GONE — never reintroduce them. Use `cfg.llm_definitions_block(ontology_key)` for the formatted text block passed to LLM prompts.
-- **Relation property constraints** are in `relations:` (71 entries, each with `provenance ∈ {owl_axiom, bfo_shape_axiom, ro_release, spec_curation}`). `relation_validator.PROPERTY_CONSTRAINTS` is just `get_config().property_constraints()`.
+- **Relation property constraints** are in `relations:` (71 entries, each with `provenance ∈ {owl_axiom, bfo_shape_axiom, ro_release, critic_minted}`). `relation_validator.PROPERTY_CONSTRAINTS` is just `get_config().property_constraints()`.
+- **Critic menu**: the validate-step relation critic is offered only the relations flagged `critic_menu: true` (20 for Pre-Salt — the properties attested in the corpus plus the generic rewrite targets; mereology only in generic `has_part`/`part_of` form). Never hardcode this list in Python; `critic._build_relations_menu()` reads the flag. The direction matters (restrictions are subject-anchored), so pick the subject-side property of each inverse pair.
+- **Mereology specialization** (`has_part` → `has_continuant_part`/`has_occurrent_part`) lives in `relation_validator.specialize_property`/`normalize_property` — the single source of truth used by BOTH the extract step and the validate step's post-critic normalisation pass. Never duplicate the rule logic; it is driven by `property_specializations:` in the YAML.
 - **Metatype groups** (`CONTINUANT`, `OCCURRENT`, `MATERIAL`, …) in `metatype_groups:` are recursive shorthand for `relations.*.domain/range`. Add new groups there, not in code.
 - **Adding a new property constraint** requires: (1) entry in `relations:` with explicit `provenance`, (2) re-running `test/test_ontology_config_parity.py` (24 checks), (3) regenerating the audit CSV via `python -m src.evaluation.property_constraints_audit`.
 - **Adding a new upper-ontology class** requires: (1) entry under the right `ontologies.<key>.classes:` list, (2) updating consumers' parity assertions if the count is hardcoded in a test, (3) re-running parity.
 
 ### Env overrides (test-friendly switches)
 - `ONTOLOGY_CONFIG_PATH` — point loader at a fixture YAML (used by `test/` only)
-- `STEP6D_MODE` — `refinement` (default, strict-subclass + ≥2 evidence) | `contradiction` (legacy aggressive)
 - `RELATION_PROVENANCE_TIERS` — comma-separated subset of the 4 tiers; restricts which relations are active
 
 ### Parity discipline
-- After ANY edit to `ontology_config.yaml` or `src/utils/ontology_config.py`, run `python test/test_ontology_config_parity.py`. Must show `=== PARITY PASSED ===` with 24/24 checks before committing.
+- After ANY edit to `ontology_config.yaml` or `src/utils/ontology_config.py`, run `python test/test_ontology_config_parity.py`. Must show `=== PARITY PASSED ===` before committing.
 - If a check fails, fix the YAML or loader — do not edit the assertion to make it pass.
 
 ---

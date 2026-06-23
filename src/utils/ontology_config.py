@@ -17,7 +17,6 @@ Key accessors (consumer → call):
 Env vars:
   ONTOLOGY_CONFIG_PATH       — config file path (default: ontology_config.yaml)
   RELATION_PROVENANCE_TIERS  — comma-separated tier names (overrides YAML)
-  STEP6D_MODE                — "refinement" | "contradiction" (overrides YAML)
 """
 
 from __future__ import annotations
@@ -65,13 +64,6 @@ class OntologyDef:
 
 
 @dataclass(frozen=True)
-class Step6dConfig:
-    mode: str                                  # "refinement" | "contradiction"
-    refinement_min_evidence: int
-    refinement_only_to_strict_subclass: bool
-
-
-@dataclass(frozen=True)
 class PropertyConstraint:
     """Domain/range constraint for a single object property."""
     name: str
@@ -79,8 +71,9 @@ class PropertyConstraint:
     domain: frozenset[str]
     range: frozenset[str]
     inverse: str | None
-    provenance: str            # owl_axiom | bfo_shape_axiom | ro_release | spec_curation
+    provenance: str            # owl_axiom | bfo_shape_axiom | ro_release | critic_minted
     notes: str = ""
+    critic_menu: bool = False  # True ⇒ offered to the validate-step critic as a rewrite/FIX target
 
 
 @dataclass(frozen=True)
@@ -132,7 +125,6 @@ class OntologyConfig:
     project: ProjectMeta
     ontologies: dict[str, OntologyDef]
     waterfall: tuple[str, ...]                 # ordered ontology keys, most-specific first
-    step6d: Step6dConfig
     provenance_tiers_active: frozenset[str]
     verifier_prefixes: dict[str, str]
     metatype_groups: dict[str, frozenset[str]]
@@ -261,15 +253,6 @@ class OntologyConfig:
 
     def import_iri_for(self, ontology_key: str) -> str | None:
         return self.ontologies[ontology_key].import_iri
-
-    def step6d_mode(self) -> str:
-        return self.step6d.mode
-
-    def step6d_min_evidence(self) -> int:
-        return self.step6d.refinement_min_evidence
-
-    def step6d_strict_subclass(self) -> bool:
-        return self.step6d.refinement_only_to_strict_subclass
 
     def active_provenance_tiers(self) -> frozenset[str]:
         return self.provenance_tiers_active
@@ -472,7 +455,7 @@ def _parse_relations(
     metatype_groups: dict[str, frozenset[str]],
 ) -> dict[str, PropertyConstraint]:
     """Build PropertyConstraint entries from YAML, resolving group references."""
-    valid_provenance = {"owl_axiom", "bfo_shape_axiom", "ro_release", "spec_curation"}
+    valid_provenance = {"owl_axiom", "bfo_shape_axiom", "ro_release", "critic_minted"}
     out: dict[str, PropertyConstraint] = {}
     for name, entry in (raw_relations or {}).items():
         domain_set: set[str] = set()
@@ -481,7 +464,12 @@ def _parse_relations(
         range_set: set[str] = set()
         for token in entry.get("range", []):
             range_set |= metatype_groups.get(token, frozenset({token}))
-        provenance = entry.get("provenance", "spec_curation")
+        if "provenance" not in entry:
+            raise RuntimeError(
+                f"Relation '{name}' is missing required 'provenance' field "
+                f"(allowed: {sorted(valid_provenance)})."
+            )
+        provenance = entry["provenance"]
         if provenance not in valid_provenance:
             raise RuntimeError(
                 f"Invalid provenance '{provenance}' for relation '{name}' "
@@ -495,6 +483,7 @@ def _parse_relations(
             inverse=entry.get("inverse"),
             provenance=provenance,
             notes=str(entry.get("notes", "")).strip(),
+            critic_menu=bool(entry.get("critic_menu", False)),
         )
     return out
 
@@ -607,17 +596,6 @@ def _build_config(raw: dict, source_path: Path) -> OntologyConfig:
             )
     waterfall = tuple(waterfall_raw)
 
-    # step6d (env override has priority)
-    s = raw.get("step6d", {})
-    mode = os.environ.get("STEP6D_MODE", s.get("mode", "refinement")).strip().lower()
-    if mode not in {"refinement", "contradiction"}:
-        raise RuntimeError(f"Invalid STEP6D_MODE / step6d.mode: '{mode}' (expected 'refinement' or 'contradiction')")
-    step6d = Step6dConfig(
-        mode=mode,
-        refinement_min_evidence=int(s.get("refinement_min_evidence", 2)),
-        refinement_only_to_strict_subclass=bool(s.get("refinement_only_to_strict_subclass", True)),
-    )
-
     # provenance tiers (env override has priority)
     default_tiers = raw.get("provenance_tiers_active", []) or []
     env_tiers = os.environ.get("RELATION_PROVENANCE_TIERS")
@@ -625,7 +603,7 @@ def _build_config(raw: dict, source_path: Path) -> OntologyConfig:
         tier_list = [t.strip() for t in env_tiers.split(",") if t.strip()]
     else:
         tier_list = list(default_tiers)
-    valid_tiers = {"owl_axiom", "bfo_shape_axiom", "ro_release", "spec_curation"}
+    valid_tiers = {"owl_axiom", "bfo_shape_axiom", "ro_release", "critic_minted"}
     for t in tier_list:
         if t not in valid_tiers:
             raise RuntimeError(f"Invalid provenance tier: '{t}' (allowed: {sorted(valid_tiers)})")
@@ -649,7 +627,6 @@ def _build_config(raw: dict, source_path: Path) -> OntologyConfig:
         project=project,
         ontologies=ontologies,
         waterfall=waterfall,
-        step6d=step6d,
         provenance_tiers_active=provenance_tiers,
         verifier_prefixes=verifier_prefixes,
         metatype_groups=metatype_groups,

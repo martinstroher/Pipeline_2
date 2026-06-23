@@ -1,0 +1,367 @@
+# =============================================================================
+# Prompt blocks — domain-specific text injected into prompts at load time.
+#
+# The prompt loader substitutes every `<<key>>` marker in a prompt file
+# with the value found here. Nested keys are flattened with `_`:
+# `domain.role` -> `<<domain_role>>`, `examples.term_extraction` ->
+# `<<examples_term_extraction>>`.
+#
+# This file has THREE sections:
+#   A. Domain identity      — you MUST edit these 9 fields.
+#   B. Personas             — auto-derived from Section A. Don't touch
+#                              unless you have a non-standard persona need.
+#   C. Per-prompt examples  — defaults are Pre-Salt geology. They will
+#                              run end-to-end, but produce poor results
+#                              on your domain. Replace progressively as
+#                              you tune.
+# =============================================================================
+
+# -----------------------------------------------------------------------------
+# SECTION A — Domain identity (REQUIRED EDITS)
+# -----------------------------------------------------------------------------
+domain:
+  # REPLACE: short noun phrase used in personas.
+  # Examples: "petroleum geoscientist", "biomedical researcher", "legal analyst".
+  role: domain expert
+
+  # REPLACE: longer phrase used in deep-expertise personas (NLD generator etc.).
+  # May overlap with `role`.
+  scope: the target scientific discipline and its core concepts
+
+  # REPLACE: short noun used as an adjective before "ontology" / "domain".
+  # Examples: "Pre-Salt petroleum geology", "Alzheimer pathway", "EU contract law".
+  name: my domain
+
+  # REPLACE: full phrase "<name> ontology". Some prompts use just <name>,
+  # others use "<name> ontology" — kept separate so both read naturally.
+  ontology_phrase: my domain ontology
+
+  # REPLACE: one-line description of the entities this ontology covers.
+  # Used in filters that refer to the domain abstractly.
+  # Examples: "Pre-Salt carbonate reservoirs", "human kinase pathways".
+  subject_phrase: the entities of my domain
+
+  # REPLACE: plural noun for the "things" the domain studies.
+  # Examples: "rocks", "biological structures", "legal entities".
+  subject_plural: things
+
+  # REPLACE: adjective form of the domain's primary discipline.
+  # Examples: "geological", "biological", "legal".
+  adjective: scientific
+
+  # REPLACE: specialty phrase used in the term-extraction persona.
+  # Examples: "South Atlantic Pre-Salt petroleum systems",
+  # "neurodegenerative protein aggregation pathways".
+  specialty: the target scientific specialty
+
+  # -------------------------------------------------------------------------
+  # Upper-ontology cascade labels — keep IN SYNC with ontology_config.yaml's
+  # `waterfall:` block. The template defaults to a BFO-only stack. When you
+  # add GeoCore / your own intermediate ontology, update both this section
+  # and the steps below.
+  # -------------------------------------------------------------------------
+
+  # Compact arrow chain in waterfall priority (most specific → most generic).
+  waterfall: "BFO"
+
+  # Numbered methodology steps that walk the LLM down the waterfall in
+  # categorization prompts. When the domain has N tiers, write N lines.
+  categorization_waterfall_steps: |
+    3.  **Use BFO categories:** Classify the term into one of the `### BFO Categories` listed in the canonical vocabulary.
+
+  # Hint pointing the LLM at a sensible non-trivial category for
+  # analytical/methodological terms before resorting to NOT_CLASSIFIED.
+  categorization_fallback_hint: "may fit 'process' or 'role' in BFO"
+
+  # Case-convention note for the taxonomy-building prompt. The template
+  # uses BFO only, whose canonical labels are all lowercase.
+  taxonomy_case_note: "BFO canonical labels are ALL LOWERCASE (e.g., \"process\", \"quality\", \"entity\"). Use the EXACT case as listed in the canonical vocabulary below."
+
+# -----------------------------------------------------------------------------
+# SECTION B — Personas (AUTO-DERIVED, no edits needed)
+#
+# Every persona references <<domain_role>>, <<domain_name>>, <<domain_scope>>,
+# etc. from Section A above. The loader resolves these markers recursively, so
+# filling in Section A populates every persona automatically.
+# -----------------------------------------------------------------------------
+personas:
+  # Used in 7 validator filter prompts.
+  domain_validator: "You are a senior <<domain_role>> and applied ontology engineer"
+
+  # Used in 3 critic prompts (intra-branch, cross-category, essentiality).
+  domain_critic: "You are a senior <<domain_role>> and ontology engineer specialising in <<domain_name>> and formal ontology (BFO)"
+
+  # Used in 4 OntoClean rule prompts. Methodology-bound, not domain-bound.
+  ontoclean: "You are an applied ontology engineer trained in the OntoClean methodology of Guarino and Welty (2009)"
+
+  # Used in pipeline categorization + 2 ablation prompts.
+  categorizer: "You are an expert ontology engineer specializing in foundational (BFO) ontologies"
+
+  # Used in the term-extraction prompt.
+  extractor: "You are an expert <<domain_role>> and ontology engineer specializing in <<domain_specialty>>"
+
+  # Used in the NLD-generation prompt.
+  nld: "You are a senior <<domain_role>> and ontology engineer. Your expertise spans <<domain_scope>>"
+
+  # Used in the taxonomy-building prompt.
+  taxonomist: "You are an expert ontology engineer building a <<domain_adjective>> taxonomy"
+
+  # Used in the relation-extraction prompt.
+  relation_extractor: "You are a senior <<domain_role>> and ontology engineer"
+
+  # Used in cq_scoring and cq_synonym_triage.
+  cq_auditor: "You are an ontology scope auditor for a <<domain_ontology_phrase>>"
+
+# -----------------------------------------------------------------------------
+# SECTION C — Per-prompt examples (STRONGLY RECOMMENDED EDITS)
+#
+# These are worked examples shown to the LLM as "here's what good output
+# looks like". The defaults are Pre-Salt petroleum geology — they will run
+# end-to-end on any domain, but the LLM will be biased toward geological
+# vocabulary in its outputs. Rewrite each block using terms from YOUR
+# domain before launching a production run.
+#
+# Order of priority (rewrite top-down for biggest impact):
+#   1. term_extraction        — anchors what the LLM treats as a "valid term"
+#   2. nld_generation         — anchors definition style and structure
+#   3. term_categorization    — anchors how terms map to your upper ontology
+#   4. relation_extraction    — anchors property usage and filler vocabulary
+#   5. everything else        — refinement; usually fine until you tune
+# -----------------------------------------------------------------------------
+examples:
+
+  # ---- term_extraction.txt — output array example ---------------------------
+  term_extraction: '["Microbial Carbonate", "Diagenesis", "Source Rock", "Structural Trap", "Porosity", "Lacustrine Environment", "Diagenetic Alteration"]'
+
+  # ---- term_extraction.txt — normalization (plural → singular) -------------
+  term_extraction_normalization: '"carbonates" -> "Carbonate", "faults" -> "Fault"'
+
+  # ---- term_extraction.txt — exclusion list (analytical instruments etc.) ---
+  term_extraction_exclusions: "    * Highly specific identifiers with no ontological value: individual well names (e.g., 'Well 1-BRSA-123'), author names, company names.\n    * Units of measure, numerical values, and codes (e.g., 'mD', 'API', '10%', 'SiO2').\n    * Analytical methods, laboratory techniques, or observational instruments (e.g., 'Thin Section', 'Core Plug', 'Seismic Survey', 'Well Log')."
+
+  # ---- term_extraction.txt — inclusion hints (named individuals) ------------
+  term_extraction_inclusions: "Note: Named petroleum fields (e.g., 'Lula Field', 'Búzios'), basin names (e.g., 'Santos Basin'), and named geological formations ARE valid — extract them. They will be classified as OWL named individuals downstream."
+
+  # ---- term_extraction.txt — named-individual hint inside Focus -------------
+  term_extraction_named_individuals_focus: "Note: named geological time periods (e.g., Aptian, Cretaceous) are valid and should be extracted — they will be classified as OWL individuals downstream."
+
+  # ---- nld_generation.txt — three worked Aristotelian definitions -----------
+  nld_generation: |
+    Term: "Grainstone"
+    Context: [paper.md > Carbonate Classification] Grainstones are grain-supported carbonate rocks lacking mud matrix...
+    Output: {{"Definition": "Grainstone is a grain-supported sedimentary carbonate rock that is characterized by the absence of micrite matrix, with grains typically consisting of allochems such as bivalves, ostracods, gastropods, ooids, or intraclasts.", "Context_Used": true}}
+
+    Term: "Coquina"
+    Context: [paper.md > Reservoir Facies] Coquinas from the Santos Basin are bioclastic carbonates composed predominantly of bivalve shells...
+    Output: {{"Definition": "Coquina is a sedimentary rock that is primarily composed of accumulated mollusk shells (bivalves and gastropods) and their fragments, deposited in brackish to saline lacustrine environments, commonly occurring as fragmented shell beds and serving as a significant reservoir rock type.", "Context_Used": true}}
+
+    Term: "Dolomitization"
+    Context: No additional context available.
+    Output: {{"Definition": "Dolomitization is a diagenetic process that replaces calcium carbonate minerals with dolomite through the substitution of calcium ions by magnesium ions from Mg-rich fluids, commonly occurring in burial or hydrothermal settings and frequently enhancing reservoir porosity and permeability.", "Context_Used": false}}
+
+  # ---- term_categorization.txt — three classified examples ------------------
+  term_categorization: |
+    Input:  [{{"term": "Grainstone",
+              "nld": "Grainstone is a grain-supported sedimentary carbonate rock that lacks micrite matrix, with allochems typically consisting of bivalves, ostracods, or ooids."}}]
+    Output: [{{"term": "Grainstone",
+              "category": "material entity",
+              "reasoning": "A sedimentary rock is a material entity (BFO)."}}]
+
+    Input:  [{{"term": "Dolomitization",
+              "nld": "Dolomitization is a diagenetic process that replaces calcium carbonate by dolomite through the substitution of calcium ions by magnesium ions."}}]
+    Output: [{{"term": "Dolomitization",
+              "category": "process",
+              "reasoning": "A diagenetic process is a process (BFO)."}}]
+
+    Input:  [{{"term": "Core Sample"}}]
+    Output: [{{"term": "Core Sample",
+              "category": "NOT_CLASSIFIED",
+              "reasoning": "Analytical instrument used to characterize formations, not an ontological concept."}}]
+
+  # ---- taxonomy_building.txt — shared-genus example -------------------------
+  taxonomy_shared_genus: |
+    Example — given two terms in the group:
+           * "Dolomitization" NLD: "Dolomitization is a **diagenetic process** that replaces calcite..."
+           * "Dissolution" NLD: "Dissolution is a **diagenetic process** that removes carbonate..."
+         → Both share the genus "diagenetic process" → create "diagenetic process" as intermediate, with both as children.
+         → If only "Dolomitization" were in the group, attach it directly to "{category}" — do NOT create "diagenetic process" for a single term.
+
+  # ---- taxonomy_building.txt — class vs individual rules --------------------
+  taxonomy_individual_types: |
+    The following are INDIVIDUALS (named instances) → use relationship_type = "rdf:type":
+         - Named geological time periods (e.g., "Cretaceous", "Aptian", "Albian", "Pre-Salt")
+         - Named petroleum fields (e.g., "Lula Field", "Búzios Field", "Tupi")
+         - Named basins (e.g., "Santos Basin", "Campos Basin")
+       General types/kinds (e.g., "Grainstone", "Fault", "Porosity") are CLASSES → use relationship_type = "rdfs:subClassOf".
+
+  # ---- relation_extraction.txt — domain-curated allowed-properties table ---
+  # The table the LLM sees as its closed vocabulary of relation properties.
+  # The defaults shown here are the BFO/RO universal properties. If you add
+  # discipline-specific properties (e.g. "has_age" for geology), extend the
+  # table here AND register the property in ontology_config.yaml's relations:.
+  relation_extraction_property_table: |
+    | Property | Domain → Range | When to use |
+    |---|---|---|
+    | has_part | whole → part (same kind) | "composed of", "consists of", "contains" — both must be continuants OR both occurrents |
+    | part_of | part → whole (same kind) | "component of", "included in" |
+    | has_participant | process → thing involved | "involves", "acts on", "uses" |
+    | participates_in | thing → process it is involved in | "undergoes", "subject to" |
+    | occurs_in | process → place/material where it happens | "takes place in", "within" |
+    | located_in | thing → place it is inside | "found in", "situated in", "within" |
+    | derives_from | new material → old material it came from | "formed from", "originates from", "product of" |
+    | derives_into | old material → new material it becomes | "transforms into", "altered to" |
+    | generated_by | thing → process that created it | "formed by", "produced by", "result of" |
+    | constituted_by | material entity → material it is made of | "composed of" (material composition), "made of" |
+    | has_quality | thing → its measurable property | "has property", "characterized by" (for qualities) |
+    | inheres_in | quality/property → thing it belongs to | "property of", "characteristic of" |
+    | preceded_by | event → earlier event | "follows", "after", "subsequent to" |
+    | precedes | event → later event | "before", "prior to", "followed by" |
+
+  # ---- relation_extraction.txt — three worked relation extractions ----------
+  relation_extraction: |
+    Input: [{{"term": "dolomitization", "nld": "Dolomitization is a diagenetic process that involves the replacement of calcite by dolomite."}}]
+    Output:
+    ```json
+    [{{"term": "dolomitization", "relations": [
+      {{"property": "has_participant", "filler": "calcite", "confidence": 1.0, "evidence": "involves the replacement of calcite by dolomite"}},
+      {{"property": "has_participant", "filler": "dolomite", "confidence": 1.0, "evidence": "involves the replacement of calcite by dolomite"}}
+    ]}}]
+    ```
+
+    Input: [{{"term": "lacustrine environment", "nld": "Lacustrine environment is a continental depositional setting associated with lake systems."}}]
+    Output:
+    ```json
+    [{{"term": "lacustrine environment", "relations": []}}]
+    ```
+
+    Input: [{{"term": "porosity", "nld": "Porosity is a physical property of rock defined as the ratio of void space to total rock volume."}}]
+    Output:
+    ```json
+    [{{"term": "porosity", "relations": [
+      {{"property": "inheres_in", "filler": "rock", "confidence": 1.0, "evidence": "physical property of rock"}}
+    ]}}]
+    ```
+
+  # -------------------------------------------------------------------------
+  # Competency question support (used by cq_scoring.txt and cq_synonym_triage.txt)
+  # Keep this list in sync with competency_questions.txt at the domain root.
+  # -------------------------------------------------------------------------
+  competency_questions: |
+    CQ1 — What are the main entities of my domain?
+    CQ2 — REPLACE: add 4–9 more competency questions specific to your domain.
+
+  cq_identifiers: "CQ1 (mandatory), CQ2 …"
+
+  cq_scoring: |
+    Term: "Dolomitization"
+    NLD:  "Dolomitization is a diagenetic process that replaces calcite by dolomite."
+    Mapped category: process
+    Output: {{"per_cq": [{{"cq": "CQ1", "score": 2, "rationale": "Direct match — names a domain process."}}], "max_score": 2}}
+
+  cq_scoring_output: |
+    {{"per_cq": [{{"cq": "CQ1", "score": 2, "rationale": "..."}}], "max_score": 2}}
+
+  # -------------------------------------------------------------------------
+  # Critic + filter example blocks. Most reuse Pre-Salt vocabulary; rewriting
+  # is recommended once your domain stabilises, but the pipeline runs without
+  # any of these being changed.
+  # -------------------------------------------------------------------------
+  critic_cross_distinct_example: '"sandstone" (a sedimentary rock) and "fault" (a geological structure) are clearly distinct kinds and must NOT be merged even if they share contexts.'
+
+  critic_cross_miscategorisation_example: '"porosity" classified under "material entity" should be moved to "quality" — it inheres in rocks, it is not a kind of rock.'
+
+  critic_essential_classes_note: "Classes that anchor the upper backbone of the ontology (e.g. the root categories of each waterfall tier) are NOT candidates for removal."
+
+  critic_essentiality_dead_end_examples: '"miscellaneous structure", "other process", "unknown facies"'
+
+  critic_essentiality_framework_examples: '"depositional model", "facies association scheme", "geological framework"'
+
+  critic_essentiality_measurement_examples: '"thickness measurement", "dip angle reading", "density value"'
+
+  critic_essentiality_preserve_note: "Preserve any term that names a concrete kind of thing in the domain, even if it sounds abstract (e.g. \"reservoir quality\" is a real quality class)."
+
+  critic_framework_examples: '"depositional model", "diagenetic scheme", "petroleum system framework"'
+
+  critic_hierarchy_error_example: '"calcite" should NOT be a subclass of "rock" — it is a mineral. The intermediate "carbonate mineral" is missing.'
+
+  critic_irrelevance_example: '"meeting room" in a Pre-Salt ontology is irrelevant — drop it.'
+
+  critic_measurement_examples: '"porosity = 12%", "thickness = 3 m", "acoustic impedance reading", "dip angle measurement", "grain-size value"'
+
+  critic_overly_specific_example: '"Lula Field oil sample 2019-04 batch C" — too specific to be a useful class.'
+
+  critic_single_child_example: '"diagenetic process" with only "dolomitization" as a child should be collapsed unless other diagenetic processes will be added.'
+
+  critic_vague_example: '"thing", "stuff", "matter" — too vague to anchor anything domain-specific.'
+
+  # ---- Filter prompt examples (LLM-engine validators) ----------------------
+  filter_category_fit_placement_example: '"sandstone" placed under "process" — wrong category; sandstone is a material entity.'
+
+  filter_cross_distinct_example: '"sandstone" and "fault" remain distinct.'
+
+  filter_framework_concrete_counter_example: '"reservoir quality" describes a measurable rock quality and IS concrete enough to keep, even though "quality" sounds abstract.'
+
+  filter_framework_discipline_example: '"sequence stratigraphy framework" — a discipline-level framework, not a domain entity.'
+
+  filter_framework_examples: '"depositional model", "facies association scheme"'
+
+  filter_framework_process_note: "Note: a process can be a legitimate class (e.g. \"dolomitization\"); only frameworks/schemas/models are filtered out."
+
+  filter_measurement_examples: '"porosity = 12%", "API gravity reading"'
+
+  filter_measurement_exemptions: "Quality classes (e.g. \"porosity\", \"permeability\") are EXEMPT — they name the property itself, not a measurement of it."
+
+  filter_measurement_instrument_examples: '"density logging tool", "thin section microscope"'
+
+  filter_near_duplicate_canonical_example: '"microbial carbonate" and "microbialite carbonate" → keep the more canonical "microbialite carbonate".'
+
+  filter_near_duplicate_specialisation_example: '"reservoir rock" and "carbonate reservoir rock" — keep BOTH; the second is a specialisation, not a duplicate.'
+
+  filter_overly_generic_examples: '"thing", "stuff", "matter", "object"'
+
+  filter_overly_generic_exemption_example: '"material entity" is generic but is a BFO root — EXEMPT.'
+
+  filter_overly_generic_root_note: "Roots of the upper ontology stack are always preserved."
+
+  filter_sibling_rename_example: '"reef carbonate" and "carbonate reef" — same concept under slightly different surface form; rename to canonical "reef carbonate".'
+
+  filter_sibling_specialisation_example: '"dolomitization" and "early dolomitization" — keep BOTH; the second is a temporal specialisation.'
+
+  # -------------------------------------------------------------------------
+  # OntoClean rule prompts (under studies/prompts/rule_ontoclean_*.txt).
+  # These are cross-domain methodology prompts that cite domain-specific
+  # IS-A examples to anchor the abstract OntoClean criteria. The defaults
+  # are Pre-Salt examples; rewrite them with examples from your domain
+  # before enabling OntoClean validation.
+  # -------------------------------------------------------------------------
+  ontoclean_rigidity: |
+    - "Sandstone IS-A Sedimentary Rock" → parent +R, child +R → ACCEPT.
+    - "Reservoir IS-A Rock Body" → parent +R, child ~R (a rock body is a reservoir only when it produces hydrocarbons) → ACCEPT (child more anti-rigid than parent is allowed).
+    - "Anhydrite IS-A Productive Layer" → parent ~R, child +R → REJECT.
+    - "Carbonate Mineral IS-A Mineral" → both +R → ACCEPT.
+
+  ontoclean_identity: |
+    - "Dolomite IS-A Carbonate Mineral" → parent +I (minerals individuated by composition + crystal structure), child +I → ACCEPT.
+    - "Reservoir Quality IS-A Geological Property" → parent -I, child -I → REJECT (neither side supplies individuation).
+    - "Barra Velha Formation IS-A Geological Formation" → parent +I (formations individuated by stratigraphic boundaries), child +I → ACCEPT.
+    - "Important Layer IS-A Stratigraphic Unit" → parent +I, child -I ("important" gives no individuation) → ACCEPT (parent carries it).
+
+  ontoclean_identity_theory_example: "\"Geological Formation\" — formal stratigraphic boundaries"
+  ontoclean_identity_rare_qualifier: "geology"
+
+  ontoclean_unity: |
+    - "Carbonate Reservoir IS-A Rock Body" → both +U (rock bodies are connected wholes) → ACCEPT.
+    - "Geological Sample IS-A Earth Material" → parent ~U (an earth material in general is a mass, not a whole), child +U (a sample is a discrete portion) → REJECT.
+    - "Mineral Phase IS-A Mineral Aggregate" → parent ~U, child ~U → ACCEPT.
+    - "Stratigraphic Unit IS-A Geological Body" → both +U → ACCEPT.
+
+  ontoclean_unity_positive_examples: "\"Sandstone Body\" — bonded grains in a connected volume; \"Petroleum Reservoir\" — connected pore network"
+
+  ontoclean_dependence: |
+    - "Carbonate Mineral IS-A Geological Material" → both -D → ACCEPT.
+    - "Sandstone Body IS-A Reservoir" → parent +D (reservoir requires a hydrocarbon accumulation), child -D (a sandstone body exists without hydrocarbons) → REJECT.
+    - "Productive Reservoir IS-A Reservoir" → parent +D, child +D → ACCEPT.
+    - "Pore Network IS-A Geological Structure" → parent -D, child -D → ACCEPT.
+
+  ontoclean_dependence_positive_examples: "\"Reservoir\" depends on a hydrocarbon accumulation; \"Source Rock\" depends on the hydrocarbons it generates"
+  ontoclean_dependence_independent_examples: "\"Carbonate Mineral\", \"Sandstone Body\""
