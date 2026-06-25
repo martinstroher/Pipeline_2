@@ -1,0 +1,64 @@
+﻿Term,Target_Class,Mint_Parent,Original_Category,Original_Parent,Reason
+campos basin,Basin,,Basin,passive-margin basin,"Check 6: The term is a proper noun naming a single, specific geological basin."
+santos basin,Basin,,Basin,passive-margin basin,"Check 6: The term is a proper noun naming a single, specific geological basin."
+pelotas basin,Basin,,Basin,passive-margin basin,"Check 6: The term is a proper noun naming a single, specific geological basin."
+espírito santo basin,Basin,,Basin,passive-margin basin,"Check 6: The term is a proper noun naming a single, specific geological basin."
+namibe basin,Basin,,Basin,passive-margin basin,"Check 6: The term is a proper noun naming a single, specific geological basin."
+búzios field,Geological Object,,Basin,Geological Object,"The term 'Búzios Field' is a proper noun naming a single, specific oil and gas field (Check 6)."
+brazilian continental margin,Geological Object,,Basin,Geological Object,"The term is a proper noun naming a single, specific geological feature (Check 6)."
+cabo frio high,Geological Structure,,Body of Rock,basement high,"'Cabo Frio High' is a proper noun naming a specific, unique geological feature (Check 6)."
+gondwana,Geological Object,,Body of Rock,Supercontinent,"'Gondwana' is a proper noun naming a specific, unique geological object (a former supercontinent) (Check 6)."
+florianopolis high,Geological Structure,,Body of Rock,basement high,"Proper noun (Check 6). 'Florianopolis High' names a single, specific geological feature."
+outer high,Geological Structure,,Body of Rock,basement high,"Proper noun (Check 6). 'Outer High' names a single, specific basement structure in the Santos Basin."
+ribeira belt,Body of Rock,,Body of Rock,basement,"Proper noun naming a specific geological orogen, which is a single instance."
+gondwana supercontinent,Body of Rock,,Body of Rock,Supercontinent,"Gondwana is a proper noun naming a specific, unique geological object (a former supercontinent)."
+tupi high,Body of Rock,,Body of Rock,basement high,"Tupi High is a proper noun naming a specific, unique structural high in the Santos Basin."
+barra velha formation,Formation,,Formation,Lithostratigraphic Unit,'barra velha formation' is a proper noun naming a specific geological formation.
+ariri formation,Formation,,Formation,Lithostratigraphic Unit,'ariri formation' is a proper noun naming a specific geological formation.
+itapema formation,Formation,,Formation,Lithostratigraphic Unit,'itapema formation' is a proper noun naming a specific geological formation.
+piçarras formation,Formation,,Formation,Lithostratigraphic Unit,'piçarras formation' is a proper noun naming a specific geological formation.
+camboriú formation,Formation,,Formation,Lithostratigraphic Unit,"Check 6: The term is a proper noun naming a specific geological formation, which is an instance of the class `Formation`."
+macabu formation,Formation,,Formation,Lithostratigraphic Unit,"Check 6: The term is a proper noun naming a specific geological formation, which is an instance of the class `Formation`."
+coqueiros formation,Formation,,Formation,Lithostratigraphic Unit,"Check 6: The term is a proper noun naming a specific geological formation, which is an instance of the class `Formation`."
+cabiúnas formation,Formation,,Formation,Lithostratigraphic Unit,"Check 6: The term is a proper noun naming a specific geological formation, which is an instance of the class `Formation`."
+guarujá formation,Formation,,Formation,Lithostratigraphic Unit,"Check 6: The term is a proper noun naming a specific geological formation, which is an instance of the class `Formation`."
+pre-alagoas unconformity,Geological Boundary,,Geological Boundary,unconformity,"Proper noun naming a specific, unique regional unconformity (Check 6)."
+intra-alagoas unconformity,Geological Boundary,,Geological Boundary,unconformity,"Proper noun naming a specific, unique intra-formational unconformity (Check 6)."
+base of salt,Geological Boundary,,Geological Boundary,Stratigraphic Surface,"The term refers to a specific, unique regional surface in the Brazilian Pre-Salt, making it a proper-noun individual, not a class."
+salt base,Geological Boundary,,Geological Boundary,Stratigraphic Surface,"The term refers to a specific, unique regional surface, defined by its relation to 'the Aptian evaporite sequence', making it a proper-noun individual."
+south american plate,Geological Object,,Geological Object,Tectonic Plate,Proper-noun individual naming a specific tectonic plate. `Geological Object` is the most specific available target class from the provided list.
+african plate,Geological Object,,Geological Object,Tectonic Plate,Proper-noun individual naming a specific tectonic plate. `Geological Object` is the most specific available target class from the provided list.
+aptian,Geological Age,,Geological Time Interval,early cretaceous,"Proper noun for a specific, unique geological age (Check 6). The IS-A relationship is incorrect for a named individual; it should be an instance."
+cretaceous,Geological Time Interval,,Geological Time Interval,mesozoic,"Proper noun for a specific, unique geological period (Check 6). The IS-A relationship is incorrect for a named individual; it should be an instance."
+barremian,Geological Age,,Geological Time Interval,early cretaceous,"Proper noun for a specific, unique geological age (Check 6). The IS-A relationship is incorrect for a named individual; it should be an instance."
+hauterivian,Geological Age,,Geological Time Interval,early cretaceous,"Proper noun for a specific, unique geological age (Check 6). The IS-A relationship is incorrect for a named individual; it should be an instance."
+late aptian,Geological Age,,Geological Time Interval,aptian,"Proper noun (Check 6). 'Late Aptian' is a standard, named geological sub-age, a unique interval in Earth history."
+valanginian,Geological Age,,Geological Time Interval,early cretaceous,"Proper noun (Check 6). 'Valanginian' is a standard, named geological age, a unique interval in Earth history."
+late jurassic,Geological Time Interval,,Geological Time Interval,jurassic,"Proper noun (Check 6). 'Late Jurassic' is a standard, named geological epoch, a unique interval in Earth history."
+precambrian,Geological Time Interval,,Geological Time Interval,Geological Time Interval,"Proper noun naming a single, specific geological supereon (Check 6)."
+eoaptian,Geological Age,,Geological Time Interval,aptian,"Proper noun naming a single, specific geological age (Check 6)."
+late cretaceous,Geological Time Interval,,Geological Time Interval,cretaceous,"Proper noun naming a single, specific geological epoch (Check 6)."
+early aptian,Geological Age,,Geological Time Interval,aptian,"Proper noun naming a single, specific geological age (Check 6)."
+mesozoic,Geological Time Interval,,Geological Time Interval,Geological Time Interval,Proper noun naming a specific geological era (an individual time interval).
+alagoas stage,Geological Time Interval,,Geological Time Interval,aptian,"Proper noun naming a specific local stage. The parent 'aptian' is incorrect as the relation is part-whole (see relation 668), not subclass."
+neobarremian,Geological Age,,Geological Time Interval,barremian,"Proper noun naming a specific sub-age. The parent 'barremian' is incorrect as the relation is part-whole (see relation 651), not subclass."
+cenozoic,Geological Time Interval,,Geological Time Interval,Geological Time Interval,Proper noun naming a specific geological era (an individual time interval).
+jurassic,Geological Time Interval,,Geological Time Interval,mesozoic,"The term 'Jurassic' is a proper noun naming a single, specific geological time period (Check 6). It is an individual, not a class."
+upper barra velha formation,Formation,,Lithostratigraphic Unit,Formation,"Proper noun naming a specific, unique lithostratigraphic unit (Check 6)."
+lagoa feia group,Lithostratigraphic Unit,,Lithostratigraphic Unit,Stratigraphic Group,"Proper noun naming a specific, unique stratigraphic group (Check 6)."
+lower barra velha formation,Formation,,Lithostratigraphic Unit,Formation,"Proper noun naming a specific, unique lithostratigraphic unit (Check 6)."
+guaratiba group,Lithostratigraphic Unit,,Lithostratigraphic Unit,Stratigraphic Group,"Check 6: 'Guaratiba Group' is a proper name for a specific, individual lithostratigraphic unit, not a class of units."
+itamambuca group,Lithostratigraphic Unit,,Lithostratigraphic Unit,Stratigraphic Group,"Check 6: 'Itamambuca Group' is a proper name for a specific, individual lithostratigraphic unit, not a class of units."
+camburi group,Lithostratigraphic Unit,,Lithostratigraphic Unit,Stratigraphic Group,"Check 6: 'Camburi Group' is a proper name for a specific, individual lithostratigraphic unit, not a class of units."
+lula field,site,,site,oil field,Proper noun naming a specific geographic site (an individual). Check 6 applies.
+tupi field,site,,site,oil field,The term is a proper noun naming a specific geographical site (an oil field).
+mero field,site,,site,oil field,The term is a proper noun naming a specific geographical site (an oil field).
+sugar loaf high,site,,site,Physiographic Feature,"The term is a proper noun naming a specific geological feature, which is a kind of site."
+atapu field,site,,site,oil field,The term is a proper noun naming a specific geographical site (an oil field).
+são paulo plateau,site,,site,Physiographic Feature,Proper noun naming a specific geographic site (Check 6).
+sapinhoá field,site,,site,oil field,"Proper noun naming a specific oil field, which is a kind of site (Check 6)."
+pre-salt,Stratigraphic Unit,,Stratigraphic Unit,Stratigraphic Succession,"The term refers to a specific, named geological mega-sequence ('The Pre-Salt'), making it a proper-noun individual."
+pre-salt section,Stratigraphic Unit,,Stratigraphic Unit,Stratigraphic Succession,"The term refers to a specific, named geological mega-sequence, making it a proper-noun individual. It is a synonym for 'pre-salt' (415)."
+pre-salt succession,Stratigraphic Unit,,Stratigraphic Unit,Stratigraphic Succession,"The term refers to a specific, named geological mega-sequence, making it a proper-noun individual. It is a synonym for 'pre-salt' (415)."
+pre-salt sequence,Stratigraphic Unit,,Stratigraphic Unit,Tectono-Stratigraphic Unit,Proper noun for a specific geological object aggregate in the South Atlantic (Check 6).
+upper rift,Stratigraphic Unit,,Stratigraphic Unit,Tectono-Stratigraphic Unit,Proper noun for a specific stratigraphic interval within the Santos Basin Pre-Salt succession (Check 6).

@@ -1,0 +1,446 @@
+﻿Term,Category,Property,Property_IRI,Filler,Filler_Source,Confidence,Evidence,Validation_Status,Validation_Reason
+aptian,Geological Time Interval,occurrent_part_of,http://purl.obolibrary.org/obo/BFO_0000132,early cretaceous,domain_term,1.0,Aptian is a geological age of the Early Cretaceous epoch,ACCEPTED,Valid.
+fracture,Geological Structure,participates_in,http://purl.obolibrary.org/obo/BFO_0000056,cementation,domain_term,0.8,cemented by minerals such as silica,ACCEPTED,Valid.
+fracture,Geological Structure,participates_in,http://purl.obolibrary.org/obo/BFO_0000056,dissolution,domain_term,1.0,may be enhanced by dissolution,ACCEPTED,Valid.
+ariri formation,Formation,constituted_by,https://www.inf.ufrgs.br/bdi/ontologies/GEOCORE_0000017,halite,domain_term,1.0,"composed of a thick, stratified sequence of halite, anhydrite, and other salts",ACCEPTED,Valid.
+ariri formation,Formation,constituted_by,https://www.inf.ufrgs.br/bdi/ontologies/GEOCORE_0000017,anhydrite,domain_term,1.0,"composed of a thick, stratified sequence of halite, anhydrite, and other salts",ACCEPTED,Valid.
+permeability,Dimension,inheres_in,http://purl.obolibrary.org/obo/BFO_0000197,rock,domain_term,1.0,petrophysical property that measures the capacity of a porous rock,ACCEPTED,Valid.
+lacustrine carbonate,Sedimentary Rock,located_in,http://purl.obolibrary.org/obo/BFO_0000171,lacustrine environment,domain_term,1.0,"formed by chemical, biochemical, or detrital processes within a lake environment",ACCEPTED,Valid.
+lacustrine carbonate,Sedimentary Rock,has_continuant_part,http://purl.obolibrary.org/obo/BFO_0000178,shrub,domain_term,1.0,"characterized by unusual textures, such as shrubs",ACCEPTED,Valid.
+mudstone,Sedimentary Rock,constituted_by,https://www.inf.ufrgs.br/bdi/ontologies/GEOCORE_0000017,carbonate mud,domain_term,1.0,composed of less than 10% grains suspended in a carbonate mud matrix,ACCEPTED,Valid.
+mudstone,Sedimentary Rock,located_in,http://purl.obolibrary.org/obo/BFO_0000171,lacustrine system,domain_term,0.8,Within Pre-Salt lacustrine systems,ACCEPTED,Valid.
+dissolution,Geological Process,has_participant,http://purl.obolibrary.org/obo/BFO_0000057,rock,domain_term,1.0,removes mineral material from a rock through fluid-rock interaction,ACCEPTED,Valid.
+dissolution,Geological Process,precedes,http://purl.obolibrary.org/obo/BFO_0000063,dolomitization,domain_term,0.8,influence subsequent diagenetic events such as dolomitization,ACCEPTED,Valid.
+pre-salt,Stratigraphic Unit,generated_in,https://www.inf.ufrgs.br/bdi/ontologies/GEOCORE_0000014,early cretaceous,domain_term,1.0,during the Early Cretaceous,ACCEPTED,Valid.
+pre-salt,Stratigraphic Unit,located_in,http://purl.obolibrary.org/obo/BFO_0000171,lacustrine system,domain_term,1.0,Deposited in a lacustrine system,ACCEPTED,Valid.
+pre-salt,Stratigraphic Unit,has_continuant_part,http://purl.obolibrary.org/obo/BFO_0000178,carbonate reservoir,domain_term,1.0,contains prolific carbonate reservoirs,ACCEPTED,Valid.
+dolomitization,Geological Process,has_participant,http://purl.obolibrary.org/obo/BFO_0000057,calcite,domain_term,1.0,"replaces pre-existing minerals, such as calcite",ACCEPTED,Valid.
+dolomitization,Geological Process,has_participant,http://purl.obolibrary.org/obo/BFO_0000057,stevensite,domain_term,1.0,"replaces pre-existing minerals, such as calcite or stevensite",ACCEPTED,Valid.
+itapema formation,Formation,has_continuant_part,http://purl.obolibrary.org/obo/BFO_0000178,lacustrine carbonate,domain_term,1.0,characterized by the intercalation of lacustrine carbonates,ACCEPTED,Valid.
+structural high,Site,generated_by,https://www.inf.ufrgs.br/bdi/ontologies/GEOCORE_0000013,tectonic activity,domain_term,0.8,a tectonically-formed positive relief feature,ACCEPTED,Valid.
+structural high,Site,continuant_part_of,http://purl.obolibrary.org/obo/BFO_0000176,reservoir,domain_term,0.8,form the core of major hydrocarbon accumulations and reservoirs,ACCEPTED,Valid.
+grainstone,Sedimentary Rock,derives_from,http://purl.obolibrary.org/obo/RO_0001000,spherulitestone,domain_term,1.0,formed by the reworking of deposits like spherulitestones,ACCEPTED,Valid.
+grainstone,Sedimentary Rock,derives_from,http://purl.obolibrary.org/obo/RO_0001000,shrubstone,domain_term,1.0,formed by the reworking of deposits like spherulitestones and shrubstones,ACCEPTED,Valid.
+grainstone,Sedimentary Rock,constituted_by,https://www.inf.ufrgs.br/bdi/ontologies/GEOCORE_0000017,bioclast,domain_term,1.0,"its constituent grains include spherulites, peloids, bioclasts",ACCEPTED,Valid.
+evaporite,Sedimentary Rock,generated_by,https://www.inf.ufrgs.br/bdi/ontologies/GEOCORE_0000013,evaporation,domain_term,1.0,formed by the precipitation of mineral salts from a body of water that has become concentrated by evaporation,ACCEPTED,Valid.
+evaporite,Sedimentary Rock,constituted_by,https://www.inf.ufrgs.br/bdi/ontologies/GEOCORE_0000017,halite,domain_term,1.0,predominantly composed of halite and anhydrite,ACCEPTED,Valid.
+evaporite,Sedimentary Rock,constituted_by,https://www.inf.ufrgs.br/bdi/ontologies/GEOCORE_0000017,anhydrite,domain_term,1.0,predominantly composed of halite and anhydrite,ACCEPTED,Valid.
+unconformity,Geological Boundary,generated_by,https://www.inf.ufrgs.br/bdi/ontologies/GEOCORE_0000013,erosion,domain_term,1.0,caused by erosion or non-deposition,ACCEPTED,Valid.
+dolomite,Earth Material,located_in,http://purl.obolibrary.org/obo/BFO_0000171,pre-salt reservoir,domain_term,1.0,occurs extensively in Brazilian Pre-Salt reservoirs,ACCEPTED,Valid.
+dolomite,Earth Material,generated_by,https://www.inf.ufrgs.br/bdi/ontologies/GEOCORE_0000013,replacement,domain_term,0.8,occurs ... as a ... diagenetic replacement phase,ACCEPTED,Valid. | Warnings: Evidence is paraphrased (not exact quote from NLD). Word overlap: 71%.
+dolomite,Earth Material,generated_by,https://www.inf.ufrgs.br/bdi/ontologies/GEOCORE_0000013,cementation,domain_term,0.8,occurs ... as a ... pore-filling cement,ACCEPTED,Valid. | Warnings: Evidence is paraphrased (not exact quote from NLD). Word overlap: 67%.
+diagenesis,Geological Process,has_participant,http://purl.obolibrary.org/obo/BFO_0000057,sediment,domain_term,1.0,"alter the original texture, mineralogy, and chemical composition of sediments",ACCEPTED,Valid.
+diagenesis,Geological Process,occurs_in,http://purl.obolibrary.org/obo/BFO_0000066,lacustrine carbonate,domain_term,1.0,In Brazilian Pre-Salt lacustrine carbonates,ACCEPTED,Valid.
+diagenesis,Geological Process,has_occurrent_part,http://purl.obolibrary.org/obo/BFO_0000117,dissolution,domain_term,1.0,key diagenetic processes include the dissolution,ACCEPTED,Valid.
+diagenesis,Geological Process,has_occurrent_part,http://purl.obolibrary.org/obo/BFO_0000117,cementation,domain_term,1.0,key diagenetic processes include ... cementation by calcite and dolomite,ACCEPTED,Valid. | Warnings: Evidence is paraphrased (not exact quote from NLD). Word overlap: 80%.
+barremian,Geological Time Interval,occurrent_part_of,http://purl.obolibrary.org/obo/BFO_0000132,early cretaceous,domain_term,1.0,Barremian is a geological age of the Early Cretaceous epoch,ACCEPTED,Valid.
+barremian,Geological Time Interval,occurrent_part_of,http://purl.obolibrary.org/obo/BFO_0000132,syn-rift,domain_term,0.8,corresponds to a critical syn-rift period,ACCEPTED,Valid.
+silica,Earth Material,derives_from,http://purl.obolibrary.org/obo/RO_0001000,host rock,domain_term,0.8,as a replacement of the host rock,ACCEPTED,Valid.
+silica,Earth Material,generated_by,https://www.inf.ufrgs.br/bdi/ontologies/GEOCORE_0000013,cementation,domain_term,0.8,as pore-lining and pore-filling cements,ACCEPTED,Valid.
+silicification,Geological Process,has_participant,http://purl.obolibrary.org/obo/BFO_0000057,host rock,domain_term,1.0,replaces host rock minerals,ACCEPTED,Valid.
+silicification,Geological Process,occurs_in,http://purl.obolibrary.org/obo/BFO_0000066,lacustrine carbonate,domain_term,1.0,"In the Brazilian Pre-Salt lacustrine carbonates, this process manifests",ACCEPTED,Valid.
+piçarras formation,Formation,has_continuant_part,http://purl.obolibrary.org/obo/BFO_0000178,conglomerate,domain_term,1.0,characterized by proximal alluvial fan deposits of conglomerates,ACCEPTED,Valid.
+piçarras formation,Formation,has_continuant_part,http://purl.obolibrary.org/obo/BFO_0000178,sandstone,domain_term,1.0,characterized by proximal alluvial fan deposits of conglomerates and sandstones,ACCEPTED,Valid.
+hauterivian,Geological Time Interval,occurrent_part_of,http://purl.obolibrary.org/obo/BFO_0000132,early cretaceous,domain_term,1.0,Hauterivian is a geological age of the Early Cretaceous Epoch,ACCEPTED,Valid.
+early cretaceous,Geological Time Interval,has_occurrent_part,http://purl.obolibrary.org/obo/BFO_0000117,syn-rift,domain_term,1.0,this epoch encompasses the syn-rift and sag phases,ACCEPTED,Valid.
+early cretaceous,Geological Time Interval,has_occurrent_part,http://purl.obolibrary.org/obo/BFO_0000117,sag phase,domain_term,1.0,this epoch encompasses the syn-rift and sag phases,ACCEPTED,Valid.
+stevensite,Earth Material,located_in,http://purl.obolibrary.org/obo/BFO_0000171,lacustrine environment,domain_term,1.0,precipitates chemically in the highly alkaline (pH > 9) and silica-rich lacustrine environments,ACCEPTED,Valid.
+stevensite,Earth Material,derives_into,http://purl.obolibrary.org/obo/RO_0001001,dolomite,domain_term,1.0,serving as a precursor for dolomite,ACCEPTED,Valid.
+stevensite,Earth Material,derives_into,http://purl.obolibrary.org/obo/RO_0001001,quartz,domain_term,0.8,a major source of silica for quartz cement upon dissolution,ACCEPTED,Valid.
+cabo frio high,Body of Rock,constituted_by,https://www.inf.ufrgs.br/bdi/ontologies/GEOCORE_0000017,igneous rock,domain_term,1.0,This basement feature is characterized by a complex composition of igneous rocks,ACCEPTED,Valid.
+pelotas basin,Basin,generated_in,https://www.inf.ufrgs.br/bdi/ontologies/GEOCORE_0000014,early cretaceous,domain_term,1.0,formed as a marginal depression during the Early Cretaceous,ACCEPTED,Valid.
+packstone,Sedimentary Rock,has_continuant_part,http://purl.obolibrary.org/obo/BFO_0000178,carbonate mud,domain_term,1.0,contains a matrix of carbonate mud (micrite),ACCEPTED,Valid.
+packstone,Sedimentary Rock,has_continuant_part,http://purl.obolibrary.org/obo/BFO_0000178,shrub,domain_term,1.0,composed of reworked grains such as shrub fragments,ACCEPTED,Valid.
+packstone,Sedimentary Rock,has_continuant_part,http://purl.obolibrary.org/obo/BFO_0000178,peloid,domain_term,1.0,composed of reworked grains such as... peloids,ACCEPTED,Valid. | Warnings: Evidence is paraphrased (not exact quote from NLD). Word overlap: 71%.
+shrub,Geological Object,constituted_by,https://www.inf.ufrgs.br/bdi/ontologies/GEOCORE_0000017,calcite,domain_term,1.0,"A shrub is a calcitic crystal aggregate that is characterized by a fan-like morphology composed of fibrous to coarse bladed, fascicular-optic calcite crystals",ACCEPTED,Valid.
+calcite,Earth Material,located_in,http://purl.obolibrary.org/obo/BFO_0000171,pore,domain_term,1.0,fills various pore types,ACCEPTED,Valid.
+calcite,Earth Material,participates_in,http://purl.obolibrary.org/obo/BFO_0000056,dissolution,domain_term,1.0,frequently subject to dissolution,ACCEPTED,Valid.
+sag phase,Geological Time Interval,preceded_by,http://purl.obolibrary.org/obo/BFO_0000062,rift phase,domain_term,1.0,follows the main rift phase,ACCEPTED,Valid.
+stromatolite,Fossil,located_in,http://purl.obolibrary.org/obo/BFO_0000171,lacustrine environment,domain_term,1.0,they typically occur in lacustrine settings,ACCEPTED,Valid.
+albian,Geological Time Interval,occurrent_part_of,http://purl.obolibrary.org/obo/BFO_0000132,early cretaceous,domain_term,1.0,a geological age of the Early Cretaceous Epoch,ACCEPTED,Valid.
+carbonate rock,Sedimentary Rock,constituted_by,https://www.inf.ufrgs.br/bdi/ontologies/GEOCORE_0000017,carbonate mineral,domain_term,1.0,composed of more than 50% carbonate minerals,ACCEPTED,Valid.
+carbonate rock,Sedimentary Rock,constituted_by,https://www.inf.ufrgs.br/bdi/ontologies/GEOCORE_0000017,calcite,domain_term,1.0,principally calcite and dolomite,ACCEPTED,Valid.
+carbonate rock,Sedimentary Rock,constituted_by,https://www.inf.ufrgs.br/bdi/ontologies/GEOCORE_0000017,dolomite,domain_term,1.0,principally calcite and dolomite,ACCEPTED,Valid.
+carbonate rock,Sedimentary Rock,has_quality,http://purl.obolibrary.org/obo/RO_0000086,heterogeneity,domain_term,1.0,exhibit significant heterogeneity,ACCEPTED,Valid.
+rudstone,Sedimentary Rock,has_continuant_part,http://purl.obolibrary.org/obo/BFO_0000178,intraclast,domain_term,1.0,the coarse grains are typically intraclasts,ACCEPTED,Valid.
+rudstone,Sedimentary Rock,has_continuant_part,http://purl.obolibrary.org/obo/BFO_0000178,bioclast,domain_term,1.0,the coarse grains are typically ... bioclastic fragments,ACCEPTED,Valid. | Warnings: Evidence is paraphrased (not exact quote from NLD). Word overlap: 75%.
+rudstone,Sedimentary Rock,has_continuant_part,http://purl.obolibrary.org/obo/BFO_0000178,pore system,domain_term,1.0,its heterogeneous pore system,ACCEPTED,Valid.
+intraclast,Geological Object,derives_from,http://purl.obolibrary.org/obo/RO_0001000,carbonate sediment,domain_term,1.0,"composed of a reworked fragment of penecontemporaneous, semi-lithified carbonate sediment",ACCEPTED,Valid.
+intraclast,Geological Object,generated_by,https://www.inf.ufrgs.br/bdi/ontologies/GEOCORE_0000013,erosion,domain_term,1.0,eroded from within the same depositional basin,ACCEPTED,Valid.
+intraclast,Geological Object,participates_in,http://purl.obolibrary.org/obo/BFO_0000056,dolomitization,domain_term,1.0,diagenetically altered by dolomitization,ACCEPTED,Valid.
+intraclast,Geological Object,participates_in,http://purl.obolibrary.org/obo/BFO_0000056,silicification,domain_term,1.0,diagenetically altered by dolomitization or silicification,ACCEPTED,Valid.
+anhydrite,Earth Material,located_in,http://purl.obolibrary.org/obo/BFO_0000171,pore,domain_term,1.0,as a diagenetic pore-filling cement,ACCEPTED,Valid.
+anhydrite,Earth Material,has_quality,http://purl.obolibrary.org/obo/RO_0000086,acoustic impedance,domain_term,1.0,Characterized by its ... high acoustic impedance,ACCEPTED,Valid. | Warnings: Evidence is paraphrased (not exact quote from NLD). Word overlap: 86%.
+laminite,Sedimentary Rock,derives_from,http://purl.obolibrary.org/obo/RO_0001000,stevensite,domain_term,1.0,"originates from the diagenetic replacement of primary laminated clay deposits, such as stevensite",ACCEPTED,Valid.
+laminite,Sedimentary Rock,constituted_by,https://www.inf.ufrgs.br/bdi/ontologies/GEOCORE_0000017,calcite,domain_term,1.0,replacement of primary laminated clay deposits ... by calcite,ACCEPTED,Valid. | Warnings: Evidence is paraphrased (not exact quote from NLD). Word overlap: 78%.
+laminite,Sedimentary Rock,constituted_by,https://www.inf.ufrgs.br/bdi/ontologies/GEOCORE_0000017,dolomite,domain_term,1.0,replacement of primary laminated clay deposits ... by calcite or dolomite,ACCEPTED,Valid. | Warnings: Evidence is paraphrased (not exact quote from NLD). Word overlap: 73%.
+diagenetic process,Geological Process,has_participant,http://purl.obolibrary.org/obo/BFO_0000057,fluid,domain_term,0.8,driven by changes in fluid chemistry,ACCEPTED,Valid.
+rift,Geological Process,has_occurrent_part,http://purl.obolibrary.org/obo/BFO_0000117,subsidence,domain_term,0.8,leading to differential subsidence,ACCEPTED,Valid.
+cementation,Geological Process,occurs_in,http://purl.obolibrary.org/obo/BFO_0000066,pore,domain_term,1.0,into the void spaces of a sediment or rock,ACCEPTED,Valid.
+subsidence,Geological Process,occurs_in,http://purl.obolibrary.org/obo/BFO_0000066,sedimentary basin,domain_term,0.8,downward movement of a basin floor,ACCEPTED,Valid.
+hydrocarbon,Earth Fluid,derives_from,http://purl.obolibrary.org/obo/RO_0001000,organic matter,domain_term,1.0,Generated from the thermal maturation of organic matter,ACCEPTED,Valid.
+quartz,Earth Material,derives_from,http://purl.obolibrary.org/obo/RO_0001000,carbonate mineral,domain_term,1.0,replacing precursor carbonate minerals,ACCEPTED,Valid.
+compaction,Geological Process,has_occurrent_part,http://purl.obolibrary.org/obo/BFO_0000117,mechanical compaction,domain_term,1.0,This process includes mechanical compaction,ACCEPTED,Valid.
+compaction,Geological Process,has_participant,http://purl.obolibrary.org/obo/BFO_0000057,sediment,domain_term,1.0,reduces the bulk volume and porosity of sediments,ACCEPTED,Valid.
+compaction,Geological Process,occurs_in,http://purl.obolibrary.org/obo/BFO_0000066,lacustrine carbonate,domain_term,0.8,"In the Pre-Salt lacustrine carbonates, the effects of compaction are often observed",ACCEPTED,Valid.
+basalt,Rock,constituted_by,https://www.inf.ufrgs.br/bdi/ontologies/GEOCORE_0000017,feldspar,domain_term,1.0,"composed of feldspar, pyroxene, and augite",ACCEPTED,Valid.
+ostracod,Fossil,located_in,http://purl.obolibrary.org/obo/BFO_0000171,lacustrine environment,domain_term,0.8,Due to their tolerance for stressed lacustrine environments,ACCEPTED,Valid.
+ostracod,Fossil,participates_in,http://purl.obolibrary.org/obo/BFO_0000056,dolomitization,domain_term,0.8,can be subject to diagenetic alteration like dolomitization,ACCEPTED,Valid.
+basement,Body of Rock,constituted_by,https://www.inf.ufrgs.br/bdi/ontologies/GEOCORE_0000017,igneous rock,domain_term,1.0,composed of crystalline igneous and metamorphic rocks,ACCEPTED,Valid.
+erosion,Geological Process,has_participant,http://purl.obolibrary.org/obo/BFO_0000057,rock,domain_term,1.0,removes and transports pre-existing rock and sediment,ACCEPTED,Valid.
+erosion,Geological Process,has_participant,http://purl.obolibrary.org/obo/BFO_0000057,sediment,domain_term,1.0,removes and transports pre-existing rock and sediment,ACCEPTED,Valid.
+erosion,Geological Process,has_participant,http://purl.obolibrary.org/obo/BFO_0000057,microbial carbonate,domain_term,1.0,leading to the breakdown of microbial carbonates,ACCEPTED,Valid.
+erosion,Geological Process,preceded_by,http://purl.obolibrary.org/obo/BFO_0000062,subaerial exposure,domain_term,0.8,this process is frequently driven by subaerial exposure,ACCEPTED,Valid.
+microbialite,Sedimentary Rock,constituted_by,https://www.inf.ufrgs.br/bdi/ontologies/GEOCORE_0000017,peloid,domain_term,1.0,composed of microbially-precipitated clots and peloids,ACCEPTED,Valid.
+microbialite,Sedimentary Rock,constituted_by,https://www.inf.ufrgs.br/bdi/ontologies/GEOCORE_0000017,calcite,domain_term,1.0,cemented by calcite,ACCEPTED,Valid.
+lacustrine environment,Sedimentary Environment,has_quality,http://purl.obolibrary.org/obo/RO_0000086,salinity,domain_term,0.8,these environments were typically alkaline and saline,ACCEPTED,Valid.
+wackestone,Sedimentary Rock,has_continuant_part,http://purl.obolibrary.org/obo/BFO_0000178,peloid,domain_term,1.0,"containing over 10% grains, such as ostracod bioclasts, spherulite fragments, and peloids",ACCEPTED,Valid.
+recrystallization,Geological Process,has_participant,http://purl.obolibrary.org/obo/BFO_0000057,carbonate mineral,domain_term,1.0,alters the crystal fabric of pre-existing carbonate minerals,ACCEPTED,Valid.
+recrystallization,Geological Process,has_participant,http://purl.obolibrary.org/obo/BFO_0000057,calcite,domain_term,1.0,"carbonate minerals, such as calcite",ACCEPTED,Valid.
+recrystallization,Geological Process,has_participant,http://purl.obolibrary.org/obo/BFO_0000057,bioclast,domain_term,1.0,"this process affects components like bioclasts, matrix, and cement",ACCEPTED,Valid.
+recrystallization,Geological Process,has_participant,http://purl.obolibrary.org/obo/BFO_0000057,matrix,domain_term,1.0,"this process affects components like bioclasts, matrix, and cement",ACCEPTED,Valid.
+shrubstone,Sedimentary Rock,has_continuant_part,http://purl.obolibrary.org/obo/BFO_0000178,shrub,domain_term,1.0,composed primarily of shrubs,ACCEPTED,Valid.
+shrubstone,Sedimentary Rock,has_quality,http://purl.obolibrary.org/obo/RO_0000086,vugular porosity,domain_term,1.0,often exhibit significant inter-aggregate and vugular porosity,ACCEPTED,Valid.
+travertine,Sedimentary Rock,generated_by,https://www.inf.ufrgs.br/bdi/ontologies/GEOCORE_0000013,abiotic precipitation,domain_term,1.0,formed by the abiotic precipitation of carbonate minerals,ACCEPTED,Valid.
+travertine,Sedimentary Rock,derives_from,http://purl.obolibrary.org/obo/RO_0001000,hydrothermal fluid,domain_term,1.0,formed by the abiotic precipitation of carbonate minerals from hydrothermal waters,ACCEPTED,Valid.
+vug,site,located_in,http://purl.obolibrary.org/obo/BFO_0000171,carbonate rock,domain_term,1.0,a non-fabric-selective pore within a carbonate rock,ACCEPTED,Valid.
+vug,site,generated_by,https://www.inf.ufrgs.br/bdi/ontologies/GEOCORE_0000013,dissolution,domain_term,1.0,generated or enhanced by dissolution,ACCEPTED,Valid.
+salt,Lithostratigraphic Unit,constituted_by,https://www.inf.ufrgs.br/bdi/ontologies/GEOCORE_0000017,halite,domain_term,1.0,primarily composed of halite and anhydrite,ACCEPTED,Valid.
+salt,Lithostratigraphic Unit,constituted_by,https://www.inf.ufrgs.br/bdi/ontologies/GEOCORE_0000017,anhydrite,domain_term,1.0,primarily composed of halite and anhydrite,ACCEPTED,Valid.
+salt,Lithostratigraphic Unit,participates_in,http://purl.obolibrary.org/obo/BFO_0000056,halokinesis,domain_term,1.0,this succession undergoes significant deformation and flow (halokinesis),ACCEPTED,Valid.
+lithology,Lithology,inheres_in,http://purl.obolibrary.org/obo/BFO_0000197,rock,domain_term,1.0,is the physical character of a rock unit,ACCEPTED,Valid.
+sandstone,Sedimentary Rock,located_in,http://purl.obolibrary.org/obo/BFO_0000171,alluvial fan,domain_term,0.8,"sandstones are commonly deposited in fluvial, alluvial fan, and fan delta systems",ACCEPTED,Valid.
+petrophysical property,Dimension,inheres_in,http://purl.obolibrary.org/obo/BFO_0000197,rock,domain_term,1.0,is a quantifiable physical attribute of a rock,ACCEPTED,Valid.
+salt layer,Lithostratigraphic Unit,has_quality,http://purl.obolibrary.org/obo/RO_0000086,permeability,domain_term,0.8,The high mobility and low permeability of the salt make it a highly effective... seal rock.,ACCEPTED,Valid. | Warnings: Evidence is paraphrased (not exact quote from NLD). Word overlap: 93%.
+post-rift,Geological Process,preceded_by,http://purl.obolibrary.org/obo/BFO_0000062,rift phase,domain_term,1.0,follows the active rifting stage,ACCEPTED,Valid.
+chalcedony,Rock,constituted_by,https://www.inf.ufrgs.br/bdi/ontologies/GEOCORE_0000017,silica,domain_term,1.0,is a cryptocrystalline variety of silica,ACCEPTED,Valid.
+evaporation,Geological Process,occurs_in,http://purl.obolibrary.org/obo/BFO_0000066,lacustrine system,domain_term,1.0,from a lacustrine system,ACCEPTED,Valid.
+accommodation space,Basin,generated_by,https://www.inf.ufrgs.br/bdi/ontologies/GEOCORE_0000013,subsidence,domain_term,1.0,created and controlled by the combined effects of tectonic subsidence,ACCEPTED,Valid.
+peloid,Geological Object,constituted_by,https://www.inf.ufrgs.br/bdi/ontologies/GEOCORE_0000017,micrite,domain_term,1.0,composed of micrite,ACCEPTED,Valid.
+peloid,Geological Object,derives_from,http://purl.obolibrary.org/obo/RO_0001000,intraclast,domain_term,0.8,commonly interpreted as micritized intraclasts,ACCEPTED,Valid.
+peloid,Geological Object,continuant_part_of,http://purl.obolibrary.org/obo/BFO_0000176,grainstone,domain_term,1.0,a primary component of reservoir facies such as peloidal grainstones,ACCEPTED,Valid.
+calcite spherulite,Geological Object,participates_in,http://purl.obolibrary.org/obo/BFO_0000056,dolomitization,domain_term,1.0,spherulites are commonly subject to... dolomitization,ACCEPTED,Valid. | Warnings: Evidence is paraphrased (not exact quote from NLD). Word overlap: 67%.
+salinity,quality,inheres_in,http://purl.obolibrary.org/obo/BFO_0000197,fluid,domain_term,1.0,measure of the total amount of dissolved salts in a fluid,ACCEPTED,Valid.
+pre-salt reservoir,Stratigraphic Unit,constituted_by,https://www.inf.ufrgs.br/bdi/ontologies/GEOCORE_0000017,carbonate rock,domain_term,1.0,composed of carbonate rocks,ACCEPTED,Valid.
+pre-salt reservoir,Stratigraphic Unit,has_continuant_part,http://purl.obolibrary.org/obo/BFO_0000178,microbialite,domain_term,1.0,consist of complex facies such as microbialites,ACCEPTED,Valid.
+tectonic activity,Geological Process,has_occurrent_part,http://purl.obolibrary.org/obo/BFO_0000117,deformation,domain_term,1.0,involves the deformation of the Earth's crust,ACCEPTED,Valid.
+tectonic activity,Geological Process,has_occurrent_part,http://purl.obolibrary.org/obo/BFO_0000117,fault reactivation,domain_term,1.0,"activity, primarily expressed as fault reactivation",ACCEPTED,Valid.
+subaerial exposure,Geological Process,has_participant,http://purl.obolibrary.org/obo/BFO_0000057,sediment,domain_term,1.0,exposes previously submerged lacustrine sediments,ACCEPTED,Valid.
+subaerial exposure,Geological Process,has_participant,http://purl.obolibrary.org/obo/BFO_0000057,rock,domain_term,1.0,exposes previously submerged... rocks,ACCEPTED,Valid. | Warnings: Evidence is paraphrased (not exact quote from NLD). Word overlap: 75%.
+organic matter,Earth Material,located_in,http://purl.obolibrary.org/obo/BFO_0000171,mudstone,domain_term,1.0,commonly found as kerogen within dark-colored laminae and mudstones,ACCEPTED,Valid.
+structural low,Basin,generated_by,https://www.inf.ufrgs.br/bdi/ontologies/GEOCORE_0000013,tectonic activity,domain_term,0.8,is a tectonically formed depression,ACCEPTED,Valid.
+structural low,Basin,generated_in,https://www.inf.ufrgs.br/bdi/ontologies/GEOCORE_0000014,rift phase,domain_term,1.0,created during the rift phase,ACCEPTED,Valid.
+heterogeneity,quality,inheres_in,http://purl.obolibrary.org/obo/BFO_0000197,reservoir,domain_term,1.0,is the spatial variation of reservoir properties,ACCEPTED,Valid.
+bioclast,Fossil,derives_from,http://purl.obolibrary.org/obo/RO_0001000,bivalve,domain_term,1.0,"predominantly derived from bivalves, ostracods, and gastropods",ACCEPTED,Valid.
+bioclast,Fossil,derives_from,http://purl.obolibrary.org/obo/RO_0001000,ostracod,domain_term,1.0,"predominantly derived from bivalves, ostracods, and gastropods",ACCEPTED,Valid.
+bioclast,Fossil,participates_in,http://purl.obolibrary.org/obo/BFO_0000056,diagenetic alteration,domain_term,1.0,can be subject to significant diagenetic alteration,ACCEPTED,Valid.
+florianopolis high,Body of Rock,generated_by,https://www.inf.ufrgs.br/bdi/ontologies/GEOCORE_0000013,magmatism,domain_term,0.8,This dominantly magmatic feature,ACCEPTED,Valid.
+primary porosity,Lithology,has_continuant_part,http://purl.obolibrary.org/obo/BFO_0000178,interparticle porosity,domain_term,1.0,this commonly includes interparticle porosity between grains,ACCEPTED,Valid.
+primary porosity,Lithology,participates_in,http://purl.obolibrary.org/obo/BFO_0000056,compaction,domain_term,1.0,often reduced by subsequent compaction,ACCEPTED,Valid.
+primary porosity,Lithology,participates_in,http://purl.obolibrary.org/obo/BFO_0000056,cementation,domain_term,1.0,often reduced by subsequent compaction and cementation,ACCEPTED,Valid.
+pore system,Geological Structure,has_continuant_part,http://purl.obolibrary.org/obo/BFO_0000178,pore,domain_term,1.0,the totality of pore space... of all constituent voids,ACCEPTED,Valid. | Warnings: Evidence is paraphrased (not exact quote from NLD). Word overlap: 75%.
+clay mineral,Earth Material,located_in,http://purl.obolibrary.org/obo/BFO_0000171,lacustrine carbonate,domain_term,1.0,In the Brazilian Pre-Salt lacustrine carbonates,ACCEPTED,Valid.
+rework facies,Facies Association,has_continuant_part,http://purl.obolibrary.org/obo/BFO_0000178,interparticle porosity,domain_term,0.8,often forming intervals with significant interparticle porosity,ACCEPTED,Valid.
+macabu formation,Formation,has_continuant_part,http://purl.obolibrary.org/obo/BFO_0000178,calcite shrub,domain_term,1.0,including... calcite shrubs,ACCEPTED,Valid. | Warnings: Evidence is paraphrased (not exact quote from NLD). Word overlap: 67%.
+sediment,Sediment,derives_into,http://purl.obolibrary.org/obo/RO_0001001,sedimentary rock,domain_term,1.0,to form the precursor to sedimentary rock,ACCEPTED,Valid.
+sediment,Sediment,located_in,http://purl.obolibrary.org/obo/BFO_0000171,lacustrine environment,domain_term,1.0,deposited by... processes within a lacustrine environment,ACCEPTED,Valid. | Warnings: Evidence is paraphrased (not exact quote from NLD). Word overlap: 86%.
+sediment,Sediment,has_continuant_part,https://www.inf.ufrgs.br/bdi/ontologies/GEOCORE_0000017,shrub,domain_term,1.0,these materials primarily include in-situ microbial precipitates like shrubs,ACCEPTED,Valid.
+sediment,Sediment,has_continuant_part,https://www.inf.ufrgs.br/bdi/ontologies/GEOCORE_0000017,carbonate mud,domain_term,1.0,include... fine-grained carbonate muds,ACCEPTED,Valid. | Warnings: Evidence mismatch: quoted evidence not found in NLD (word overlap 50%). Possible hallucination.
+reservoir property,quality,inheres_in,http://purl.obolibrary.org/obo/BFO_0000197,reservoir rock,domain_term,1.0,"characteristic that is used to describe and quantify the state, quality, and behavior of a subsurface rock formation",ACCEPTED,Valid.
+reservoir property,quality,inheres_in,http://purl.obolibrary.org/obo/BFO_0000197,fluid,domain_term,1.0,"and fluid attributes such as composition, pressure, and temperature",ACCEPTED,Valid.
+pyrite,Earth Material,located_in,http://purl.obolibrary.org/obo/BFO_0000171,pore,domain_term,1.0,commonly occurs as a secondary mineral filling fractures and pores,ACCEPTED,Valid.
+half-graben,Basin,has_continuant_part,http://purl.obolibrary.org/obo/BFO_0000178,normal fault,domain_term,1.0,bounded on one side by a major normal or listric fault,ACCEPTED,Valid.
+conglomerate,Sedimentary Rock,has_continuant_part,http://purl.obolibrary.org/obo/BFO_0000178,basalt,domain_term,1.0,"contain a heterogeneous mix of clasts, including basement gneiss, basalt, limestone, and intraformational silica",ACCEPTED,Valid.
+conglomerate,Sedimentary Rock,has_continuant_part,http://purl.obolibrary.org/obo/BFO_0000178,limestone,domain_term,1.0,"contain a heterogeneous mix of clasts, including basement gneiss, basalt, limestone, and intraformational silica",ACCEPTED,Valid.
+limestone,Sedimentary Rock,constituted_by,https://www.inf.ufrgs.br/bdi/ontologies/GEOCORE_0000017,calcite,domain_term,1.0,"composed predominantly of calcium carbonate minerals, chiefly calcite",ACCEPTED,Valid.
+limestone,Sedimentary Rock,constituted_by,https://www.inf.ufrgs.br/bdi/ontologies/GEOCORE_0000017,aragonite,domain_term,1.0,"composed predominantly of calcium carbonate minerals, chiefly calcite and aragonite",ACCEPTED,Valid.
+limestone,Sedimentary Rock,participates_in,http://purl.obolibrary.org/obo/BFO_0000056,dissolution,domain_term,0.8,reservoir quality is often controlled by subsequent diagenetic processes like dissolution,ACCEPTED,Valid.
+limestone,Sedimentary Rock,participates_in,http://purl.obolibrary.org/obo/BFO_0000056,silicification,domain_term,0.8,"reservoir quality is often controlled by subsequent diagenetic processes like dissolution, brecciation, and silicification",ACCEPTED,Valid.
+cement,Earth Material,located_in,http://purl.obolibrary.org/obo/BFO_0000171,pore space,domain_term,1.0,fill void spaces within a sedimentary rock,ACCEPTED,Valid.
+cement,Earth Material,generated_by,https://www.inf.ufrgs.br/bdi/ontologies/GEOCORE_0000013,cementation,domain_term,0.8,"In the context of Brazilian Pre-Salt reservoirs, cementation is a critical diagenetic process that significantly impacts reservoir quality by occluding primary and secondary pore networks.",ACCEPTED,Valid.
+volcanic rock,Rock,continuant_part_of,http://purl.obolibrary.org/obo/BFO_0000176,grainstone,domain_term,1.0,occurs as fragments and intraclasts reworked into carbonate deposits such as grainstones,ACCEPTED,Valid.
+volcanic rock,Rock,continuant_part_of,http://purl.obolibrary.org/obo/BFO_0000176,rudstone,domain_term,1.0,occurs as fragments and intraclasts reworked into carbonate deposits such as grainstones and rudstones,ACCEPTED,Valid.
+depositional system,Depositional System,has_continuant_part,http://purl.obolibrary.org/obo/BFO_0000178,sedimentary facies,domain_term,1.0,a three-dimensional assemblage of genetically related sedimentary facies,ACCEPTED,Valid.
+interparticle porosity,quality,participates_in,http://purl.obolibrary.org/obo/BFO_0000056,compaction,domain_term,0.8,reduced by diagenetic processes such as compaction,ACCEPTED,Valid.
+interparticle porosity,quality,participates_in,http://purl.obolibrary.org/obo/BFO_0000056,cementation,domain_term,0.8,reduced by diagenetic processes such as compaction and cementation,ACCEPTED,Valid.
+facies association,Facies Association,has_continuant_part,http://purl.obolibrary.org/obo/BFO_0000178,sedimentary facies,domain_term,1.0,a group of genetically related sedimentary facies,ACCEPTED,Valid.
+oil,Earth Fluid,constituted_by,https://www.inf.ufrgs.br/bdi/ontologies/GEOCORE_0000017,hydrocarbon,domain_term,1.0,Oil is a naturally occurring liquid hydrocarbon fluid,ACCEPTED,Valid.
+oil,Earth Fluid,located_in,http://purl.obolibrary.org/obo/BFO_0000171,reservoir,domain_term,1.0,it is a reservoir fluid,ACCEPTED,Valid.
+kerolite,Earth Material,located_in,http://purl.obolibrary.org/obo/BFO_0000171,intraclastic grainstone,domain_term,1.0,occurring in various facies such as Mg-claystones and intraclastic grainstones,ACCEPTED,Valid.
+pore space,Site,located_in,http://purl.obolibrary.org/obo/BFO_0000171,rock,domain_term,1.0,the void volume within a rock,ACCEPTED,Valid.
+pore space,Site,located_in,http://purl.obolibrary.org/obo/BFO_0000171,sediment,domain_term,1.0,the void volume within a rock or sediment,ACCEPTED,Valid.
+pore space,Site,participates_in,http://purl.obolibrary.org/obo/BFO_0000056,dissolution,domain_term,1.0,modified by diagenetic processes like dissolution that enhances space,ACCEPTED,Valid.
+pore space,Site,participates_in,http://purl.obolibrary.org/obo/BFO_0000056,cementation,domain_term,1.0,modified by diagenetic processes like... cementation that reduces it,ACCEPTED,Valid. | Warnings: Evidence is paraphrased (not exact quote from NLD). Word overlap: 78%.
+búzios field,Basin,has_continuant_part,http://purl.obolibrary.org/obo/BFO_0000178,hydrocarbon accumulation,domain_term,1.0,contains the largest known pre-salt hydrocarbon accumulation by volume,ACCEPTED,Valid.
+depocenter,Basin,located_in,http://purl.obolibrary.org/obo/BFO_0000171,sedimentary basin,domain_term,1.0,a structural low within a sedimentary basin,ACCEPTED,Valid.
+depocenter,Basin,has_continuant_part,http://purl.obolibrary.org/obo/BFO_0000178,sediment,domain_term,1.0,characterized by the greatest thickness of accumulated sediment,ACCEPTED,Valid.
+coqueiros formation,Formation,constituted_by,https://www.inf.ufrgs.br/bdi/ontologies/GEOCORE_0000017,rudstone,domain_term,1.0,composed primarily of bioclastic carbonate rudstones,ACCEPTED,Valid.
+coqueiros formation,Formation,constituted_by,https://www.inf.ufrgs.br/bdi/ontologies/GEOCORE_0000017,grainstone,domain_term,1.0,composed primarily of bioclastic carbonate rudstones and grainstones,ACCEPTED,Valid.
+intraclastic grainstone,Sedimentary Rock,constituted_by,https://www.inf.ufrgs.br/bdi/ontologies/GEOCORE_0000017,intraclast,domain_term,1.0,composition dominated by intraclasts,ACCEPTED,Valid.
+intraclastic grainstone,Sedimentary Rock,constituted_by,https://www.inf.ufrgs.br/bdi/ontologies/GEOCORE_0000017,laminite,domain_term,1.0,"composed of reworked fragments of fascicular calcite crusts, spherulites, and laminites",ACCEPTED,Valid.
+bioclastic grainstone,Sedimentary Rock,constituted_by,https://www.inf.ufrgs.br/bdi/ontologies/GEOCORE_0000017,bivalve,domain_term,1.0,Primarily composed of fragmented lacustrine organisms such as bivalves,ACCEPTED,Valid.
+bioclastic grainstone,Sedimentary Rock,constituted_by,https://www.inf.ufrgs.br/bdi/ontologies/GEOCORE_0000017,gastropod,domain_term,1.0,"Primarily composed of fragmented lacustrine organisms such as bivalves, gastropods",ACCEPTED,Valid.
+bioclastic grainstone,Sedimentary Rock,constituted_by,https://www.inf.ufrgs.br/bdi/ontologies/GEOCORE_0000017,ostracod,domain_term,1.0,"Primarily composed of fragmented lacustrine organisms such as bivalves, gastropods, and ostracods",ACCEPTED,Valid.
+bioclastic grainstone,Sedimentary Rock,participates_in,http://purl.obolibrary.org/obo/BFO_0000056,diagenetic alteration,domain_term,1.0,frequently undergoes diagenetic alteration,ACCEPTED,Valid.
+bed,Lithostratigraphic Unit,constituted_by,http://purl.obolibrary.org/obo/BFO_0000176,sedimentary rock,domain_term,0.8,A bed is a distinct stratum of sedimentary rock,ACCEPTED,Valid.
+silica nodule,Body of Rock,constituted_by,https://www.inf.ufrgs.br/bdi/ontologies/GEOCORE_0000017,macrocrystalline quartz,domain_term,1.0,composed of microcrystalline and/or macrocrystalline quartz,ACCEPTED,Valid.
+silica nodule,Body of Rock,located_in,http://purl.obolibrary.org/obo/BFO_0000171,carbonate rock,domain_term,1.0,"occurring as a discrete, rounded to almond-shaped mass within a host carbonate rock",ACCEPTED,Valid.
+mineralogy,Lithology,inheres_in,http://purl.obolibrary.org/obo/BFO_0000197,rock,domain_term,1.0,Mineralogy is the mineral composition of a rock,ACCEPTED,Valid.
+sag,Geological Process,occurs_in,http://purl.obolibrary.org/obo/BFO_0000066,rift basin,domain_term,1.0,phase in a rift basin,ACCEPTED,Valid.
+sag,Geological Process,preceded_by,http://purl.obolibrary.org/obo/BFO_0000062,syn-rift,domain_term,1.0,following the main fault-controlled syn-rift stage,ACCEPTED,Valid.
+late aptian,Geological Time Interval,occurrent_part_of,http://purl.obolibrary.org/obo/BFO_0000132,early cretaceous,domain_term,1.0,geological age of the Early Cretaceous period,ACCEPTED,Valid.
+late aptian,Geological Time Interval,precedes,http://purl.obolibrary.org/obo/BFO_0000063,drift phase,domain_term,1.0,signifying the transition to the salt-dominated post-rift stage,ACCEPTED,Valid.
+drift,Geological Process,preceded_by,http://purl.obolibrary.org/obo/BFO_0000062,rift phase,domain_term,1.0,after the cessation of major rifting,ACCEPTED,Valid.
+alluvial fan,Architectural Element,constituted_by,https://www.inf.ufrgs.br/bdi/ontologies/GEOCORE_0000017,sediment,domain_term,0.8,formed by the accumulation of sediment,ACCEPTED,Valid.
+alluvial fan,Architectural Element,located_in,http://purl.obolibrary.org/obo/BFO_0000171,rift basin,domain_term,0.8,typically along the margins of extensional rift basins,ACCEPTED,Valid.
+barite,Earth Material,located_in,http://purl.obolibrary.org/obo/BFO_0000171,calcilutite,domain_term,0.8,in facies such as calcilutites,ACCEPTED,Valid.
+dolostone,Sedimentary Rock,constituted_by,https://www.inf.ufrgs.br/bdi/ontologies/GEOCORE_0000017,dolomite,domain_term,1.0,predominantly composed of the mineral dolomite,ACCEPTED,Valid.
+dolostone,Sedimentary Rock,derives_from,http://purl.obolibrary.org/obo/RO_0001000,carbonate mineral,domain_term,1.0,formed through the diagenetic replacement of precursor calcium carbonate minerals,ACCEPTED,Valid.
+siliciclastic grain,Geological Object,derives_from,http://purl.obolibrary.org/obo/RO_0001000,rock,domain_term,1.0,derived from the weathering and erosion of pre-existing terrestrial rocks,ACCEPTED,Valid.
+feldspar,Earth Material,located_in,http://purl.obolibrary.org/obo/BFO_0000171,siltstone,domain_term,1.0,found as detrital grains of K-feldspar and plagioclase within siltstones,ACCEPTED,Valid.
+feldspar,Earth Material,participates_in,http://purl.obolibrary.org/obo/BFO_0000056,diagenetic alteration,domain_term,1.0,often subject to diagenetic alteration,ACCEPTED,Valid.
+feldspar,Earth Material,derives_into,http://purl.obolibrary.org/obo/RO_0001001,dolomite,domain_term,0.8,"subject to diagenetic alteration, including replacement by carbonate minerals such as dolomite",ACCEPTED,Valid.
+fault block,Body of Rock,constituted_by,https://www.inf.ufrgs.br/bdi/ontologies/GEOCORE_0000017,rock,domain_term,0.8,A fault block is a crustal block,ACCEPTED,Valid.
+marine environment,Sedimentary Environment,has_continuant_part,http://purl.obolibrary.org/obo/BFO_0000178,marine water,domain_term,1.0,containing water with oceanic salinity and chemistry,ACCEPTED,Valid.
+marine environment,Sedimentary Environment,generated_in,https://www.inf.ufrgs.br/bdi/ontologies/GEOCORE_0000014,drift phase,domain_term,1.0,establishment of open marine conditions during the Aptian drift phase,ACCEPTED,Valid.
+oceanic crust,Body of Rock,generated_in,https://www.inf.ufrgs.br/bdi/ontologies/GEOCORE_0000014,drift phase,domain_term,1.0,formed by seafloor spreading at mid-ocean ridges during the drift phase,ACCEPTED,Valid.
+upper barra velha formation,Lithostratigraphic Unit,constituted_by,https://www.inf.ufrgs.br/bdi/ontologies/GEOCORE_0000017,grainstone,domain_term,1.0,lithologically dominated by grainstones and shrubby carbonates,ACCEPTED,Valid.
+tupi field,site,has_continuant_part,http://purl.obolibrary.org/obo/BFO_0000178,reservoir,domain_term,1.0,contains its primary reservoirs within the Aptian-age lacustrine carbonates of the Barra Velha Formation,ACCEPTED,Valid.
+mero field,site,has_continuant_part,http://purl.obolibrary.org/obo/BFO_0000178,hydrocarbon,domain_term,1.0,contains vast hydrocarbon reserves,ACCEPTED,Valid.
+mero field,site,has_continuant_part,http://purl.obolibrary.org/obo/BFO_0000178,reservoir,domain_term,1.0,hydrocarbon reserves hosted in high-quality microbial carbonate and coquina reservoirs,ACCEPTED,Valid.
+talc,Earth Material,derives_from,http://purl.obolibrary.org/obo/RO_0001000,mg-silicate gel,domain_term,1.0,precipitates as a hydrated form from Mg-rich silica gels,ACCEPTED,Valid.
+talc,Earth Material,participates_in,http://purl.obolibrary.org/obo/BFO_0000056,dolomitization,domain_term,0.8,serves as a significant source of magnesium and silica for later diagenetic processes such as dolomitization,ACCEPTED,Valid.
+effective porosity,quality,inheres_in,http://purl.obolibrary.org/obo/BFO_0000197,rock,domain_term,1.0,is a petrophysical property that quantifies the interconnected pore volume of a rock,ACCEPTED,Valid.
+fluid flow,Geological Process,has_participant,http://purl.obolibrary.org/obo/BFO_0000057,oil,domain_term,1.0,"movement of subsurface fluids, such as oil, gas, and water",ACCEPTED,Valid.
+fluid flow,Geological Process,has_participant,http://purl.obolibrary.org/obo/BFO_0000057,gas,domain_term,1.0,"movement of subsurface fluids, such as oil, gas, and water",ACCEPTED,Valid.
+fluid flow,Geological Process,occurs_in,http://purl.obolibrary.org/obo/BFO_0000066,rock,domain_term,1.0,through the interconnected pore and fracture network of a rock,ACCEPTED,Valid.
+valanginian,Geological Time Interval,occurrent_part_of,http://purl.obolibrary.org/obo/BFO_0000132,early cretaceous,domain_term,1.0,is a geological age of the Early Cretaceous epoch,ACCEPTED,Valid.
+calcite cement,Earth Material,located_in,http://purl.obolibrary.org/obo/BFO_0000171,sedimentary rock,domain_term,1.0,precipitates from pore fluids into the void spaces of a sedimentary rock,ACCEPTED,Valid.
+hydrothermal alteration,Geological Process,has_participant,http://purl.obolibrary.org/obo/BFO_0000057,rock,domain_term,1.0,modifies pre-existing rocks,ACCEPTED,Valid.
+hydrothermal alteration,Geological Process,has_participant,http://purl.obolibrary.org/obo/BFO_0000057,hydrothermal fluid,domain_term,1.0,"interaction with hot, circulating fluids",ACCEPTED,Valid.
+hydrothermal alteration,Geological Process,occurs_in,http://purl.obolibrary.org/obo/BFO_0000066,fault zone,domain_term,1.0,particularly along fault zones,ACCEPTED,Valid.
+spherulitestone,Sedimentary Rock,constituted_by,https://www.inf.ufrgs.br/bdi/ontologies/GEOCORE_0000017,calcite,domain_term,0.8,"composed of more than 90% spherulites, which are spherical to subspherical aggregates of radiating calcite crystals",ACCEPTED,Valid.
+sedimentary rock,Sedimentary Rock,generated_by,https://www.inf.ufrgs.br/bdi/ontologies/GEOCORE_0000013,cementation,domain_term,1.0,"formed by the accumulation, deposition, and subsequent cementation",ACCEPTED,Valid.
+sedimentary rock,Sedimentary Rock,constituted_by,https://www.inf.ufrgs.br/bdi/ontologies/GEOCORE_0000017,organic matter,domain_term,0.8,cementation of mineral or organic particles,ACCEPTED,Valid.
+acoustic impedance,quality,inheres_in,http://purl.obolibrary.org/obo/BFO_0000197,carbonate reservoir,domain_term,0.8,high-porosity carbonate reservoirs are often identified by their characteristic low acoustic impedance signatures,ACCEPTED,Valid.
+late jurassic,Geological Time Interval,precedes,http://purl.obolibrary.org/obo/BFO_0000063,sag phase,domain_term,0.8,marks the onset of the continental rifting phase which preceded the main sag phase,ACCEPTED,Valid.
+microcrystalline dolomite,Rock,generated_by,https://www.inf.ufrgs.br/bdi/ontologies/GEOCORE_0000013,replacement,domain_term,1.0,forms through the post-depositional replacement of precursor minerals,ACCEPTED,Valid.
+microcrystalline dolomite,Rock,derives_from,http://purl.obolibrary.org/obo/RO_0001000,calcite spherulite,domain_term,1.0,it is a common replacement product of materials such as Mg-clays and calcite spherulites,ACCEPTED,Valid.
+carbonate mound,Mound Unit,has_continuant_part,http://purl.obolibrary.org/obo/BFO_0000178,fault,domain_term,1.0,a high density of faults,ACCEPTED,Valid.
+carbonate mound,Mound Unit,has_continuant_part,http://purl.obolibrary.org/obo/BFO_0000178,fracture,domain_term,1.0,associated fracturing,ACCEPTED,Valid.
+carbonate mound,Mound Unit,has_continuant_part,http://purl.obolibrary.org/obo/BFO_0000178,silica,domain_term,1.0,indicated by elevated silica and uranium content,ACCEPTED,Valid.
+deformation,Geological Process,has_participant,http://purl.obolibrary.org/obo/BFO_0000057,rock,domain_term,1.0,"changes the shape, size, or orientation of a rock body",ACCEPTED,Valid.
+deformation,Geological Process,has_participant,http://purl.obolibrary.org/obo/BFO_0000057,basement,domain_term,0.8,interaction with pre-existing basement fabrics,ACCEPTED,Valid.
+diagenetic alteration,Geological Process,has_participant,http://purl.obolibrary.org/obo/BFO_0000057,sedimentary rock,domain_term,1.0,"modify the mineralogy, texture, and fabric of a sedimentary rock",ACCEPTED,Valid.
+diagenetic alteration,Geological Process,has_occurrent_part,http://purl.obolibrary.org/obo/BFO_0000117,dolomitization,domain_term,1.0,"including dissolution, dolomitization, and silicification",ACCEPTED,Valid.
+diagenetic alteration,Geological Process,has_occurrent_part,http://purl.obolibrary.org/obo/BFO_0000117,silicification,domain_term,1.0,"including dissolution, dolomitization, and silicification",ACCEPTED,Valid.
+lagoa feia group,Lithostratigraphic Unit,has_continuant_part,http://purl.obolibrary.org/obo/BFO_0000178,carbonate deposit,domain_term,1.0,"containing siliciclastic, carbonate, and evaporitic deposits",ACCEPTED,Valid.
+lagoa feia group,Lithostratigraphic Unit,has_continuant_part,http://purl.obolibrary.org/obo/BFO_0000178,carbonate reservoir,domain_term,1.0,The upper part of the group includes the economically significant coquina and microbialite carbonate reservoirs,ACCEPTED,Valid.
+rift basin,Basin,has_continuant_part,http://purl.obolibrary.org/obo/BFO_0000178,normal fault,domain_term,1.0,bounded by normal faults,ACCEPTED,Valid.
+gneiss,Rock,continuant_part_of,http://purl.obolibrary.org/obo/BFO_0000176,crystalline basement,domain_term,0.8,gneiss commonly constitutes the crystalline basement,ACCEPTED,Valid.
+gneiss,Rock,continuant_part_of,http://purl.obolibrary.org/obo/BFO_0000171,conglomerate,domain_term,1.0,occurs as clasts within syn-rift conglomerates,ACCEPTED,Valid.
+ribeira belt,Body of Rock,constituted_by,https://www.inf.ufrgs.br/bdi/ontologies/GEOCORE_0000017,gneiss,domain_term,1.0,Composed primarily of granites and gneisses,ACCEPTED,Valid.
+lower barra velha formation,Lithostratigraphic Unit,generated_in,https://www.inf.ufrgs.br/bdi/ontologies/GEOCORE_0000014,rift phase,domain_term,1.0,represents deposition during the syn-tectonic rift phase,ACCEPTED,Valid.
+calcirudite,Sedimentary Rock,has_continuant_part,http://purl.obolibrary.org/obo/BFO_0000178,intraclast,domain_term,1.0,contain intraclasts,ACCEPTED,Valid.
+chert,Sedimentary Rock,has_quality,http://purl.obolibrary.org/obo/RO_0000086,vuggy porosity,domain_term,0.8,Due to its frequent development of vuggy and fracture porosity,ACCEPTED,Valid.
+chert,Sedimentary Rock,has_quality,http://purl.obolibrary.org/obo/RO_0000086,fracture porosity,domain_term,0.8,Due to its frequent development of vuggy and fracture porosity,ACCEPTED,Valid.
+eoaptian,Geological Time Interval,occurrent_part_of,http://purl.obolibrary.org/obo/BFO_0000132,early cretaceous,domain_term,1.0,subdivision of the Aptian Stage of the Early Cretaceous Epoch,ACCEPTED,Valid.
+pre-salt succession,Stratigraphic Unit,has_continuant_part,http://purl.obolibrary.org/obo/BFO_0000178,sedimentary rock,domain_term,1.0,a stratigraphic sequence of sedimentary and volcanic rocks,ACCEPTED,Valid.
+pre-salt succession,Stratigraphic Unit,has_continuant_part,http://purl.obolibrary.org/obo/BFO_0000178,carbonate reservoir,domain_term,1.0,it contains the prolific non-marine carbonate reservoirs,ACCEPTED,Valid.
+tholeiitic basalt,Rock,continuant_part_of,http://purl.obolibrary.org/obo/BFO_0000176,economic basement,domain_term,1.0,constitute the economic basement,ACCEPTED,Valid.
+stylolite,Geological Structure,has_continuant_part,http://purl.obolibrary.org/obo/BFO_0000178,clay mineral,domain_term,1.0,"accumulation of insoluble residue, such as clay minerals",ACCEPTED,Valid.
+stylolite,Geological Structure,has_continuant_part,http://purl.obolibrary.org/obo/BFO_0000178,pyrite,domain_term,1.0,"accumulation of insoluble residue, such as clay minerals, pyrite, and quartz",ACCEPTED,Valid.
+stylolite,Geological Structure,has_continuant_part,http://purl.obolibrary.org/obo/BFO_0000178,quartz,domain_term,1.0,"accumulation of insoluble residue, such as clay minerals, pyrite, and quartz",ACCEPTED,Valid.
+fluid,Earth Fluid,located_in,http://purl.obolibrary.org/obo/BFO_0000171,pore space,domain_term,1.0,occupies the pore space of a reservoir rock,ACCEPTED,Valid.
+fluid,Earth Fluid,has_continuant_part,http://purl.obolibrary.org/obo/BFO_0000178,hydrocarbon,domain_term,1.0,fluids primarily consist of hydrocarbons (oil and gas) and water,ACCEPTED,Valid.
+mechanical compaction,Geological Process,has_participant,http://purl.obolibrary.org/obo/BFO_0000057,sediment,domain_term,1.0,reduces the bulk volume and porosity of a sediment,ACCEPTED,Valid.
+mechanical compaction,Geological Process,occurrent_part_of,http://purl.obolibrary.org/obo/BFO_0000132,burial,domain_term,0.8,typically results in the reduction of primary interparticle porosity during burial,ACCEPTED,Valid.
+silica cement,Earth Material,constituted_by,https://www.inf.ufrgs.br/bdi/ontologies/GEOCORE_0000017,quartz,domain_term,1.0,"composed of silica polymorphs, such as quartz and chalcedony",ACCEPTED,Valid.
+silica cement,Earth Material,constituted_by,https://www.inf.ufrgs.br/bdi/ontologies/GEOCORE_0000017,chalcedony,domain_term,1.0,"composed of silica polymorphs, such as quartz and chalcedony",ACCEPTED,Valid.
+silica cement,Earth Material,located_in,http://purl.obolibrary.org/obo/BFO_0000171,pore space,domain_term,1.0,crystallize within the pore spaces of a sedimentary rock,ACCEPTED,Valid.
+silica cement,Earth Material,located_in,http://purl.obolibrary.org/obo/BFO_0000171,sedimentary rock,domain_term,1.0,within the pore spaces of a sedimentary rock,ACCEPTED,Valid.
+platform,Sedimentary Environment,located_in,http://purl.obolibrary.org/obo/BFO_0000171,structural high,domain_term,1.0,develops on a structural high,ACCEPTED,Valid.
+platform,Sedimentary Environment,generated_in,https://www.inf.ufrgs.br/bdi/ontologies/GEOCORE_0000014,sag phase,domain_term,1.0,lacustrine platforms formed during the sag phase,ACCEPTED,Valid.
+hydrothermal process,Geological Process,has_participant,http://purl.obolibrary.org/obo/BFO_0000057,fluid,domain_term,1.0,"involves the circulation of hot, chemically active fluids",ACCEPTED,Valid.
+hydrothermal process,Geological Process,occurs_in,http://purl.obolibrary.org/obo/BFO_0000066,rock,domain_term,1.0,"involves the circulation of hot, chemically active fluids through rock",ACCEPTED,Valid.
+fault system,Geological Structure,has_continuant_part,http://purl.obolibrary.org/obo/BFO_0000178,fault,domain_term,1.0,is a set of genetically related extensional faults,ACCEPTED,Valid.
+gas,Earth Fluid,constituted_by,https://www.inf.ufrgs.br/bdi/ontologies/GEOCORE_0000017,hydrocarbon,domain_term,1.0,consists of a mixture of low-molecular-weight hydrocarbons,ACCEPTED,Valid.
+gas,Earth Fluid,located_in,http://purl.obolibrary.org/obo/BFO_0000171,reservoir,domain_term,0.8,existing under reservoir conditions,ACCEPTED,Valid.
+uplift,Geological Process,has_participant,http://purl.obolibrary.org/obo/BFO_0000057,footwall,domain_term,1.0,associated with the upward movement of footwall blocks,ACCEPTED,Valid.
+uplift,Geological Process,precedes,http://purl.obolibrary.org/obo/BFO_0000063,erosion,domain_term,1.0,can also lead to erosion,ACCEPTED,Valid.
+espírito santo basin,Basin,generated_in,https://www.inf.ufrgs.br/bdi/ontologies/GEOCORE_0000014,early cretaceous,domain_term,1.0,it was formed during the Early Cretaceous,ACCEPTED,Valid.
+espírito santo basin,Basin,has_continuant_part,http://purl.obolibrary.org/obo/BFO_0000178,hydrocarbon accumulation,domain_term,1.0,contains significant hydrocarbon accumulations,ACCEPTED,Valid.
+oil accumulation,Earth Fluid,has_continuant_part,http://purl.obolibrary.org/obo/BFO_0000178,gas,domain_term,1.0,accumulations of oil with associated gas,ACCEPTED,Valid.
+oil accumulation,Earth Fluid,constituted_by,https://www.inf.ufrgs.br/bdi/ontologies/GEOCORE_0000017,oil,domain_term,1.0,giant accumulations of oil,ACCEPTED,Valid.
+magnesian clay,Sediment,constituted_by,https://www.inf.ufrgs.br/bdi/ontologies/GEOCORE_0000017,stevensite,domain_term,0.8,predominantly stevensite,ACCEPTED,Valid.
+magnesian clay,Sediment,derives_into,http://purl.obolibrary.org/obo/RO_0001001,dolomite,domain_term,0.8,highly susceptible to diagenetic replacement by dolomite,ACCEPTED,Valid.
+magnesian clay,Sediment,derives_into,http://purl.obolibrary.org/obo/RO_0001001,silica,domain_term,0.8,"highly susceptible to diagenetic replacement by dolomite, silica, and calcite spherulites",ACCEPTED,Valid.
+hydrocarbon accumulation,Earth Fluid,constituted_by,https://www.inf.ufrgs.br/bdi/ontologies/GEOCORE_0000017,oil,domain_term,1.0,a subsurface body of oil and/or gas,ACCEPTED,Valid.
+hydrocarbon accumulation,Earth Fluid,constituted_by,https://www.inf.ufrgs.br/bdi/ontologies/GEOCORE_0000017,gas,domain_term,1.0,a subsurface body of oil and/or gas,ACCEPTED,Valid.
+hydrocarbon accumulation,Earth Fluid,located_in,http://purl.obolibrary.org/obo/BFO_0000171,reservoir rock,domain_term,1.0,trapped within a porous and permeable reservoir rock,ACCEPTED,Valid.
+rift section,Stratigraphic Unit,has_continuant_part,http://purl.obolibrary.org/obo/BFO_0000178,sedimentary rock,domain_term,1.0,comprises the sedimentary and volcanic rocks,ACCEPTED,Valid.
+rift section,Stratigraphic Unit,has_continuant_part,http://purl.obolibrary.org/obo/BFO_0000178,carbonate reservoir,domain_term,1.0,contains the primary source rocks and significant carbonate reservoirs,ACCEPTED,Valid.
+volcanic activity,Geological Process,occurrent_part_of,http://purl.obolibrary.org/obo/BFO_0000117,magmatism,domain_term,1.0,involved extensive magmatism,ACCEPTED,Valid.
+volcanic activity,Geological Process,occurs_in,http://purl.obolibrary.org/obo/BFO_0000066,lacustrine system,domain_term,0.8,influenced the chemistry of the Pre-Salt lacustrine systems,ACCEPTED,Valid.
+volcanic activity,Geological Process,precedes,http://purl.obolibrary.org/obo/BFO_0000063,abiotic precipitation,domain_term,0.8,creating the highly alkaline and supersaturated conditions necessary for the abiotic precipitation of key carbonate reservoir facies,ACCEPTED,Valid.
+sepiolite,Earth Material,derives_from,http://purl.obolibrary.org/obo/RO_0001000,stevensite,domain_term,0.8,can have a genetic relationship with precursor minerals like stevensite,ACCEPTED,Valid.
+late cretaceous,Geological Time Interval,preceded_by,http://purl.obolibrary.org/obo/BFO_0000062,early cretaceous,domain_term,1.0,following the Early Cretaceous Epoch,ACCEPTED,Valid.
+grain size,Dimension,inheres_in,http://purl.obolibrary.org/obo/BFO_0000197,sediment,domain_term,1.0,textural property of a sediment or sedimentary rock,ACCEPTED,Valid.
+grain size,Dimension,inheres_in,http://purl.obolibrary.org/obo/BFO_0000197,sedimentary rock,domain_term,1.0,textural property of a sediment or sedimentary rock,ACCEPTED,Valid.
+diagenetic history,Geological Process,has_occurrent_part,http://purl.obolibrary.org/obo/BFO_0000117,dissolution,domain_term,1.0,"This sequence of events, such as dissolution, cementation, dolomitization, and silicification",ACCEPTED,Valid.
+diagenetic history,Geological Process,has_occurrent_part,http://purl.obolibrary.org/obo/BFO_0000117,cementation,domain_term,1.0,"This sequence of events, such as dissolution, cementation, dolomitization, and silicification",ACCEPTED,Valid.
+diagenetic history,Geological Process,has_occurrent_part,http://purl.obolibrary.org/obo/BFO_0000117,dolomitization,domain_term,1.0,"This sequence of events, such as dissolution, cementation, dolomitization, and silicification",ACCEPTED,Valid.
+diagenetic history,Geological Process,has_participant,http://purl.obolibrary.org/obo/BFO_0000057,sedimentary rock,domain_term,1.0,"chronological sequence of physical, chemical, and biological processes that alter a sedimentary rock",ACCEPTED,Valid.
+microbial mat,Sedimentary Facies,has_continuant_part,http://purl.obolibrary.org/obo/BFO_0000178,lamination,domain_term,0.8,"preserved as laminated, spongy, or tufted fabrics",ACCEPTED,Valid.
+calcite shrub,Body of Rock,constituted_by,https://www.inf.ufrgs.br/bdi/ontologies/GEOCORE_0000017,calcite,domain_term,1.0,composed of fibrous to bladed calcite crystals,ACCEPTED,Valid.
+calcite shrub,Body of Rock,located_in,http://purl.obolibrary.org/obo/BFO_0000171,lacustrine environment,domain_term,1.0,form extensive crusts and layers in lacustrine environments,ACCEPTED,Valid.
+burial,Geological Process,has_participant,http://purl.obolibrary.org/obo/BFO_0000057,sedimentary rock,domain_term,1.0,subjects sedimentary rocks to progressively increasing temperature and pressure,ACCEPTED,Valid.
+burial,Geological Process,precedes,http://purl.obolibrary.org/obo/BFO_0000063,diagenetic alteration,domain_term,1.0,initiating a suite of diagenetic changes,ACCEPTED,Valid.
+burial,Geological Process,precedes,http://purl.obolibrary.org/obo/BFO_0000063,dolomitization,domain_term,1.0,"where alterations like dolomitization, silicification, and cementation critically control the creation or destruction of reservoir porosity",ACCEPTED,Valid.
+replacement,Geological Process,has_participant,http://purl.obolibrary.org/obo/BFO_0000057,carbonate fabric,domain_term,1.0,"involves the replacement of carbonate fabrics (spherulites, shrubs)",ACCEPTED,Valid.
+replacement,Geological Process,has_participant,http://purl.obolibrary.org/obo/BFO_0000057,stevensite,domain_term,1.0,involves the replacement of ... clays (stevensite),ACCEPTED,Valid. | Warnings: Evidence is paraphrased (not exact quote from NLD). Word overlap: 86%.
+basement high,Body of Rock,located_in,http://purl.obolibrary.org/obo/BFO_0000171,sedimentary basin,domain_term,1.0,forms a positive paleotopographic feature within a sedimentary basin,ACCEPTED,Valid.
+channel,Channel Unit,generated_by,https://www.inf.ufrgs.br/bdi/ontologies/GEOCORE_0000013,dissolution,domain_term,1.0,diagenetic conduits formed by dissolution,ACCEPTED,Valid.
+early aptian,Geological Time Interval,occurrent_part_of,http://purl.obolibrary.org/obo/BFO_0000132,early cretaceous,domain_term,1.0,Early Aptian is a geological age of the Early Cretaceous epoch,ACCEPTED,Valid.
+bioclastic rudstone,Sedimentary Rock,constituted_by,https://www.inf.ufrgs.br/bdi/ontologies/GEOCORE_0000017,bivalve,domain_term,1.0,predominantly composed of fragmented and disarticulated bivalve shells,ACCEPTED,Valid.
+bioclastic rudstone,Sedimentary Rock,has_continuant_part,http://purl.obolibrary.org/obo/BFO_0000178,intraclast,domain_term,1.0,may contain common intraclasts,ACCEPTED,Valid.
+bioclastic rudstone,Sedimentary Rock,has_quality,http://purl.obolibrary.org/obo/BFO_0000178,interparticle porosity,domain_term,0.8,"exhibiting a heterogeneous pore system that includes interparticle, moldic, and vugular porosity",ACCEPTED,Valid.
+bioclastic rudstone,Sedimentary Rock,has_quality,http://purl.obolibrary.org/obo/BFO_0000178,moldic porosity,domain_term,0.8,"exhibiting a heterogeneous pore system that includes interparticle, moldic, and vugular porosity",ACCEPTED,Valid.
+crystalline basement,Lithostratigraphic Unit,constituted_by,https://www.inf.ufrgs.br/bdi/ontologies/GEOCORE_0000017,igneous rock,domain_term,1.0,igneous and metamorphic rocks,ACCEPTED,Valid.
+crystalline basement,Lithostratigraphic Unit,constituted_by,https://www.inf.ufrgs.br/bdi/ontologies/GEOCORE_0000017,gneiss,domain_term,1.0,primarily granites and gneisses,ACCEPTED,Valid.
+pore,site,located_in,http://purl.obolibrary.org/obo/BFO_0000171,rock,domain_term,1.0,a void space within a rock,ACCEPTED,Valid.
+pore,site,generated_by,https://www.inf.ufrgs.br/bdi/ontologies/GEOCORE_0000013,diagenetic process,domain_term,1.0,pores are formed and modified by complex depositional and diagenetic processes,ACCEPTED,Valid.
+pore,site,participates_in,http://purl.obolibrary.org/obo/BFO_0000056,diagenetic process,domain_term,1.0,pores are formed and modified by complex depositional and diagenetic processes,ACCEPTED,Valid.
+rifted margin,Geological Object,has_continuant_part,http://purl.obolibrary.org/obo/BFO_0000178,post-rift sequence,domain_term,1.0,characterized by distinct syn-rift and post-rift stratigraphic sequences,ACCEPTED,Valid.
+rift sequence,Stratigraphic Unit,located_in,http://purl.obolibrary.org/obo/BFO_0000171,half-graben,domain_term,1.0,deposited ... typically within fault-bounded half-grabens,ACCEPTED,Valid. | Warnings: Evidence is paraphrased (not exact quote from NLD). Word overlap: 67%.
+syn-rift,Geological Time Interval,precedes,http://purl.obolibrary.org/obo/BFO_0000063,sag phase,domain_term,0.8,"upper boundary is typically defined by the major post-rift unconformity, which marks the onset of thermal subsidence",ACCEPTED,Valid.
+sedimentary basin,Basin,participates_in,http://purl.obolibrary.org/obo/BFO_0000056,rift,domain_term,1.0,"evolution often governed by distinct tectonic phases, such as the rift... stages",ACCEPTED,Valid. | Warnings: Evidence is paraphrased (not exact quote from NLD). Word overlap: 92%.
+weathering,Geological Process,has_participant,http://purl.obolibrary.org/obo/BFO_0000057,rock,domain_term,1.0,causes the physical and chemical alteration of pre-existing rocks,ACCEPTED,Valid.
+weathering,Geological Process,has_occurrent_part,http://purl.obolibrary.org/obo/BFO_0000117,dolomitization,domain_term,0.8,characterized by... diagenetic overprints such as dolomitization,ACCEPTED,Valid. | Warnings: Evidence is paraphrased (not exact quote from NLD). Word overlap: 86%.
+weathering,Geological Process,has_occurrent_part,http://purl.obolibrary.org/obo/BFO_0000117,silicification,domain_term,0.8,characterized by... diagenetic overprints such as dolomitization and silicification,ACCEPTED,Valid. | Warnings: Evidence is paraphrased (not exact quote from NLD). Word overlap: 78%.
+oncoid,Fossil,has_continuant_part,http://purl.obolibrary.org/obo/BFO_0000178,nucleus,domain_term,1.0,around a central nucleus,ACCEPTED,Valid.
+oncoid,Fossil,participates_in,http://purl.obolibrary.org/obo/BFO_0000056,dissolution,domain_term,1.0,oncoids can be subject to significant intraparticle dissolution,ACCEPTED,Valid.
+allochem,Sediment,located_in,http://purl.obolibrary.org/obo/BFO_0000171,pre-salt reservoir,domain_term,1.0,found in Brazilian Pre-Salt reservoirs,ACCEPTED,Valid.
+karst,Geological Structure,has_continuant_part,http://purl.obolibrary.org/obo/BFO_0000178,pore system,domain_term,1.0,a set of geological features and associated pore systems,ACCEPTED,Valid.
+carbonate mineral,Earth Material,continuant_part_of,http://purl.obolibrary.org/obo/BFO_0000176,reservoir rock,domain_term,0.8,form the primary framework of the reservoir rocks,ACCEPTED,Valid.
+oil-water contact,Geological Boundary,located_in,http://purl.obolibrary.org/obo/BFO_0000171,reservoir,domain_term,1.0,within a petroleum reservoir,ACCEPTED,Valid.
+fabric,Lithology,inheres_in,http://purl.obolibrary.org/obo/BFO_0000197,sedimentary rock,domain_term,1.0,petrographic attribute of a sedimentary rock,ACCEPTED,Valid.
+diagenetic modification,Geological Process,has_participant,http://purl.obolibrary.org/obo/BFO_0000057,sediment,domain_term,1.0,alters a sediment or sedimentary rock,ACCEPTED,Valid.
+diagenetic modification,Geological Process,has_participant,http://purl.obolibrary.org/obo/BFO_0000057,sedimentary rock,domain_term,1.0,alters a sediment or sedimentary rock,ACCEPTED,Valid.
+diagenetic modification,Geological Process,has_occurrent_part,http://purl.obolibrary.org/obo/BFO_0000117,dissolution,domain_term,1.0,modifications include processes such as dissolution,ACCEPTED,Valid.
+diagenetic modification,Geological Process,has_occurrent_part,http://purl.obolibrary.org/obo/BFO_0000117,cementation,domain_term,1.0,"modifications include processes such as dissolution, cementation, dolomitization",ACCEPTED,Valid.
+itamambuca group,Lithostratigraphic Unit,constituted_by,https://www.inf.ufrgs.br/bdi/ontologies/GEOCORE_0000017,carbonate rock,domain_term,1.0,Composed of marine siliciclastic and carbonate rocks,ACCEPTED,Valid.
+gastropod,Fossil,participates_in,http://purl.obolibrary.org/obo/BFO_0000056,diagenetic alteration,domain_term,1.0,their diagenetic alteration contributes to reservoir porosity,ACCEPTED,Valid.
+floatstone,Sedimentary Rock,has_continuant_part,http://purl.obolibrary.org/obo/BFO_0000178,oncoid,domain_term,1.0,"larger components often consist of microbialite fragments, oncoids, shells, and various tufa types",ACCEPTED,Valid.
+floatstone,Sedimentary Rock,constituted_by,https://www.inf.ufrgs.br/bdi/ontologies/GEOCORE_0000017,micrite,domain_term,1.0,"embedded within a matrix of micrite, silt, or sand",ACCEPTED,Valid.
+alagoas stage,Geological Time Interval,occurrent_part_of,http://purl.obolibrary.org/obo/BFO_0000132,sag phase,domain_term,0.8,during the upper sag phase,ACCEPTED,Valid.
+calcarenite,Sedimentary Rock,constituted_by,https://www.inf.ufrgs.br/bdi/ontologies/GEOCORE_0000017,intraclast,domain_term,1.0,"composed of sand-sized grains, which in the Pre-Salt are typically reworked intraclasts",ACCEPTED,Valid.
+calcarenite,Sedimentary Rock,constituted_by,https://www.inf.ufrgs.br/bdi/ontologies/GEOCORE_0000017,ooid,domain_term,1.0,"composed of sand-sized grains, which in the Pre-Salt are typically reworked intraclasts, ooids, and bioclasts",ACCEPTED,Valid.
+calcarenite,Sedimentary Rock,constituted_by,https://www.inf.ufrgs.br/bdi/ontologies/GEOCORE_0000017,bioclast,domain_term,1.0,"composed of sand-sized grains, which in the Pre-Salt are typically reworked intraclasts, ooids, and bioclasts",ACCEPTED,Valid.
+calcarenite,Sedimentary Rock,has_quality,http://purl.obolibrary.org/obo/RO_0000086,interparticle porosity,domain_term,1.0,can possess significant primary interparticle porosity,ACCEPTED,Valid.
+calcilutite,Sedimentary Rock,constituted_by,https://www.inf.ufrgs.br/bdi/ontologies/GEOCORE_0000017,calcite,domain_term,1.0,"predominantly composed of calcite, dolomite, and quartz",ACCEPTED,Valid.
+calcilutite,Sedimentary Rock,constituted_by,https://www.inf.ufrgs.br/bdi/ontologies/GEOCORE_0000017,dolomite,domain_term,1.0,"predominantly composed of calcite, dolomite, and quartz",ACCEPTED,Valid.
+calcilutite,Sedimentary Rock,constituted_by,https://www.inf.ufrgs.br/bdi/ontologies/GEOCORE_0000017,quartz,domain_term,1.0,"predominantly composed of calcite, dolomite, and quartz",ACCEPTED,Valid.
+calcilutite,Sedimentary Rock,participates_in,http://purl.obolibrary.org/obo/BFO_0000056,dolomitization,domain_term,1.0,reflecting significant post-depositional alteration through dolomitization,ACCEPTED,Valid.
+pre-salt interval,Stratigraphic Unit,has_continuant_part,http://purl.obolibrary.org/obo/BFO_0000178,rift section,domain_term,0.8,subdivided into a lower syn-rift section,ACCEPTED,Valid.
+magmatic event,Geological Process,occurs_in,http://purl.obolibrary.org/obo/BFO_0000066,sedimentary basin,domain_term,1.0,emplacement of ... igneous rocks within a sedimentary basin,ACCEPTED,Valid. | Warnings: Evidence is paraphrased (not exact quote from NLD). Word overlap: 78%.
+sequence boundary,Geological Boundary,generated_by,https://www.inf.ufrgs.br/bdi/ontologies/GEOCORE_0000013,erosion,domain_term,1.0,hiatus characterized by erosion,ACCEPTED,Valid.
+neobarremian,Geological Time Interval,occurrent_part_of,http://purl.obolibrary.org/obo/BFO_0000132,early cretaceous,domain_term,1.0,of the Barremian Age of the Early Cretaceous Period,ACCEPTED,Valid.
+reservoir interval,Stratigraphic Unit,continuant_part_of,http://purl.obolibrary.org/obo/BFO_0000176,reservoir rock,domain_term,1.0,is a vertical subdivision of a reservoir rock formation,ACCEPTED,Valid.
+reservoir interval,Stratigraphic Unit,has_quality,http://purl.obolibrary.org/obo/RO_0000086,permeability,domain_term,1.0,"characterized by a relatively homogeneous set of attributes, such as lithofacies, porosity, permeability, or diagenetic alteration",ACCEPTED,Valid.
+karstification,Geological Process,has_participant,http://purl.obolibrary.org/obo/BFO_0000057,hydrothermal fluid,domain_term,1.0,driven by ascending hydrothermal fluids along fault zones,ACCEPTED,Valid.
+karstification,Geological Process,occurs_in,http://purl.obolibrary.org/obo/BFO_0000066,pre-salt reservoir,domain_term,1.0,"In Pre-Salt reservoirs, this process can be hypogenic",ACCEPTED,Valid.
+dissolution process,Geological Process,occurs_in,http://purl.obolibrary.org/obo/BFO_0000066,lacustrine carbonate,domain_term,1.0,"In Pre-Salt lacustrine carbonates, this process is critical",ACCEPTED,Valid.
+dissolution process,Geological Process,has_participant,http://purl.obolibrary.org/obo/BFO_0000057,shrub,domain_term,1.0,"targeting components such as Mg-clays, spherulites, shrubs, and cements",ACCEPTED,Valid.
+lacustrine coquina,Sedimentary Rock,located_in,http://purl.obolibrary.org/obo/BFO_0000171,lacustrine system,domain_term,1.0,within a lacustrine depositional system,ACCEPTED,Valid.
+lacustrine coquina,Sedimentary Rock,located_in,http://purl.obolibrary.org/obo/BFO_0000171,structural high,domain_term,1.0,"typically formed in shallow, high-energy waters on structural highs",ACCEPTED,Valid.
+early diagenesis,Geological Process,occurs_in,http://purl.obolibrary.org/obo/BFO_0000066,sediment-water interface,domain_term,1.0,occurs at or near the sediment-water interface,ACCEPTED,Valid.
+carbonate sediment,Sediment,constituted_by,https://www.inf.ufrgs.br/bdi/ontologies/GEOCORE_0000017,carbonate mineral,domain_term,1.0,composed primarily of carbonate minerals,ACCEPTED,Valid.
+carbonate sediment,Sediment,derives_into,http://purl.obolibrary.org/obo/RO_0001001,reservoir rock,domain_term,0.8,forms the precursor to reservoir rocks,ACCEPTED,Valid.
+carbonate sediment,Sediment,has_continuant_part,http://purl.obolibrary.org/obo/BFO_0000178,shrub,domain_term,1.0,includes components such as... microbial shrubs,ACCEPTED,Valid. | Warnings: Evidence is paraphrased (not exact quote from NLD). Word overlap: 67%.
+carbonate sediment,Sediment,has_continuant_part,http://purl.obolibrary.org/obo/BFO_0000178,carbonate mud,domain_term,0.8,includes components such as... fine-grained muds,ACCEPTED,Valid. | Warnings: Evidence is paraphrased (not exact quote from NLD). Word overlap: 67%.
+nodule,Geological Object,located_in,http://purl.obolibrary.org/obo/BFO_0000171,host rock,domain_term,1.0,compositionally distinct from its surrounding host rock,ACCEPTED,Valid.
+intercrystalline pore,site,generated_by,https://www.inf.ufrgs.br/bdi/ontologies/GEOCORE_0000013,dolomitization,domain_term,1.0,most commonly formed by dolomitization,ACCEPTED,Valid.
+intercrystalline pore,site,continuant_part_of,http://purl.obolibrary.org/obo/BFO_0000176,pore system,domain_term,1.0,significant component of the total pore system,ACCEPTED,Valid.
+intercrystalline pore,site,located_in,http://purl.obolibrary.org/obo/BFO_0000171,dolomite,domain_term,0.8,"creating a network of small, often irregular pores between dolomite crystals",ACCEPTED,Valid.
+neomorphism,Geological Process,has_participant,http://purl.obolibrary.org/obo/BFO_0000057,aragonite,domain_term,1.0,"involves the in-situ transformation of an original mineral component, such as an aragonite shell",ACCEPTED,Valid.
+neomorphism,Geological Process,has_participant,http://purl.obolibrary.org/obo/BFO_0000057,bioclast,domain_term,1.0,the neomorphism of aragonitic bioclasts,ACCEPTED,Valid.
+carbonate mud,Sediment,constituted_by,https://www.inf.ufrgs.br/bdi/ontologies/GEOCORE_0000017,calcite,domain_term,1.0,composed of a variable mixture of calcite,ACCEPTED,Valid.
+carbonate mud,Sediment,constituted_by,https://www.inf.ufrgs.br/bdi/ontologies/GEOCORE_0000017,clay mineral,domain_term,1.0,composed of a variable mixture of... clay minerals,ACCEPTED,Valid. | Warnings: Evidence is paraphrased (not exact quote from NLD). Word overlap: 75%.
+carbonate mud,Sediment,constituted_by,https://www.inf.ufrgs.br/bdi/ontologies/GEOCORE_0000017,dolomite,domain_term,1.0,composed of a variable mixture of... dolomite,ACCEPTED,Valid. | Warnings: Evidence is paraphrased (not exact quote from NLD). Word overlap: 71%.
+carbonate mud,Sediment,located_in,http://purl.obolibrary.org/obo/BFO_0000171,lacustrine environment,domain_term,1.0,deposited in lacustrine environments,ACCEPTED,Valid.
+oil reserve,Dimension,continuant_part_of,http://purl.obolibrary.org/obo/BFO_0000176,oil accumulation,domain_term,0.8,recoverable from known accumulations,ACCEPTED,Valid.
+k-feldspar,Earth Material,located_in,http://purl.obolibrary.org/obo/BFO_0000171,carbonate reservoir,domain_term,1.0,as an authigenic phase within the carbonate reservoirs,ACCEPTED,Valid.
+k-feldspar,Earth Material,participates_in,http://purl.obolibrary.org/obo/BFO_0000056,diagenetic alteration,domain_term,1.0,This mineral is often subject to diagenetic alteration,ACCEPTED,Valid.
+diagenetic evolution,Geological Process,has_participant,http://purl.obolibrary.org/obo/BFO_0000057,sedimentary rock,domain_term,1.0,sequence of processes and resulting products that have altered a sedimentary rock,ACCEPTED,Valid.
+diagenetic evolution,Geological Process,has_occurrent_part,http://purl.obolibrary.org/obo/BFO_0000117,dissolution,domain_term,1.0,details the timing of events such as dissolution,ACCEPTED,Valid.
+diagenetic evolution,Geological Process,has_occurrent_part,http://purl.obolibrary.org/obo/BFO_0000117,replacement,domain_term,1.0,and the precipitation or replacement of minerals,ACCEPTED,Valid.
+micropore,site,has_quality,http://purl.obolibrary.org/obo/RO_0000086,pore size,domain_term,1.0,defined by a size range of approximately 0.125 to 0.5 micrometers,ACCEPTED,Valid.
+micropore,site,located_in,http://purl.obolibrary.org/obo/BFO_0000171,packstone,domain_term,1.0,often associated with cemented packstones,ACCEPTED,Valid.
+micropore,site,located_in,http://purl.obolibrary.org/obo/BFO_0000171,vug,domain_term,1.0,within larger karst-modified vugs,ACCEPTED,Valid.
+camburi group,Lithostratigraphic Unit,generated_in,https://www.inf.ufrgs.br/bdi/ontologies/GEOCORE_0000014,albian,domain_term,1.0,deposited from the Albian to the Cenomanian,ACCEPTED,Valid.
+camburi group,Lithostratigraphic Unit,constituted_by,https://www.inf.ufrgs.br/bdi/ontologies/GEOCORE_0000017,carbonate rock,domain_term,1.0,composed of siliciclastic and carbonate rocks,ACCEPTED,Valid.
+marine incursion,Geological Process,has_participant,http://purl.obolibrary.org/obo/BFO_0000057,marine water,domain_term,1.0,involves the episodic or large-scale entry of seawater,ACCEPTED,Valid.
+total porosity,quality,inheres_in,http://purl.obolibrary.org/obo/BFO_0000197,rock,domain_term,1.0,petrophysical property that quantifies the fraction of a rock's bulk volume,ACCEPTED,Valid.
+total porosity,quality,has_continuant_part,http://purl.obolibrary.org/obo/BFO_0000178,primary porosity,domain_term,1.0,"represents the sum of all pore types, including primary, secondary (e.g., dissolution-related), and fracture porosity",ACCEPTED,Valid.
+total porosity,quality,has_continuant_part,http://purl.obolibrary.org/obo/BFO_0000178,fracture porosity,domain_term,1.0,"represents the sum of all pore types, including primary, secondary (e.g., dissolution-related), and fracture porosity",ACCEPTED,Valid.
+rift system,Geological Structure,has_continuant_part,http://purl.obolibrary.org/obo/BFO_0000178,normal fault,domain_term,1.0,characterized by a series of normal faults,ACCEPTED,Valid.
+pre-salt sequence,Stratigraphic Unit,has_continuant_part,http://purl.obolibrary.org/obo/BFO_0000178,sedimentary rock,domain_term,1.0,comprises the Early Cretaceous sedimentary and volcanic rocks,ACCEPTED,Valid.
+pre-salt sequence,Stratigraphic Unit,generated_in,https://www.inf.ufrgs.br/bdi/ontologies/GEOCORE_0000014,early cretaceous,domain_term,1.0,comprises the Early Cretaceous sedimentary and volcanic rocks,ACCEPTED,Valid.
+volcaniclastic,Sediment,has_continuant_part,https://www.inf.ufrgs.br/bdi/ontologies/GEOCORE_0000017,volcanic fragment,domain_term,1.0,"composed of fragments of rock and minerals produced by or derived from volcanic activity. In the Brazilian Pre-Salt, this component consists of volcanic rock fragments",ACCEPTED,Valid.
+volcaniclastic,Sediment,generated_by,https://www.inf.ufrgs.br/bdi/ontologies/GEOCORE_0000013,volcanic activity,domain_term,1.0,produced by or derived from volcanic activity,ACCEPTED,Valid.
+clastic sediment,Sediment,generated_by,https://www.inf.ufrgs.br/bdi/ontologies/GEOCORE_0000013,weathering,domain_term,1.0,derived from the physical weathering and erosion of pre-existing rocks,ACCEPTED,Valid.
+clastic sediment,Sediment,generated_by,https://www.inf.ufrgs.br/bdi/ontologies/GEOCORE_0000013,erosion,domain_term,1.0,derived from the physical weathering and erosion of pre-existing rocks,ACCEPTED,Valid.
+growth strata,Architectural Element,located_in,http://purl.obolibrary.org/obo/BFO_0000171,half-graben,domain_term,1.0,filling half-graben basins,ACCEPTED,Valid.
+precambrian basement,Lithostratigraphic Unit,constituted_by,https://www.inf.ufrgs.br/bdi/ontologies/GEOCORE_0000017,gneiss,domain_term,1.0,composed of Precambrian-aged granitoids and gneisses,ACCEPTED,Valid.
+marl,Sedimentary Rock,constituted_by,https://www.inf.ufrgs.br/bdi/ontologies/GEOCORE_0000017,carbonate mineral,domain_term,1.0,composed of a mixture of carbonate minerals,ACCEPTED,Valid.
+marl,Sedimentary Rock,constituted_by,https://www.inf.ufrgs.br/bdi/ontologies/GEOCORE_0000017,calcite,domain_term,1.0,"carbonate minerals, such as calcite",ACCEPTED,Valid.
+abiotic precipitation,Geological Process,occurs_in,http://purl.obolibrary.org/obo/BFO_0000066,lacustrine environment,domain_term,1.0,"In Pre-Salt lacustrine settings, this process is often triggered...",ACCEPTED,Valid. | Warnings: Evidence is paraphrased (not exact quote from NLD). Word overlap: 89%.
+continental siliciclastic,Sedimentary Rock,generated_by,https://www.inf.ufrgs.br/bdi/ontologies/GEOCORE_0000013,erosion,domain_term,1.0,derived from the erosion of land areas,ACCEPTED,Valid.
+continental siliciclastic,Sedimentary Rock,generated_in,https://www.inf.ufrgs.br/bdi/ontologies/GEOCORE_0000014,rift phase,domain_term,0.8,are characteristic of the rift phase,ACCEPTED,Valid.
+carbonate fabric,Geological Structure,participates_in,http://purl.obolibrary.org/obo/BFO_0000056,diagenetic process,domain_term,1.0,significantly modified or completely obliterated by subsequent diagenetic processes,ACCEPTED,Valid.
+supersequence,Stratigraphic Unit,has_continuant_part,http://purl.obolibrary.org/obo/BFO_0000178,depositional sequence,domain_term,1.0,comprises a genetically related succession of depositional sequences,ACCEPTED,Valid.
+rock texture,Lithology,inheres_in,http://purl.obolibrary.org/obo/BFO_0000197,rock,domain_term,1.0,is a fundamental physical property of a rock,ACCEPTED,Valid.
+rock texture,Lithology,participates_in,http://purl.obolibrary.org/obo/BFO_0000056,diagenetic process,domain_term,1.0,"The original depositional texture can be preserved, modified, or completely obliterated by diagenetic processes",ACCEPTED,Valid.
+fracture porosity,quality,inheres_in,http://purl.obolibrary.org/obo/BFO_0000197,rock,domain_term,1.0,"composed of the void space created by natural cracks, fissures, or breaks within a rock",ACCEPTED,Valid.
+macrocrystalline quartz,Earth Material,located_in,http://purl.obolibrary.org/obo/BFO_0000171,pore,domain_term,1.0,precipitates as a late-stage phase in the center of pores,ACCEPTED,Valid.
+macrocrystalline quartz,Earth Material,generated_by,https://www.inf.ufrgs.br/bdi/ontologies/GEOCORE_0000013,replacement,domain_term,1.0,can also replace carbonate components,ACCEPTED,Valid.
+mica,Earth Material,located_in,http://purl.obolibrary.org/obo/BFO_0000171,siltstone,domain_term,1.0,within siliciclastic siltstones and mudstones,ACCEPTED,Valid.
+mica,Earth Material,located_in,http://purl.obolibrary.org/obo/BFO_0000171,mudstone,domain_term,1.0,within siliciclastic siltstones and mudstones,ACCEPTED,Valid.
+structural setting,Geological Structure,has_continuant_part,http://purl.obolibrary.org/obo/BFO_0000178,fault,domain_term,1.0,defined by the geometric arrangement and interplay of tectonic elements such as faults,ACCEPTED,Valid.
+depositional cycle,Facies Association,has_continuant_part,http://purl.obolibrary.org/obo/BFO_0000178,carbonate facies,domain_term,1.0,a recurring vertical succession of genetically related carbonate facies,ACCEPTED,Valid.
+depositional cycle,Facies Association,has_continuant_part,http://purl.obolibrary.org/obo/BFO_0000178,shrubstone,domain_term,1.0,with in situ facies like shrubstones or mudstones at their base,ACCEPTED,Valid.
+depositional cycle,Facies Association,has_continuant_part,http://purl.obolibrary.org/obo/BFO_0000178,mudstone,domain_term,1.0,with in situ facies like shrubstones or mudstones at their base,ACCEPTED,Valid.
+laminated mudstone,Sedimentary Facies,has_continuant_part,http://purl.obolibrary.org/obo/BFO_0000178,peloid,domain_term,1.0,can contain peloids,ACCEPTED,Valid.
+laminated mudstone,Sedimentary Facies,has_continuant_part,http://purl.obolibrary.org/obo/BFO_0000178,ostracod,domain_term,1.0,"can contain peloids, ostracods",ACCEPTED,Valid.
+dolomudstone,Sedimentary Rock,constituted_by,https://www.inf.ufrgs.br/bdi/ontologies/GEOCORE_0000017,dolomite,domain_term,1.0,predominantly composed of mud-grade dolomite crystals,ACCEPTED,Valid.
+dolomudstone,Sedimentary Rock,has_continuant_part,http://purl.obolibrary.org/obo/BFO_0000178,calcite,domain_term,1.0,containing fine calcite particles,ACCEPTED,Valid.
+dolomudstone,Sedimentary Rock,has_continuant_part,http://purl.obolibrary.org/obo/BFO_0000178,intercrystalline pore,domain_term,1.0,consisting of small intercrystalline and interparticle pores,ACCEPTED,Valid.
+passive-margin basin,Basin,located_in,http://purl.obolibrary.org/obo/BFO_0000171,continental margin,domain_term,1.0,develops on a passive continental margin,ACCEPTED,Valid.
+reworked carbonate,Sedimentary Rock,constituted_by,https://www.inf.ufrgs.br/bdi/ontologies/GEOCORE_0000017,shrub,domain_term,1.0,"composed of transported and redeposited fragments of pre-existing carbonate facies, primarily calcitic spherulites and shrubs",ACCEPTED,Valid.
+reworked carbonate,Sedimentary Rock,has_quality,http://purl.obolibrary.org/obo/RO_0000086,primary porosity,domain_term,1.0,characterized by high primary porosity and permeability,ACCEPTED,Valid.
+carbonate deposit,Body of Rock,constituted_by,https://www.inf.ufrgs.br/bdi/ontologies/GEOCORE_0000017,carbonate mineral,domain_term,0.8,formed by the net accumulation of carbonate minerals and sediments,ACCEPTED,Valid.
+carbonate deposit,Body of Rock,constituted_by,https://www.inf.ufrgs.br/bdi/ontologies/GEOCORE_0000017,sediment,domain_term,0.8,formed by the net accumulation of carbonate minerals and sediments,ACCEPTED,Valid.
+diagenetic product,Earth Material,located_in,http://purl.obolibrary.org/obo/BFO_0000171,rock,domain_term,1.0,forms within a rock,ACCEPTED,Valid.
+aragonite,Earth Material,located_in,http://purl.obolibrary.org/obo/BFO_0000171,lacustrine carbonate,domain_term,1.0,in Pre-Salt lacustrine carbonates,ACCEPTED,Valid.
+aragonite,Earth Material,participates_in,http://purl.obolibrary.org/obo/BFO_0000056,dissolution,domain_term,0.8,susceptible to diagenetic alteration through dissolution,ACCEPTED,Valid.
+aragonite,Earth Material,derives_into,http://purl.obolibrary.org/obo/RO_0001001,calcite,domain_term,1.0,neomorphism to calcite,ACCEPTED,Valid.
+continental carbonate,Sedimentary Rock,located_in,http://purl.obolibrary.org/obo/BFO_0000171,lacustrine system,domain_term,1.0,"forms in a wide range of non-marine depositional environments, including lacustrine, palustrine, and spring systems",ACCEPTED,Valid.
+mg-silicate gel,Earth Material,located_in,http://purl.obolibrary.org/obo/BFO_0000171,lacustrine environment,domain_term,0.8,"forms in alkaline, Mg- and SiO2-rich lacustrine waters",ACCEPTED,Valid.
+mg-silicate gel,Earth Material,generated_by,https://www.inf.ufrgs.br/bdi/ontologies/GEOCORE_0000013,evaporation,domain_term,1.0,"forms in alkaline, Mg- and SiO2-rich lacustrine waters during periods of intense evaporation",ACCEPTED,Valid.
+mg-silicate gel,Earth Material,derives_into,http://purl.obolibrary.org/obo/RO_0001001,stevensite,domain_term,1.0,forming more stable crystalline Mg-silicate minerals such as stevensite,ACCEPTED,Valid.
+cave,site,has_quality,http://purl.obolibrary.org/obo/RO_0000086,permeability,domain_term,1.0,represents a zone of extremely high permeability,ACCEPTED,Valid.
+cave,site,has_quality,http://purl.obolibrary.org/obo/RO_0000086,flow capacity,domain_term,1.0,represents a zone of extremely high permeability and flow capacity,ACCEPTED,Valid.
+namibe basin,Basin,generated_in,https://www.inf.ufrgs.br/bdi/ontologies/GEOCORE_0000014,early cretaceous,domain_term,1.0,Formed during the Early Cretaceous,ACCEPTED,Valid.
+fluorite,Earth Material,located_in,http://purl.obolibrary.org/obo/BFO_0000171,pore,domain_term,1.0,observed lining the margins of pores,ACCEPTED,Valid.
+pore size,Dimension,inheres_in,http://purl.obolibrary.org/obo/BFO_0000197,pore,domain_term,1.0,quantifies the physical dimensions of the void spaces (pores),ACCEPTED,Valid.
+pore size,Dimension,inheres_in,http://purl.obolibrary.org/obo/BFO_0000197,rock,domain_term,1.0,quantifies the physical dimensions of the void spaces (pores) within a rock,ACCEPTED,Valid.
+carbonate sequence,Stratigraphic Unit,constituted_by,https://www.inf.ufrgs.br/bdi/ontologies/GEOCORE_0000017,carbonate rock,domain_term,1.0,predominantly composed of carbonate rocks,ACCEPTED,Valid.
+volcanic,Lithology,participates_in,http://purl.obolibrary.org/obo/BFO_0000056,weathering,domain_term,0.8,The weathering of these volcanic terrains,ACCEPTED,Valid.
+interparticle pore,site,located_in,http://purl.obolibrary.org/obo/BFO_0000171,sedimentary rock,domain_term,1.0,located in the voids between the constituent grains or particles of a sedimentary rock,ACCEPTED,Valid.
+interparticle pore,site,located_in,http://purl.obolibrary.org/obo/BFO_0000171,grainstone,domain_term,1.0,particularly within reworked facies like grainstones and rudstones,ACCEPTED,Valid.
+interparticle pore,site,located_in,http://purl.obolibrary.org/obo/BFO_0000171,rudstone,domain_term,1.0,particularly within reworked facies like grainstones and rudstones,ACCEPTED,Valid.
+interparticle pore,site,participates_in,http://purl.obolibrary.org/obo/BFO_0000056,dissolution,domain_term,0.8,These pores can be enhanced by dissolution,ACCEPTED,Valid.
+post-rift supersequence,Stratigraphic Unit,has_continuant_part,http://purl.obolibrary.org/obo/BFO_0000178,lacustrine carbonate,domain_term,1.0,"comprising lacustrine carbonates, clastics, and a capping succession of evaporites",ACCEPTED,Valid.
+density,quality,inheres_in,http://purl.obolibrary.org/obo/BFO_0000197,rock,domain_term,0.8,"fundamental physical property of a substance... In the context of reservoir characterization, it is distinguished as either bulk density... which includes the rock matrix... or grain density... of the solid mineral constituents.",ACCEPTED,Valid. | Warnings: Evidence is paraphrased (not exact quote from NLD). Word overlap: 89%.
+silica cementation,Geological Process,occurs_in,http://purl.obolibrary.org/obo/BFO_0000066,vug,domain_term,1.0,"filling interparticle pores, vugs, and fractures",ACCEPTED,Valid.
