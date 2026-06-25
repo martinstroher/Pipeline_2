@@ -82,6 +82,50 @@ def _mint_presalt_iri(term: str) -> URIRef:
     return ONTO_NS[camel]
 
 
+# Minor words kept lower-case in Title Case labels (matches GeoCore's
+# "Body of Rock" style).
+_LABEL_MINOR_WORDS = {
+    "of", "the", "a", "an", "and", "or", "in", "on", "for", "to",
+    "with", "by", "from", "as", "at", "per",
+}
+
+
+def _cap_token(token: str) -> str:
+    """Capitalise the first letter of a token, preserving acronyms / existing
+    capitals (`CO2` stays `CO2`, `rock` -> `Rock`)."""
+    if not token:
+        return token
+    if token[0].isupper() or any(c.isupper() for c in token[1:]):
+        return token
+    return token[:1].upper() + token[1:]
+
+
+def _title_case(label: str) -> str:
+    """Title-case a label in the GeoCore/GeoReservoir house style
+    (`Body of Rock`, `Pre-Salt Sequence`): capitalise each word and each
+    hyphen-separated part, keep minor words lower-case (except the first), and
+    leave acronyms / already-capitalised tokens untouched. Used only for class
+    and individual labels — never for object properties."""
+    label = (label or "").strip()
+    if not label:
+        return label
+    out: list[str] = []
+    for wi, word in enumerate(label.split()):
+        parts = word.split("-")
+        cased: list[str] = []
+        for pi, part in enumerate(parts):
+            if not part:
+                cased.append(part)
+                continue
+            is_first = wi == 0 and pi == 0
+            if part.lower() in _LABEL_MINOR_WORDS and not is_first:
+                cased.append(part.lower())
+            else:
+                cased.append(_cap_token(part))
+        out.append("-".join(cased))
+    return " ".join(out)
+
+
 # ── Upper-ontology backbone ────────────────────────────────────────────
 # Caches the subClassOf chain from published OWL files so that every
 # GeoCore/GeoReservoir class referenced in the graph gets its parent
@@ -381,7 +425,7 @@ def _emit_named_individuals(g: Graph, instances_csv: str) -> int:
                 target_label = target.split(":", 1)[-1] if ":" in target else target
                 type_iri = _mint_presalt_iri(target_label)
                 g.add((type_iri, RDF.type, OWL.Class))
-                g.add((type_iri, RDFS.label, Literal(target_label, lang="en")))
+                g.add((type_iri, RDFS.label, Literal(_title_case(target_label), lang="en")))
                 g.add((type_iri, RDFS.subClassOf, URIRef(mint_parent_iri)))
                 g.add((type_iri, RDFS.comment,
                        Literal("[critic CONVERT_TO_INSTANCE minted target class]", lang="en")))
@@ -392,7 +436,7 @@ def _emit_named_individuals(g: Graph, instances_csv: str) -> int:
         term_iri = _term_to_iri(term)
         g.add((term_iri, RDF.type, OWL.NamedIndividual))
         g.add((term_iri, RDF.type, type_iri))
-        g.add((term_iri, RDFS.label, Literal(term, lang="en")))
+        g.add((term_iri, RDFS.label, Literal(_title_case(term), lang="en")))
         reason = str(r.get("Reason", "")).strip()
         if reason:
             g.add((term_iri, RDFS.comment, Literal(f"[critic CONVERT_TO_INSTANCE] {reason}", lang="en")))
@@ -477,6 +521,33 @@ def _emit_companion_axioms(g: Graph) -> int:
             g.add((cls, RDFS.subClassOf, bn))
             n_emitted += 1
     return n_emitted
+
+
+def _label_used_properties(g: Graph) -> int:
+    """Declare + label every object property used via owl:onProperty that has no
+    rdfs:label yet, so Protege shows a readable name (e.g. BFO_0000054 ->
+    'realized in') even when the BFO/RO imports are not resolved. Labels come
+    from the reference OWL files first, then the config relation names. Property
+    labels stay lower-case (BFO/RO convention)."""
+    _load_upper_parent_map()  # populates _UPPER_LABEL_FROM_OWL
+    ref_labels = dict(_UPPER_LABEL_FROM_OWL or {})
+    cfg_labels = {pc.iri: name.replace("_", " ") for name, pc in _CFG.all_relations().items()}
+    n = 0
+    seen: set[str] = set()
+    for _, _, prop in g.triples((None, OWL.onProperty, None)):
+        if not isinstance(prop, URIRef):
+            continue
+        pstr = str(prop)
+        if pstr in seen:
+            continue
+        seen.add(pstr)
+        if list(g.objects(prop, RDFS.label)):
+            continue  # already labelled (e.g. relation-restriction properties)
+        label = ref_labels.get(pstr) or cfg_labels.get(pstr) or _local_name(pstr)
+        g.add((prop, RDF.type, OWL.ObjectProperty))
+        g.add((prop, RDFS.label, Literal(label, lang="en")))
+        n += 1
+    return n
 
 
 def run_owl_export(
@@ -618,7 +689,7 @@ def run_owl_export(
                     g.add((term_iri, RDFS.subClassOf, URIRef(upper_iri_str)))
 
         # Label
-        g.add((term_iri, RDFS.label, Literal(term, lang="en")))
+        g.add((term_iri, RDFS.label, Literal(_title_case(str(term)), lang="en")))
 
         # NLD as comment
         nld = nld_map.get(term, "")
@@ -778,6 +849,12 @@ def run_owl_export(
     for iri_a, iri_b in _BFO_DISJOINT:
         g.add((URIRef(iri_a), OWL.disjointWith, URIRef(iri_b)))
     log.detail(f"Added {len(_BFO_DISJOINT)} BFO disjointness axioms")
+
+    # ── Label every object property used in a restriction, so Protege shows a
+    #    readable name even without resolving the BFO/RO imports ──
+    n_prop_labels = _label_used_properties(g)
+    if n_prop_labels:
+        log.detail(f"Labelled {n_prop_labels} object propert{'y' if n_prop_labels == 1 else 'ies'} used in restrictions")
 
     # Serialize
     os.makedirs(os.path.dirname(output_path) or ".", exist_ok=True)

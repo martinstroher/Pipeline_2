@@ -20,6 +20,7 @@ domains/<your_domain>/
 │   ├── taxonomy_building.txt
 │   ├── relation_extraction.txt
 │   ├── critic_taxonomy.txt
+│   ├── critic_taxonomy_dedup.txt
 │   ├── critic_relations.txt
 │   ├── cq_scoring.txt
 │   └── cq_synonym_triage.txt
@@ -71,7 +72,8 @@ call time.
 | `term_categorization.txt` | `{categories_block}`, `{json_batch}` |
 | `taxonomy_building.txt` | `{category}`, `{upper_vocab}`, `{terms_json}` |
 | `relation_extraction.txt` | `{known_terms}`, `{json_batch}`, `{batch_size}` |
-| `critic_taxonomy.txt` | `{category}`, `{terms_json}`, `{relations_context_json}`, `{target_classes_json}` |
+| `critic_taxonomy.txt` | `{category}`, `{terms_json}`, `{relations_context_json}`, `{parent_context_json}`, `{target_classes_json}` |
+| `critic_taxonomy_dedup.txt` | `{category}`, `{survivors_json}` |
 | `critic_relations.txt` | `{category}`, `{relations_json}`, `{relations_menu_json}`, `{previously_minted_json}`, `{taxonomy_context_json}`, `{taxonomy_decisions_json}` |
 | `cq_scoring.txt` | `{batch_size}`, `{terms_json}` |
 | `cq_synonym_triage.txt` | `{clusters_json}` |

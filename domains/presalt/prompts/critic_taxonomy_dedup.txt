@@ -1,0 +1,58 @@
+[SYSTEM_INSTRUCTION]
+<<personas_critic_auditor>>
+
+[PROMPT_TEMPLATE]
+You are doing a focused **deduplication** pass over the terms of the **{category}** branch of an upper-ontology-aligned taxonomy. Your ONLY job is the two checks that require seeing the terms **together**: sibling near-synonym redundancy and weak intermediates.
+
+Each row is a term with its definition (NLD), its parent, whether it is a builder-invented intermediate, and how many surviving children it has (computed for you).
+
+## Terms
+{survivors_json}
+
+────────────────────────────────────────────────────────────
+## Two checks (run across the whole set)
+────────────────────────────────────────────────────────────
+
+1. **Sibling near-synonym redundancy.** Do two (or more) terms denote the **same kind** — near-identical NLDs, or one is just a spelling/word-order/synonym variant of another (e.g. `Sofa` vs `Couch`)? Keep the clearest single survivor; mark the other(s) DROP_AS_REDUNDANT, `survivor` = the kept term. Judge by **meaning**, not surface wording — two genuinely distinct subkinds that merely sound similar must both be KEPT.
+
+2. **Weak intermediate.** A term with `is_intermediate: true` earns its place only if it has **≥2 surviving children** AND a real differentia. Use the provided `child_count`. If `child_count < 2` (or it has no real differentia) → DROP_AS_REDUNDANT (its children auto-reparent to the category root). `survivor` = the category root or the term's parent.
+
+────────────────────────────────────────────────────────────
+## Abstention
+────────────────────────────────────────────────────────────
+
+- Default to **KEEP**. Drop when you can name the surviving term it collapses into (sibling) or cite `child_count < 2` (weak intermediate).
+- Do NOT judge mixins, roles, instances, or parent-collapse here. Two terms that are both legitimate subkinds of the same parent are NOT redundant just because they share a parent.
+- A term may appear only once in `edits`.
+
+────────────────────────────────────────────────────────────
+## Worked examples (BFO-spec; not domain-specific)
+────────────────────────────────────────────────────────────
+
+- Siblings `Sofa` and `Couch`, near-identical NLDs → DROP_AS_REDUNDANT one, `survivor` = the other.
+- `Dog` and `Cat` under `Mammal` → distinct kinds; both KEEP (shared parent ≠ redundant).
+- `MiscGroup` with `is_intermediate: true`, `child_count: 1` → weak intermediate → DROP_AS_REDUNDANT, `survivor` = parent.
+
+────────────────────────────────────────────────────────────
+## Output schema
+────────────────────────────────────────────────────────────
+
+Return ONLY a JSON object with this exact shape. Include a row ONLY when you drop it (every term not listed is implicitly KEPT):
+
+```json
+{{
+  "edits": [
+    {{"id": 14, "action": "DROP_AS_REDUNDANT", "survivor": "Sofa",
+      "reason": "near-synonym of sibling 'Sofa' (id=12); same kind"}},
+
+    {{"id": 27, "action": "DROP_AS_REDUNDANT", "survivor": "Mammal",
+      "reason": "weak intermediate: child_count=1, no real differentia"}}
+  ]
+}}
+```
+
+### Output constraints
+- Only `DROP_AS_REDUNDANT` rows appear; everything else is implicitly KEPT.
+- `survivor` is REQUIRED on every row and must be a term that you are NOT dropping.
+- Never drop both members of a redundant pair — keep exactly one.
+- `reason` is one short sentence (≤200 chars).

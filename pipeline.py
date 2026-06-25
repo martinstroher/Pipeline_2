@@ -356,8 +356,8 @@ def main():
         log.info("Step 6b: Relation extraction skipped (--skip-relations)")
     if _check_stop(_stop, "6b"): return
 
-    # Step validate: two-pass critic per category (taxonomy then relations)
-    log.banner("validate", "Validate (taxonomy + relation critic per category)")
+    # Step validate: three-stage critic per category (taxonomy → dedup → relations)
+    log.banner("validate", "Validate (taxonomy + dedup + relation critic per category)")
     from src.modules.validate.critic import run_critic
     tax_csv = (
         os.path.splitext(cat_csv)[0]

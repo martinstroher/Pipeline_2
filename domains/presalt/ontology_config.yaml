@@ -606,6 +606,7 @@ relations:
     range: [SDC]
     inverse: disposition_of
     provenance: ro_release
+    critic_menu: true
     notes: "SubPropertyOf has_characteristic. Range is BFO:Disposition (⊂ SDC)."
   disposition_of:
     iri: "http://purl.obolibrary.org/obo/RO_0000092"

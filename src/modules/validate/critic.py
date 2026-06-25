@@ -1,23 +1,35 @@
 """Ontology critic — the `validate` verb.
 
-Two LLM calls per category, run sequentially so the second is informed by the
-first:
+Per category, three kinds of LLM call run in sequence so each is informed by
+the previous:
 
-  1. **Taxonomy critic** judges the IS-A rows (KEEP / REPARENT / DROP_AS_MIXIN /
-     DROP_AS_REDUNDANT / CONVERT_TO_INSTANCE). It sees the terms + NLDs, the
-     relations as read-only context, and the allowed target-class list. Its
-     output carries a per-row probe trace (probe1/2/3) and, on every
-     DROP_AS_MIXIN, a `carried_by` relation that should carry the lost meaning.
-  2. **Relation critic** judges the object-property rows (KEEP / DROP / FIX,
-     FIX may carry a `mint` block). It sees the relations + menu + previously
-     minted properties, the taxonomy NLDs as context, and a **handoff** from
-     call 1: the taxonomy decisions (so its edits stay consistent) and the
-     `carried_by` carrier relations (which it keeps or adds via
-     `added_relations`).
+  1. **Taxonomy critic (Stage 1, per-term, CHUNKED).** Judges the IS-A rows
+     (KEEP / REPARENT / DROP_AS_MIXIN / DROP_AS_REDUNDANT / CONVERT_TO_INSTANCE)
+     in small chunks (``CRITIC_TAXONOMY_CHUNK_SIZE`` terms, default 5) so each
+     call reasons about only a handful of terms. It sees the chunk's terms +
+     NLDs, the chunk terms' own/ancestor relations as read-only context, the
+     parents' NLDs (to judge vacuous restatement), and the allowed target-class
+     list. It also runs an OntoClean parent–child edge check
+     (rigidity / dependence drive REPARENT; identity is advisory-only) from the
+     parent NLDs, and buckets the
+     differentia by BFO category (Quality / Disposition / Role / Site / Process
+     / TemporalRegion). Output carries a per-row probe trace (probe1/2/3 + the
+     OntoClean signs rigidity/identity/dependence) and, on every
+     DROP_AS_MIXIN, a `carried_by` note (logged for audit, not re-emitted). DROP_AS_REDUNDANT here is
+     **parent-collapse only** (a term that vacuously restates its parent).
+  2. **Dedup critic (Stage 2, cross-term, ONE call over survivors).** Sees all
+     surviving terms of the category together and makes the two decisions that
+     need a global view: sibling near-synonym redundancy and weak intermediates
+     (using a Python-computed `child_count`). Only emits DROP_AS_REDUNDANT, each
+     citing the `survivor` it collapses into. A mutual-drop guard then un-drops
+     any term whose cited survivor was itself dropped (never lose a concept).
+  3. **Relation critic.** Judges the object-property rows (KEEP / DROP / FIX,
+     FIX may carry a `mint` block) over the whole category, informed by a
+     **handoff** of the merged taxonomy decisions from stages 1–2.
 
-Calls are sequential *within* a category but the categories run in parallel on
-the worker pool. A completeness guard re-asks the model for any input ids it
-forgot, so large categories are not silently under-reviewed.
+Categories run in parallel on the worker pool; the calls above are sequential
+within a category. A completeness guard re-asks the model for any input ids it
+forgot in stages 1 and 3, so large categories are not silently under-reviewed.
 
 I/O contract:
     run_critic(taxonomy_csv, output_dir, *, relations_csv=None)
@@ -29,7 +41,7 @@ Outputs written to `output_dir`:
     validate_edits.csv               — full audit log (taxonomy rows carry the probe trace)
     validate_instances.csv           — terms converted to NamedIndividuals (Term, Target_Class, …)
     validate_minted_properties.csv   — newly invented ObjectProperties (provenance=critic_minted)
-    validate_responses_archive/{ts}.jsonl — raw LLM responses, one line per call (call=taxonomy|relation)
+    validate_responses_archive/{ts}.jsonl — raw LLM responses, one line per call (call=taxonomy|dedup|relation)
 
 Safety guards:
     - Default temperature 0 (deterministic).
@@ -57,7 +69,12 @@ from src.utils.csv_io import read_csv, write_csv
 from src.utils.gemini_client import get_client, generate
 from src.utils.ontology_config import get_config
 from src.utils.prompt_loader import load_prompt
-from src.utils.relation_validator import PROPERTY_CONSTRAINTS, normalize_property
+from src.utils.relation_validator import (
+    PROPERTY_CONSTRAINTS,
+    get_metatypes,
+    normalize_property,
+    validate_relation,
+)
 
 
 _TAXONOMY_VERDICTS = {
@@ -107,6 +124,30 @@ def _build_taxonomy_payload(rows: pd.DataFrame) -> list[dict]:
             "is_intermediate": bool(r.get("Is_Intermediate", False)),
             "nld": str(r.get("NLD", ""))[:400],
         })
+    return out
+
+
+def _build_parent_context(
+    chunk: pd.DataFrame,
+    cat_term_nld: dict[str, str],
+    valid_categories: set[str],
+) -> list[dict]:
+    """NLDs of the chunk terms' parents (when the parent is itself a category
+    term), so the Stage-1 critic can judge vacuous restatement (Check 5) even
+    when the parent lives in a different chunk. Category roots and upper-class
+    parents are skipped (no NLD / no collapse risk). Deduped."""
+    seen: set[str] = set()
+    out: list[dict] = []
+    for _, r in chunk.iterrows():
+        parent = str(r["Parent_Term"]).strip()
+        pl = parent.lower()
+        if not parent or parent in valid_categories or pl in seen:
+            continue
+        nld = cat_term_nld.get(pl)
+        if not nld:
+            continue
+        seen.add(pl)
+        out.append({"term": parent, "nld": str(nld)[:400]})
     return out
 
 
@@ -194,6 +235,38 @@ def _build_taxonomy_context(rows: pd.DataFrame) -> list[dict]:
     ]
 
 
+def _child_counts_among_survivors(survivor_rows: list[pd.Series]) -> dict[str, int]:
+    """How many surviving rows name each (lower-cased) term as their parent.
+    Computed in Python so the dedup critic's weak-intermediate check is
+    deterministic rather than asking the model to count."""
+    counts: dict[str, int] = {}
+    for r in survivor_rows:
+        parent = str(r["Parent_Term"]).strip().lower()
+        if parent:
+            counts[parent] = counts.get(parent, 0) + 1
+    return counts
+
+
+def _build_dedup_payload(
+    survivor_rows: list[pd.Series],
+    child_counts: dict[str, int],
+) -> list[dict]:
+    """Compact cross-term view for the Stage-2 dedup critic: every survivor with
+    a short NLD, its parent, intermediate flag, and surviving child count."""
+    out: list[dict] = []
+    for r in survivor_rows:
+        term = str(r["Term"]).strip()
+        out.append({
+            "id": int(r["_critic_id"]),
+            "term": r["Term"],
+            "parent": r["Parent_Term"],
+            "is_intermediate": bool(r.get("Is_Intermediate", False)),
+            "child_count": int(child_counts.get(term.lower(), 0)),
+            "nld": str(r.get("NLD", ""))[:200],
+        })
+    return out
+
+
 def _build_taxonomy_decisions(
     tax_edits_local: dict[int, dict],
     id_to_term: dict[int, str],
@@ -216,14 +289,19 @@ def _build_taxonomy_decisions(
 
 
 def _probe_cols(edit: dict | None) -> dict:
-    """Extract the Option-E probe trace from a taxonomy edit for the audit log."""
+    """Extract the Option-E probe trace + OntoClean signs from a taxonomy edit
+    for the audit log."""
     if not isinstance(edit, dict):
-        return {"probe1_genus_ok": "", "probe2_bucket": "", "probe3_rewrite": "", "carried_by": ""}
+        return {"probe1_genus_ok": "", "probe2_bucket": "", "probe3_rewrite": "",
+                "rigidity": "", "identity": "", "dependence": "", "carried_by": ""}
     cb = edit.get("carried_by")
     return {
         "probe1_genus_ok": edit.get("probe1_genus_ok", ""),
         "probe2_bucket": str(edit.get("probe2_bucket", "") or ""),
         "probe3_rewrite": str(edit.get("probe3_rewrite", "") or "")[:200],
+        "rigidity": str(edit.get("rigidity", "") or ""),
+        "identity": str(edit.get("identity", "") or ""),
+        "dependence": str(edit.get("dependence", "") or ""),
         "carried_by": json.dumps(cb, ensure_ascii=False) if isinstance(cb, dict) else "",
     }
 
@@ -240,6 +318,7 @@ def _call_taxonomy_critic(
     category: str,
     terms_payload: list[dict],
     relations_context: list[dict],
+    parent_context: list[dict],
     target_classes: list[str],
     system_instruction: str,
     prompt_template: str,
@@ -253,6 +332,7 @@ def _call_taxonomy_critic(
         category=category,
         terms_json=json.dumps(terms_payload, indent=2),
         relations_context_json=json.dumps(relations_context, indent=2) if relations_context else "[]",
+        parent_context_json=json.dumps(parent_context, indent=2) if parent_context else "[]",
         target_classes_json=json.dumps(target_classes, indent=2),
     )
     raw_text = ""
@@ -321,6 +401,44 @@ def _call_relation_critic(
     return edits
 
 
+def _call_dedup_critic(
+    category: str,
+    survivors_payload: list[dict],
+    system_instruction: str,
+    prompt_template: str,
+    model: str,
+    temperature: float,
+    archive_path: str,
+    archive_lock: threading.Lock,
+) -> list[dict]:
+    """Stage 2: cross-term dedup over a category's survivors. The prompt emits
+    only DROP_AS_REDUNDANT rows (KEEP is implicit), so there is no completeness
+    guard — a sparse or empty response simply means 'keep everything'."""
+    prompt = prompt_template.format(
+        category=category,
+        survivors_json=json.dumps(survivors_payload, indent=2),
+    )
+    raw_text = ""
+    edits: list[dict] = []
+    try:
+        raw_text = generate(
+            prompt, model=model, system_instruction=system_instruction,
+            temperature=temperature, response_mime_type="application/json",
+        )
+        data = json.loads(raw_text)
+        if isinstance(data, dict) and isinstance(data.get("edits"), list):
+            edits = data["edits"]
+    except Exception as e:
+        tqdm.write(f"  [{category}] dedup critic failed ({e}); keeping all survivors")
+        edits = []
+    _archive({
+        "timestamp": datetime.now(timezone.utc).isoformat(), "call": "dedup",
+        "category": category, "model": model, "n_survivors": len(survivors_payload),
+        "n_edits": len(edits), "response_text": raw_text,
+    }, archive_path, archive_lock)
+    return edits
+
+
 def _ask_complete(
     invoke,
     full_payload: list[dict],
@@ -345,6 +463,41 @@ def _ask_complete(
             if still:
                 log.warn(f"  [{category}] {kind}: {len(still)} ids still missing after retry (implicit KEEP)")
     return edits
+
+
+def _mutual_drop_guard(
+    tax_edits_local: dict[int, dict],
+    id_to_term: dict[int, str],
+    id_to_parent: dict[int, str],
+) -> None:
+    """Never lose a concept to a dangling redundancy drop.
+
+    A DROP_AS_REDUNDANT survives only if the term it collapses into (the
+    `survivor` field, or, for Stage-1 parent-collapse, the row's parent) is
+    itself kept. If the cited survivor was *also* dropped — e.g. two near-
+    synonyms each pointing at the other, or a parent that got dropped — the
+    drop is reverted to KEEP so at least one representative of the concept
+    remains. Mutates `tax_edits_local` in place. Single-pass over a snapshot of
+    the dropped set: conservative (may keep an extra near-duplicate in long
+    chains) but it can never delete the last survivor of a concept.
+    """
+    dropped_terms = {
+        id_to_term[rid].strip().lower()
+        for rid, e in tax_edits_local.items()
+        if rid in id_to_term and (e.get("action", "") or "").upper() in _DROP_TAX_VERDICTS
+    }
+    for rid, e in list(tax_edits_local.items()):
+        if (e.get("action", "") or "").upper() != "DROP_AS_REDUNDANT":
+            continue
+        survivor = (e.get("survivor") or "").strip() or id_to_parent.get(rid, "")
+        if survivor and survivor.strip().lower() not in dropped_terms:
+            continue  # survivor is alive — the drop is safe
+        reverted = dict(e)
+        reverted["action"] = "KEEP"
+        note = "survivor also dropped" if survivor else "no survivor cited"
+        reverted["reason"] = f"(dedup reverted — {note}) {e.get('reason', '')}".strip()
+        tax_edits_local[rid] = reverted
+        log.detail(f"Mutual-drop guard: kept '{id_to_term.get(rid, rid)}' ({note})")
 
 
 # ─── Edit appliers ────────────────────────────────────────────────────────
@@ -519,35 +672,64 @@ def _apply_relation_edits(
     return cleaned, log_rows
 
 
-def _normalize_relation_mereology(
+def _normalize_and_revalidate_relations(
     cleaned_rel: pd.DataFrame,
     term_to_cat: dict[str, str],
-) -> tuple[pd.DataFrame, int]:
-    """Re-normalise mereological properties after the critic's edits.
+) -> tuple[pd.DataFrame, list[dict], int]:
+    """Finalise relations after the critic's edits, in one pass:
 
-    Specialization (`has_part` → `has_continuant_part`, …) is a pure function of
-    the subject's and filler's metatypes, but it only runs at extraction time.
-    A critic FIX can genericise a property or swap the filler, leaving a stale
-    or over-generic parthood property. This pass genericises then re-specialises
-    every row against its current subject/filler categories, keeping mereology
-    correct no matter what the critic did. `Property_IRI` is refreshed to match.
-    Non-mereological properties pass through untouched.
+    1. **Re-normalise mereology** — specialization (`has_part` →
+       `has_continuant_part`, …) is a pure function of the subject/filler
+       metatypes but only runs at extraction. A critic FIX can genericise a
+       property or swap the filler, so every row is genericised then
+       re-specialised against its current subject/filler categories.
+       `Property_IRI` is refreshed to match.
+    2. **Re-validate domain/range** — a FIX can also make a relation
+       BFO-invalid (wrong property for the metatypes, or a forbidden
+       continuant↔occurrent parthood). Such rows are dropped and logged.
+       This is the same `validate_relation` check the extractor runs — applied
+       again because the critic is a second LLM mutation of the relations.
+
+    Both checks are skipped for a row whose subject or filler category is
+    unresolvable (external/upper-class filler): we cannot judge it, so we leave
+    it exactly as the extractor accepted it (never drop on uncertainty).
+    Non-mereological, still-valid properties pass through untouched.
     """
     if cleaned_rel.empty or "Property" not in cleaned_rel.columns:
-        return cleaned_rel, 0
-    changed = 0
+        return cleaned_rel, [], 0
+    n_norm = 0
+    drop_log: list[dict] = []
+    keep_idx: list = []
     for idx, row in cleaned_rel.iterrows():
         prop = str(row["Property"]).strip()
         subj_cat = str(row.get("Category", "")).strip()
-        filler_cat = term_to_cat.get(str(row.get("Filler", "")).strip().lower(), "")
+        filler = str(row.get("Filler", "")).strip()
+        filler_cat = term_to_cat.get(filler.lower(), "")
+
+        # 1. Re-specialise mereology.
         new_prop = normalize_property(prop, subj_cat, filler_cat)
         if new_prop != prop:
             cleaned_rel.at[idx, "Property"] = new_prop
             pc = PROPERTY_CONSTRAINTS.get(new_prop)
             if pc is not None and "Property_IRI" in cleaned_rel.columns:
                 cleaned_rel.at[idx, "Property_IRI"] = pc.iri
-            changed += 1
-    return cleaned_rel, changed
+            prop = new_prop
+            n_norm += 1
+
+        # 2. Re-validate domain/range — only when both categories resolve.
+        if get_metatypes(subj_cat) is not None and filler_cat and get_metatypes(filler_cat) is not None:
+            ok, reason = validate_relation(subj_cat, prop, filler_cat)
+            if not ok:
+                drop_log.append({
+                    "id": int(row.get("_critic_id", -1)), "kind": "relation",
+                    "category": subj_cat, "term": row.get("Term", ""),
+                    "action": "DROP", "reason": f"(post-critic re-validation — {reason})",
+                })
+                continue  # drop this row
+        keep_idx.append(idx)
+
+    cleaned_rel = cleaned_rel.loc[keep_idx].copy()
+    return cleaned_rel, drop_log, n_norm
 
 
 # ─── Orchestrator ─────────────────────────────────────────────────────────
@@ -578,11 +760,12 @@ def run_critic(
     archive_lock = threading.Lock()
 
     tax_system, tax_template = load_prompt("critic_taxonomy.txt")
+    dedup_system, dedup_template = load_prompt("critic_taxonomy_dedup.txt")
     rel_system, rel_template = load_prompt("critic_relations.txt")
     model = os.environ.get("LLM_GENERATION_MODEL", "gemini-2.5-pro")
     temperature = float(os.environ.get("LLM_GENERATION_TEMPERATURE", 0))
 
-    log.banner("validate", "Validate (taxonomy + relation critic per category)")
+    log.banner("validate", "Validate (taxonomy + dedup + relation critic per category)")
 
     tax = read_csv(taxonomy_csv).reset_index(drop=True)
     tax["_critic_id"] = range(len(tax))
@@ -620,7 +803,7 @@ def run_critic(
         if len(tax_group) == 0:
             return
 
-        # Own relations: rows whose Term is in this category.
+        # Category-level relations (used by the relation critic + cheap-skip).
         own_rel = pd.DataFrame()
         ancestor_rel = pd.DataFrame()
         if rel is not None:
@@ -640,27 +823,72 @@ def run_critic(
             return
 
         id_to_term = {int(r["_critic_id"]): str(r["Term"]) for _, r in tax_group.iterrows()}
-
-        # ── Call 1: taxonomy critic ──
-        tax_payload = _build_taxonomy_payload(tax_group)
-        rel_context = _build_relation_payload(own_rel, ancestor_rel)
-
-        def _invoke_tax(payload: list[dict]) -> list[dict]:
-            return _call_taxonomy_critic(
-                cat, payload, rel_context, target_classes,
-                tax_system, tax_template, model, temperature,
-                archive_path, archive_lock,
-            )
-
-        tax_edits_list = _ask_complete(
-            _invoke_tax, tax_payload, {p["id"] for p in tax_payload}, cat, "taxonomy",
-        )
-        tax_edits_local = {
-            e["id"]: e for e in tax_edits_list
-            if isinstance(e, dict) and isinstance(e.get("id"), int)
+        id_to_parent = {int(r["_critic_id"]): str(r["Parent_Term"]).strip() for _, r in tax_group.iterrows()}
+        cat_term_nld = {
+            str(r["Term"]).strip().lower(): str(r.get("NLD", ""))
+            for _, r in tax_group.iterrows()
         }
 
-        # ── Handoff: taxonomy decisions inform the relation critic ──
+        # ── Stage 1: per-term taxonomy critic, CHUNKED ──
+        tax_edits_local: dict[int, dict] = {}
+        chunk_size = max(1, int(os.environ.get("CRITIC_TAXONOMY_CHUNK_SIZE", 5)))
+        for start in range(0, len(tax_group), chunk_size):
+            chunk = tax_group.iloc[start:start + chunk_size]
+            chunk_terms_lower = {str(t).strip().lower() for t in chunk["Term"]}
+
+            # Per-chunk relation context (only the chunk terms' own + ancestors).
+            chunk_own_rel = pd.DataFrame()
+            chunk_anc_rel = pd.DataFrame()
+            if rel is not None:
+                chunk_own_rel = rel[rel["Term"].astype(str).str.strip().str.lower().isin(chunk_terms_lower)]
+                chunk_anc: set[str] = set()
+                for term in chunk["Term"].astype(str):
+                    for anc in _ancestor_chain(term, parent_lookup, valid_categories):
+                        chunk_anc.add(anc.strip().lower())
+                if chunk_anc:
+                    chunk_anc_rel = rel[rel["Term"].astype(str).str.strip().str.lower().isin(chunk_anc)]
+
+            rel_context = _build_relation_payload(chunk_own_rel, chunk_anc_rel)
+            parent_context = _build_parent_context(chunk, cat_term_nld, valid_categories)
+            tax_payload = _build_taxonomy_payload(chunk)
+
+            def _invoke_tax(payload: list[dict], _rc=rel_context, _pc=parent_context) -> list[dict]:
+                return _call_taxonomy_critic(
+                    cat, payload, _rc, _pc, target_classes,
+                    tax_system, tax_template, model, temperature,
+                    archive_path, archive_lock,
+                )
+
+            chunk_edits = _ask_complete(
+                _invoke_tax, tax_payload, {p["id"] for p in tax_payload}, cat, "taxonomy",
+            )
+            for e in chunk_edits:
+                if isinstance(e, dict) and isinstance(e.get("id"), int):
+                    tax_edits_local[e["id"]] = e
+
+        # ── Stage 2: cross-term dedup over survivors ──
+        def _is_dropped(rid: int) -> bool:
+            e = tax_edits_local.get(rid)
+            return bool(e) and (e.get("action", "") or "").upper() in _DROP_TAX_VERDICTS
+
+        survivor_rows = [r for _, r in tax_group.iterrows() if not _is_dropped(int(r["_critic_id"]))]
+        if len(survivor_rows) >= 2:
+            child_counts = _child_counts_among_survivors(survivor_rows)
+            dedup_payload = _build_dedup_payload(survivor_rows, child_counts)
+            dedup_edits = _call_dedup_critic(
+                cat, dedup_payload, dedup_system, dedup_template,
+                model, temperature, archive_path, archive_lock,
+            )
+            for e in dedup_edits:
+                if not (isinstance(e, dict) and isinstance(e.get("id"), int)):
+                    continue
+                if (e.get("action", "") or "").upper() == "DROP_AS_REDUNDANT":
+                    tax_edits_local[e["id"]] = e  # override the Stage-1 KEEP
+
+        # ── Mutual-drop guard: never lose a concept to a dangling redundancy ──
+        _mutual_drop_guard(tax_edits_local, id_to_term, id_to_parent)
+
+        # ── Handoff: merged taxonomy decisions inform the relation critic ──
         decisions = _build_taxonomy_decisions(tax_edits_local, id_to_term)
 
         # ── Call 2: relation critic (only if there are own relations) ──
@@ -737,10 +965,15 @@ def run_critic(
                     "reason": f"(phantom-filler cleanup — filler '{r['Filler']}' dropped from taxonomy)",
                 })
             cleaned_rel = cleaned_rel[~phantom_mask]
-        # Re-normalise mereology after the critic's edits (genericize → re-specialize).
-        cleaned_rel, n_norm = _normalize_relation_mereology(cleaned_rel, _term_to_category(tax))
+        # Finalise: re-specialise mereology + re-validate domain/range after the critic.
+        cleaned_rel, reval_drops, n_norm = _normalize_and_revalidate_relations(
+            cleaned_rel, _term_to_category(tax)
+        )
         if n_norm:
             log.detail(f"Re-normalised {n_norm} mereological propert{'y' if n_norm == 1 else 'ies'} post-critic")
+        if reval_drops:
+            rel_log.extend(reval_drops)
+            log.warn(f"Post-critic re-validation dropped {len(reval_drops)} BFO-invalid relation(s)")
         cleaned_rel = cleaned_rel.drop(columns=["_critic_id"], errors="ignore")
         write_csv(cleaned_rel, rel_out)
         log.success(f"Cleaned relations: {len(cleaned_rel)} rows (was {len(rel)}) → {rel_out}")
