@@ -301,11 +301,37 @@ def _detect_and_repair_disjointness(g: Graph, df: pd.DataFrame) -> list[dict]:
                 elif iri_b in intended and iri_a not in intended:
                     keep_side, remove_side = iri_b, iri_a
                 else:
-                    log.warn(
-                        f"  Disjointness conflict unresolved: {_local_name(cls_str)} "
-                        f"— category '{cat}' doesn't disambiguate"
-                    )
-                    continue
+                    # Category cannot disambiguate — it resolves to a *third*
+                    # branch disjoint with both conflict sides. This is the
+                    # case-collision signature: two taxonomy rows that normalise
+                    # to one IRI (an LLM-invented intermediate genus + a real
+                    # term whose critic reparent points at a bare BFO metatype
+                    # root) have their parents silently unioned across a disjoint
+                    # boundary. Fallback: if the class is a DIRECT subclass of
+                    # exactly one of the two disjoint roots while reaching the
+                    # other side only transitively (via a substantive published
+                    # genus), the direct bare-root edge is the artifact — drop it
+                    # and keep the genus. (This branch only runs where the repair
+                    # previously gave up, so a currently-satisfiable class is
+                    # never altered.)
+                    direct_parents = dp.get(cls_str, set())
+                    a_direct = iri_a in direct_parents
+                    b_direct = iri_b in direct_parents
+                    if a_direct != b_direct:
+                        remove_side = iri_a if a_direct else iri_b
+                        keep_side = iri_b if a_direct else iri_a
+                        log.warn(
+                            f"  Disjointness fallback: {_local_name(cls_str)} "
+                            f"— dropping direct upper-root parent "
+                            f"{_local_name(remove_side)}; kept genus toward "
+                            f"{_local_name(keep_side)} (category did not disambiguate)"
+                        )
+                    else:
+                        log.warn(
+                            f"  Disjointness conflict unresolved: {_local_name(cls_str)} "
+                            f"— category '{cat}' doesn't disambiguate"
+                        )
+                        continue
 
                 for parent_str in list(dp.get(cls_str, [])):
                     p_anc = _ancestors(parent_str, dp) | {parent_str}
