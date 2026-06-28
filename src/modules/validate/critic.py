@@ -78,11 +78,22 @@ from src.utils.relation_validator import (
 
 
 _TAXONOMY_VERDICTS = {
-    "KEEP", "REPARENT", "DROP_AS_MIXIN", "DROP_AS_REDUNDANT", "CONVERT_TO_INSTANCE",
+    "KEEP", "REPARENT", "KEEP_AS_BEARER",
+    "DROP_AS_MIXIN", "DROP_AS_REDUNDANT", "CONVERT_TO_INSTANCE",
 }
 _RELATION_VERDICTS = {"KEEP", "DROP", "FIX"}
 
 _DROP_TAX_VERDICTS = {"DROP_AS_MIXIN", "DROP_AS_REDUNDANT", "CONVERT_TO_INSTANCE"}
+
+# KEEP_AS_BEARER: companion object-property → the BFO parent the minted filler
+# class is declared under. Keeps a material bearer under its genus and carries
+# the realizable/quality off the IS-A edge onto a companion axiom.
+_BEARER_PROPERTIES = {
+    "has_role": "role",
+    "has_function": "function",
+    "has_disposition": "disposition",
+    "has_quality": "quality",
+}
 
 
 # ─── Payload builders ─────────────────────────────────────────────────────
@@ -262,7 +273,7 @@ def _build_dedup_payload(
             "parent": r["Parent_Term"],
             "is_intermediate": bool(r.get("Is_Intermediate", False)),
             "child_count": int(child_counts.get(term.lower(), 0)),
-            "nld": str(r.get("NLD", ""))[:200],
+            "nld": str(r.get("NLD", ""))[:400],
         })
     return out
 
@@ -506,18 +517,21 @@ def _apply_taxonomy_edits(
     tax: pd.DataFrame,
     edits_by_id: dict[int, dict],
     valid_categories: set[str],
-) -> tuple[pd.DataFrame, pd.DataFrame, list[dict]]:
-    """Apply 5-verdict taxonomy edits.
+) -> tuple[pd.DataFrame, pd.DataFrame, list[dict], list[dict]]:
+    """Apply 6-verdict taxonomy edits.
 
     Returns:
         cleaned_tax_df — surviving taxonomy rows (drops applied, parents fixed)
         instances_df   — rows converted to NamedIndividuals
         log_rows       — full audit-log rows
+        bearer_records — KEEP_AS_BEARER carries (bearer kept under its material
+                         genus; the realizable/quality becomes a companion axiom)
     """
     log_rows: list[dict] = []
     keep_mask = [True] * len(tax)
     new_parents: dict[int, str] = {}
     instance_records: list[dict] = []
+    bearer_records: list[dict] = []
 
     for idx, row in tax.iterrows():
         rid = int(row["_critic_id"])
@@ -550,6 +564,39 @@ def _apply_taxonomy_edits(
             log_rows.append({"id": rid, "kind": "taxonomy", "category": cat,
                              "term": row["Term"], "action": "REPARENT",
                              "reason": f"parent → {new_parent}: {reason}", **probes})
+        elif action == "KEEP_AS_BEARER":
+            # Keep the material bearer; carry the realizable / quality off the
+            # IS-A edge as a companion axiom (run_critic mints the filler class
+            # and the `<bearer> <property> some <filler>` row). `new_parent` is
+            # OPTIONAL — the bearer stays under its current (already-material)
+            # parent unless the critic names a better genus, and a genus is only
+            # ever REUSED (an existing class), never minted here.
+            cb = edit.get("carried_by") if isinstance(edit.get("carried_by"), dict) else {}
+            prop = str(cb.get("property", "") or "").strip()
+            filler = str(cb.get("filler", "") or "").strip()
+            if prop not in _BEARER_PROPERTIES or not filler:
+                # The carry itself is incomplete — reject to KEEP so the term is
+                # never lost.
+                log_rows.append({"id": rid, "kind": "taxonomy", "category": cat,
+                                 "term": row["Term"], "action": "KEEP",
+                                 "reason": f"(KEEP_AS_BEARER rejected — incomplete carry) {reason}", **probes})
+                continue
+            new_parent = (edit.get("new_parent") or "").strip()
+            # Move the bearer only when a non-realizable genus is named (the
+            # orphan pass reuses it if it exists, else falls back). Absent or a
+            # realizable branch → keep the current material parent untouched.
+            if new_parent and new_parent.strip().lower() not in _BEARER_PROPERTIES.values():
+                new_parents[rid] = new_parent
+            bearer_records.append({
+                "bearer": str(row["Term"]).strip(),
+                "bearer_category": cat,
+                "property": prop,
+                "filler": filler,
+                "filler_parent": _BEARER_PROPERTIES[prop],
+            })
+            log_rows.append({"id": rid, "kind": "taxonomy", "category": cat,
+                             "term": row["Term"], "action": "KEEP_AS_BEARER",
+                             "reason": f"bearer kept under '{new_parent or row['Parent_Term']}'; {prop} some {filler}: {reason}", **probes})
         elif action in _DROP_TAX_VERDICTS:
             keep_mask[idx] = False
             log_rows.append({"id": rid, "kind": "taxonomy", "category": cat,
@@ -589,7 +636,52 @@ def _apply_taxonomy_edits(
     instances_df = pd.DataFrame(instance_records) if instance_records else pd.DataFrame(
         columns=["Term", "Target_Class", "Mint_Parent", "Original_Category", "Original_Parent", "Reason"]
     )
-    return cleaned, instances_df, log_rows
+    return cleaned, instances_df, log_rows, bearer_records
+
+
+def _materialize_bearer_carries(
+    bearer_records: list[dict],
+    tax_cols: list[str] | None,
+    rel_cols: list[str] | None,
+) -> tuple[pd.DataFrame, pd.DataFrame]:
+    """Turn KEEP_AS_BEARER carries into the rows emit consumes:
+
+    * a minted **filler class** row `<filler> ⊑ <bfo parent>` (role / function /
+      disposition / quality), deduplicated by filler name, and
+    * a **companion relation** row `<bearer> <property> some <filler>`.
+
+    Column order is aligned to the existing taxonomy / relation outputs so the
+    appended rows merge cleanly. The bearer itself is already kept under its
+    material genus by `_apply_taxonomy_edits` (via `new_parents`)."""
+    if not bearer_records:
+        return pd.DataFrame(), pd.DataFrame()
+    filler_rows: dict[str, dict] = {}
+    rel_rows: list[dict] = []
+    for rec in bearer_records:
+        filler = rec["filler"].strip()
+        prop = rec["property"].strip()
+        fp = rec["filler_parent"]
+        key = filler.lower()
+        if key and key not in filler_rows:
+            filler_rows[key] = {
+                "Term": filler, "Parent_Term": fp, "Relationship_Type": "subClassOf",
+                "Category": fp, "Is_Intermediate": True, "NLD": "", "FALLBACK": False,
+            }
+        pc = PROPERTY_CONSTRAINTS.get(prop)
+        rel_rows.append({
+            "Term": rec["bearer"], "Category": rec.get("bearer_category", ""),
+            "Property": prop, "Property_IRI": pc.iri if pc else "",
+            "Filler": filler, "Filler_Source": "critic_bearer",
+            "Confidence": 1.0, "Evidence": f"KEEP_AS_BEARER companion ({prop} some {filler})",
+            "Validation_Status": "ACCEPTED", "Validation_Reason": "critic KEEP_AS_BEARER",
+        })
+    filler_df = pd.DataFrame(list(filler_rows.values()))
+    rel_df = pd.DataFrame(rel_rows)
+    if tax_cols and not filler_df.empty:
+        filler_df = filler_df.reindex(columns=tax_cols)
+    if rel_cols and not rel_df.empty:
+        rel_df = rel_df.reindex(columns=rel_cols)
+    return filler_df, rel_df
 
 
 def _apply_relation_edits(
@@ -932,7 +1024,9 @@ def run_critic(
                     tqdm.write(f"  [error] Category '{cat}': {e}")
                 pbar.update(1)
 
-    cleaned_tax, instances_df, tax_log = _apply_taxonomy_edits(tax, all_tax_edits, valid_categories)
+    cleaned_tax, instances_df, tax_log, bearer_records = _apply_taxonomy_edits(
+        tax, all_tax_edits, valid_categories
+    )
 
     dropped_taxonomy_terms = {
         str(entry["term"]).strip().lower()
@@ -940,9 +1034,20 @@ def run_critic(
         if entry["action"] in _DROP_TAX_VERDICTS
     }
 
+    # KEEP_AS_BEARER carries → minted filler classes (taxonomy) + companion
+    # relations. Built once; appended to each output below.
+    tax_cols = [c for c in cleaned_tax.columns if c != "_critic_id"]
+    rel_cols = [c for c in rel.columns if c != "_critic_id"] if rel is not None else None
+    bearer_filler_df, bearer_rel_df = _materialize_bearer_carries(
+        bearer_records, tax_cols, rel_cols
+    )
+
     cleaned_tax_out = cleaned_tax.drop(columns=["_critic_id"], errors="ignore")
+    if not bearer_filler_df.empty:
+        cleaned_tax_out = pd.concat([cleaned_tax_out, bearer_filler_df], ignore_index=True)
     write_csv(cleaned_tax_out, tax_out)
-    log.success(f"Cleaned taxonomy: {len(cleaned_tax_out)} rows (was {len(tax)}) → {tax_out}")
+    _bearer_note = f", +{len(bearer_filler_df)} bearer-role fillers" if not bearer_filler_df.empty else ""
+    log.success(f"Cleaned taxonomy: {len(cleaned_tax_out)} rows (was {len(tax)}{_bearer_note}) → {tax_out}")
 
     if not instances_df.empty:
         write_csv(instances_df, instances_out)
@@ -975,8 +1080,11 @@ def run_critic(
             rel_log.extend(reval_drops)
             log.warn(f"Post-critic re-validation dropped {len(reval_drops)} BFO-invalid relation(s)")
         cleaned_rel = cleaned_rel.drop(columns=["_critic_id"], errors="ignore")
+        if not bearer_rel_df.empty:
+            cleaned_rel = pd.concat([cleaned_rel, bearer_rel_df], ignore_index=True)
         write_csv(cleaned_rel, rel_out)
-        log.success(f"Cleaned relations: {len(cleaned_rel)} rows (was {len(rel)}) → {rel_out}")
+        _comp_note = f", +{len(bearer_rel_df)} bearer companions" if not bearer_rel_df.empty else ""
+        log.success(f"Cleaned relations: {len(cleaned_rel)} rows (was {len(rel)}{_comp_note}) → {rel_out}")
 
     if minted_collector:
         # Merge with any existing minted CSV (preserve prior runs' mints).

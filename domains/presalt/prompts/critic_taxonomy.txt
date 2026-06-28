@@ -9,82 +9,54 @@ You judge ONLY taxonomy rows here. The relation rows are shown as **read-only co
 ## Taxonomy rows to judge (subject → parent_term, with NLD)
 {terms_json}
 
-## Relation context (read-only — informs Probe 3 and REPARENT evidence; do NOT vote)
+## Relation context (read-only — informs the differentia rewrite and REPARENT evidence; do NOT vote)
 {relations_context_json}
 
-## Parent definitions (read-only — use these to judge vacuous restatement, Check 5)
+## Parent definitions (read-only — use these to judge vacuous restatement, step 5)
 {parent_context_json}
 
 ## Allowed target classes for CONVERT_TO_INSTANCE (pick one for `target_class`, or for `mint_parent` when minting)
 {target_classes_json}
 
 ────────────────────────────────────────────────────────────
-## Three structural probes — RUN ON EVERY TAXONOMY ROW
+## How to decide each row — ONE pass, take the FIRST verdict that matches
 ────────────────────────────────────────────────────────────
+Read the NLD as `X is a Y that <differentia>`, then walk these in order:
 
-### Probe 1 — Genus / differentia separability
-Read the NLD as Aristotelian form `X is a Y that <differentia>`.
-- Does the genus `Y` stand alone as a real kind (independently nameable, not a mixin)?
-- Is the `<differentia>` a **contingent** property of `Y` (i.e., `Y` could exist without it and still be a `Y`)?
-If yes to both → genus/differentia is clean.
-If the differentia is **necessary** to be a `Y` → the row may be a vacuous restatement of the parent.
-
-### Probe 2 — BFO-bucket categorisation of the differentia
-Classify the differentia text into exactly one bucket:
-`Quality | Disposition | Role | Site | Process | TemporalRegion | None`
-- **Quality** — an inhering property that is simply present, needing no further process to be realised (colour, viscosity, mass)
-- **Disposition** — an internally-grounded capacity realised only in a process (soluble, brittle, elastic, conductive). A **Function** (a capacity the bearer exists to perform) goes here too.
-- **Role** — an externally-grounded function, holding only by the bearer's relations to other entities (husband, student, employee)
-- **Site** — a place or region the bearer occupies
-- **Process** — an unfolding occurrent the bearer participates in
-- **TemporalRegion** — a span or instant of time
-- **None** — the differentia is itself an essential structural feature (genuine subkind)
-
-Anything other than `None` → **mixin candidate**: the differentia is a separate BFO entity inhering in / realised by / occupied by / participated in the bearer, not a subkind discriminator.
-
-### Probe 3 — Counterfactual relational rewrite
-Try to restate the row as `<parent> + <relation> some <differentia-as-entity>` (a generic BFO verb such as `has_quality`, `has_disposition`, `has_role`, `located_in`, `participates_in`, `occupies_temporal_region`).
-- If such a rewrite produces a sentence with the **same truth conditions** as the NLD → confirmed mixin; the IS-A row is wrong and a relation should carry the meaning.
-- If no relation can capture it cleanly → the term is a genuine subkind; KEEP.
+1. **Proper noun** — names exactly one thing (a field, basin, formation, age, person, event)? → CONVERT_TO_INSTANCE.
+2. **Not a domain entity** — a methodology, model, classification scheme, or measurement unit? → DROP_AS_MIXIN.
+3. **Bucket the `<differentia>`** into one of: `Quality` (inhering property — colour, density, porosity) · `Disposition`/`Function` (a capacity realised in a process — soluble, stores fluid) · `Role` (externally-grounded function — reservoir, seal, host) · `Site` (a place) · `Process` · `TemporalRegion` · `None` (a genuine structural subkind).
+   - **None** → go to 4.
+   - **Any other bucket** = the differentia is a separate BFO entity the bearer *has / plays / occupies*, not a subkind (confirm with a rewrite — `<parent> <property> some <differentia>` ≈ the NLD → record as `probe3_rewrite`):
+       • a **substantial material bearer** that carries it → **KEEP_AS_BEARER** (keep its genus; `carried_by` the realizable/quality)
+       • a throwaway `<genus> + <property>` (e.g. `RedApple`) → **DROP_AS_MIXIN**
+       • the term *is* that quality/role/process itself (e.g. `porosity`, `HusbandRole`) → KEEP under that branch
+4. **Wrong genus? (OntoClean)** Tag the term with three signs, then REPARENT only on a rigidity or dependence violation:
+   - **Rigidity** — `+R` = essential kind it can never stop being (`Person`, `rock`); `~R` = a contingent role/phase it can drop while still existing (`Student`, `reservoir`). *Violation:* `~R` parent over a `+R` child (e.g. `Person` filed under `Student`) → REPARENT onto a rigid genus.
+   - **Dependence** — `+D` = exists only via another entity (`role`, `boundary`); `-D` = self-standing (`rock`, `person`). *Violation:* `+D` parent over a `-D` child (e.g. `rock` filed under `role`) → REPARENT onto an independent genus.
+   - **Identity** — `+I` = has its own way to tell two instances apart; `-I` = none (normal for quality/role/process). Advisory: record it, never REPARENT on it alone.
+   If you can't name a better **existing** genus → KEEP.
+5. **Restates its parent?** the differentia is necessary for the genus, so it adds nothing → **DROP_AS_REDUNDANT** (`survivor` = parent).
+6. otherwise → **KEEP**. (When unsure, KEEP.)
 
 ────────────────────────────────────────────────────────────
-## Seven checks (taxonomy rows)
+## Six verdicts (taxonomy rows)
 ────────────────────────────────────────────────────────────
 
-1. **OntoClean parent–child edge (use the parent's definition above).** Check the `term → parent` edge:
-    - **Rigidity** — an anti-rigid parent must not subsume a rigid child. ~R: instances can stop being of the kind while still existing (`Student`, `Employee`); +R: they cannot (`Person`, `Organism`). Violation (parent ~R **and** term +R) → REPARENT onto a rigid genus.
-    - **Dependence** — a dependent parent must not subsume an independent child. +D: every instance requires a separate entity (`Husband` needs a spouse, `Employee` needs an employer); -D: self-standing. Violation (parent +D **and** term -D) → REPARENT onto an independent genus.
-    - **Identity (advisory)** — record the term's `identity` sign, but **never REPARENT on identity alone**. Only *note* in `reason` when both parent and child lack an identity criterion (`-I ⊑ -I`, a vague-umbrella stack), and **only when the child is a substantial sortal** (an object / material-entity kind). On Quality / Role / Disposition / Process / TemporalRegion branches `-I` is normal and correct — do not flag.
-   Name the violated sign in `reason`; if you cannot name a better genus for a rigidity/dependence violation, KEEP.
-2. **Quality-as-class.** Does the NLD describe a property the bearer **has** (colour, density, weight) rather than something the bearer **is**? If yes → mixin; either DROP_AS_MIXIN or KEEP with an emitted `inheres_in` restriction on the child.
-3. **Role-as-class.** Does the NLD describe a function the bearer plays in a system (`acts as a barrier`, `serves as a container`, `provides support`)? If yes → REPARENT under `role` (the bearer remains a separate class).
-4. **Mixin via Probes 1–3.** If all three probes flag the row → DROP_AS_MIXIN.
-5. **Vacuous restatement (parent-collapse).** Does the term merely restate its own **parent** — the Probe-1 differentia is *necessary* for the genus, so the term adds nothing and is extensionally equal to its parent? Use the parent's definition above to confirm. If yes → DROP_AS_REDUNDANT, `survivor` = the parent.
-6. **Proper-noun instance.** Is the term a proper noun naming exactly one thing (a person, a place, a specific event, a named time period)? → CONVERT_TO_INSTANCE with a `target_class`.
-7. **Interface / analytical-framework as class.** Is the term a methodology, model, framework, classification scheme, or measurement unit dressed up as a domain entity? → DROP_AS_MIXIN.
+Each verdict and the field(s) it must carry (the *when* is the decision steps above):
 
-**Precedence — if several checks fire on one row, apply the first matching verdict in this order:** proper-noun (6 → CONVERT_TO_INSTANCE) → framework (7 → DROP_AS_MIXIN) → role (3 → REPARENT under `role`) → quality/disposition mixin (2, 4 → DROP_AS_MIXIN) → OntoClean rigidity/dependence edge (1 → REPARENT) → vacuous restatement (5 → DROP_AS_REDUNDANT) → else KEEP. (E.g. `Student` is both a role and an edge violation → REPARENT under `role`.)
-
-────────────────────────────────────────────────────────────
-## Five verdicts (taxonomy rows)
-────────────────────────────────────────────────────────────
-
-- **KEEP** — passes all probes / checks, parent is correct.
-- **REPARENT** — term is real but mis-parented. Move it only when the term's NLD and/or its relation context clearly justify a better genus.
-    - Provide `new_parent`. Cite the evidence in `reason`: a relation `id` from the context, a probe result, or the NLD phrase that fixes the genus.
-    - **Lateral moves to arbitrary siblings are discouraged** — the new parent should be a better genus justified by Probe 2 / Probe 3, not a sideways guess at the same depth.
-    - If you cannot justify the move from the NLD or relations → KEEP, do not bluff.
-- **DROP_AS_MIXIN** — the differentia is a separable BFO entity (Probe 2 bucket ≠ None), not a subkind. Cite which bucket. **MUST carry `carried_by`** — the BFO entity the differentia encodes, recorded as `{{"property": "has_quality", "filler": "RedColour"}}`. The term is **removed**; `carried_by` is logged to the audit trail for traceability (it is not re-emitted as an axiom).
-- **DROP_AS_REDUNDANT** — the term vacuously restates its **parent** (Probe 1 / Check 5): it adds no differentia beyond its genus, so it is extensionally equal to its parent. Set `survivor` to the parent term.
-- **CONVERT_TO_INSTANCE** — the term is a proper-noun individual (names exactly one thing: a person, place, organisation, named time period, specific event). MUST carry `target_class`:
-    - Choose the single best fit from the **Allowed target classes** list above — the most specific listed class that still correctly types the individual (e.g. a named time period → `temporal region`; a named place / region → `site`; a named physical object → `object`).
-    - ONLY if no listed class is specific enough AND a more precise kind is clearly warranted, set `target_class` to a NEW class name (e.g. `Painting`) and add `mint_parent` naming the listed class it falls under.
+- **KEEP** — parent is a correct genus; nothing to carry.
+- **REPARENT** — real term, wrong genus → `new_parent` = a better **existing** class (current parent, a sibling, or an Allowed class). Cite the NLD/relation evidence in `reason`. Can't justify it → KEEP.
+- **KEEP_AS_BEARER** — bearer kept under its genus; differentia carried as a companion axiom. **`carried_by` = {{"property", "filler"}}** by bucket: `Role→has_role`, `Function→has_function`, `Disposition→has_disposition`, `Quality→has_quality` (filler = `<Bearer>Role`/`<Bearer>Function`, or the quality's own name, e.g. `Heterogeneity`). `new_parent` optional, reuse-only (omit = keep current; never a realizable, never invented). Substantial bearers only — else DROP_AS_MIXIN.
+- **DROP_AS_MIXIN** — term removed. **`carried_by` = {{"property", "filler"}}** records the BFO entity (audit only, not re-emitted).
+- **DROP_AS_REDUNDANT** — term removed; **`survivor` = parent**.
+- **CONVERT_TO_INSTANCE** — **`target_class`** = best fit from the Allowed list (add `mint_parent` only if none fits).
 
 ────────────────────────────────────────────────────────────
 ## Abstention rules (when to default to KEEP)
 ────────────────────────────────────────────────────────────
 
-A. **Vocabulary disagreement.** Do NOT drop a row just because you would phrase it differently. KEEP unless you can cite a probe or a check.
+A. **Vocabulary disagreement.** Do NOT drop a row just because you would phrase it differently. KEEP unless you can cite a step.
 B. **Upper-ontology disagreement with the source taxonomy.** If a term sits under a category root you would not have chosen but a real argument exists either way → KEEP. REPARENT only when the NLD or relations clearly justify a better genus.
 C. **Named individuals.** Do NOT drop named individuals (<<examples_critic_named_individuals>>) unless clearly out of scope. Prefer CONVERT_TO_INSTANCE.
 
@@ -92,15 +64,15 @@ C. **Named individuals.** Do NOT drop named individuals (<<examples_critic_named
 ## Generic worked examples (BFO-spec; not domain-specific)
 ────────────────────────────────────────────────────────────
 
-- **`Color is a Quality that depends on a material entity`** → Probe 2: differentia bucket = `None` (it's the bearer relation that is the meaning). Probe 3 rewrite: `Color inheres_in some MaterialEntity`. Verdict: KEEP under `quality`.
-- **`Husband is a Man that is married to a woman`** → Probe 1: differentia is non-rigid (men can be unmarried and still be men). Probe 2: bucket = `Role`. Probe 3: `Man + has_role some HusbandRole` preserves truth conditions. Verdict: REPARENT `Husband` under `role` (HusbandRole).
-- **`The year 1969 is a TemporalRegion that contains the first Moon landing`** → Probe 1: proper-noun individual. Verdict: CONVERT_TO_INSTANCE with `target_class: temporal region`.
-- **`RedApple is an Apple that has a red colour`** → Probe 2: bucket = `Quality` (the colour inheres in the apple). Probe 3: `Apple + has_quality some RedColour` preserves truth conditions. Verdict: DROP_AS_MIXIN, `carried_by: {{"property": "has_quality", "filler": "RedColour"}}`.
-- **`ColourClassification is a Framework that organises objects by colour`** → Check 7: analytical framework. Verdict: DROP_AS_MIXIN, `carried_by: {{"property": "is_about", "filler": "Object"}}`.
-- **`ThreeSidedTriangle is a Triangle that has three sides`** → Probe 1: the differentia "has three sides" is *necessary* for any triangle (a triangle is *by definition* three-sided), so it adds nothing beyond the parent. Verdict: DROP_AS_REDUNDANT, `survivor: triangle`.
-- **`FragileVase is a Vase that breaks easily`** → Probe 2: bucket = `Disposition` (a capacity realised only when the vase is struck). Probe 3: `Vase has_disposition some Fragility`. Verdict: DROP_AS_MIXIN, `carried_by: {{"property": "has_disposition", "filler": "Fragility"}}`.
-- **`Apple is-a Food`** → Check 1 rigidity: parent `Food` is ~R (a thing is *food* only in a consumption context) but `Apple` is +R → REPARENT `Apple` onto a rigid genus (e.g. `Fruit`).
-- **`RedThing is-a ColouredThing`** → Check 1 identity is **advisory**: both sides are `-I` (colour gives no way to individuate instances) → do NOT REPARENT; record `identity: -I` and KEEP.
+- **`Color is a Quality that depends on a material entity`** → bucket `None` (it's the bearer relation that is the meaning); rewrite `Color inheres_in some MaterialEntity`. Verdict: KEEP under `quality`.
+- **`Husband is a Man that is married to a woman`** → bucket `Role`; the term **is the bearer** (a Man) that *plays* the husband role, and "husband" is a kind listed in its own right. Verdict: **KEEP_AS_BEARER**, `new_parent: Man`, `carried_by: {{"property": "has_role", "filler": "HusbandRole"}}` → emits `Husband ⊑ Man` + `has_role some HusbandRole`. (REPARENT under `role` would be wrong — a husband is not a role, he *has* one.)
+- **`The year 1969 is a TemporalRegion that contains the first Moon landing`** → step 1: proper-noun individual. Verdict: CONVERT_TO_INSTANCE with `target_class: temporal region`.
+- **`RedApple is an Apple that has a red colour`** → bucket `Quality` (the colour inheres in the apple); rewrite `Apple + has_quality some RedColour` preserves truth conditions. Verdict: DROP_AS_MIXIN, `carried_by: {{"property": "has_quality", "filler": "RedColour"}}`.
+- **`ColourClassification is a Framework that organises objects by colour`** → step 2: analytical framework. Verdict: DROP_AS_MIXIN, `carried_by: {{"property": "is_about", "filler": "Object"}}`.
+- **`FragileVase is a Vase that breaks easily`** → bucket `Disposition` (a capacity realised only when the vase is struck); rewrite `Vase has_disposition some Fragility`. Verdict: DROP_AS_MIXIN, `carried_by: {{"property": "has_disposition", "filler": "Fragility"}}`.
+- **`ThreeSidedTriangle is a Triangle that has three sides`** → step 5: the differentia "has three sides" is *necessary* for any triangle (a triangle is *by definition* three-sided), so it adds nothing beyond the parent. Verdict: DROP_AS_REDUNDANT, `survivor: triangle`.
+- **`Apple is-a Food`** → step 4 rigidity: parent `Food` is ~R (a thing is *food* only in a consumption context) but `Apple` is +R → REPARENT `Apple` onto a rigid genus (e.g. `Fruit`).
+- **`RedThing is-a ColouredThing`** → step 4 identity is **advisory**: both sides are `-I` (colour gives no way to individuate instances) → do NOT REPARENT; record `identity: -I` and KEEP.
 
 ────────────────────────────────────────────────────────────
 ## Output schema
@@ -121,8 +93,9 @@ For EVERY taxonomy row, fill the probe fields and the OntoClean sign fields (`ri
       "probe1_genus_ok": true, "probe2_bucket": "Role",
       "probe3_rewrite": "Man has_role some HusbandRole",
       "rigidity": "~R", "identity": "+I", "dependence": "+D",
-      "action": "REPARENT", "new_parent": "role",
-      "reason": "non-rigid; differentia is a Role (probe 2)"}},
+      "action": "KEEP_AS_BEARER", "new_parent": "Man",
+      "carried_by": {{"property": "has_role", "filler": "HusbandRole"}},
+      "reason": "bearer (a Man) plays a role; keep it + carry has_role (step 3)"}},
 
     {{"id": 18,
       "probe1_genus_ok": true, "probe2_bucket": "Quality",
@@ -130,13 +103,13 @@ For EVERY taxonomy row, fill the probe fields and the OntoClean sign fields (`ri
       "rigidity": "+R", "identity": "+I", "dependence": "-D",
       "action": "DROP_AS_MIXIN",
       "carried_by": {{"property": "has_quality", "filler": "RedColour"}},
-      "reason": "differentia is an inhering Quality (probe 2)"}},
+      "reason": "differentia is an inhering Quality (step 3)"}},
 
     {{"id": 19,
       "probe1_genus_ok": false, "probe2_bucket": "None", "probe3_rewrite": "",
       "rigidity": "+R", "identity": "+I", "dependence": "-D",
       "action": "DROP_AS_REDUNDANT", "survivor": "triangle",
-      "reason": "vacuously restates parent 'triangle'; differentia necessary for the genus (Probe 1)"}},
+      "reason": "vacuously restates parent 'triangle'; differentia necessary for the genus (step 5)"}},
 
     {{"id": 20,
       "probe1_genus_ok": true, "probe2_bucket": "TemporalRegion", "probe3_rewrite": "",
@@ -161,4 +134,5 @@ For EVERY taxonomy row, fill the probe fields and the OntoClean sign fields (`ri
 - `reason` is one short sentence (≤200 chars) and MUST cite probes/checks where applicable.
 - For REPARENT: if you cannot justify the new parent from the NLD or relations, KEEP — do not bluff.
 - For DROP_AS_MIXIN: `carried_by` is REQUIRED.
+- For KEEP_AS_BEARER: `carried_by` is REQUIRED; `new_parent` is OPTIONAL (omit to keep the current parent) and, if given, must name an **existing** material genus (never `role`/`quality`/`disposition`/`function`, never invented). Use it only for a substantial bearer; otherwise DROP_AS_MIXIN.
 - For DROP_AS_REDUNDANT: `survivor` is REQUIRED and must be the term's parent (parent-collapse only).

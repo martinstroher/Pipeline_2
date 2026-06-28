@@ -2,7 +2,7 @@
 <<personas_critic_auditor>>
 
 [PROMPT_TEMPLATE]
-You are doing a focused **deduplication** pass over the terms of the **{category}** branch of an upper-ontology-aligned taxonomy. Your ONLY job is the two checks that require seeing the terms **together**: sibling near-synonym redundancy and weak intermediates.
+You are doing a focused **deduplication** pass over the terms of the **{category}** branch of an upper-ontology-aligned taxonomy. Your ONLY job is the two checks that require seeing the terms **together**: sibling near-synonym / co-extensional redundancy and intermediate value.
 
 Each row is a term with its definition (NLD), its parent, whether it is a builder-invented intermediate, and how many surviving children it has (computed for you).
 
@@ -13,16 +13,21 @@ Each row is a term with its definition (NLD), its parent, whether it is a builde
 ## Two checks (run across the whole set)
 ────────────────────────────────────────────────────────────
 
-1. **Sibling near-synonym redundancy.** Do two (or more) terms denote the **same kind** — near-identical NLDs, or one is just a spelling/word-order/synonym variant of another (e.g. `Sofa` vs `Couch`)? Keep the clearest single survivor; mark the other(s) DROP_AS_REDUNDANT, `survivor` = the kept term. Judge by **meaning**, not surface wording — two genuinely distinct subkinds that merely sound similar must both be KEPT.
+1. **Sibling near-synonym / co-extensional redundancy.** Do two (or more) terms denote the **same kind**? This covers not only spelling / word-order / synonym variants (e.g. `Sofa` vs `Couch`) but also **co-extensional jargon** — two different names or registers (a common name vs a technical term, an acronym vs its expansion) whose NLDs pick out the **same extension**. Keep the clearest single survivor; mark the other(s) DROP_AS_REDUNDANT, `survivor` = the kept term. Judge by **meaning / extension**, not surface wording — two genuinely distinct subkinds that merely sound similar must both be KEPT, and a strictly **more specific** term is NOT redundant with its broader sibling (that would be a reparent, out of scope here → KEEP both).
 
-2. **Weak intermediate.** A term with `is_intermediate: true` earns its place only if it has **≥2 surviving children** AND a real differentia. Use the provided `child_count`. If `child_count < 2` (or it has no real differentia) → DROP_AS_REDUNDANT (its children auto-reparent to the category root). `survivor` = the category root or the term's parent.
+2. **Intermediate value.** A term with `is_intermediate: true` is a builder-minted genus — keep it only if it is a genuine kind, **not on child count alone**:
+   - **Rigid sortal → KEEP** — a real kind carrying its own identity (you can count its instances); valuable even with one child.
+   - **Mixin → DROP_AS_REDUNDANT** — groups children by a shared property / origin / use, no identity of its own; drop regardless of child count.
+   - **Role / phase → DROP_AS_REDUNDANT** — contingent or relational, not a genus.
+   - Rigid sortal but `child_count < 2` and not a standard kind → DROP_AS_REDUNDANT (one-off bridge, pure indirection).
+   On any drop, `survivor` = the term's parent (children reparent there).
 
 ────────────────────────────────────────────────────────────
 ## Abstention
 ────────────────────────────────────────────────────────────
 
-- Default to **KEEP**. Drop when you can name the surviving term it collapses into (sibling) or cite `child_count < 2` (weak intermediate).
-- Do NOT judge mixins, roles, instances, or parent-collapse here. Two terms that are both legitimate subkinds of the same parent are NOT redundant just because they share a parent.
+- Default to **KEEP**. Drop only to collapse a sibling (name the survivor) or per Check 2 for an `is_intermediate` term.
+- Do NOT re-judge mixins, roles, or instances for **non-intermediate** terms (Stage 1 already ruled). Two subkinds of the same parent are not redundant just because they share it.
 - A term may appear only once in `edits`.
 
 ────────────────────────────────────────────────────────────
@@ -31,7 +36,9 @@ Each row is a term with its definition (NLD), its parent, whether it is a builde
 
 - Siblings `Sofa` and `Couch`, near-identical NLDs → DROP_AS_REDUNDANT one, `survivor` = the other.
 - `Dog` and `Cat` under `Mammal` → distinct kinds; both KEEP (shared parent ≠ redundant).
-- `MiscGroup` with `is_intermediate: true`, `child_count: 1` → weak intermediate → DROP_AS_REDUNDANT, `survivor` = parent.
+- `Bird` with `is_intermediate: true`, `child_count: 1`, NLD "an Animal that has feathers and a beak" → rigid sortal naming a real kind → **KEEP** despite the single child (value beats count).
+- `PetAnimal` with `is_intermediate: true`, `child_count: 3`, NLD "an Animal kept by humans for companionship" → mixin grouping by *use*, no identity of its own → DROP_AS_REDUNDANT, `survivor` = parent (dropped even with 3 children).
+- `MiscGroup` with `is_intermediate: true`, `child_count: 1`, no real differentia, not a standard kind → pure indirection → DROP_AS_REDUNDANT, `survivor` = parent.
 
 ────────────────────────────────────────────────────────────
 ## Output schema
@@ -45,8 +52,8 @@ Return ONLY a JSON object with this exact shape. Include a row ONLY when you dro
     {{"id": 14, "action": "DROP_AS_REDUNDANT", "survivor": "Sofa",
       "reason": "near-synonym of sibling 'Sofa' (id=12); same kind"}},
 
-    {{"id": 27, "action": "DROP_AS_REDUNDANT", "survivor": "Mammal",
-      "reason": "weak intermediate: child_count=1, no real differentia"}}
+    {{"id": 27, "action": "DROP_AS_REDUNDANT", "survivor": "Animal",
+      "reason": "intermediate mixin: groups children by use, no identity of its own (Check 2a) — dropped despite child_count=3"}}
   ]
 }}
 ```
