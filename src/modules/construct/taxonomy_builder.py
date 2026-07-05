@@ -14,7 +14,9 @@ Output: construct_taxonomy.csv with columns (Term, Parent_Term, Relationship_Typ
 
 import json
 import os
+import re
 import threading
+from collections import defaultdict
 from concurrent.futures import ThreadPoolExecutor, as_completed
 
 import pandas as pd
@@ -168,6 +170,91 @@ def build_taxonomy_for_group(
         ]
 
 
+def _iri_key(term: str) -> str:
+    """Canonical identity key matching emit's presalt IRI normalisation
+    (lowercase → non-alphanumerics to '_' → CamelCase). Two terms that mint the
+    same OWL IRI share this key, so they denote the same class."""
+    local = re.sub(r"[^a-zA-Z0-9]", "_", str(term).strip().lower())
+    local = re.sub(r"_+", "_", local).strip("_")
+    return "".join(p.capitalize() for p in local.split("_") if p)
+
+
+def _dedupe_cross_category_collisions(rows: list[dict]) -> list[dict]:
+    """Enforce 'one OWL IRI = one class' across the WHOLE taxonomy.
+
+    `build_taxonomy_for_group` already drops a minted intermediate that collides
+    with an input term, but only within a single category (it is called per
+    category). An intermediate minted in category X can still share an IRI with a
+    real term — or another intermediate — from category Y; those survive into the
+    construct output and later collapse onto one IRI in emit, silently unioning
+    their (often BFO-disjoint) parents and making the reasoner inconsistent.
+
+    This global pass resolves every cross-category collision with no
+    domain-specific tie-break:
+      * a real categorized term (`Is_Intermediate=False`) is canonical over any
+        minted intermediate sharing its IRI key — the same 'input term wins'
+        rule the per-group drop uses (the real term owns the NLD/category);
+      * when only intermediates collide, the survivor is chosen by a stable,
+        domain-agnostic sort so the result is reproducible;
+      * references (`Parent_Term`) to a dropped variant are rewritten to the
+        survivor's exact Term, and the duplicate rows are removed.
+    """
+    if not rows:
+        return rows
+
+    groups: dict[str, list[int]] = defaultdict(list)
+    for i, r in enumerate(rows):
+        groups[_iri_key(r["Term"])].append(i)
+
+    winner_term: dict[str, str] = {}
+    drop_idx: set[int] = set()
+    n_colliding_keys = 0
+    for key, idxs in groups.items():
+        if len(idxs) == 1:
+            winner_term[key] = rows[idxs[0]]["Term"]
+            continue
+        n_colliding_keys += 1
+        # Real term beats minted intermediate; otherwise deterministic order.
+        ordered = sorted(
+            idxs,
+            key=lambda i: (
+                bool(rows[i].get("Is_Intermediate", False)),
+                str(rows[i].get("Category", "")),
+                str(rows[i].get("Parent_Term", "")),
+                str(rows[i].get("Term", "")),
+            ),
+        )
+        keep = ordered[0]
+        winner_term[key] = rows[keep]["Term"]
+        for i in ordered[1:]:
+            drop_idx.add(i)
+            log.detail(
+                f"Collision dedup: dropped '{rows[i]['Term']}' "
+                f"({'intermediate' if rows[i].get('Is_Intermediate') else 'term'}, "
+                f"cat={rows[i].get('Category', '')}) — merged into "
+                f"'{rows[keep]['Term']}' (cat={rows[keep].get('Category', '')})"
+            )
+
+    if not drop_idx:
+        return rows
+
+    survivors = [r for i, r in enumerate(rows) if i not in drop_idx]
+    for r in survivors:
+        pkey = _iri_key(r["Parent_Term"])
+        if pkey in winner_term and r["Parent_Term"] != winner_term[pkey]:
+            if _iri_key(r["Term"]) == pkey:
+                # Parent canonicalises to this same node — drop the self-edge.
+                r["Parent_Term"] = r.get("Category", r["Parent_Term"])
+            else:
+                r["Parent_Term"] = winner_term[pkey]
+
+    log.info(
+        f"Global collision dedup: removed {len(drop_idx)} duplicate row(s) across "
+        f"{n_colliding_keys} colliding IRI key(s)"
+    )
+    return survivors
+
+
 def run_taxonomy_builder(categorized_csv: str, output_path: str | None = None, hints_csv: str | None = None):
     """
     Build taxonomy from a categorized CSV.
@@ -253,6 +340,12 @@ def run_taxonomy_builder(categorized_csv: str, output_path: str | None = None, h
                 except Exception as e:
                     tqdm.write(f"  [error] Category '{cat}': {e}")
                 pbar.update(1)
+
+    # Global cross-category IRI-collision dedup. The per-group drop inside
+    # build_taxonomy_for_group only sees collisions within one category; a
+    # minted intermediate can still collide with a real term (or intermediate)
+    # from another category and later corrupt the OWL IRI space in emit.
+    all_taxonomy_rows = _dedupe_cross_category_collisions(all_taxonomy_rows)
 
     # Add upper-level IRI mappings
     for row in all_taxonomy_rows:

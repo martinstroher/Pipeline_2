@@ -532,6 +532,14 @@ def _apply_taxonomy_edits(
     new_parents: dict[int, str] = {}
     instance_records: list[dict] = []
     bearer_records: list[dict] = []
+    # A KEEP_AS_BEARER companion filler is only ever a freshly-minted
+    # realizable/quality class. Reject any carry whose filler collides with an
+    # existing class: minting `<filler> ⊑ role / quality / …` would retype it.
+    # Upper-ontology classes are off-limits (we never alter a published
+    # ontology), and reusing an existing domain term can force a continuant into
+    # `quality`/`role` and make the ontology inconsistent.
+    upper_lower = {k.strip().lower() for k in get_config().upper_iris()}
+    existing_term_lower = {str(t).strip().lower() for t in tax["Term"].astype(str)}
 
     for idx, row in tax.iterrows():
         rid = int(row["_critic_id"])
@@ -581,6 +589,17 @@ def _apply_taxonomy_edits(
                                  "term": row["Term"], "action": "KEEP",
                                  "reason": f"(KEEP_AS_BEARER rejected — incomplete carry) {reason}", **probes})
                 continue
+            filler_key = filler.strip().lower()
+            if filler_key in upper_lower or filler_key in existing_term_lower:
+                # The filler names an existing class — minting it under a BFO
+                # realizable/quality parent would retype that class (forbidden
+                # for upper ontologies, unsound for domain continuants). Reject
+                # to KEEP so neither the bearer nor the named class is mutated.
+                where = "upper-ontology" if filler_key in upper_lower else "existing domain"
+                log_rows.append({"id": rid, "kind": "taxonomy", "category": cat,
+                                 "term": row["Term"], "action": "KEEP",
+                                 "reason": f"(KEEP_AS_BEARER rejected — filler '{filler}' is an {where} class; would retype it) {reason}", **probes})
+                continue
             new_parent = (edit.get("new_parent") or "").strip()
             # Move the bearer only when a non-realizable genus is named (the
             # orphan pass reuses it if it exists, else falls back). Absent or a
@@ -623,7 +642,6 @@ def _apply_taxonomy_edits(
     # REPARENT to `role`/`quality`/`object`) is a legitimate target, NOT an
     # orphan — recognising it prevents silently undoing role-reparenting.
     surviving_lower = {str(t).lower() for t in cleaned["Term"].astype(str)}
-    upper_lower = {k.lower() for k in get_config().upper_iris()}
     for idx, row in cleaned.iterrows():
         parent = str(row["Parent_Term"]).strip()
         if not parent or parent in valid_categories:

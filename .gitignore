@@ -7,3 +7,5 @@ chroma_db*/
 output/
 .DS_Store
 inputs/
+.venv*/
+usage_log.csv
