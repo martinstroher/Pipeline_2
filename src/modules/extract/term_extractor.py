@@ -7,7 +7,7 @@ from tqdm import tqdm
 
 from src.utils import log
 from src.utils.csv_io import write_csv
-from src.utils.gemini_client import generate
+from src.utils.llm_client import generate
 from src.utils.prompt_loader import load_prompt
 
 

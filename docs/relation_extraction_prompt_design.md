@@ -579,7 +579,7 @@ import os
 import pandas as pd
 from tqdm import tqdm
 
-from src.utils.gemini_client import generate
+from src.utils.llm_client import generate
 from src.utils import log
 from src.modules.taxonomy_builder import UPPER_IRIS
 

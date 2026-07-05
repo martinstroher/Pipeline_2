@@ -166,7 +166,7 @@ Processing strategy:
    b. Batch terms into groups of BATCH_SIZE (default 5)
    c. For each batch:
       i.   Build prompt from _RE_PROMPT_TEMPLATE (from prompt_design.md)
-      ii.  Call gemini_client.generate() with response_mime_type="application/json"
+      ii.  Call llm_client.generate() with response_mime_type="application/json"
       iii. Parse JSON response → list of {term, relations}
       iv.  Validate len(response) == len(batch)
       v.   For each term's relations:
@@ -234,7 +234,7 @@ def _resolve_filler_category(
 | All relations for a term fail validation | All rows written with `REJECTED` status; term has no OWL restrictions |
 | Unknown filler_source value | Treat as "external", log warning |
 | Filler is "domain_term" but not in vocabulary | Set `Filler_Source = "external_corrected"`, log warning |
-| API rate limit / 429 | Handled by `gemini_client.generate()` retry logic |
+| API rate limit / 429 | Handled by `llm_client.generate()` retry logic |
 
 ### 4.6 Function Signature
 

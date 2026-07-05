@@ -29,7 +29,7 @@ from concurrent.futures import ThreadPoolExecutor, as_completed
 from tqdm import tqdm
 
 from src.utils import log
-from src.utils.gemini_client import generate
+from src.utils.llm_client import generate
 from src.utils.prompt_loader import load_prompt
 
 # ---------------------------------------------------------------------------

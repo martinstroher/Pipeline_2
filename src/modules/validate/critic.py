@@ -66,7 +66,7 @@ from tqdm import tqdm
 
 from src.utils import log
 from src.utils.csv_io import read_csv, write_csv
-from src.utils.gemini_client import get_client, generate
+from src.utils.llm_client import get_client, generate
 from src.utils.ontology_config import get_config
 from src.utils.prompt_loader import load_prompt
 from src.utils.relation_validator import (

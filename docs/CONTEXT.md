@@ -81,7 +81,7 @@ The ontology scope is defined by 10 competency questions (CQs) that specify what
 - Provides retrieval context to Steps 4 (NLD generation) and 5 (categorization).
 
 ### `src/modules/term_extractor.py` — Step 1: Extraction
-- **Tech**: Gemini 2.5 Pro (default; configurable via `LLM_EXTRACTION_MODEL`)
+- **Tech**: gpt-5.4 (Azure AI Foundry; default, configurable via `LLM_EXTRACTION_MODEL`)
 - Reads Markdown files and extracts candidate geological terms via a structured LLM prompt.
 - Output: `output/1_raw_llm_extraction.json`
 

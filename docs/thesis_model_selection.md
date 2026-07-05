@@ -46,3 +46,25 @@ Despite their "State-of-the-Art" performance, these models are highly efficient:
 *   **Parameter Count**: ~560 Million parameters.
 *   **Memory Footprint**: ~2-3 GB of RAM (fp16).
 *   **Infrastructure**: This allows the entire pipeline to run **locally** on standard hardware (e.g., Apple M-series chips or consumer GPUs) without requiring external API calls for embedding generation, ensuring data privacy and zero latency overheads from network requests.
+
+## 4. Generation LLM: gpt-5.4 (Azure AI Foundry)
+All generative steps (term extraction, NLD generation, categorization, taxonomy construction, relation extraction, and the OntoClean critic) use **OpenAI `gpt-5.4`** served through **Azure AI Foundry (Azure OpenAI)**, accessed via the OpenAI SDK v1 API in [src/utils/llm_client.py](../src/utils/llm_client.py).
+
+### 4.1. Why a single frontier reasoning model
+*   **Uniformity for internal validity.** A single model is used for **every** step and, critically, is held **constant across the four ablation conditions (A/B/C/D)**. The ablation's independent variable is the *NLD representation*, not the model; holding the LLM fixed prevents confounding the RAG/NLD effect with model capability. Mixing models per step was evaluated and rejected on defensibility grounds.
+*   **Reasoning capability.** `gpt-5.4` is a reasoning model; the OntoClean critic (rigidity/dependence probes, `KEEP_AS_BEARER` logic, six-verdict triage) is the most reasoning-intensive step and benefits from a frontier model.
+
+### 4.2. Settings (pinned)
+| Parameter | Value | Notes |
+|---|---|---|
+| Deployment / version | `gpt-5.4` (2026-03-05) | pinned Azure deployment |
+| `reasoning_effort` | `high` (uniform) | GPT-5.4 defaults to `none`; set explicitly. `xhigh` is not available on 5.4 |
+| `max_completion_tokens` | 32000 | bounds reasoning + visible tokens; generous to avoid truncation |
+| `seed` | 42 | best-effort determinism |
+| `temperature` | — | **not supported** by reasoning models; not sent |
+
+### 4.3. Reproducibility caveat
+Reasoning models do not accept `temperature`, and they generate hidden reasoning tokens with run-to-run variance even at a fixed `seed`. Determinism is therefore **best-effort** (pinned deployment version + `seed=42`), **not** bit-exact. This is a deliberate, documented trade-off for access to frontier reasoning quality; per-call token usage (including `reasoning_tokens`) is logged to `output/usage_log.csv` for auditability.
+
+*(Migration note: earlier development used Gemini 2.5 Pro; the pipeline was migrated to Azure-hosted gpt-5.4 with no change to the RAG/embedding subsystem, which remains the local `BAAI/bge-m3` stack described above.)*
+

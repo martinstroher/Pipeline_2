@@ -1,6 +1,6 @@
 """Unit tests for src.validate.engines.llm.
 
-Mocks `gemini_client.generate` so no actual LLM calls happen. Exercises
+Mocks `llm_client.generate` so no actual LLM calls happen. Exercises
 the cache path, single + batch dispatch, and verdict mapping.
 """
 

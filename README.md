@@ -8,7 +8,7 @@ An LLM-driven ontology learning pipeline for Brazilian Pre-Salt petroleum geolog
 
 ### Prerequisites
 - Python 3.10+
-- Google Gemini API key (AI Studio) **or** Vertex AI credentials
+- Azure AI Foundry (Azure OpenAI) resource with a `gpt-5.4` deployment + API key
 
 ### Installation
 ```bash
@@ -20,7 +20,8 @@ pip install -r requirements.txt
 ### Configuration
 ```bash
 cp .env.example .env
-# Edit .env and set GEMINI_API_KEY (or VERTEX_AI=true + GCP_PROJECT + GCP_LOCATION)
+# Edit .env and set AZURE_OPENAI_API_KEY + AZURE_OPENAI_ENDPOINT
+# (and LLM_GENERATION_MODEL / LLM_EXTRACTION_MODEL = your gpt-5.4 deployment name)
 ```
 
 **Optional environment variables:**
@@ -151,11 +152,11 @@ studies/                  # Cross-domain study artifacts (not Pre-Salt-specific)
 src/
   modules/
     extract/
-      term_extractor.py     # Step 1: LLM-based term extraction (Gemini 2.5 Pro)
+      term_extractor.py     # Step 1: LLM-based term extraction (gpt-5.4 via Azure Foundry)
       term_aggregator.py    # Step 2: Frequency aggregation + spaCy lemmatization
       term_filter.py        # Step 3: Frequency threshold filter
     define/
-      nld_generator.py      # Step 4: RAG-grounded NLD generation (Gemini 2.5 Pro)
+      nld_generator.py      # Step 4: RAG-grounded NLD generation (gpt-5.4 via Azure Foundry)
     classify/
       category_assigner.py  # Step 5: N-tier waterfall categorization
       cq_scorer.py          # Step 5b: CQ-driven refinement (mandatory): cleanup + scoring + filter at CQ>=1
@@ -175,7 +176,7 @@ src/
     rag_setup.py          # RAG infrastructure: BGE-M3 dense + BM25 sparse + BGE-Reranker RRF
     pdf_processor.py      # PDF→Markdown conversion (pymupdf4llm)
     log.py                # ANSI colour logging helpers
-    gemini_client.py      # Gemini API wrapper (AI Studio + Vertex AI express mode)
+    llm_client.py         # Azure OpenAI (Foundry) wrapper — gpt-5.4, Chat Completions, reasoning_effort
     prompt_loader.py      # Loads prompts verbatim across [<active-domain>/prompts/, studies/prompts/] in priority order
     relation_validator.py # BFO domain/range validation for extracted relations (sources constraints from ontology_config.yaml)
   evaluation/

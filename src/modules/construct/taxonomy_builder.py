@@ -25,7 +25,7 @@ from src.utils.csv_io import read_csv, write_csv
 from dotenv import load_dotenv
 from tqdm import tqdm
 
-from src.utils.gemini_client import get_client, generate
+from src.utils.llm_client import get_client, generate
 from src.utils import log
 from src.utils.prompt_loader import load_prompt
 from src.utils.ontology_config import get_config
