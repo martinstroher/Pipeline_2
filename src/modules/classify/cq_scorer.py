@@ -29,7 +29,7 @@ from concurrent.futures import ThreadPoolExecutor, as_completed
 from tqdm import tqdm
 
 from src.utils import log
-from src.utils.llm_client import generate
+from src.utils.llm_client import generate, parse_json_array
 from src.utils.prompt_loader import load_prompt
 
 # ---------------------------------------------------------------------------
@@ -231,7 +231,7 @@ def _run_synonym_triage(clusters: list[list[dict]]) -> tuple[list[dict], list[di
             response_mime_type="application/json",
         )
         try:
-            results = json.loads(response)
+            results = parse_json_array(response)
         except json.JSONDecodeError:
             log.warn(f"Synonym triage: failed to parse LLM response, skipping batch")
             continue
@@ -289,7 +289,7 @@ def _score_batch(batch_terms: list[dict], batch_size: int) -> list[dict]:
         response_mime_type="application/json",
     )
 
-    parsed = json.loads(response)
+    parsed = parse_json_array(response)
     if not isinstance(parsed, list) or len(parsed) != batch_size:
         raise ValueError(
             f"Expected {batch_size} results, got {len(parsed) if isinstance(parsed, list) else type(parsed)}"

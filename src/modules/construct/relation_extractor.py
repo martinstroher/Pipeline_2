@@ -33,7 +33,7 @@ from src.utils.checkpoint import Checkpoint
 from tqdm import tqdm
 
 from src.utils import log
-from src.utils.llm_client import generate
+from src.utils.llm_client import generate, parse_json_array
 from src.utils.ontology_config import get_config
 from src.utils.prompt_loader import load_prompt
 from src.utils.relation_validator import (
@@ -100,7 +100,7 @@ def _extract_batch(
         response_mime_type="application/json",
     )
 
-    result = json.loads(response_text)
+    result = parse_json_array(response_text)
 
     if len(result) != len(batch):
         raise ValueError(

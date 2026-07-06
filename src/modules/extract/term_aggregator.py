@@ -25,7 +25,7 @@ def run_term_aggregation():
             return None
         try:
             df = read_csv(filepath, delimiter=',', header=0, usecols=['Entity'])
-            terms_list = df['Entity'].squeeze().tolist()
+            terms_list = df['Entity'].tolist()
             log.info(f"{len(terms_list)} raw terms loaded from '{filepath}'.")
             return terms_list
         except ValueError:

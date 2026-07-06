@@ -8,7 +8,7 @@ import pandas as pd
 from src.utils.csv_io import read_csv, write_csv
 from tqdm import tqdm
 
-from src.utils.llm_client import generate
+from src.utils.llm_client import generate, parse_json_array
 from src.utils import log
 from src.utils.prompt_loader import load_prompt
 from src.utils.ontology_config import get_config
@@ -78,7 +78,7 @@ def run_term_categorization():
                     temperature=MODEL_TEMPERATURE,
                     response_mime_type="application/json",
                 )
-                response_json = json.loads(response_text)
+                response_json = parse_json_array(response_text)
 
                 if len(response_json) != len(batch_df):
                     raise ValueError("LLM response length does not match batch size.")

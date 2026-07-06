@@ -15,8 +15,14 @@ Notes on GPT-5.x reasoning models:
   - `max_completion_tokens` bounds reasoning + visible tokens; if too low the visible
     content can come back empty (finish_reason == "length"). Keep it generous.
   - Determinism is best-effort (pinned deployment version + seed); not bit-reproducible.
+  - JSON: we do NOT force ``response_format={"type": "json_object"}``. That mode makes
+    the model collapse "array of objects" prompts into a single object (dropping items).
+    Instead we rely on the prompts (which all instruct "return valid JSON") and parse
+    tolerantly — stripping any markdown code fences and, for array call sites, unwrapping
+    a single wrapped array via :func:`parse_json_array`.
 """
 
+import json
 import os
 import threading
 import time
@@ -121,8 +127,12 @@ def generate(
         "reasoning_effort": effort,
         "seed": seed,
     }
-    if response_mime_type == "application/json":
-        kwargs["response_format"] = {"type": "json_object"}
+    # NOTE: we intentionally do NOT set response_format={"type": "json_object"}.
+    # On gpt-5.x that mode collapses "array of objects" prompts into a single
+    # object (silently dropping list items). The prompts already instruct the
+    # model to return valid JSON; callers parse tolerantly (fence-stripped here,
+    # array-unwrapped via parse_json_array).
+    want_json = response_mime_type == "application/json"
 
     last_error = None
     for attempt in range(1, _MAX_RETRIES + 1):
@@ -137,7 +147,8 @@ def generate(
                     f"{getattr(choice, 'finish_reason', None)}). Raise "
                     f"LLM_MAX_OUTPUT_TOKENS (current {max_out}) or lower reasoning_effort."
                 )
-            return content or ""
+            content = content or ""
+            return _strip_code_fences(content) if want_json else content
         except (RateLimitError, APITimeoutError, APIConnectionError) as e:
             last_error = e
             if attempt == _MAX_RETRIES:
@@ -162,3 +173,52 @@ def generate(
             raise
 
     raise last_error  # unreachable, but satisfies type checker
+
+
+# Common keys models use when they wrap an array inside an object.
+_ARRAY_WRAPPER_KEYS = (
+    "result", "results", "items", "data", "output", "outputs",
+    "terms", "entities", "list", "array", "values", "response",
+)
+
+
+def _strip_code_fences(text: str) -> str:
+    """Strip a surrounding markdown code fence (```json ... ``` or ``` ... ```).
+
+    Reasoning models usually return bare JSON, but occasionally wrap it in a
+    fenced block; this makes downstream ``json.loads`` robust to that.
+    """
+    s = text.strip()
+    if not s.startswith("```"):
+        return s
+    newline = s.find("\n")
+    s = s[newline + 1:] if newline != -1 else s[3:]
+    if s.rstrip().endswith("```"):
+        s = s.rstrip()[:-3]
+    return s.strip()
+
+
+def parse_json_array(text: str) -> list:
+    """Parse an LLM JSON response that is logically an array.
+
+    Azure OpenAI's ``response_format={"type": "json_object"}`` forces a JSON
+    *object* at the top level, so prompts that ask for a bare array come back
+    wrapped, e.g. ``{"result": [...]}`` (the wrapper key is non-deterministic).
+    This unwraps that single list so array-consuming call sites stay simple.
+
+    Raises ``ValueError`` if no array can be recovered.
+    """
+    data = json.loads(text)
+    if isinstance(data, list):
+        return data
+    if isinstance(data, dict):
+        for key in _ARRAY_WRAPPER_KEYS:
+            if isinstance(data.get(key), list):
+                return data[key]
+        list_values = [v for v in data.values() if isinstance(v, list)]
+        if len(list_values) == 1:
+            return list_values[0]
+    raise ValueError(
+        f"Expected a JSON array (or an object wrapping exactly one array); "
+        f"got {type(data).__name__}."
+    )

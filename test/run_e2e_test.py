@@ -100,8 +100,8 @@ def run_test():
     env = os.environ.copy()
 
     # Check if key exists
-    if not env.get("GEMINI_API_KEY"):
-        print("ERROR: GEMINI_API_KEY not found in environment or ../.env!")
+    if not env.get("AZURE_OPENAI_API_KEY"):
+        print("ERROR: AZURE_OPENAI_API_KEY not found in environment or ../.env!")
         sys.exit(1)
 
     # 2. Load .env-test manually to override

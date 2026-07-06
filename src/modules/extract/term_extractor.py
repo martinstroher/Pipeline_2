@@ -7,7 +7,7 @@ from tqdm import tqdm
 
 from src.utils import log
 from src.utils.csv_io import write_csv
-from src.utils.llm_client import generate
+from src.utils.llm_client import generate, parse_json_array
 from src.utils.prompt_loader import load_prompt
 
 
@@ -53,7 +53,7 @@ def run_llm_term_extraction():
             temperature=LLM_MODEL_TEMPERATURE,
             response_mime_type="application/json",
         )
-        return filename, json.loads(response_text)
+        return filename, parse_json_array(response_text)
 
     log.info(f"Loading papers from {LLM_INPUT_DIR}...")
     papers = load_papers_from_dir(LLM_INPUT_DIR)

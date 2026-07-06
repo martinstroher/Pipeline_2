@@ -1,5 +1,80 @@
 ﻿Term,NLD,Context_Used,Context
-calcite,"Calcite is a carbonate mineral that is a primary component of carbonate reservoir rocks. It can be replaced by dolomite during the diagenetic process of dolomitization, which often enhances reservoir porosity and permeability.",True,"[test_doc.md > Pre-Salt Petroleum Geology: Key Concepts > Carbonate Reservoirs]
+carbonate reservoir,"Carbonate reservoir is a petroleum reservoir rock that is composed predominantly of carbonate minerals such as calcite and dolomite and is capable of storing and transmitting hydrocarbons through its porosity and permeability. In the Brazilian Pre-Salt, carbonate reservoirs are commonly represented by microbialite facies, especially in the Santos Basin. Their reservoir quality is strongly controlled by porosity-permeability architecture and can be modified by diagenetic processes such as dolomitization.",True,"[test_doc.md > Pre-Salt Petroleum Geology: Key Concepts > Carbonate Reservoirs]
+Carbonate reservoir is a type of petroleum reservoir rock composed of carbonate minerals
+such as calcite and dolomite. Microbialite is a sedimentary rock formed by the metabolic
+activity of microbial communities, serving as the primary reservoir facies in the
+Santos Basin Pre-Salt sequences.
+
+[test_doc.md > Pre-Salt Petroleum Geology: Key Concepts > Stratigraphy and Basin Evolution]
+Rifting is a tectonic process involving extensional deformation of the lithosphere.
+Reservoir quality is a composite property describing a rock's capacity to store and
+transmit fluids, primarily controlled by porosity and permeability.
+
+[test_doc.md > Pre-Salt Petroleum Geology: Key Concepts > Structural Geology and Traps]
+Structural trap is a type of petroleum trap formed by deformation of rock layers through
+tectonic processes. Fault is a planar fracture in rock along which displacement has occurred,
+serving as both migration pathway and barrier in Pre-Salt reservoirs.
+
+[test_doc.md > Pre-Salt Petroleum Geology: Key Concepts > Diagenesis and Porosity]
+Porosity is a physical property of rock defined as the ratio of void space to total rock
+volume. Dolomitization is a diagenetic process involving replacement of calcite by dolomite,
+often enhancing reservoir porosity and permeability.
+
+[test_doc.md > Pre-Salt Petroleum Geology: Key Concepts > Depositional Environments]
+Lacustrine environment is a continental depositional setting associated with lake systems.
+Evaporite is a chemical sedimentary rock formed by precipitation of dissolved minerals from
+evaporating water bodies, acting as the regional seal in the Pre-Salt play."
+dolomite,"Dolomite is a carbonate mineral that consists of calcium magnesium carbonate and commonly forms in carbonate reservoir rocks through diagenetic replacement of calcite. In the Brazilian Pre-Salt, dolomite is an important constituent of carbonate reservoirs and is commonly associated with dolomitization processes that can enhance porosity, permeability, and overall reservoir quality.",True,"[test_doc.md > Pre-Salt Petroleum Geology: Key Concepts > Diagenesis and Porosity]
+Porosity is a physical property of rock defined as the ratio of void space to total rock
+volume. Dolomitization is a diagenetic process involving replacement of calcite by dolomite,
+often enhancing reservoir porosity and permeability.
+
+[test_doc.md > Pre-Salt Petroleum Geology: Key Concepts > Carbonate Reservoirs]
+Carbonate reservoir is a type of petroleum reservoir rock composed of carbonate minerals
+such as calcite and dolomite. Microbialite is a sedimentary rock formed by the metabolic
+activity of microbial communities, serving as the primary reservoir facies in the
+Santos Basin Pre-Salt sequences.
+
+[test_doc.md > Pre-Salt Petroleum Geology: Key Concepts > Depositional Environments]
+Lacustrine environment is a continental depositional setting associated with lake systems.
+Evaporite is a chemical sedimentary rock formed by precipitation of dissolved minerals from
+evaporating water bodies, acting as the regional seal in the Pre-Salt play.
+
+[test_doc.md > Pre-Salt Petroleum Geology: Key Concepts > Stratigraphy and Basin Evolution]
+Rifting is a tectonic process involving extensional deformation of the lithosphere.
+Reservoir quality is a composite property describing a rock's capacity to store and
+transmit fluids, primarily controlled by porosity and permeability.
+
+[test_doc.md > Pre-Salt Petroleum Geology: Key Concepts > Structural Geology and Traps]
+Structural trap is a type of petroleum trap formed by deformation of rock layers through
+tectonic processes. Fault is a planar fracture in rock along which displacement has occurred,
+serving as both migration pathway and barrier in Pre-Salt reservoirs."
+petroleum reservoir rock,"Petroleum reservoir rock is a subsurface rock unit that stores and transmits petroleum through interconnected pore spaces and sufficient permeability. Its reservoir quality is primarily controlled by porosity and permeability, and in the Brazilian Pre-Salt it commonly includes carbonate reservoir rocks composed of calcite and dolomite, especially microbialite facies in the Santos Basin.",True,"[test_doc.md > Pre-Salt Petroleum Geology: Key Concepts > Carbonate Reservoirs]
+Carbonate reservoir is a type of petroleum reservoir rock composed of carbonate minerals
+such as calcite and dolomite. Microbialite is a sedimentary rock formed by the metabolic
+activity of microbial communities, serving as the primary reservoir facies in the
+Santos Basin Pre-Salt sequences.
+
+[test_doc.md > Pre-Salt Petroleum Geology: Key Concepts > Structural Geology and Traps]
+Structural trap is a type of petroleum trap formed by deformation of rock layers through
+tectonic processes. Fault is a planar fracture in rock along which displacement has occurred,
+serving as both migration pathway and barrier in Pre-Salt reservoirs.
+
+[test_doc.md > Pre-Salt Petroleum Geology: Key Concepts > Stratigraphy and Basin Evolution]
+Rifting is a tectonic process involving extensional deformation of the lithosphere.
+Reservoir quality is a composite property describing a rock's capacity to store and
+transmit fluids, primarily controlled by porosity and permeability.
+
+[test_doc.md > Pre-Salt Petroleum Geology: Key Concepts > Diagenesis and Porosity]
+Porosity is a physical property of rock defined as the ratio of void space to total rock
+volume. Dolomitization is a diagenetic process involving replacement of calcite by dolomite,
+often enhancing reservoir porosity and permeability.
+
+[test_doc.md > Pre-Salt Petroleum Geology: Key Concepts > Depositional Environments]
+Lacustrine environment is a continental depositional setting associated with lake systems.
+Evaporite is a chemical sedimentary rock formed by precipitation of dissolved minerals from
+evaporating water bodies, acting as the regional seal in the Pre-Salt play."
+calcite,"Calcite is a carbonate mineral that commonly composes carbonate reservoir rocks and can be replaced by dolomite during dolomitization. In the Brazilian Pre-Salt, calcite is an important constituent of microbialites and other carbonate facies, and its abundance and diagenetic alteration help control reservoir quality through their effects on porosity and permeability.",True,"[test_doc.md > Pre-Salt Petroleum Geology: Key Concepts > Carbonate Reservoirs]
 Carbonate reservoir is a type of petroleum reservoir rock composed of carbonate minerals
 such as calcite and dolomite. Microbialite is a sedimentary rock formed by the metabolic
 activity of microbial communities, serving as the primary reservoir facies in the
@@ -24,57 +99,7 @@ serving as both migration pathway and barrier in Pre-Salt reservoirs.
 Rifting is a tectonic process involving extensional deformation of the lithosphere.
 Reservoir quality is a composite property describing a rock's capacity to store and
 transmit fluids, primarily controlled by porosity and permeability."
-dolomite,"Dolomite is a carbonate mineral that is a common component of carbonate reservoir rocks and is formed through the diagenetic replacement of calcite during dolomitization. This diagenetic process frequently enhances reservoir porosity and permeability, making it a significant mineral in Pre-Salt petroleum systems.",True,"[test_doc.md > Pre-Salt Petroleum Geology: Key Concepts > Diagenesis and Porosity]
-Porosity is a physical property of rock defined as the ratio of void space to total rock
-volume. Dolomitization is a diagenetic process involving replacement of calcite by dolomite,
-often enhancing reservoir porosity and permeability.
-
-[test_doc.md > Pre-Salt Petroleum Geology: Key Concepts > Carbonate Reservoirs]
-Carbonate reservoir is a type of petroleum reservoir rock composed of carbonate minerals
-such as calcite and dolomite. Microbialite is a sedimentary rock formed by the metabolic
-activity of microbial communities, serving as the primary reservoir facies in the
-Santos Basin Pre-Salt sequences.
-
-[test_doc.md > Pre-Salt Petroleum Geology: Key Concepts > Depositional Environments]
-Lacustrine environment is a continental depositional setting associated with lake systems.
-Evaporite is a chemical sedimentary rock formed by precipitation of dissolved minerals from
-evaporating water bodies, acting as the regional seal in the Pre-Salt play.
-
-[test_doc.md > Pre-Salt Petroleum Geology: Key Concepts > Stratigraphy and Basin Evolution]
-Rifting is a tectonic process involving extensional deformation of the lithosphere.
-Reservoir quality is a composite property describing a rock's capacity to store and
-transmit fluids, primarily controlled by porosity and permeability.
-
-[test_doc.md > Pre-Salt Petroleum Geology: Key Concepts > Structural Geology and Traps]
-Structural trap is a type of petroleum trap formed by deformation of rock layers through
-tectonic processes. Fault is a planar fracture in rock along which displacement has occurred,
-serving as both migration pathway and barrier in Pre-Salt reservoirs."
-carbonate reservoir,"Carbonate reservoir is a type of petroleum reservoir rock that is composed of carbonate minerals such as calcite and dolomite. In the Brazilian Pre-Salt, these reservoirs are predominantly formed by microbialites, with their quality, including porosity and permeability, often enhanced by diagenetic processes like dolomitization.",True,"[test_doc.md > Pre-Salt Petroleum Geology: Key Concepts > Carbonate Reservoirs]
-Carbonate reservoir is a type of petroleum reservoir rock composed of carbonate minerals
-such as calcite and dolomite. Microbialite is a sedimentary rock formed by the metabolic
-activity of microbial communities, serving as the primary reservoir facies in the
-Santos Basin Pre-Salt sequences.
-
-[test_doc.md > Pre-Salt Petroleum Geology: Key Concepts > Stratigraphy and Basin Evolution]
-Rifting is a tectonic process involving extensional deformation of the lithosphere.
-Reservoir quality is a composite property describing a rock's capacity to store and
-transmit fluids, primarily controlled by porosity and permeability.
-
-[test_doc.md > Pre-Salt Petroleum Geology: Key Concepts > Structural Geology and Traps]
-Structural trap is a type of petroleum trap formed by deformation of rock layers through
-tectonic processes. Fault is a planar fracture in rock along which displacement has occurred,
-serving as both migration pathway and barrier in Pre-Salt reservoirs.
-
-[test_doc.md > Pre-Salt Petroleum Geology: Key Concepts > Diagenesis and Porosity]
-Porosity is a physical property of rock defined as the ratio of void space to total rock
-volume. Dolomitization is a diagenetic process involving replacement of calcite by dolomite,
-often enhancing reservoir porosity and permeability.
-
-[test_doc.md > Pre-Salt Petroleum Geology: Key Concepts > Depositional Environments]
-Lacustrine environment is a continental depositional setting associated with lake systems.
-Evaporite is a chemical sedimentary rock formed by precipitation of dissolved minerals from
-evaporating water bodies, acting as the regional seal in the Pre-Salt play."
-carbonate mineral,"Carbonate mineral is a mineral that contains the carbonate ion (CO3^2-) as its fundamental anionic group. These minerals, such as calcite and dolomite, are the primary constituents of carbonate reservoir rocks in the Brazilian Pre-Salt.",True,"[test_doc.md > Pre-Salt Petroleum Geology: Key Concepts > Carbonate Reservoirs]
+carbonate mineral,"Carbonate mineral is a mineral that contains the carbonate ion (CO3^2-) as a fundamental structural component, commonly occurring in reservoir rocks as phases such as calcite and dolomite. In the Brazilian Pre-Salt, carbonate minerals constitute the framework of many carbonate reservoirs and strongly influence diagenetic processes, porosity evolution, and overall reservoir quality.",True,"[test_doc.md > Pre-Salt Petroleum Geology: Key Concepts > Carbonate Reservoirs]
 Carbonate reservoir is a type of petroleum reservoir rock composed of carbonate minerals
 such as calcite and dolomite. Microbialite is a sedimentary rock formed by the metabolic
 activity of microbial communities, serving as the primary reservoir facies in the
@@ -99,57 +124,7 @@ serving as both migration pathway and barrier in Pre-Salt reservoirs.
 Rifting is a tectonic process involving extensional deformation of the lithosphere.
 Reservoir quality is a composite property describing a rock's capacity to store and
 transmit fluids, primarily controlled by porosity and permeability."
-petroleum reservoir rock,"Petroleum reservoir rock is a rock that possesses the capacity to store and transmit petroleum fluids. This capacity is primarily controlled by its porosity, defined as the ratio of void space to total rock volume, and its permeability, which allows fluid flow, with carbonate reservoirs like microbialites being significant examples in the Brazilian Pre-Salt.",True,"[test_doc.md > Pre-Salt Petroleum Geology: Key Concepts > Carbonate Reservoirs]
-Carbonate reservoir is a type of petroleum reservoir rock composed of carbonate minerals
-such as calcite and dolomite. Microbialite is a sedimentary rock formed by the metabolic
-activity of microbial communities, serving as the primary reservoir facies in the
-Santos Basin Pre-Salt sequences.
-
-[test_doc.md > Pre-Salt Petroleum Geology: Key Concepts > Structural Geology and Traps]
-Structural trap is a type of petroleum trap formed by deformation of rock layers through
-tectonic processes. Fault is a planar fracture in rock along which displacement has occurred,
-serving as both migration pathway and barrier in Pre-Salt reservoirs.
-
-[test_doc.md > Pre-Salt Petroleum Geology: Key Concepts > Stratigraphy and Basin Evolution]
-Rifting is a tectonic process involving extensional deformation of the lithosphere.
-Reservoir quality is a composite property describing a rock's capacity to store and
-transmit fluids, primarily controlled by porosity and permeability.
-
-[test_doc.md > Pre-Salt Petroleum Geology: Key Concepts > Diagenesis and Porosity]
-Porosity is a physical property of rock defined as the ratio of void space to total rock
-volume. Dolomitization is a diagenetic process involving replacement of calcite by dolomite,
-often enhancing reservoir porosity and permeability.
-
-[test_doc.md > Pre-Salt Petroleum Geology: Key Concepts > Depositional Environments]
-Lacustrine environment is a continental depositional setting associated with lake systems.
-Evaporite is a chemical sedimentary rock formed by precipitation of dissolved minerals from
-evaporating water bodies, acting as the regional seal in the Pre-Salt play."
-microbialite,Microbialite is a sedimentary rock that is formed by the metabolic activity of microbial communities. It serves as the primary reservoir facies in the Santos Basin Pre-Salt sequences.,True,"[test_doc.md > Pre-Salt Petroleum Geology: Key Concepts > Carbonate Reservoirs]
-Carbonate reservoir is a type of petroleum reservoir rock composed of carbonate minerals
-such as calcite and dolomite. Microbialite is a sedimentary rock formed by the metabolic
-activity of microbial communities, serving as the primary reservoir facies in the
-Santos Basin Pre-Salt sequences.
-
-[test_doc.md > Pre-Salt Petroleum Geology: Key Concepts > Depositional Environments]
-Lacustrine environment is a continental depositional setting associated with lake systems.
-Evaporite is a chemical sedimentary rock formed by precipitation of dissolved minerals from
-evaporating water bodies, acting as the regional seal in the Pre-Salt play.
-
-[test_doc.md > Pre-Salt Petroleum Geology: Key Concepts > Diagenesis and Porosity]
-Porosity is a physical property of rock defined as the ratio of void space to total rock
-volume. Dolomitization is a diagenetic process involving replacement of calcite by dolomite,
-often enhancing reservoir porosity and permeability.
-
-[test_doc.md > Pre-Salt Petroleum Geology: Key Concepts > Stratigraphy and Basin Evolution]
-Rifting is a tectonic process involving extensional deformation of the lithosphere.
-Reservoir quality is a composite property describing a rock's capacity to store and
-transmit fluids, primarily controlled by porosity and permeability.
-
-[test_doc.md > Pre-Salt Petroleum Geology: Key Concepts > Structural Geology and Traps]
-Structural trap is a type of petroleum trap formed by deformation of rock layers through
-tectonic processes. Fault is a planar fracture in rock along which displacement has occurred,
-serving as both migration pathway and barrier in Pre-Salt reservoirs."
-santos basin,"Santos Basin is a sedimentary basin that is located off the southeastern coast of Brazil and is renowned for its significant Pre-Salt petroleum discoveries. Within its Pre-Salt sequences, microbialite serves as the primary reservoir facies.",True,"[test_doc.md > Pre-Salt Petroleum Geology: Key Concepts > Carbonate Reservoirs]
+santos basin,"Santos Basin is a sedimentary basin that contains the Brazilian Pre-Salt petroleum system, where microbialite-rich carbonate reservoirs form the primary reservoir facies beneath an evaporite regional seal. It developed in association with rifting and includes lacustrine depositional successions whose reservoir quality is strongly controlled by porosity, permeability, structural traps, faults, and diagenetic processes such as dolomitization.",True,"[test_doc.md > Pre-Salt Petroleum Geology: Key Concepts > Carbonate Reservoirs]
 Carbonate reservoir is a type of petroleum reservoir rock composed of carbonate minerals
 such as calcite and dolomite. Microbialite is a sedimentary rock formed by the metabolic
 activity of microbial communities, serving as the primary reservoir facies in the
@@ -174,32 +149,7 @@ transmit fluids, primarily controlled by porosity and permeability.
 Porosity is a physical property of rock defined as the ratio of void space to total rock
 volume. Dolomitization is a diagenetic process involving replacement of calcite by dolomite,
 often enhancing reservoir porosity and permeability."
-reservoir facies,"Reservoir facies is a geological facies that possesses the necessary petrophysical characteristics to store and transmit hydrocarbons. In the Brazilian Pre-Salt, microbialites are a primary example of such facies, formed by the metabolic activity of microbial communities.",True,"[test_doc.md > Pre-Salt Petroleum Geology: Key Concepts > Carbonate Reservoirs]
-Carbonate reservoir is a type of petroleum reservoir rock composed of carbonate minerals
-such as calcite and dolomite. Microbialite is a sedimentary rock formed by the metabolic
-activity of microbial communities, serving as the primary reservoir facies in the
-Santos Basin Pre-Salt sequences.
-
-[test_doc.md > Pre-Salt Petroleum Geology: Key Concepts > Stratigraphy and Basin Evolution]
-Rifting is a tectonic process involving extensional deformation of the lithosphere.
-Reservoir quality is a composite property describing a rock's capacity to store and
-transmit fluids, primarily controlled by porosity and permeability.
-
-[test_doc.md > Pre-Salt Petroleum Geology: Key Concepts > Structural Geology and Traps]
-Structural trap is a type of petroleum trap formed by deformation of rock layers through
-tectonic processes. Fault is a planar fracture in rock along which displacement has occurred,
-serving as both migration pathway and barrier in Pre-Salt reservoirs.
-
-[test_doc.md > Pre-Salt Petroleum Geology: Key Concepts > Diagenesis and Porosity]
-Porosity is a physical property of rock defined as the ratio of void space to total rock
-volume. Dolomitization is a diagenetic process involving replacement of calcite by dolomite,
-often enhancing reservoir porosity and permeability.
-
-[test_doc.md > Pre-Salt Petroleum Geology: Key Concepts > Depositional Environments]
-Lacustrine environment is a continental depositional setting associated with lake systems.
-Evaporite is a chemical sedimentary rock formed by precipitation of dissolved minerals from
-evaporating water bodies, acting as the regional seal in the Pre-Salt play."
-sedimentary rock,"Sedimentary rock is a type of rock that is formed from the accumulation or deposition of mineral or organic particles, or by the precipitation of minerals from solution, followed by compaction and cementation. In the Brazilian Pre-Salt, key examples include microbialites, which are primary reservoir facies, and evaporites, which act as regional seals.",True,"[test_doc.md > Pre-Salt Petroleum Geology: Key Concepts > Carbonate Reservoirs]
+microbialite,"Microbialite is a sedimentary rock that is formed by the metabolic activity of microbial communities. In the Brazilian Pre-Salt, especially in the Santos Basin, it constitutes the primary carbonate reservoir facies. Its reservoir quality is commonly linked to the development and preservation of porosity within these lacustrine carbonate successions.",True,"[test_doc.md > Pre-Salt Petroleum Geology: Key Concepts > Carbonate Reservoirs]
 Carbonate reservoir is a type of petroleum reservoir rock composed of carbonate minerals
 such as calcite and dolomite. Microbialite is a sedimentary rock formed by the metabolic
 activity of microbial communities, serving as the primary reservoir facies in the
@@ -224,7 +174,107 @@ transmit fluids, primarily controlled by porosity and permeability.
 Structural trap is a type of petroleum trap formed by deformation of rock layers through
 tectonic processes. Fault is a planar fracture in rock along which displacement has occurred,
 serving as both migration pathway and barrier in Pre-Salt reservoirs."
-porosity,"Porosity is a physical property of rock that is defined as the ratio of void space to total rock volume. It is a critical factor for reservoir quality, controlling a rock's capacity to store fluids, and can be enhanced by diagenetic processes such as dolomitization.",True,"[test_doc.md > Pre-Salt Petroleum Geology: Key Concepts > Diagenesis and Porosity]
+microbial community,"Microbial community is a biological assemblage that consists of interacting populations of microorganisms living together in a shared environment. In the Brazilian Pre-Salt lacustrine carbonate systems, such communities drive metabolic processes that induce or mediate the formation of microbialites, which constitute major reservoir facies in the Santos Basin. Their activity can therefore influence carbonate fabric development and, indirectly, reservoir quality.",True,"[test_doc.md > Pre-Salt Petroleum Geology: Key Concepts > Carbonate Reservoirs]
+Carbonate reservoir is a type of petroleum reservoir rock composed of carbonate minerals
+such as calcite and dolomite. Microbialite is a sedimentary rock formed by the metabolic
+activity of microbial communities, serving as the primary reservoir facies in the
+Santos Basin Pre-Salt sequences.
+
+[test_doc.md > Pre-Salt Petroleum Geology: Key Concepts > Depositional Environments]
+Lacustrine environment is a continental depositional setting associated with lake systems.
+Evaporite is a chemical sedimentary rock formed by precipitation of dissolved minerals from
+evaporating water bodies, acting as the regional seal in the Pre-Salt play.
+
+[test_doc.md > Pre-Salt Petroleum Geology: Key Concepts > Stratigraphy and Basin Evolution]
+Rifting is a tectonic process involving extensional deformation of the lithosphere.
+Reservoir quality is a composite property describing a rock's capacity to store and
+transmit fluids, primarily controlled by porosity and permeability.
+
+[test_doc.md > Pre-Salt Petroleum Geology: Key Concepts > Diagenesis and Porosity]
+Porosity is a physical property of rock defined as the ratio of void space to total rock
+volume. Dolomitization is a diagenetic process involving replacement of calcite by dolomite,
+often enhancing reservoir porosity and permeability.
+
+[test_doc.md > Pre-Salt Petroleum Geology: Key Concepts > Structural Geology and Traps]
+Structural trap is a type of petroleum trap formed by deformation of rock layers through
+tectonic processes. Fault is a planar fracture in rock along which displacement has occurred,
+serving as both migration pathway and barrier in Pre-Salt reservoirs."
+reservoir facies,"Reservoir facies is a depositional facies that forms or constitutes a petroleum reservoir by possessing the lithologic and petrophysical characteristics needed to store and transmit hydrocarbons. In the Brazilian Pre-Salt, reservoir facies are typically carbonate rocks, and microbialite serves as the primary reservoir facies in the Santos Basin sequences. Their reservoir quality is mainly expressed through porosity and permeability, which are further modified by diagenetic processes such as dolomitization.",True,"[test_doc.md > Pre-Salt Petroleum Geology: Key Concepts > Carbonate Reservoirs]
+Carbonate reservoir is a type of petroleum reservoir rock composed of carbonate minerals
+such as calcite and dolomite. Microbialite is a sedimentary rock formed by the metabolic
+activity of microbial communities, serving as the primary reservoir facies in the
+Santos Basin Pre-Salt sequences.
+
+[test_doc.md > Pre-Salt Petroleum Geology: Key Concepts > Stratigraphy and Basin Evolution]
+Rifting is a tectonic process involving extensional deformation of the lithosphere.
+Reservoir quality is a composite property describing a rock's capacity to store and
+transmit fluids, primarily controlled by porosity and permeability.
+
+[test_doc.md > Pre-Salt Petroleum Geology: Key Concepts > Structural Geology and Traps]
+Structural trap is a type of petroleum trap formed by deformation of rock layers through
+tectonic processes. Fault is a planar fracture in rock along which displacement has occurred,
+serving as both migration pathway and barrier in Pre-Salt reservoirs.
+
+[test_doc.md > Pre-Salt Petroleum Geology: Key Concepts > Diagenesis and Porosity]
+Porosity is a physical property of rock defined as the ratio of void space to total rock
+volume. Dolomitization is a diagenetic process involving replacement of calcite by dolomite,
+often enhancing reservoir porosity and permeability.
+
+[test_doc.md > Pre-Salt Petroleum Geology: Key Concepts > Depositional Environments]
+Lacustrine environment is a continental depositional setting associated with lake systems.
+Evaporite is a chemical sedimentary rock formed by precipitation of dissolved minerals from
+evaporating water bodies, acting as the regional seal in the Pre-Salt play."
+sedimentary rock,"Sedimentary rock is a rock that forms through the deposition, precipitation, and subsequent lithification of sediments or dissolved mineral matter at or near the Earth's surface. In the Brazilian Pre-Salt, sedimentary rocks include carbonate reservoir facies such as microbialites and chemical sedimentary rocks such as evaporites that act as regional seals. Their depositional origin strongly influences porosity, permeability, and petroleum system behavior.",True,"[test_doc.md > Pre-Salt Petroleum Geology: Key Concepts > Carbonate Reservoirs]
+Carbonate reservoir is a type of petroleum reservoir rock composed of carbonate minerals
+such as calcite and dolomite. Microbialite is a sedimentary rock formed by the metabolic
+activity of microbial communities, serving as the primary reservoir facies in the
+Santos Basin Pre-Salt sequences.
+
+[test_doc.md > Pre-Salt Petroleum Geology: Key Concepts > Depositional Environments]
+Lacustrine environment is a continental depositional setting associated with lake systems.
+Evaporite is a chemical sedimentary rock formed by precipitation of dissolved minerals from
+evaporating water bodies, acting as the regional seal in the Pre-Salt play.
+
+[test_doc.md > Pre-Salt Petroleum Geology: Key Concepts > Diagenesis and Porosity]
+Porosity is a physical property of rock defined as the ratio of void space to total rock
+volume. Dolomitization is a diagenetic process involving replacement of calcite by dolomite,
+often enhancing reservoir porosity and permeability.
+
+[test_doc.md > Pre-Salt Petroleum Geology: Key Concepts > Stratigraphy and Basin Evolution]
+Rifting is a tectonic process involving extensional deformation of the lithosphere.
+Reservoir quality is a composite property describing a rock's capacity to store and
+transmit fluids, primarily controlled by porosity and permeability.
+
+[test_doc.md > Pre-Salt Petroleum Geology: Key Concepts > Structural Geology and Traps]
+Structural trap is a type of petroleum trap formed by deformation of rock layers through
+tectonic processes. Fault is a planar fracture in rock along which displacement has occurred,
+serving as both migration pathway and barrier in Pre-Salt reservoirs."
+dolomitization,"Dolomitization is a diagenetic process that replaces calcite with dolomite in carbonate rocks. In Brazilian Pre-Salt carbonate reservoirs, this mineralogical alteration often enhances porosity and permeability, thereby improving reservoir quality and fluid flow capacity.",True,"[test_doc.md > Pre-Salt Petroleum Geology: Key Concepts > Diagenesis and Porosity]
+Porosity is a physical property of rock defined as the ratio of void space to total rock
+volume. Dolomitization is a diagenetic process involving replacement of calcite by dolomite,
+often enhancing reservoir porosity and permeability.
+
+[test_doc.md > Pre-Salt Petroleum Geology: Key Concepts > Carbonate Reservoirs]
+Carbonate reservoir is a type of petroleum reservoir rock composed of carbonate minerals
+such as calcite and dolomite. Microbialite is a sedimentary rock formed by the metabolic
+activity of microbial communities, serving as the primary reservoir facies in the
+Santos Basin Pre-Salt sequences.
+
+[test_doc.md > Pre-Salt Petroleum Geology: Key Concepts > Stratigraphy and Basin Evolution]
+Rifting is a tectonic process involving extensional deformation of the lithosphere.
+Reservoir quality is a composite property describing a rock's capacity to store and
+transmit fluids, primarily controlled by porosity and permeability.
+
+[test_doc.md > Pre-Salt Petroleum Geology: Key Concepts > Structural Geology and Traps]
+Structural trap is a type of petroleum trap formed by deformation of rock layers through
+tectonic processes. Fault is a planar fracture in rock along which displacement has occurred,
+serving as both migration pathway and barrier in Pre-Salt reservoirs.
+
+[test_doc.md > Pre-Salt Petroleum Geology: Key Concepts > Depositional Environments]
+Lacustrine environment is a continental depositional setting associated with lake systems.
+Evaporite is a chemical sedimentary rock formed by precipitation of dissolved minerals from
+evaporating water bodies, acting as the regional seal in the Pre-Salt play."
+diagenesis,"Diagenesis is a post-depositional geological process that alters sediment or sedimentary rock through physical, chemical, and biological changes during burial and lithification. In Brazilian Pre-Salt carbonate reservoirs, diagenesis strongly controls reservoir quality by modifying porosity and permeability, with dolomitization being an important example that replaces calcite with dolomite and can enhance storage and flow capacity.",True,"[test_doc.md > Pre-Salt Petroleum Geology: Key Concepts > Diagenesis and Porosity]
 Porosity is a physical property of rock defined as the ratio of void space to total rock
 volume. Dolomitization is a diagenetic process involving replacement of calcite by dolomite,
 often enhancing reservoir porosity and permeability.
@@ -249,7 +299,7 @@ evaporating water bodies, acting as the regional seal in the Pre-Salt play.
 Structural trap is a type of petroleum trap formed by deformation of rock layers through
 tectonic processes. Fault is a planar fracture in rock along which displacement has occurred,
 serving as both migration pathway and barrier in Pre-Salt reservoirs."
-pre-salt sequence,"Pre-salt sequence is a stratigraphic interval that lies beneath a thick evaporite layer and was deposited during the rift and sag phases of the South Atlantic opening. It is characterized by lacustrine and marine carbonate and siliciclastic rocks, including microbialites, which form prolific hydrocarbon reservoirs, and represents a major petroleum play in the Brazilian offshore.",False,"[test_doc.md > Pre-Salt Petroleum Geology: Key Concepts > Carbonate Reservoirs]
+pre-salt sequence,"Pre-salt sequence is a stratigraphic succession that was deposited before the regional evaporite seal during the rift to early post-rift evolution of Brazilian marginal basins. In the Brazilian Pre-Salt, it commonly comprises lacustrine sediments and carbonate reservoir rocks, especially microbialites that form the main reservoir facies in the Santos Basin. These deposits are central to the petroleum system because their reservoir quality depends on porosity and permeability and they are overlain by evaporites that provide an effective regional seal.",True,"[test_doc.md > Pre-Salt Petroleum Geology: Key Concepts > Carbonate Reservoirs]
 Carbonate reservoir is a type of petroleum reservoir rock composed of carbonate minerals
 such as calcite and dolomite. Microbialite is a sedimentary rock formed by the metabolic
 activity of microbial communities, serving as the primary reservoir facies in the
@@ -274,7 +324,57 @@ transmit fluids, primarily controlled by porosity and permeability.
 Porosity is a physical property of rock defined as the ratio of void space to total rock
 volume. Dolomitization is a diagenetic process involving replacement of calcite by dolomite,
 often enhancing reservoir porosity and permeability."
-structural trap,"Structural trap is a type of petroleum trap that is formed by deformation of rock layers through tectonic processes. These traps commonly arise from folding or faulting, where faults can act as seals or barriers, leading to the accumulation of hydrocarbons.",True,"[test_doc.md > Pre-Salt Petroleum Geology: Key Concepts > Structural Geology and Traps]
+permeability,"Permeability is a petrophysical property of rock that quantifies its ability to transmit fluids through interconnected pore spaces and fractures. In Brazilian Pre-Salt carbonate reservoirs, it is a key component of reservoir quality together with porosity, and it may be enhanced by diagenetic processes such as dolomitization. This property strongly influences fluid flow, production performance, and the effectiveness of migration pathways within microbialite and other carbonate facies.",True,"[test_doc.md > Pre-Salt Petroleum Geology: Key Concepts > Diagenesis and Porosity]
+Porosity is a physical property of rock defined as the ratio of void space to total rock
+volume. Dolomitization is a diagenetic process involving replacement of calcite by dolomite,
+often enhancing reservoir porosity and permeability.
+
+[test_doc.md > Pre-Salt Petroleum Geology: Key Concepts > Stratigraphy and Basin Evolution]
+Rifting is a tectonic process involving extensional deformation of the lithosphere.
+Reservoir quality is a composite property describing a rock's capacity to store and
+transmit fluids, primarily controlled by porosity and permeability.
+
+[test_doc.md > Pre-Salt Petroleum Geology: Key Concepts > Structural Geology and Traps]
+Structural trap is a type of petroleum trap formed by deformation of rock layers through
+tectonic processes. Fault is a planar fracture in rock along which displacement has occurred,
+serving as both migration pathway and barrier in Pre-Salt reservoirs.
+
+[test_doc.md > Pre-Salt Petroleum Geology: Key Concepts > Carbonate Reservoirs]
+Carbonate reservoir is a type of petroleum reservoir rock composed of carbonate minerals
+such as calcite and dolomite. Microbialite is a sedimentary rock formed by the metabolic
+activity of microbial communities, serving as the primary reservoir facies in the
+Santos Basin Pre-Salt sequences.
+
+[test_doc.md > Pre-Salt Petroleum Geology: Key Concepts > Depositional Environments]
+Lacustrine environment is a continental depositional setting associated with lake systems.
+Evaporite is a chemical sedimentary rock formed by precipitation of dissolved minerals from
+evaporating water bodies, acting as the regional seal in the Pre-Salt play."
+porosity,"Porosity is a physical property of rock that quantifies the ratio of void space to total rock volume. In Brazilian Pre-Salt carbonate reservoirs, it is a primary control on reservoir quality because it governs the rock's capacity to store fluids, and it may be enhanced by diagenetic processes such as dolomitization. In microbialite-dominated reservoir facies, porosity commonly interacts with permeability to determine hydrocarbon storage and flow behavior.",True,"[test_doc.md > Pre-Salt Petroleum Geology: Key Concepts > Diagenesis and Porosity]
+Porosity is a physical property of rock defined as the ratio of void space to total rock
+volume. Dolomitization is a diagenetic process involving replacement of calcite by dolomite,
+often enhancing reservoir porosity and permeability.
+
+[test_doc.md > Pre-Salt Petroleum Geology: Key Concepts > Stratigraphy and Basin Evolution]
+Rifting is a tectonic process involving extensional deformation of the lithosphere.
+Reservoir quality is a composite property describing a rock's capacity to store and
+transmit fluids, primarily controlled by porosity and permeability.
+
+[test_doc.md > Pre-Salt Petroleum Geology: Key Concepts > Carbonate Reservoirs]
+Carbonate reservoir is a type of petroleum reservoir rock composed of carbonate minerals
+such as calcite and dolomite. Microbialite is a sedimentary rock formed by the metabolic
+activity of microbial communities, serving as the primary reservoir facies in the
+Santos Basin Pre-Salt sequences.
+
+[test_doc.md > Pre-Salt Petroleum Geology: Key Concepts > Depositional Environments]
+Lacustrine environment is a continental depositional setting associated with lake systems.
+Evaporite is a chemical sedimentary rock formed by precipitation of dissolved minerals from
+evaporating water bodies, acting as the regional seal in the Pre-Salt play.
+
+[test_doc.md > Pre-Salt Petroleum Geology: Key Concepts > Structural Geology and Traps]
+Structural trap is a type of petroleum trap formed by deformation of rock layers through
+tectonic processes. Fault is a planar fracture in rock along which displacement has occurred,
+serving as both migration pathway and barrier in Pre-Salt reservoirs."
+structural trap,"Structural trap is a type of petroleum trap that forms when tectonic deformation of rock layers creates a closed geometry capable of accumulating hydrocarbons. In the Brazilian Pre-Salt, such traps commonly result from rift-related extensional structures, and faults may both facilitate hydrocarbon migration and act as sealing barriers. These traps are typically effective where reservoir carbonates are overlain by evaporites that provide a regional seal.",True,"[test_doc.md > Pre-Salt Petroleum Geology: Key Concepts > Structural Geology and Traps]
 Structural trap is a type of petroleum trap formed by deformation of rock layers through
 tectonic processes. Fault is a planar fracture in rock along which displacement has occurred,
 serving as both migration pathway and barrier in Pre-Salt reservoirs.
@@ -299,82 +399,7 @@ Carbonate reservoir is a type of petroleum reservoir rock composed of carbonate 
 such as calcite and dolomite. Microbialite is a sedimentary rock formed by the metabolic
 activity of microbial communities, serving as the primary reservoir facies in the
 Santos Basin Pre-Salt sequences."
-permeability,"Permeability is a physical property of rock that describes its capacity to transmit fluids. It is a critical factor in determining reservoir quality, often enhanced by diagenetic processes like dolomitization in Pre-Salt carbonate reservoirs.",True,"[test_doc.md > Pre-Salt Petroleum Geology: Key Concepts > Diagenesis and Porosity]
-Porosity is a physical property of rock defined as the ratio of void space to total rock
-volume. Dolomitization is a diagenetic process involving replacement of calcite by dolomite,
-often enhancing reservoir porosity and permeability.
-
-[test_doc.md > Pre-Salt Petroleum Geology: Key Concepts > Stratigraphy and Basin Evolution]
-Rifting is a tectonic process involving extensional deformation of the lithosphere.
-Reservoir quality is a composite property describing a rock's capacity to store and
-transmit fluids, primarily controlled by porosity and permeability.
-
-[test_doc.md > Pre-Salt Petroleum Geology: Key Concepts > Structural Geology and Traps]
-Structural trap is a type of petroleum trap formed by deformation of rock layers through
-tectonic processes. Fault is a planar fracture in rock along which displacement has occurred,
-serving as both migration pathway and barrier in Pre-Salt reservoirs.
-
-[test_doc.md > Pre-Salt Petroleum Geology: Key Concepts > Carbonate Reservoirs]
-Carbonate reservoir is a type of petroleum reservoir rock composed of carbonate minerals
-such as calcite and dolomite. Microbialite is a sedimentary rock formed by the metabolic
-activity of microbial communities, serving as the primary reservoir facies in the
-Santos Basin Pre-Salt sequences.
-
-[test_doc.md > Pre-Salt Petroleum Geology: Key Concepts > Depositional Environments]
-Lacustrine environment is a continental depositional setting associated with lake systems.
-Evaporite is a chemical sedimentary rock formed by precipitation of dissolved minerals from
-evaporating water bodies, acting as the regional seal in the Pre-Salt play."
-dolomitization,"Dolomitization is a diagenetic process that involves the replacement of calcite by dolomite. This process often enhances reservoir porosity and permeability, which is crucial for hydrocarbon accumulation in Pre-Salt carbonate reservoirs.",True,"[test_doc.md > Pre-Salt Petroleum Geology: Key Concepts > Diagenesis and Porosity]
-Porosity is a physical property of rock defined as the ratio of void space to total rock
-volume. Dolomitization is a diagenetic process involving replacement of calcite by dolomite,
-often enhancing reservoir porosity and permeability.
-
-[test_doc.md > Pre-Salt Petroleum Geology: Key Concepts > Carbonate Reservoirs]
-Carbonate reservoir is a type of petroleum reservoir rock composed of carbonate minerals
-such as calcite and dolomite. Microbialite is a sedimentary rock formed by the metabolic
-activity of microbial communities, serving as the primary reservoir facies in the
-Santos Basin Pre-Salt sequences.
-
-[test_doc.md > Pre-Salt Petroleum Geology: Key Concepts > Stratigraphy and Basin Evolution]
-Rifting is a tectonic process involving extensional deformation of the lithosphere.
-Reservoir quality is a composite property describing a rock's capacity to store and
-transmit fluids, primarily controlled by porosity and permeability.
-
-[test_doc.md > Pre-Salt Petroleum Geology: Key Concepts > Structural Geology and Traps]
-Structural trap is a type of petroleum trap formed by deformation of rock layers through
-tectonic processes. Fault is a planar fracture in rock along which displacement has occurred,
-serving as both migration pathway and barrier in Pre-Salt reservoirs.
-
-[test_doc.md > Pre-Salt Petroleum Geology: Key Concepts > Depositional Environments]
-Lacustrine environment is a continental depositional setting associated with lake systems.
-Evaporite is a chemical sedimentary rock formed by precipitation of dissolved minerals from
-evaporating water bodies, acting as the regional seal in the Pre-Salt play."
-diagenetic process,"A diagenetic process is a geological process that involves physical and chemical changes to a rock after its initial deposition, often impacting its reservoir quality through alterations like mineral replacement. In the context of Pre-Salt reservoirs, these processes, such as dolomitization, are crucial as they can significantly enhance or degrade porosity and permeability, which are key factors for hydrocarbon accumulation and production.",True,"[test_doc.md > Pre-Salt Petroleum Geology: Key Concepts > Diagenesis and Porosity]
-Porosity is a physical property of rock defined as the ratio of void space to total rock
-volume. Dolomitization is a diagenetic process involving replacement of calcite by dolomite,
-often enhancing reservoir porosity and permeability.
-
-[test_doc.md > Pre-Salt Petroleum Geology: Key Concepts > Stratigraphy and Basin Evolution]
-Rifting is a tectonic process involving extensional deformation of the lithosphere.
-Reservoir quality is a composite property describing a rock's capacity to store and
-transmit fluids, primarily controlled by porosity and permeability.
-
-[test_doc.md > Pre-Salt Petroleum Geology: Key Concepts > Structural Geology and Traps]
-Structural trap is a type of petroleum trap formed by deformation of rock layers through
-tectonic processes. Fault is a planar fracture in rock along which displacement has occurred,
-serving as both migration pathway and barrier in Pre-Salt reservoirs.
-
-[test_doc.md > Pre-Salt Petroleum Geology: Key Concepts > Carbonate Reservoirs]
-Carbonate reservoir is a type of petroleum reservoir rock composed of carbonate minerals
-such as calcite and dolomite. Microbialite is a sedimentary rock formed by the metabolic
-activity of microbial communities, serving as the primary reservoir facies in the
-Santos Basin Pre-Salt sequences.
-
-[test_doc.md > Pre-Salt Petroleum Geology: Key Concepts > Depositional Environments]
-Lacustrine environment is a continental depositional setting associated with lake systems.
-Evaporite is a chemical sedimentary rock formed by precipitation of dissolved minerals from
-evaporating water bodies, acting as the regional seal in the Pre-Salt play."
-fault,"Fault is a planar fracture in rock along which displacement has occurred. In Pre-Salt reservoirs, faults can serve as both migration pathways for hydrocarbons and barriers to fluid flow.",True,"[test_doc.md > Pre-Salt Petroleum Geology: Key Concepts > Structural Geology and Traps]
+fault,"Fault is a planar fracture in rock that is characterized by displacement along the fracture surface. In the Brazilian Pre-Salt, faults are tectonic structures associated mainly with rifting and can form structural traps while also acting either as migration pathways or as barriers to fluid flow in carbonate reservoirs.",True,"[test_doc.md > Pre-Salt Petroleum Geology: Key Concepts > Structural Geology and Traps]
 Structural trap is a type of petroleum trap formed by deformation of rock layers through
 tectonic processes. Fault is a planar fracture in rock along which displacement has occurred,
 serving as both migration pathway and barrier in Pre-Salt reservoirs.
@@ -399,7 +424,307 @@ Carbonate reservoir is a type of petroleum reservoir rock composed of carbonate 
 such as calcite and dolomite. Microbialite is a sedimentary rock formed by the metabolic
 activity of microbial communities, serving as the primary reservoir facies in the
 Santos Basin Pre-Salt sequences."
-tectonic process,"Tectonic process is a geological process that involves the deformation of the Earth's lithosphere. These processes, such as rifting, can lead to extensional deformation and the formation of structural traps in petroleum systems.",True,"[test_doc.md > Pre-Salt Petroleum Geology: Key Concepts > Stratigraphy and Basin Evolution]
+petroleum trap,"Petroleum trap is a subsurface geological configuration that prevents migrating hydrocarbons from escaping and allows them to accumulate in a reservoir beneath an effective seal. In the Brazilian Pre-Salt, traps commonly involve structural deformation of rock layers and fault-related closures associated with rifting, with microbialite-rich carbonate reservoirs sealed regionally by evaporites. A petroleum trap requires the proper combination of reservoir rock, seal, and closure geometry to retain oil and gas.",True,"[test_doc.md > Pre-Salt Petroleum Geology: Key Concepts > Structural Geology and Traps]
+Structural trap is a type of petroleum trap formed by deformation of rock layers through
+tectonic processes. Fault is a planar fracture in rock along which displacement has occurred,
+serving as both migration pathway and barrier in Pre-Salt reservoirs.
+
+[test_doc.md > Pre-Salt Petroleum Geology: Key Concepts > Carbonate Reservoirs]
+Carbonate reservoir is a type of petroleum reservoir rock composed of carbonate minerals
+such as calcite and dolomite. Microbialite is a sedimentary rock formed by the metabolic
+activity of microbial communities, serving as the primary reservoir facies in the
+Santos Basin Pre-Salt sequences.
+
+[test_doc.md > Pre-Salt Petroleum Geology: Key Concepts > Stratigraphy and Basin Evolution]
+Rifting is a tectonic process involving extensional deformation of the lithosphere.
+Reservoir quality is a composite property describing a rock's capacity to store and
+transmit fluids, primarily controlled by porosity and permeability.
+
+[test_doc.md > Pre-Salt Petroleum Geology: Key Concepts > Depositional Environments]
+Lacustrine environment is a continental depositional setting associated with lake systems.
+Evaporite is a chemical sedimentary rock formed by precipitation of dissolved minerals from
+evaporating water bodies, acting as the regional seal in the Pre-Salt play.
+
+[test_doc.md > Pre-Salt Petroleum Geology: Key Concepts > Diagenesis and Porosity]
+Porosity is a physical property of rock defined as the ratio of void space to total rock
+volume. Dolomitization is a diagenetic process involving replacement of calcite by dolomite,
+often enhancing reservoir porosity and permeability."
+barrier,"Barrier is a geological impediment that restricts or prevents the migration and flow of hydrocarbons or formation fluids within a reservoir system. In the Brazilian Pre-Salt, faults can act as barriers when their displacement or sealing properties compartmentalize carbonate reservoirs, even though they may also serve as migration pathways in other contexts.",True,"[test_doc.md > Pre-Salt Petroleum Geology: Key Concepts > Structural Geology and Traps]
+Structural trap is a type of petroleum trap formed by deformation of rock layers through
+tectonic processes. Fault is a planar fracture in rock along which displacement has occurred,
+serving as both migration pathway and barrier in Pre-Salt reservoirs.
+
+[test_doc.md > Pre-Salt Petroleum Geology: Key Concepts > Diagenesis and Porosity]
+Porosity is a physical property of rock defined as the ratio of void space to total rock
+volume. Dolomitization is a diagenetic process involving replacement of calcite by dolomite,
+often enhancing reservoir porosity and permeability.
+
+[test_doc.md > Pre-Salt Petroleum Geology: Key Concepts > Stratigraphy and Basin Evolution]
+Rifting is a tectonic process involving extensional deformation of the lithosphere.
+Reservoir quality is a composite property describing a rock's capacity to store and
+transmit fluids, primarily controlled by porosity and permeability.
+
+[test_doc.md > Pre-Salt Petroleum Geology: Key Concepts > Depositional Environments]
+Lacustrine environment is a continental depositional setting associated with lake systems.
+Evaporite is a chemical sedimentary rock formed by precipitation of dissolved minerals from
+evaporating water bodies, acting as the regional seal in the Pre-Salt play.
+
+[test_doc.md > Pre-Salt Petroleum Geology: Key Concepts > Carbonate Reservoirs]
+Carbonate reservoir is a type of petroleum reservoir rock composed of carbonate minerals
+such as calcite and dolomite. Microbialite is a sedimentary rock formed by the metabolic
+activity of microbial communities, serving as the primary reservoir facies in the
+Santos Basin Pre-Salt sequences."
+migration pathway,"Migration pathway is a subsurface geological conduit that enables hydrocarbons to move from source rocks toward reservoir rocks and traps. In the Brazilian Pre-Salt, faults commonly act as migration pathways by providing connected fractures or permeable zones, although they may also behave as barriers depending on their sealing properties. Effective migration along these pathways influences hydrocarbon charge into carbonate reservoirs such as microbialites beneath the regional evaporite seal.",True,"[test_doc.md > Pre-Salt Petroleum Geology: Key Concepts > Structural Geology and Traps]
+Structural trap is a type of petroleum trap formed by deformation of rock layers through
+tectonic processes. Fault is a planar fracture in rock along which displacement has occurred,
+serving as both migration pathway and barrier in Pre-Salt reservoirs.
+
+[test_doc.md > Pre-Salt Petroleum Geology: Key Concepts > Stratigraphy and Basin Evolution]
+Rifting is a tectonic process involving extensional deformation of the lithosphere.
+Reservoir quality is a composite property describing a rock's capacity to store and
+transmit fluids, primarily controlled by porosity and permeability.
+
+[test_doc.md > Pre-Salt Petroleum Geology: Key Concepts > Depositional Environments]
+Lacustrine environment is a continental depositional setting associated with lake systems.
+Evaporite is a chemical sedimentary rock formed by precipitation of dissolved minerals from
+evaporating water bodies, acting as the regional seal in the Pre-Salt play.
+
+[test_doc.md > Pre-Salt Petroleum Geology: Key Concepts > Carbonate Reservoirs]
+Carbonate reservoir is a type of petroleum reservoir rock composed of carbonate minerals
+such as calcite and dolomite. Microbialite is a sedimentary rock formed by the metabolic
+activity of microbial communities, serving as the primary reservoir facies in the
+Santos Basin Pre-Salt sequences.
+
+[test_doc.md > Pre-Salt Petroleum Geology: Key Concepts > Diagenesis and Porosity]
+Porosity is a physical property of rock defined as the ratio of void space to total rock
+volume. Dolomitization is a diagenetic process involving replacement of calcite by dolomite,
+often enhancing reservoir porosity and permeability."
+lacustrine environment,"Lacustrine environment is a continental depositional setting that is associated with lake systems. In the Brazilian Pre-Salt, it is the setting in which key sediments such as microbial carbonates accumulated before evaporite deposition, strongly influencing reservoir facies distribution and stratigraphic architecture.",True,"[test_doc.md > Pre-Salt Petroleum Geology: Key Concepts > Depositional Environments]
+Lacustrine environment is a continental depositional setting associated with lake systems.
+Evaporite is a chemical sedimentary rock formed by precipitation of dissolved minerals from
+evaporating water bodies, acting as the regional seal in the Pre-Salt play.
+
+[test_doc.md > Pre-Salt Petroleum Geology: Key Concepts > Carbonate Reservoirs]
+Carbonate reservoir is a type of petroleum reservoir rock composed of carbonate minerals
+such as calcite and dolomite. Microbialite is a sedimentary rock formed by the metabolic
+activity of microbial communities, serving as the primary reservoir facies in the
+Santos Basin Pre-Salt sequences.
+
+[test_doc.md > Pre-Salt Petroleum Geology: Key Concepts > Stratigraphy and Basin Evolution]
+Rifting is a tectonic process involving extensional deformation of the lithosphere.
+Reservoir quality is a composite property describing a rock's capacity to store and
+transmit fluids, primarily controlled by porosity and permeability.
+
+[test_doc.md > Pre-Salt Petroleum Geology: Key Concepts > Diagenesis and Porosity]
+Porosity is a physical property of rock defined as the ratio of void space to total rock
+volume. Dolomitization is a diagenetic process involving replacement of calcite by dolomite,
+often enhancing reservoir porosity and permeability.
+
+[test_doc.md > Pre-Salt Petroleum Geology: Key Concepts > Structural Geology and Traps]
+Structural trap is a type of petroleum trap formed by deformation of rock layers through
+tectonic processes. Fault is a planar fracture in rock along which displacement has occurred,
+serving as both migration pathway and barrier in Pre-Salt reservoirs."
+pre-salt reservoir,"Pre-salt reservoir is a petroleum reservoir that occurs in subsalt stratigraphic intervals of the Brazilian Pre-Salt play, typically consisting of lacustrine carbonate rocks whose storage and flow capacity are controlled by porosity and permeability. In the Santos Basin, microbialites are the primary reservoir facies, and these reservoirs are commonly sealed by overlying evaporites. Their trapping and performance may also be influenced by structural deformation and faults, which can act as migration pathways or barriers.",True,"[test_doc.md > Pre-Salt Petroleum Geology: Key Concepts > Carbonate Reservoirs]
+Carbonate reservoir is a type of petroleum reservoir rock composed of carbonate minerals
+such as calcite and dolomite. Microbialite is a sedimentary rock formed by the metabolic
+activity of microbial communities, serving as the primary reservoir facies in the
+Santos Basin Pre-Salt sequences.
+
+[test_doc.md > Pre-Salt Petroleum Geology: Key Concepts > Structural Geology and Traps]
+Structural trap is a type of petroleum trap formed by deformation of rock layers through
+tectonic processes. Fault is a planar fracture in rock along which displacement has occurred,
+serving as both migration pathway and barrier in Pre-Salt reservoirs.
+
+[test_doc.md > Pre-Salt Petroleum Geology: Key Concepts > Depositional Environments]
+Lacustrine environment is a continental depositional setting associated with lake systems.
+Evaporite is a chemical sedimentary rock formed by precipitation of dissolved minerals from
+evaporating water bodies, acting as the regional seal in the Pre-Salt play.
+
+[test_doc.md > Pre-Salt Petroleum Geology: Key Concepts > Stratigraphy and Basin Evolution]
+Rifting is a tectonic process involving extensional deformation of the lithosphere.
+Reservoir quality is a composite property describing a rock's capacity to store and
+transmit fluids, primarily controlled by porosity and permeability.
+
+[test_doc.md > Pre-Salt Petroleum Geology: Key Concepts > Diagenesis and Porosity]
+Porosity is a physical property of rock defined as the ratio of void space to total rock
+volume. Dolomitization is a diagenetic process involving replacement of calcite by dolomite,
+often enhancing reservoir porosity and permeability."
+continental depositional setting,"Continental depositional setting is a depositional environment that develops on land rather than in marine domains. In the Brazilian Pre-Salt context, it includes lacustrine systems associated with lakes, where sediments and carbonates such as microbialites accumulated during rift-related basin evolution prior to regional evaporite sealing.",True,"[test_doc.md > Pre-Salt Petroleum Geology: Key Concepts > Depositional Environments]
+Lacustrine environment is a continental depositional setting associated with lake systems.
+Evaporite is a chemical sedimentary rock formed by precipitation of dissolved minerals from
+evaporating water bodies, acting as the regional seal in the Pre-Salt play.
+
+[test_doc.md > Pre-Salt Petroleum Geology: Key Concepts > Carbonate Reservoirs]
+Carbonate reservoir is a type of petroleum reservoir rock composed of carbonate minerals
+such as calcite and dolomite. Microbialite is a sedimentary rock formed by the metabolic
+activity of microbial communities, serving as the primary reservoir facies in the
+Santos Basin Pre-Salt sequences.
+
+[test_doc.md > Pre-Salt Petroleum Geology: Key Concepts > Stratigraphy and Basin Evolution]
+Rifting is a tectonic process involving extensional deformation of the lithosphere.
+Reservoir quality is a composite property describing a rock's capacity to store and
+transmit fluids, primarily controlled by porosity and permeability.
+
+[test_doc.md > Pre-Salt Petroleum Geology: Key Concepts > Structural Geology and Traps]
+Structural trap is a type of petroleum trap formed by deformation of rock layers through
+tectonic processes. Fault is a planar fracture in rock along which displacement has occurred,
+serving as both migration pathway and barrier in Pre-Salt reservoirs.
+
+[test_doc.md > Pre-Salt Petroleum Geology: Key Concepts > Diagenesis and Porosity]
+Porosity is a physical property of rock defined as the ratio of void space to total rock
+volume. Dolomitization is a diagenetic process involving replacement of calcite by dolomite,
+often enhancing reservoir porosity and permeability."
+evaporite,"Evaporite is a chemical sedimentary rock that forms by precipitation of dissolved minerals from evaporating water bodies. In the Brazilian Pre-Salt petroleum system, evaporites constitute the regional seal that overlies lacustrine carbonate reservoirs and helps trap hydrocarbons.",True,"[test_doc.md > Pre-Salt Petroleum Geology: Key Concepts > Depositional Environments]
+Lacustrine environment is a continental depositional setting associated with lake systems.
+Evaporite is a chemical sedimentary rock formed by precipitation of dissolved minerals from
+evaporating water bodies, acting as the regional seal in the Pre-Salt play.
+
+[test_doc.md > Pre-Salt Petroleum Geology: Key Concepts > Carbonate Reservoirs]
+Carbonate reservoir is a type of petroleum reservoir rock composed of carbonate minerals
+such as calcite and dolomite. Microbialite is a sedimentary rock formed by the metabolic
+activity of microbial communities, serving as the primary reservoir facies in the
+Santos Basin Pre-Salt sequences.
+
+[test_doc.md > Pre-Salt Petroleum Geology: Key Concepts > Diagenesis and Porosity]
+Porosity is a physical property of rock defined as the ratio of void space to total rock
+volume. Dolomitization is a diagenetic process involving replacement of calcite by dolomite,
+often enhancing reservoir porosity and permeability.
+
+[test_doc.md > Pre-Salt Petroleum Geology: Key Concepts > Stratigraphy and Basin Evolution]
+Rifting is a tectonic process involving extensional deformation of the lithosphere.
+Reservoir quality is a composite property describing a rock's capacity to store and
+transmit fluids, primarily controlled by porosity and permeability.
+
+[test_doc.md > Pre-Salt Petroleum Geology: Key Concepts > Structural Geology and Traps]
+Structural trap is a type of petroleum trap formed by deformation of rock layers through
+tectonic processes. Fault is a planar fracture in rock along which displacement has occurred,
+serving as both migration pathway and barrier in Pre-Salt reservoirs."
+lake system,"Lake system is a lacustrine depositional system that comprises a continental water body and its associated sedimentary environments within a basin. In the Brazilian Pre-Salt, lake systems developed during rifting and controlled the deposition of lacustrine sediments and carbonate facies, including microbialites that later became important reservoir rocks. They are also commonly associated with evaporative conditions that preceded the deposition of evaporites forming the regional seal.",True,"[test_doc.md > Pre-Salt Petroleum Geology: Key Concepts > Depositional Environments]
+Lacustrine environment is a continental depositional setting associated with lake systems.
+Evaporite is a chemical sedimentary rock formed by precipitation of dissolved minerals from
+evaporating water bodies, acting as the regional seal in the Pre-Salt play.
+
+[test_doc.md > Pre-Salt Petroleum Geology: Key Concepts > Structural Geology and Traps]
+Structural trap is a type of petroleum trap formed by deformation of rock layers through
+tectonic processes. Fault is a planar fracture in rock along which displacement has occurred,
+serving as both migration pathway and barrier in Pre-Salt reservoirs.
+
+[test_doc.md > Pre-Salt Petroleum Geology: Key Concepts > Carbonate Reservoirs]
+Carbonate reservoir is a type of petroleum reservoir rock composed of carbonate minerals
+such as calcite and dolomite. Microbialite is a sedimentary rock formed by the metabolic
+activity of microbial communities, serving as the primary reservoir facies in the
+Santos Basin Pre-Salt sequences.
+
+[test_doc.md > Pre-Salt Petroleum Geology: Key Concepts > Stratigraphy and Basin Evolution]
+Rifting is a tectonic process involving extensional deformation of the lithosphere.
+Reservoir quality is a composite property describing a rock's capacity to store and
+transmit fluids, primarily controlled by porosity and permeability.
+
+[test_doc.md > Pre-Salt Petroleum Geology: Key Concepts > Diagenesis and Porosity]
+Porosity is a physical property of rock defined as the ratio of void space to total rock
+volume. Dolomitization is a diagenetic process involving replacement of calcite by dolomite,
+often enhancing reservoir porosity and permeability."
+regional seal,"Regional seal is a laterally extensive, low-permeability stratigraphic unit that prevents the vertical escape of hydrocarbons and seals an entire petroleum play or large part of a basin. In the Brazilian Pre-Salt, this role is performed predominantly by evaporites precipitated in evaporative lacustrine to restricted settings. These evaporitic layers are critical for preserving hydrocarbons trapped in underlying carbonate reservoirs such as microbialites.",True,"[test_doc.md > Pre-Salt Petroleum Geology: Key Concepts > Depositional Environments]
+Lacustrine environment is a continental depositional setting associated with lake systems.
+Evaporite is a chemical sedimentary rock formed by precipitation of dissolved minerals from
+evaporating water bodies, acting as the regional seal in the Pre-Salt play.
+
+[test_doc.md > Pre-Salt Petroleum Geology: Key Concepts > Structural Geology and Traps]
+Structural trap is a type of petroleum trap formed by deformation of rock layers through
+tectonic processes. Fault is a planar fracture in rock along which displacement has occurred,
+serving as both migration pathway and barrier in Pre-Salt reservoirs.
+
+[test_doc.md > Pre-Salt Petroleum Geology: Key Concepts > Carbonate Reservoirs]
+Carbonate reservoir is a type of petroleum reservoir rock composed of carbonate minerals
+such as calcite and dolomite. Microbialite is a sedimentary rock formed by the metabolic
+activity of microbial communities, serving as the primary reservoir facies in the
+Santos Basin Pre-Salt sequences.
+
+[test_doc.md > Pre-Salt Petroleum Geology: Key Concepts > Stratigraphy and Basin Evolution]
+Rifting is a tectonic process involving extensional deformation of the lithosphere.
+Reservoir quality is a composite property describing a rock's capacity to store and
+transmit fluids, primarily controlled by porosity and permeability.
+
+[test_doc.md > Pre-Salt Petroleum Geology: Key Concepts > Diagenesis and Porosity]
+Porosity is a physical property of rock defined as the ratio of void space to total rock
+volume. Dolomitization is a diagenetic process involving replacement of calcite by dolomite,
+often enhancing reservoir porosity and permeability."
+chemical sedimentary rock,"Chemical sedimentary rock is a sedimentary rock that forms by the precipitation of dissolved minerals from water rather than by the accumulation of transported clastic particles. In the Brazilian Pre-Salt context, evaporites are a key example of chemical sedimentary rocks, precipitated from evaporating water bodies and commonly acting as the regional seal above carbonate reservoirs.",True,"[test_doc.md > Pre-Salt Petroleum Geology: Key Concepts > Depositional Environments]
+Lacustrine environment is a continental depositional setting associated with lake systems.
+Evaporite is a chemical sedimentary rock formed by precipitation of dissolved minerals from
+evaporating water bodies, acting as the regional seal in the Pre-Salt play.
+
+[test_doc.md > Pre-Salt Petroleum Geology: Key Concepts > Carbonate Reservoirs]
+Carbonate reservoir is a type of petroleum reservoir rock composed of carbonate minerals
+such as calcite and dolomite. Microbialite is a sedimentary rock formed by the metabolic
+activity of microbial communities, serving as the primary reservoir facies in the
+Santos Basin Pre-Salt sequences.
+
+[test_doc.md > Pre-Salt Petroleum Geology: Key Concepts > Diagenesis and Porosity]
+Porosity is a physical property of rock defined as the ratio of void space to total rock
+volume. Dolomitization is a diagenetic process involving replacement of calcite by dolomite,
+often enhancing reservoir porosity and permeability.
+
+[test_doc.md > Pre-Salt Petroleum Geology: Key Concepts > Stratigraphy and Basin Evolution]
+Rifting is a tectonic process involving extensional deformation of the lithosphere.
+Reservoir quality is a composite property describing a rock's capacity to store and
+transmit fluids, primarily controlled by porosity and permeability.
+
+[test_doc.md > Pre-Salt Petroleum Geology: Key Concepts > Structural Geology and Traps]
+Structural trap is a type of petroleum trap formed by deformation of rock layers through
+tectonic processes. Fault is a planar fracture in rock along which displacement has occurred,
+serving as both migration pathway and barrier in Pre-Salt reservoirs."
+pre-salt play,"Pre-salt play is a petroleum play that consists of hydrocarbon accumulations in rift-related lacustrine carbonate reservoirs deposited before regional evaporite sealing, typically involving microbialite-dominated facies, structural traps, and fault-controlled migration. In the Brazilian Pre-Salt, the evaporite package acts as the regional seal above these reservoirs, especially in the Santos Basin. Reservoir quality in this play is strongly controlled by porosity and permeability, which may be further modified by diagenetic processes such as dolomitization.",True,"[test_doc.md > Pre-Salt Petroleum Geology: Key Concepts > Depositional Environments]
+Lacustrine environment is a continental depositional setting associated with lake systems.
+Evaporite is a chemical sedimentary rock formed by precipitation of dissolved minerals from
+evaporating water bodies, acting as the regional seal in the Pre-Salt play.
+
+[test_doc.md > Pre-Salt Petroleum Geology: Key Concepts > Structural Geology and Traps]
+Structural trap is a type of petroleum trap formed by deformation of rock layers through
+tectonic processes. Fault is a planar fracture in rock along which displacement has occurred,
+serving as both migration pathway and barrier in Pre-Salt reservoirs.
+
+[test_doc.md > Pre-Salt Petroleum Geology: Key Concepts > Carbonate Reservoirs]
+Carbonate reservoir is a type of petroleum reservoir rock composed of carbonate minerals
+such as calcite and dolomite. Microbialite is a sedimentary rock formed by the metabolic
+activity of microbial communities, serving as the primary reservoir facies in the
+Santos Basin Pre-Salt sequences.
+
+[test_doc.md > Pre-Salt Petroleum Geology: Key Concepts > Stratigraphy and Basin Evolution]
+Rifting is a tectonic process involving extensional deformation of the lithosphere.
+Reservoir quality is a composite property describing a rock's capacity to store and
+transmit fluids, primarily controlled by porosity and permeability.
+
+[test_doc.md > Pre-Salt Petroleum Geology: Key Concepts > Diagenesis and Porosity]
+Porosity is a physical property of rock defined as the ratio of void space to total rock
+volume. Dolomitization is a diagenetic process involving replacement of calcite by dolomite,
+often enhancing reservoir porosity and permeability."
+stratigraphy,"Stratigraphy is a branch of geology that studies the origin, succession, spatial distribution, and correlation of rock layers through time. In the Brazilian Pre-Salt, it is used to organize rift, sag, carbonate reservoir, and evaporite successions and to reconstruct the depositional and tectonic evolution that controls reservoir, seal, and trap distribution.",False,"[test_doc.md > Pre-Salt Petroleum Geology: Key Concepts > Stratigraphy and Basin Evolution]
+Rifting is a tectonic process involving extensional deformation of the lithosphere.
+Reservoir quality is a composite property describing a rock's capacity to store and
+transmit fluids, primarily controlled by porosity and permeability.
+
+[test_doc.md > Pre-Salt Petroleum Geology: Key Concepts > Diagenesis and Porosity]
+Porosity is a physical property of rock defined as the ratio of void space to total rock
+volume. Dolomitization is a diagenetic process involving replacement of calcite by dolomite,
+often enhancing reservoir porosity and permeability.
+
+[test_doc.md > Pre-Salt Petroleum Geology: Key Concepts > Structural Geology and Traps]
+Structural trap is a type of petroleum trap formed by deformation of rock layers through
+tectonic processes. Fault is a planar fracture in rock along which displacement has occurred,
+serving as both migration pathway and barrier in Pre-Salt reservoirs.
+
+[test_doc.md > Pre-Salt Petroleum Geology: Key Concepts > Depositional Environments]
+Lacustrine environment is a continental depositional setting associated with lake systems.
+Evaporite is a chemical sedimentary rock formed by precipitation of dissolved minerals from
+evaporating water bodies, acting as the regional seal in the Pre-Salt play.
+
+[test_doc.md > Pre-Salt Petroleum Geology: Key Concepts > Carbonate Reservoirs]
+Carbonate reservoir is a type of petroleum reservoir rock composed of carbonate minerals
+such as calcite and dolomite. Microbialite is a sedimentary rock formed by the metabolic
+activity of microbial communities, serving as the primary reservoir facies in the
+Santos Basin Pre-Salt sequences."
+tectonic process,"Tectonic process is a geodynamic process that deforms the lithosphere through stresses such as extension, compression, or shear. In the Brazilian Pre-Salt context, rifting is a key tectonic process that produces extensional deformation and strongly controls basin evolution, fault development, and the formation of structural traps. These processes influence the architecture and fluid migration pathways of carbonate reservoirs.",True,"[test_doc.md > Pre-Salt Petroleum Geology: Key Concepts > Stratigraphy and Basin Evolution]
 Rifting is a tectonic process involving extensional deformation of the lithosphere.
 Reservoir quality is a composite property describing a rock's capacity to store and
 transmit fluids, primarily controlled by porosity and permeability.
@@ -424,7 +749,62 @@ Carbonate reservoir is a type of petroleum reservoir rock composed of carbonate 
 such as calcite and dolomite. Microbialite is a sedimentary rock formed by the metabolic
 activity of microbial communities, serving as the primary reservoir facies in the
 Santos Basin Pre-Salt sequences."
-barrier,"Barrier is a geological feature that impedes the migration or flow of fluids within a reservoir system. In Pre-Salt reservoirs, a fault can serve as a barrier, compartmentalizing hydrocarbon accumulations.",True,"[test_doc.md > Pre-Salt Petroleum Geology: Key Concepts > Structural Geology and Traps]
+basin evolution,"Basin evolution is the geological development of a sedimentary basin through time that is controlled by tectonic, stratigraphic, depositional, and diagenetic processes. In the Brazilian Pre-Salt context, it includes rifting, the establishment of lacustrine depositional environments with microbialite-bearing carbonate reservoirs, and subsequent evaporite deposition that forms the regional seal. This evolution governs the distribution of faults, reservoir facies, porosity, and structural traps, and therefore strongly controls petroleum system architecture and reservoir quality.",True,"[test_doc.md > Pre-Salt Petroleum Geology: Key Concepts > Carbonate Reservoirs]
+Carbonate reservoir is a type of petroleum reservoir rock composed of carbonate minerals
+such as calcite and dolomite. Microbialite is a sedimentary rock formed by the metabolic
+activity of microbial communities, serving as the primary reservoir facies in the
+Santos Basin Pre-Salt sequences.
+
+[test_doc.md > Pre-Salt Petroleum Geology: Key Concepts > Depositional Environments]
+Lacustrine environment is a continental depositional setting associated with lake systems.
+Evaporite is a chemical sedimentary rock formed by precipitation of dissolved minerals from
+evaporating water bodies, acting as the regional seal in the Pre-Salt play.
+
+[test_doc.md > Pre-Salt Petroleum Geology: Key Concepts > Stratigraphy and Basin Evolution]
+Rifting is a tectonic process involving extensional deformation of the lithosphere.
+Reservoir quality is a composite property describing a rock's capacity to store and
+transmit fluids, primarily controlled by porosity and permeability.
+
+[test_doc.md > Pre-Salt Petroleum Geology: Key Concepts > Diagenesis and Porosity]
+Porosity is a physical property of rock defined as the ratio of void space to total rock
+volume. Dolomitization is a diagenetic process involving replacement of calcite by dolomite,
+often enhancing reservoir porosity and permeability.
+
+[test_doc.md > Pre-Salt Petroleum Geology: Key Concepts > Structural Geology and Traps]
+Structural trap is a type of petroleum trap formed by deformation of rock layers through
+tectonic processes. Fault is a planar fracture in rock along which displacement has occurred,
+serving as both migration pathway and barrier in Pre-Salt reservoirs."
+rifting,"Rifting is a tectonic process that involves extensional deformation of the lithosphere. In the Brazilian Pre-Salt context, it generated faulted basin architecture and accommodation space that controlled lacustrine deposition and strongly influenced the development of structural traps and reservoir distribution.",True,"[test_doc.md > Pre-Salt Petroleum Geology: Key Concepts > Stratigraphy and Basin Evolution]
+Rifting is a tectonic process involving extensional deformation of the lithosphere.
+Reservoir quality is a composite property describing a rock's capacity to store and
+transmit fluids, primarily controlled by porosity and permeability.
+
+[test_doc.md > Pre-Salt Petroleum Geology: Key Concepts > Structural Geology and Traps]
+Structural trap is a type of petroleum trap formed by deformation of rock layers through
+tectonic processes. Fault is a planar fracture in rock along which displacement has occurred,
+serving as both migration pathway and barrier in Pre-Salt reservoirs.
+
+[test_doc.md > Pre-Salt Petroleum Geology: Key Concepts > Carbonate Reservoirs]
+Carbonate reservoir is a type of petroleum reservoir rock composed of carbonate minerals
+such as calcite and dolomite. Microbialite is a sedimentary rock formed by the metabolic
+activity of microbial communities, serving as the primary reservoir facies in the
+Santos Basin Pre-Salt sequences.
+
+[test_doc.md > Pre-Salt Petroleum Geology: Key Concepts > Diagenesis and Porosity]
+Porosity is a physical property of rock defined as the ratio of void space to total rock
+volume. Dolomitization is a diagenetic process involving replacement of calcite by dolomite,
+often enhancing reservoir porosity and permeability.
+
+[test_doc.md > Pre-Salt Petroleum Geology: Key Concepts > Depositional Environments]
+Lacustrine environment is a continental depositional setting associated with lake systems.
+Evaporite is a chemical sedimentary rock formed by precipitation of dissolved minerals from
+evaporating water bodies, acting as the regional seal in the Pre-Salt play."
+extensional deformation,"Extensional deformation is a tectonic deformation process that stretches and thins the lithosphere under tensional stress. In the Brazilian Pre-Salt context, it is the fundamental mechanism of rifting and commonly generates normal faults and associated structural architectures that influence basin evolution, trap formation, and fluid migration.",True,"[test_doc.md > Pre-Salt Petroleum Geology: Key Concepts > Stratigraphy and Basin Evolution]
+Rifting is a tectonic process involving extensional deformation of the lithosphere.
+Reservoir quality is a composite property describing a rock's capacity to store and
+transmit fluids, primarily controlled by porosity and permeability.
+
+[test_doc.md > Pre-Salt Petroleum Geology: Key Concepts > Structural Geology and Traps]
 Structural trap is a type of petroleum trap formed by deformation of rock layers through
 tectonic processes. Fault is a planar fracture in rock along which displacement has occurred,
 serving as both migration pathway and barrier in Pre-Salt reservoirs.
@@ -433,11 +813,6 @@ serving as both migration pathway and barrier in Pre-Salt reservoirs.
 Porosity is a physical property of rock defined as the ratio of void space to total rock
 volume. Dolomitization is a diagenetic process involving replacement of calcite by dolomite,
 often enhancing reservoir porosity and permeability.
-
-[test_doc.md > Pre-Salt Petroleum Geology: Key Concepts > Stratigraphy and Basin Evolution]
-Rifting is a tectonic process involving extensional deformation of the lithosphere.
-Reservoir quality is a composite property describing a rock's capacity to store and
-transmit fluids, primarily controlled by porosity and permeability.
 
 [test_doc.md > Pre-Salt Petroleum Geology: Key Concepts > Depositional Environments]
 Lacustrine environment is a continental depositional setting associated with lake systems.
@@ -449,282 +824,7 @@ Carbonate reservoir is a type of petroleum reservoir rock composed of carbonate 
 such as calcite and dolomite. Microbialite is a sedimentary rock formed by the metabolic
 activity of microbial communities, serving as the primary reservoir facies in the
 Santos Basin Pre-Salt sequences."
-migration pathway,"Migration pathway is a geological conduit that facilitates the movement of fluids, such as petroleum, through rock layers. In Pre-Salt reservoirs, structural features like faults commonly serve as such pathways, sometimes also acting as barriers.",True,"[test_doc.md > Pre-Salt Petroleum Geology: Key Concepts > Structural Geology and Traps]
-Structural trap is a type of petroleum trap formed by deformation of rock layers through
-tectonic processes. Fault is a planar fracture in rock along which displacement has occurred,
-serving as both migration pathway and barrier in Pre-Salt reservoirs.
-
-[test_doc.md > Pre-Salt Petroleum Geology: Key Concepts > Stratigraphy and Basin Evolution]
-Rifting is a tectonic process involving extensional deformation of the lithosphere.
-Reservoir quality is a composite property describing a rock's capacity to store and
-transmit fluids, primarily controlled by porosity and permeability.
-
-[test_doc.md > Pre-Salt Petroleum Geology: Key Concepts > Depositional Environments]
-Lacustrine environment is a continental depositional setting associated with lake systems.
-Evaporite is a chemical sedimentary rock formed by precipitation of dissolved minerals from
-evaporating water bodies, acting as the regional seal in the Pre-Salt play.
-
-[test_doc.md > Pre-Salt Petroleum Geology: Key Concepts > Carbonate Reservoirs]
-Carbonate reservoir is a type of petroleum reservoir rock composed of carbonate minerals
-such as calcite and dolomite. Microbialite is a sedimentary rock formed by the metabolic
-activity of microbial communities, serving as the primary reservoir facies in the
-Santos Basin Pre-Salt sequences.
-
-[test_doc.md > Pre-Salt Petroleum Geology: Key Concepts > Diagenesis and Porosity]
-Porosity is a physical property of rock defined as the ratio of void space to total rock
-volume. Dolomitization is a diagenetic process involving replacement of calcite by dolomite,
-often enhancing reservoir porosity and permeability."
-petroleum trap,"Petroleum trap is a geological configuration that impedes the upward or lateral migration of hydrocarbons, leading to their accumulation in a reservoir rock. These traps are essential for the formation of hydrocarbon reservoirs and are typically classified as structural, stratigraphic, or a combination of both. In the Brazilian Pre-Salt, structural traps, which are formed by the deformation of rock layers through tectonic processes, are a significant type of petroleum trap, with faults often acting as both migration pathways and barriers.",True,"[test_doc.md > Pre-Salt Petroleum Geology: Key Concepts > Structural Geology and Traps]
-Structural trap is a type of petroleum trap formed by deformation of rock layers through
-tectonic processes. Fault is a planar fracture in rock along which displacement has occurred,
-serving as both migration pathway and barrier in Pre-Salt reservoirs.
-
-[test_doc.md > Pre-Salt Petroleum Geology: Key Concepts > Carbonate Reservoirs]
-Carbonate reservoir is a type of petroleum reservoir rock composed of carbonate minerals
-such as calcite and dolomite. Microbialite is a sedimentary rock formed by the metabolic
-activity of microbial communities, serving as the primary reservoir facies in the
-Santos Basin Pre-Salt sequences.
-
-[test_doc.md > Pre-Salt Petroleum Geology: Key Concepts > Stratigraphy and Basin Evolution]
-Rifting is a tectonic process involving extensional deformation of the lithosphere.
-Reservoir quality is a composite property describing a rock's capacity to store and
-transmit fluids, primarily controlled by porosity and permeability.
-
-[test_doc.md > Pre-Salt Petroleum Geology: Key Concepts > Depositional Environments]
-Lacustrine environment is a continental depositional setting associated with lake systems.
-Evaporite is a chemical sedimentary rock formed by precipitation of dissolved minerals from
-evaporating water bodies, acting as the regional seal in the Pre-Salt play.
-
-[test_doc.md > Pre-Salt Petroleum Geology: Key Concepts > Diagenesis and Porosity]
-Porosity is a physical property of rock defined as the ratio of void space to total rock
-volume. Dolomitization is a diagenetic process involving replacement of calcite by dolomite,
-often enhancing reservoir porosity and permeability."
-lacustrine environment,"Lacustrine environment is a continental depositional setting that is associated with lake systems. These environments are crucial in the Brazilian Pre-Salt for the deposition of microbialites and the formation of evaporites, which act as reservoir rocks and regional seals, respectively.",True,"[test_doc.md > Pre-Salt Petroleum Geology: Key Concepts > Depositional Environments]
-Lacustrine environment is a continental depositional setting associated with lake systems.
-Evaporite is a chemical sedimentary rock formed by precipitation of dissolved minerals from
-evaporating water bodies, acting as the regional seal in the Pre-Salt play.
-
-[test_doc.md > Pre-Salt Petroleum Geology: Key Concepts > Carbonate Reservoirs]
-Carbonate reservoir is a type of petroleum reservoir rock composed of carbonate minerals
-such as calcite and dolomite. Microbialite is a sedimentary rock formed by the metabolic
-activity of microbial communities, serving as the primary reservoir facies in the
-Santos Basin Pre-Salt sequences.
-
-[test_doc.md > Pre-Salt Petroleum Geology: Key Concepts > Stratigraphy and Basin Evolution]
-Rifting is a tectonic process involving extensional deformation of the lithosphere.
-Reservoir quality is a composite property describing a rock's capacity to store and
-transmit fluids, primarily controlled by porosity and permeability.
-
-[test_doc.md > Pre-Salt Petroleum Geology: Key Concepts > Diagenesis and Porosity]
-Porosity is a physical property of rock defined as the ratio of void space to total rock
-volume. Dolomitization is a diagenetic process involving replacement of calcite by dolomite,
-often enhancing reservoir porosity and permeability.
-
-[test_doc.md > Pre-Salt Petroleum Geology: Key Concepts > Structural Geology and Traps]
-Structural trap is a type of petroleum trap formed by deformation of rock layers through
-tectonic processes. Fault is a planar fracture in rock along which displacement has occurred,
-serving as both migration pathway and barrier in Pre-Salt reservoirs."
-evaporite,"Evaporite is a chemical sedimentary rock that is formed by the precipitation of dissolved minerals from evaporating water bodies. In the Brazilian Pre-Salt, it characteristically functions as the regional seal, trapping hydrocarbons.",True,"[test_doc.md > Pre-Salt Petroleum Geology: Key Concepts > Depositional Environments]
-Lacustrine environment is a continental depositional setting associated with lake systems.
-Evaporite is a chemical sedimentary rock formed by precipitation of dissolved minerals from
-evaporating water bodies, acting as the regional seal in the Pre-Salt play.
-
-[test_doc.md > Pre-Salt Petroleum Geology: Key Concepts > Carbonate Reservoirs]
-Carbonate reservoir is a type of petroleum reservoir rock composed of carbonate minerals
-such as calcite and dolomite. Microbialite is a sedimentary rock formed by the metabolic
-activity of microbial communities, serving as the primary reservoir facies in the
-Santos Basin Pre-Salt sequences.
-
-[test_doc.md > Pre-Salt Petroleum Geology: Key Concepts > Diagenesis and Porosity]
-Porosity is a physical property of rock defined as the ratio of void space to total rock
-volume. Dolomitization is a diagenetic process involving replacement of calcite by dolomite,
-often enhancing reservoir porosity and permeability.
-
-[test_doc.md > Pre-Salt Petroleum Geology: Key Concepts > Stratigraphy and Basin Evolution]
-Rifting is a tectonic process involving extensional deformation of the lithosphere.
-Reservoir quality is a composite property describing a rock's capacity to store and
-transmit fluids, primarily controlled by porosity and permeability.
-
-[test_doc.md > Pre-Salt Petroleum Geology: Key Concepts > Structural Geology and Traps]
-Structural trap is a type of petroleum trap formed by deformation of rock layers through
-tectonic processes. Fault is a planar fracture in rock along which displacement has occurred,
-serving as both migration pathway and barrier in Pre-Salt reservoirs."
-chemical sedimentary rock,"Chemical sedimentary rock is a sedimentary rock that is formed by the precipitation of dissolved minerals from evaporating water bodies. In the Pre-Salt play, evaporites are a significant type of chemical sedimentary rock, often acting as regional seals.",True,"[test_doc.md > Pre-Salt Petroleum Geology: Key Concepts > Depositional Environments]
-Lacustrine environment is a continental depositional setting associated with lake systems.
-Evaporite is a chemical sedimentary rock formed by precipitation of dissolved minerals from
-evaporating water bodies, acting as the regional seal in the Pre-Salt play.
-
-[test_doc.md > Pre-Salt Petroleum Geology: Key Concepts > Carbonate Reservoirs]
-Carbonate reservoir is a type of petroleum reservoir rock composed of carbonate minerals
-such as calcite and dolomite. Microbialite is a sedimentary rock formed by the metabolic
-activity of microbial communities, serving as the primary reservoir facies in the
-Santos Basin Pre-Salt sequences.
-
-[test_doc.md > Pre-Salt Petroleum Geology: Key Concepts > Diagenesis and Porosity]
-Porosity is a physical property of rock defined as the ratio of void space to total rock
-volume. Dolomitization is a diagenetic process involving replacement of calcite by dolomite,
-often enhancing reservoir porosity and permeability.
-
-[test_doc.md > Pre-Salt Petroleum Geology: Key Concepts > Stratigraphy and Basin Evolution]
-Rifting is a tectonic process involving extensional deformation of the lithosphere.
-Reservoir quality is a composite property describing a rock's capacity to store and
-transmit fluids, primarily controlled by porosity and permeability.
-
-[test_doc.md > Pre-Salt Petroleum Geology: Key Concepts > Structural Geology and Traps]
-Structural trap is a type of petroleum trap formed by deformation of rock layers through
-tectonic processes. Fault is a planar fracture in rock along which displacement has occurred,
-serving as both migration pathway and barrier in Pre-Salt reservoirs."
-dissolved mineral,"Dissolved mineral is a chemical substance that exists in an ionic or molecular state within a solvent, typically water. In the Pre-Salt context, these substances are the constituents that precipitate from evaporating water bodies to form chemical sedimentary rocks, such as evaporites, which act as regional seals.",True,"[test_doc.md > Pre-Salt Petroleum Geology: Key Concepts > Depositional Environments]
-Lacustrine environment is a continental depositional setting associated with lake systems.
-Evaporite is a chemical sedimentary rock formed by precipitation of dissolved minerals from
-evaporating water bodies, acting as the regional seal in the Pre-Salt play.
-
-[test_doc.md > Pre-Salt Petroleum Geology: Key Concepts > Carbonate Reservoirs]
-Carbonate reservoir is a type of petroleum reservoir rock composed of carbonate minerals
-such as calcite and dolomite. Microbialite is a sedimentary rock formed by the metabolic
-activity of microbial communities, serving as the primary reservoir facies in the
-Santos Basin Pre-Salt sequences.
-
-[test_doc.md > Pre-Salt Petroleum Geology: Key Concepts > Diagenesis and Porosity]
-Porosity is a physical property of rock defined as the ratio of void space to total rock
-volume. Dolomitization is a diagenetic process involving replacement of calcite by dolomite,
-often enhancing reservoir porosity and permeability.
-
-[test_doc.md > Pre-Salt Petroleum Geology: Key Concepts > Structural Geology and Traps]
-Structural trap is a type of petroleum trap formed by deformation of rock layers through
-tectonic processes. Fault is a planar fracture in rock along which displacement has occurred,
-serving as both migration pathway and barrier in Pre-Salt reservoirs.
-
-[test_doc.md > Pre-Salt Petroleum Geology: Key Concepts > Stratigraphy and Basin Evolution]
-Rifting is a tectonic process involving extensional deformation of the lithosphere.
-Reservoir quality is a composite property describing a rock's capacity to store and
-transmit fluids, primarily controlled by porosity and permeability."
-regional seal,"Regional seal is a geological barrier that effectively impedes the migration of hydrocarbons across a broad geographic extent. In the Brazilian Pre-Salt play, this role is predominantly fulfilled by thick evaporite sequences, which form a crucial top seal for the underlying carbonate reservoirs.",True,"[test_doc.md > Pre-Salt Petroleum Geology: Key Concepts > Depositional Environments]
-Lacustrine environment is a continental depositional setting associated with lake systems.
-Evaporite is a chemical sedimentary rock formed by precipitation of dissolved minerals from
-evaporating water bodies, acting as the regional seal in the Pre-Salt play.
-
-[test_doc.md > Pre-Salt Petroleum Geology: Key Concepts > Structural Geology and Traps]
-Structural trap is a type of petroleum trap formed by deformation of rock layers through
-tectonic processes. Fault is a planar fracture in rock along which displacement has occurred,
-serving as both migration pathway and barrier in Pre-Salt reservoirs.
-
-[test_doc.md > Pre-Salt Petroleum Geology: Key Concepts > Carbonate Reservoirs]
-Carbonate reservoir is a type of petroleum reservoir rock composed of carbonate minerals
-such as calcite and dolomite. Microbialite is a sedimentary rock formed by the metabolic
-activity of microbial communities, serving as the primary reservoir facies in the
-Santos Basin Pre-Salt sequences.
-
-[test_doc.md > Pre-Salt Petroleum Geology: Key Concepts > Stratigraphy and Basin Evolution]
-Rifting is a tectonic process involving extensional deformation of the lithosphere.
-Reservoir quality is a composite property describing a rock's capacity to store and
-transmit fluids, primarily controlled by porosity and permeability.
-
-[test_doc.md > Pre-Salt Petroleum Geology: Key Concepts > Diagenesis and Porosity]
-Porosity is a physical property of rock defined as the ratio of void space to total rock
-volume. Dolomitization is a diagenetic process involving replacement of calcite by dolomite,
-often enhancing reservoir porosity and permeability."
-continental depositional setting,"A continental depositional setting is a depositional environment that occurs on land, away from direct marine influence. It encompasses various terrestrial environments, including lacustrine systems, which are particularly relevant in the Brazilian Pre-Salt for their association with hydrocarbon reservoirs.",True,"[test_doc.md > Pre-Salt Petroleum Geology: Key Concepts > Depositional Environments]
-Lacustrine environment is a continental depositional setting associated with lake systems.
-Evaporite is a chemical sedimentary rock formed by precipitation of dissolved minerals from
-evaporating water bodies, acting as the regional seal in the Pre-Salt play.
-
-[test_doc.md > Pre-Salt Petroleum Geology: Key Concepts > Carbonate Reservoirs]
-Carbonate reservoir is a type of petroleum reservoir rock composed of carbonate minerals
-such as calcite and dolomite. Microbialite is a sedimentary rock formed by the metabolic
-activity of microbial communities, serving as the primary reservoir facies in the
-Santos Basin Pre-Salt sequences.
-
-[test_doc.md > Pre-Salt Petroleum Geology: Key Concepts > Stratigraphy and Basin Evolution]
-Rifting is a tectonic process involving extensional deformation of the lithosphere.
-Reservoir quality is a composite property describing a rock's capacity to store and
-transmit fluids, primarily controlled by porosity and permeability.
-
-[test_doc.md > Pre-Salt Petroleum Geology: Key Concepts > Structural Geology and Traps]
-Structural trap is a type of petroleum trap formed by deformation of rock layers through
-tectonic processes. Fault is a planar fracture in rock along which displacement has occurred,
-serving as both migration pathway and barrier in Pre-Salt reservoirs.
-
-[test_doc.md > Pre-Salt Petroleum Geology: Key Concepts > Diagenesis and Porosity]
-Porosity is a physical property of rock defined as the ratio of void space to total rock
-volume. Dolomitization is a diagenetic process involving replacement of calcite by dolomite,
-often enhancing reservoir porosity and permeability."
-rifting,"Rifting is a tectonic process that involves extensional deformation of the lithosphere. This process is fundamental to the initial formation and evolution of sedimentary basins, including those that host the Brazilian Pre-Salt reservoirs.",True,"[test_doc.md > Pre-Salt Petroleum Geology: Key Concepts > Stratigraphy and Basin Evolution]
-Rifting is a tectonic process involving extensional deformation of the lithosphere.
-Reservoir quality is a composite property describing a rock's capacity to store and
-transmit fluids, primarily controlled by porosity and permeability.
-
-[test_doc.md > Pre-Salt Petroleum Geology: Key Concepts > Structural Geology and Traps]
-Structural trap is a type of petroleum trap formed by deformation of rock layers through
-tectonic processes. Fault is a planar fracture in rock along which displacement has occurred,
-serving as both migration pathway and barrier in Pre-Salt reservoirs.
-
-[test_doc.md > Pre-Salt Petroleum Geology: Key Concepts > Carbonate Reservoirs]
-Carbonate reservoir is a type of petroleum reservoir rock composed of carbonate minerals
-such as calcite and dolomite. Microbialite is a sedimentary rock formed by the metabolic
-activity of microbial communities, serving as the primary reservoir facies in the
-Santos Basin Pre-Salt sequences.
-
-[test_doc.md > Pre-Salt Petroleum Geology: Key Concepts > Diagenesis and Porosity]
-Porosity is a physical property of rock defined as the ratio of void space to total rock
-volume. Dolomitization is a diagenetic process involving replacement of calcite by dolomite,
-often enhancing reservoir porosity and permeability.
-
-[test_doc.md > Pre-Salt Petroleum Geology: Key Concepts > Depositional Environments]
-Lacustrine environment is a continental depositional setting associated with lake systems.
-Evaporite is a chemical sedimentary rock formed by precipitation of dissolved minerals from
-evaporating water bodies, acting as the regional seal in the Pre-Salt play."
-lithosphere,"Lithosphere is a geological layer that constitutes the rigid outermost shell of a terrestrial planet. It comprises the Earth's crust and the uppermost part of the mantle, behaving as a brittle solid that is subject to tectonic processes like rifting.",False,"[test_doc.md > Pre-Salt Petroleum Geology: Key Concepts > Stratigraphy and Basin Evolution]
-Rifting is a tectonic process involving extensional deformation of the lithosphere.
-Reservoir quality is a composite property describing a rock's capacity to store and
-transmit fluids, primarily controlled by porosity and permeability.
-
-[test_doc.md > Pre-Salt Petroleum Geology: Key Concepts > Carbonate Reservoirs]
-Carbonate reservoir is a type of petroleum reservoir rock composed of carbonate minerals
-such as calcite and dolomite. Microbialite is a sedimentary rock formed by the metabolic
-activity of microbial communities, serving as the primary reservoir facies in the
-Santos Basin Pre-Salt sequences.
-
-[test_doc.md > Pre-Salt Petroleum Geology: Key Concepts > Diagenesis and Porosity]
-Porosity is a physical property of rock defined as the ratio of void space to total rock
-volume. Dolomitization is a diagenetic process involving replacement of calcite by dolomite,
-often enhancing reservoir porosity and permeability.
-
-[test_doc.md > Pre-Salt Petroleum Geology: Key Concepts > Depositional Environments]
-Lacustrine environment is a continental depositional setting associated with lake systems.
-Evaporite is a chemical sedimentary rock formed by precipitation of dissolved minerals from
-evaporating water bodies, acting as the regional seal in the Pre-Salt play.
-
-[test_doc.md > Pre-Salt Petroleum Geology: Key Concepts > Structural Geology and Traps]
-Structural trap is a type of petroleum trap formed by deformation of rock layers through
-tectonic processes. Fault is a planar fracture in rock along which displacement has occurred,
-serving as both migration pathway and barrier in Pre-Salt reservoirs."
-pre-salt play,"Pre-salt play is a petroleum play that is characterized by hydrocarbon accumulations situated beneath a thick evaporite seal, typically associated with rift-related carbonate reservoirs. This play is defined by its unique geological setting, including lacustrine carbonate reservoirs, primarily microbialites, developed during rift-related basin evolution, sealed by regional evaporites, and often exhibiting enhanced reservoir quality due to diagenetic processes like dolomitization.",True,"[test_doc.md > Pre-Salt Petroleum Geology: Key Concepts > Depositional Environments]
-Lacustrine environment is a continental depositional setting associated with lake systems.
-Evaporite is a chemical sedimentary rock formed by precipitation of dissolved minerals from
-evaporating water bodies, acting as the regional seal in the Pre-Salt play.
-
-[test_doc.md > Pre-Salt Petroleum Geology: Key Concepts > Structural Geology and Traps]
-Structural trap is a type of petroleum trap formed by deformation of rock layers through
-tectonic processes. Fault is a planar fracture in rock along which displacement has occurred,
-serving as both migration pathway and barrier in Pre-Salt reservoirs.
-
-[test_doc.md > Pre-Salt Petroleum Geology: Key Concepts > Carbonate Reservoirs]
-Carbonate reservoir is a type of petroleum reservoir rock composed of carbonate minerals
-such as calcite and dolomite. Microbialite is a sedimentary rock formed by the metabolic
-activity of microbial communities, serving as the primary reservoir facies in the
-Santos Basin Pre-Salt sequences.
-
-[test_doc.md > Pre-Salt Petroleum Geology: Key Concepts > Stratigraphy and Basin Evolution]
-Rifting is a tectonic process involving extensional deformation of the lithosphere.
-Reservoir quality is a composite property describing a rock's capacity to store and
-transmit fluids, primarily controlled by porosity and permeability.
-
-[test_doc.md > Pre-Salt Petroleum Geology: Key Concepts > Diagenesis and Porosity]
-Porosity is a physical property of rock defined as the ratio of void space to total rock
-volume. Dolomitization is a diagenetic process involving replacement of calcite by dolomite,
-often enhancing reservoir porosity and permeability."
-reservoir quality,"Reservoir quality is a composite property that describes a rock's capacity to store and transmit fluids, primarily controlled by porosity and permeability. In Pre-Salt carbonate reservoirs, diagenetic processes such as dolomitization often play a significant role in enhancing these controlling factors, thereby improving the overall reservoir quality.",True,"[test_doc.md > Pre-Salt Petroleum Geology: Key Concepts > Stratigraphy and Basin Evolution]
+reservoir quality,"Reservoir quality is a composite rock property that describes the capacity of a reservoir to store and transmit fluids, primarily as a function of porosity and permeability. In the Brazilian Pre-Salt, it is a key attribute of carbonate reservoirs such as microbialites, and it can be significantly modified by diagenetic processes like dolomitization that enhance pore space and fluid flow.",True,"[test_doc.md > Pre-Salt Petroleum Geology: Key Concepts > Stratigraphy and Basin Evolution]
 Rifting is a tectonic process involving extensional deformation of the lithosphere.
 Reservoir quality is a composite property describing a rock's capacity to store and
 transmit fluids, primarily controlled by porosity and permeability.
@@ -749,12 +849,7 @@ serving as both migration pathway and barrier in Pre-Salt reservoirs.
 Lacustrine environment is a continental depositional setting associated with lake systems.
 Evaporite is a chemical sedimentary rock formed by precipitation of dissolved minerals from
 evaporating water bodies, acting as the regional seal in the Pre-Salt play."
-fluid,"Fluid is a substance that can be stored and transmitted within reservoir rocks. In the context of Pre-Salt petroleum systems, these primarily include hydrocarbons (oil and natural gas) and formation water, which are crucial for reservoir quality assessment.",True,"[test_doc.md > Pre-Salt Petroleum Geology: Key Concepts > Structural Geology and Traps]
-Structural trap is a type of petroleum trap formed by deformation of rock layers through
-tectonic processes. Fault is a planar fracture in rock along which displacement has occurred,
-serving as both migration pathway and barrier in Pre-Salt reservoirs.
-
-[test_doc.md > Pre-Salt Petroleum Geology: Key Concepts > Stratigraphy and Basin Evolution]
+lithosphere,"Lithosphere is the rigid outer shell of the Earth that comprises the crust and uppermost mantle and deforms as tectonic plates under stress. In the Brazilian Pre-Salt context, extensional deformation of the lithosphere during rifting controlled basin formation and strongly influenced the structural framework of the reservoirs and seals.",True,"[test_doc.md > Pre-Salt Petroleum Geology: Key Concepts > Stratigraphy and Basin Evolution]
 Rifting is a tectonic process involving extensional deformation of the lithosphere.
 Reservoir quality is a composite property describing a rock's capacity to store and
 transmit fluids, primarily controlled by porosity and permeability.
@@ -773,29 +868,9 @@ often enhancing reservoir porosity and permeability.
 [test_doc.md > Pre-Salt Petroleum Geology: Key Concepts > Depositional Environments]
 Lacustrine environment is a continental depositional setting associated with lake systems.
 Evaporite is a chemical sedimentary rock formed by precipitation of dissolved minerals from
-evaporating water bodies, acting as the regional seal in the Pre-Salt play."
-pre-salt,"Pre-salt is a geological play that is characterized by hydrocarbon reservoirs situated beneath a thick, regional evaporite (salt) layer. These reservoirs, predominantly lacustrine carbonates like microbialites, formed during the rift phase of the South Atlantic opening and are sealed by the overlying Aptian salt, making them a significant petroleum frontier, particularly offshore Brazil.",False,"[test_doc.md > Pre-Salt Petroleum Geology: Key Concepts > Depositional Environments]
-Lacustrine environment is a continental depositional setting associated with lake systems.
-Evaporite is a chemical sedimentary rock formed by precipitation of dissolved minerals from
 evaporating water bodies, acting as the regional seal in the Pre-Salt play.
-
-[test_doc.md > Pre-Salt Petroleum Geology: Key Concepts > Carbonate Reservoirs]
-Carbonate reservoir is a type of petroleum reservoir rock composed of carbonate minerals
-such as calcite and dolomite. Microbialite is a sedimentary rock formed by the metabolic
-activity of microbial communities, serving as the primary reservoir facies in the
-Santos Basin Pre-Salt sequences.
 
 [test_doc.md > Pre-Salt Petroleum Geology: Key Concepts > Structural Geology and Traps]
 Structural trap is a type of petroleum trap formed by deformation of rock layers through
 tectonic processes. Fault is a planar fracture in rock along which displacement has occurred,
-serving as both migration pathway and barrier in Pre-Salt reservoirs.
-
-[test_doc.md > Pre-Salt Petroleum Geology: Key Concepts > Stratigraphy and Basin Evolution]
-Rifting is a tectonic process involving extensional deformation of the lithosphere.
-Reservoir quality is a composite property describing a rock's capacity to store and
-transmit fluids, primarily controlled by porosity and permeability.
-
-[test_doc.md > Pre-Salt Petroleum Geology: Key Concepts > Diagenesis and Porosity]
-Porosity is a physical property of rock defined as the ratio of void space to total rock
-volume. Dolomitization is a diagenetic process involving replacement of calcite by dolomite,
-often enhancing reservoir porosity and permeability."
+serving as both migration pathway and barrier in Pre-Salt reservoirs."

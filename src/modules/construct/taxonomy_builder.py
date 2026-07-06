@@ -25,7 +25,7 @@ from src.utils.csv_io import read_csv, write_csv
 from dotenv import load_dotenv
 from tqdm import tqdm
 
-from src.utils.llm_client import get_client, generate
+from src.utils.llm_client import get_client, generate, parse_json_array
 from src.utils import log
 from src.utils.prompt_loader import load_prompt
 from src.utils.ontology_config import get_config
@@ -96,7 +96,7 @@ def build_taxonomy_for_group(
             temperature=model_temperature,
             response_mime_type="application/json",
         )
-        result = json.loads(response_text)
+        result = parse_json_array(response_text)
 
         rows = []
         for item in result:

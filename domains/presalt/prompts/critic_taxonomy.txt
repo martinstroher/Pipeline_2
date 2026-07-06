@@ -47,7 +47,7 @@ Each verdict and the field(s) it must carry (the *when* is the decision steps ab
 
 - **KEEP** — parent is a correct genus; nothing to carry.
 - **REPARENT** — real term, wrong genus → `new_parent` = a better **existing** class (current parent, a sibling, or an Allowed class). Cite the NLD/relation evidence in `reason`. Can't justify it → KEEP.
-- **KEEP_AS_BEARER** — bearer kept under its genus; differentia carried as a companion axiom. **`carried_by` = {{"property", "filler"}}** by bucket: `Role→has_role`, `Function→has_function`, `Disposition→has_disposition`, `Quality→has_quality` (filler = `<Bearer>Role`/`<Bearer>Function`, or the quality's own name, e.g. `Heterogeneity`). `new_parent` optional, reuse-only (omit = keep current; never a realizable, never invented). Substantial bearers only — else DROP_AS_MIXIN.
+- **KEEP_AS_BEARER** — bearer kept under its genus; differentia carried as a companion axiom. **`carried_by` = {{"property", "filler", "filler_nld"}}** by bucket: `Role→has_role`, `Function→has_function`, `Disposition→has_disposition`, `Quality→has_quality` (filler = `<Bearer>Role`/`<Bearer>Function`, or the quality's own name, e.g. `Heterogeneity`). `filler_nld` = a one-sentence Aristotelian definition of that minted filler class in the form "A <genus> that is borne by a <bearer …>" (genus = role/function/disposition/quality), grounded in the bearer's own NLD. `new_parent` optional, reuse-only (omit = keep current; never a realizable, never invented). Substantial bearers only — else DROP_AS_MIXIN.
 - **DROP_AS_MIXIN** — term removed. **`carried_by` = {{"property", "filler"}}** records the BFO entity (audit only, not re-emitted).
 - **DROP_AS_REDUNDANT** — term removed; **`survivor` = parent**.
 - **CONVERT_TO_INSTANCE** — **`target_class`** = best fit from the Allowed list (add `mint_parent` only if none fits).
@@ -65,7 +65,7 @@ C. **Named individuals.** Do NOT drop named individuals (<<examples_critic_named
 ────────────────────────────────────────────────────────────
 
 - **`Color is a Quality that depends on a material entity`** → bucket `None` (it's the bearer relation that is the meaning); rewrite `Color inheres_in some MaterialEntity`. Verdict: KEEP under `quality`.
-- **`Husband is a Man that is married to a woman`** → bucket `Role`; the term **is the bearer** (a Man) that *plays* the husband role, and "husband" is a kind listed in its own right. Verdict: **KEEP_AS_BEARER**, `new_parent: Man`, `carried_by: {{"property": "has_role", "filler": "HusbandRole"}}` → emits `Husband ⊑ Man` + `has_role some HusbandRole`. (REPARENT under `role` would be wrong — a husband is not a role, he *has* one.)
+- **`Husband is a Man that is married to a woman`** → bucket `Role`; the term **is the bearer** (a Man) that *plays* the husband role, and "husband" is a kind listed in its own right. Verdict: **KEEP_AS_BEARER**, `new_parent: Man`, `carried_by: {{"property": "has_role", "filler": "HusbandRole", "filler_nld": "A role that is borne by a man who is married to a woman."}}` → emits `Husband ⊑ Man` + `has_role some HusbandRole`. (REPARENT under `role` would be wrong — a husband is not a role, he *has* one.)
 - **`The year 1969 is a TemporalRegion that contains the first Moon landing`** → step 1: proper-noun individual. Verdict: CONVERT_TO_INSTANCE with `target_class: temporal region`.
 - **`RedApple is an Apple that has a red colour`** → bucket `Quality` (the colour inheres in the apple); rewrite `Apple + has_quality some RedColour` preserves truth conditions. Verdict: DROP_AS_MIXIN, `carried_by: {{"property": "has_quality", "filler": "RedColour"}}`.
 - **`ColourClassification is a Framework that organises objects by colour`** → step 2: analytical framework. Verdict: DROP_AS_MIXIN, `carried_by: {{"property": "is_about", "filler": "Object"}}`.
@@ -94,7 +94,7 @@ For EVERY taxonomy row, fill the probe fields and the OntoClean sign fields (`ri
       "probe3_rewrite": "Man has_role some HusbandRole",
       "rigidity": "~R", "identity": "+I", "dependence": "+D",
       "action": "KEEP_AS_BEARER", "new_parent": "Man",
-      "carried_by": {{"property": "has_role", "filler": "HusbandRole"}},
+      "carried_by": {{"property": "has_role", "filler": "HusbandRole", "filler_nld": "A role that is borne by a man who is married to a woman."}},
       "reason": "bearer (a Man) plays a role; keep it + carry has_role (step 3)"}},
 
     {{"id": 18,
@@ -134,5 +134,5 @@ For EVERY taxonomy row, fill the probe fields and the OntoClean sign fields (`ri
 - `reason` is one short sentence (≤200 chars) and MUST cite probes/checks where applicable.
 - For REPARENT: if you cannot justify the new parent from the NLD or relations, KEEP — do not bluff.
 - For DROP_AS_MIXIN: `carried_by` is REQUIRED.
-- For KEEP_AS_BEARER: `carried_by` is REQUIRED; `new_parent` is OPTIONAL (omit to keep the current parent) and, if given, must name an **existing** material genus (never `role`/`quality`/`disposition`/`function`, never invented). Use it only for a substantial bearer; otherwise DROP_AS_MIXIN.
+- For KEEP_AS_BEARER: `carried_by` is REQUIRED with `property`, `filler`, and `filler_nld` (a one-sentence definition of the minted filler in the form "A <role/function/disposition/quality> that is borne by a <bearer …>", grounded in the bearer's NLD). `new_parent` is OPTIONAL (omit to keep the current parent) and, if given, must name an **existing** material genus (never `role`/`quality`/`disposition`/`function`, never invented). Use it only for a substantial bearer; otherwise DROP_AS_MIXIN.
 - For DROP_AS_REDUNDANT: `survivor` is REQUIRED and must be the term's parent (parent-collapse only).

@@ -95,6 +95,17 @@ _BEARER_PROPERTIES = {
     "has_quality": "quality",
 }
 
+# Deterministic Aristotelian fallback NLD for a minted filler class, keyed by
+# its BFO genus. Used only when the critic does not supply a usable `filler_nld`
+# so every minted class always carries an `rdfs:comment` (verification requires
+# it). `{bearer}` is the material entity the realizable/quality inheres in.
+_BEARER_NLD_TEMPLATES = {
+    "role": "A role that inheres in a {bearer}.",
+    "function": "A function that inheres in a {bearer}.",
+    "disposition": "A disposition that inheres in a {bearer}.",
+    "quality": "A quality that inheres in a {bearer}.",
+}
+
 
 # ─── Payload builders ─────────────────────────────────────────────────────
 
@@ -582,6 +593,7 @@ def _apply_taxonomy_edits(
             cb = edit.get("carried_by") if isinstance(edit.get("carried_by"), dict) else {}
             prop = str(cb.get("property", "") or "").strip()
             filler = str(cb.get("filler", "") or "").strip()
+            filler_nld = str(cb.get("filler_nld", "") or "").strip()
             if prop not in _BEARER_PROPERTIES or not filler:
                 # The carry itself is incomplete — reject to KEEP so the term is
                 # never lost.
@@ -611,6 +623,7 @@ def _apply_taxonomy_edits(
                 "bearer_category": cat,
                 "property": prop,
                 "filler": filler,
+                "filler_nld": filler_nld,
                 "filler_parent": _BEARER_PROPERTIES[prop],
             })
             log_rows.append({"id": rid, "kind": "taxonomy", "category": cat,
@@ -681,9 +694,15 @@ def _materialize_bearer_carries(
         fp = rec["filler_parent"]
         key = filler.lower()
         if key and key not in filler_rows:
+            # Prefer the critic's grounded NLD; fall back to the deterministic
+            # Aristotelian template so every minted filler carries a comment.
+            llm_nld = str(rec.get("filler_nld", "") or "").strip()
+            nld = llm_nld if (llm_nld and not llm_nld.upper().startswith("ERROR")) else \
+                _BEARER_NLD_TEMPLATES.get(fp, "A {genus} that inheres in a {bearer}.").format(
+                    genus=fp, bearer=rec["bearer"])
             filler_rows[key] = {
                 "Term": filler, "Parent_Term": fp, "Relationship_Type": "subClassOf",
-                "Category": fp, "Is_Intermediate": True, "NLD": "", "FALLBACK": False,
+                "Category": fp, "Is_Intermediate": True, "NLD": nld, "FALLBACK": False,
             }
         pc = PROPERTY_CONSTRAINTS.get(prop)
         rel_rows.append({
