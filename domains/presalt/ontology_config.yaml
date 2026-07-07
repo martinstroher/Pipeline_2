@@ -134,6 +134,7 @@ ontologies:
       - label: "disposition"
         iri_fragment: "BFO_0000016"
         metatypes: [Disposition, RealizableEntity, SpecificallyDependentContinuant, Continuant]
+        categorizer: false  # realizable — introduced only by the validate-step critic, not Step 5
         llm_definition: "A disposition is a realizable entity whose realization occurs when its bearer is in some special physical circumstance, where this realization typically results from a corresponding change in the physical make-up of the bearer. Examples: the disposition of a glass to break when struck; the solubility of salt in water; the conductivity of copper."
       - label: "realizable entity"
         iri_fragment: "BFO_0000017"
@@ -150,6 +151,7 @@ ontologies:
       - label: "role"
         iri_fragment: "BFO_0000023"
         metatypes: [Role, RealizableEntity, SpecificallyDependentContinuant, Continuant]
+        categorizer: false  # realizable — introduced only by the validate-step critic, not Step 5
         llm_definition: "A role is a realizable entity whose instances are externally grounded — that is, they exist because of the relations between the bearer and other entities, and the bearer would not have the role were it not for these relations. Examples: the role of being a student; the role of source rock (a rock body in a petroleum system); the role of seal."
       - label: "fiat object part"
         iri_fragment: "BFO_0000024"
@@ -174,6 +176,7 @@ ontologies:
       - label: "function"
         iri_fragment: "BFO_0000034"
         metatypes: [Function, Disposition, RealizableEntity, SpecificallyDependentContinuant, Continuant]
+        categorizer: false  # realizable — introduced only by the validate-step critic, not Step 5
         llm_definition: "A function is a disposition that exists in virtue of the bearer's physical make-up and this physical make-up is something the bearer possesses because it came into being through processes of selection or design. Examples: the function of a heart to pump blood; the function of a key to open a specific lock."
       - label: "process boundary"
         iri_fragment: "BFO_0000035"

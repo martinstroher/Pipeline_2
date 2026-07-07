@@ -470,6 +470,49 @@ def _emit_named_individuals(g: Graph, instances_csv: str) -> int:
     return n
 
 
+def _emit_defined_bearer_classes(g: Graph, defined_csv: str) -> int:
+    """Emit `bearer owl:equivalentClass (genus ⊓ <prop> some <role>)` for each
+    KEEP_AS_BEARER realizable bearer in ``defined_csv``.
+
+    This makes a role-fused term (e.g. "carbonate reservoir") a *defined* class —
+    "a carbonate rock that plays the reservoir role" — rather than a primitive
+    rigid kind (the OntoClean mixin fix). The asserted `bearer ⊑ genus` is kept
+    (browsable hierarchy + verifier anchoring); the loose role restriction is
+    skipped in the relation loop so the role lives only inside this definition.
+    """
+    if not defined_csv or not os.path.exists(defined_csv):
+        return 0
+    from rdflib.collection import Collection
+
+    df = read_csv(defined_csv)
+    n = 0
+    for _, r in df.iterrows():
+        bearer = str(r["Bearer"]).strip()
+        genus = str(r["Genus"]).strip()
+        filler = str(r["Filler"]).strip()
+        prop_iri = str(r.get("Property_IRI", "")).strip()
+        if not (bearer and genus and filler and prop_iri):
+            continue
+        bearer_iri = _term_to_iri(bearer)
+        genus_iri = _term_to_iri(genus)
+        role_iri = _term_to_iri(filler)
+        prop_uri = URIRef(prop_iri)
+
+        restriction = BNode()
+        g.add((restriction, RDF.type, OWL.Restriction))
+        g.add((restriction, OWL.onProperty, prop_uri))
+        g.add((restriction, OWL.someValuesFrom, role_iri))
+
+        members = BNode()
+        Collection(g, members, [genus_iri, restriction])
+        defn = BNode()
+        g.add((defn, RDF.type, OWL.Class))
+        g.add((defn, OWL.intersectionOf, members))
+        g.add((bearer_iri, OWL.equivalentClass, defn))
+        n += 1
+    return n
+
+
 def _emit_companion_axioms(g: Graph) -> int:
     """Emit BFO companion restrictions for presalt classes that descend from
     Quality or Role but lack the canonical inheres_in / realized_in restriction.
@@ -583,6 +626,7 @@ def run_owl_export(
     relations_csv: str | None = None,
     minted_csv: str | None = None,
     instances_csv: str | None = None,
+    defined_csv: str | None = None,
 ):
     """
     Export taxonomy to OWL Turtle format.
@@ -596,6 +640,9 @@ def run_owl_export(
                     object properties). Auto-derived from taxonomy_csv's dir if None.
         instances_csv: Optional path to validate_instances.csv (CONVERT_TO_INSTANCE
                        rows). Auto-derived from taxonomy_csv's dir if None.
+        defined_csv: Optional path to validate_defined_classes.csv (KEEP_AS_BEARER
+                     realizable bearers emitted as owl:equivalentClass definitions).
+                     Auto-derived from taxonomy_csv's dir if None.
     """
     if output_path is None:
         base = os.path.splitext(taxonomy_csv)[0]
@@ -611,6 +658,10 @@ def run_owl_export(
         candidate = os.path.join(tax_dir, "validate_instances.csv")
         if os.path.exists(candidate):
             instances_csv = candidate
+    if defined_csv is None:
+        candidate = os.path.join(tax_dir, "validate_defined_classes.csv")
+        if os.path.exists(candidate):
+            defined_csv = candidate
 
     df = read_csv(taxonomy_csv)
     log.info(f"OWL Export: {len(df)} taxonomy entries from {taxonomy_csv}")
@@ -745,6 +796,18 @@ def run_owl_export(
 
     # ── Relation restrictions (Step 6b) ──
     n_restrictions = 0
+    # Role restrictions that are folded into a defined-class definition
+    # (owl:equivalentClass, emitted later) must NOT also be emitted here as loose
+    # subClassOf restrictions — that would double-encode the role.
+    _defined_skip: set[tuple[str, str, str]] = set()
+    if defined_csv and os.path.exists(defined_csv):
+        _dc = read_csv(defined_csv)
+        for _, _r in _dc.iterrows():
+            _defined_skip.add((
+                str(_r["Bearer"]).strip().lower(),
+                str(_r.get("Property_IRI", "")).strip(),
+                str(_r["Filler"]).strip().lower(),
+            ))
     if relations_csv and os.path.exists(relations_csv):
         rel_df = read_csv(relations_csv)
         accepted = rel_df[rel_df["Validation_Status"] == "ACCEPTED"]
@@ -779,6 +842,11 @@ def run_owl_export(
                 continue
 
             prop_uri = URIRef(prop_iri_str)
+
+            # Skip a role restriction that is folded into this bearer's
+            # owl:equivalentClass definition (avoids double-encoding).
+            if (term_str.lower(), prop_iri_str, filler_str.lower()) in _defined_skip:
+                continue
 
             # Never create restrictions between two upper-level entities
             if _is_upper_iri(term_iri) and _is_upper_iri(filler_iri):
@@ -858,6 +926,10 @@ def run_owl_export(
     n_companion = _emit_companion_axioms(g)
     if n_companion:
         log.detail(f"Emitted {n_companion} BFO companion-axiom restrictions (Quality/Role descendants)")
+    if defined_csv:
+        n_defined = _emit_defined_bearer_classes(g, defined_csv)
+        if n_defined:
+            log.detail(f"Emitted {n_defined} defined bearer classes (equivalentClass genus ⊓ role) from {defined_csv}")
 
     # ── Third backbone pass: link any upper classes introduced by minted
     #    target classes / instances / companion axioms up to BFO. ──

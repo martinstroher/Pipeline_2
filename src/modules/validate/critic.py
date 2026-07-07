@@ -41,6 +41,8 @@ Outputs written to `output_dir`:
     validate_edits.csv               — full audit log (taxonomy rows carry the probe trace)
     validate_instances.csv           — terms converted to NamedIndividuals (Term, Target_Class, …)
     validate_minted_properties.csv   — newly invented ObjectProperties (provenance=critic_minted)
+    validate_defined_classes.csv     — KEEP_AS_BEARER realizable bearers to emit as owl:equivalentClass
+                                       definitions (Bearer, Genus, Property, Property_IRI, Filler)
     validate_responses_archive/{ts}.jsonl — raw LLM responses, one line per call (call=taxonomy|dedup|relation)
 
 Safety guards:
@@ -105,6 +107,13 @@ _BEARER_NLD_TEMPLATES = {
     "disposition": "A disposition that inheres in a {bearer}.",
     "quality": "A quality that inheres in a {bearer}.",
 }
+
+# BFO realizable genera whose KEEP_AS_BEARER carry makes the bearer a DEFINED
+# class (`bearer ≡ genus ⊓ <property> some <minted role>`) rather than a
+# primitive kind — the OntoClean fix for a role/function/disposition fused into
+# a rigid class name. Quality carries stay primitive (a quality-bearing entity
+# is not a role mixin).
+_DEFINING_BEARER_PARENTS = {"role", "function", "disposition"}
 
 
 # ─── Payload builders ─────────────────────────────────────────────────────
@@ -721,6 +730,41 @@ def _materialize_bearer_carries(
     return filler_df, rel_df
 
 
+def _build_defined_classes(
+    bearer_records: list[dict],
+    cleaned_tax: pd.DataFrame,
+) -> pd.DataFrame:
+    """Rows the emitter turns into `owl:equivalentClass` definitions.
+
+    A KEEP_AS_BEARER bearer that carries a *realizable* (role / function /
+    disposition) is defined as `genus ⊓ (<property> some <minted role>)` instead
+    of being asserted as a primitive rigid kind — the OntoClean fix for a role
+    fused into a class name. Quality carries stay primitive. The genus is the
+    bearer's final taxonomy parent (after any REPARENT)."""
+    cols = ["Bearer", "Genus", "Property", "Property_IRI", "Filler"]
+    if not bearer_records:
+        return pd.DataFrame(columns=cols)
+    genus_by_term = {
+        str(t).strip().lower(): str(p).strip()
+        for t, p in zip(cleaned_tax["Term"].astype(str), cleaned_tax["Parent_Term"].astype(str))
+    }
+    rows: list[dict] = []
+    for rec in bearer_records:
+        if rec.get("filler_parent") not in _DEFINING_BEARER_PARENTS:
+            continue
+        genus = genus_by_term.get(str(rec["bearer"]).strip().lower(), "")
+        if not genus:
+            continue
+        prop = str(rec["property"]).strip()
+        pc = PROPERTY_CONSTRAINTS.get(prop)
+        rows.append({
+            "Bearer": rec["bearer"], "Genus": genus,
+            "Property": prop, "Property_IRI": pc.iri if pc else "",
+            "Filler": rec["filler"],
+        })
+    return pd.DataFrame(rows, columns=cols)
+
+
 def _apply_relation_edits(
     rel: pd.DataFrame,
     edits_by_id: dict[int, dict],
@@ -879,6 +923,7 @@ def run_critic(
     edits_out = os.path.join(output_dir, "validate_edits.csv")
     instances_out = os.path.join(output_dir, "validate_instances.csv")
     minted_out = os.path.join(output_dir, "validate_minted_properties.csv")
+    defined_out = os.path.join(output_dir, "validate_defined_classes.csv")
 
     archive_dir = os.path.join(output_dir, "validate_responses_archive")
     os.makedirs(archive_dir, exist_ok=True)
@@ -1078,6 +1123,12 @@ def run_critic(
     bearer_filler_df, bearer_rel_df = _materialize_bearer_carries(
         bearer_records, tax_cols, rel_cols
     )
+
+    # Realizable KEEP_AS_BEARER carries → defined-class handoff for the emitter.
+    defined_df = _build_defined_classes(bearer_records, cleaned_tax)
+    if not defined_df.empty:
+        write_csv(defined_df, defined_out)
+        log.success(f"Defined bearer classes: {len(defined_df)} rows → {defined_out}")
 
     cleaned_tax_out = cleaned_tax.drop(columns=["_critic_id"], errors="ignore")
     if not bearer_filler_df.empty:

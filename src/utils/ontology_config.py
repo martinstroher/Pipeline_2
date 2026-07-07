@@ -42,6 +42,9 @@ class ClassDef:
     ontology_key: str                    # e.g. "bfo", "geocore", "georeservoir"
     metatypes: frozenset[str]            # empty ⇒ ancestor-only, not a Category
     llm_definition: str | None           # None ⇒ auto-extract from OWL at runtime
+    categorizer: bool = True             # False ⇒ excluded from the Step-5 categorizer menu
+                                         #   (still a valid relation domain/range, taxonomy
+                                         #   parent, and critic REPARENT/mint target)
 
     @property
     def iri(self) -> str:
@@ -176,19 +179,29 @@ class OntologyConfig:
         return out
 
     def categories_for(self, ontology_key: str) -> set[str]:
-        """Set of valid category labels for a given ontology tier (used by expert eval)."""
+        """Set of valid category labels the Step-5 categorizer may assign for a tier.
+
+        Excludes classes with no metatypes (ancestor-only) and classes flagged
+        `categorizer: false` (e.g. the BFO realizables role/disposition/function,
+        which are introduced only by the validate-step critic, never by Step 5).
+        """
         onto = self.ontologies.get(ontology_key)
         if onto is None:
             raise KeyError(f"Unknown ontology key: {ontology_key}")
-        return {cls.label for cls in onto.classes if cls.metatypes}
+        return {cls.label for cls in onto.classes if cls.metatypes and cls.categorizer}
 
-    def llm_definitions_block(self, ontology_key: str) -> str:
+    def llm_definitions_block(self, ontology_key: str, categorizer_only: bool = False) -> str:
         """Formatted 'Label: definition' block for LLM prompt injection.
 
         Includes every class that contributes prompt context — i.e. those with
         either a metatype set (a valid category) OR an explicit `llm_definition`
         (top-level ancestors like 'entity'/'continuant'/'occurrent' that frame
         the hierarchy for the LLM but are not used as categories themselves).
+
+        When `categorizer_only` is True (used by the Step-5 `categorization_block`),
+        classes flagged `categorizer: false` are omitted so they are never offered
+        as assignable categories. The default (False) keeps the full block so other
+        consumers — e.g. the expert-eval workbook — still see every definition.
 
         For classes with no `llm_definition` set, falls back to skos:definition
         in the OWL file, then rdfs:comment, then the label itself.
@@ -200,6 +213,8 @@ class OntologyConfig:
         for cls in onto.classes:
             if not cls.metatypes and not cls.llm_definition:
                 continue  # ancestor with no definition → skip
+            if categorizer_only and cls.metatypes and not cls.categorizer:
+                continue  # realizable excluded from the Step-5 menu
             definition = cls.llm_definition or _extract_owl_definition(onto.owl_path, cls.iri) or cls.label
             lines.append(f"{cls.label}: {definition}")
         return "\n".join(lines)
@@ -219,7 +234,7 @@ class OntologyConfig:
         sections: list[str] = []
         for key in self.waterfall:
             onto = self.ontologies[key]
-            defs = self.llm_definitions_block(key)
+            defs = self.llm_definitions_block(key, categorizer_only=True)
             sections.append(f"### {onto.display_name} Categories:\n{defs}")
         return "\n\n".join(sections)
 
@@ -416,6 +431,7 @@ def _parse_classes(
             ontology_key=ontology_key,
             metatypes=metatypes,
             llm_definition=llm_def,
+            categorizer=bool(entry.get("categorizer", True)),
         ))
     return tuple(out)
 
