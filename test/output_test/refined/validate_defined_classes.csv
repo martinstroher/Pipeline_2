@@ -1,0 +1,3 @@
+﻿Bearer,Genus,Property,Property_IRI,Filler
+regional seal,Stratigraphic Unit,has_role,http://purl.obolibrary.org/obo/RO_0000087,RegionalSealRole
+carbonate reservoir,Sedimentary Rock,has_role,http://purl.obolibrary.org/obo/RO_0000087,CarbonateReservoirRole

@@ -5,15 +5,15 @@
       "layer": "syntax",
       "status": "PASS",
       "errors": [],
-      "triple_count": 356
+      "triple_count": 305
     },
     "structure": {
       "layer": "structure",
       "status": "PASS",
-      "classes": 51,
+      "classes": 47,
       "individuals": 1,
-      "triples": 356,
-      "upper_iris_referenced": 26,
+      "triples": 305,
+      "upper_iris_referenced": 25,
       "upper_iris_list": [
         "http://purl.obolibrary.org/obo/BFO_0000001",
         "http://purl.obolibrary.org/obo/BFO_0000002",
@@ -24,7 +24,6 @@
         "http://purl.obolibrary.org/obo/BFO_0000019",
         "http://purl.obolibrary.org/obo/BFO_0000020",
         "http://purl.obolibrary.org/obo/BFO_0000023",
-        "http://purl.obolibrary.org/obo/BFO_0000027",
         "http://purl.obolibrary.org/obo/BFO_0000029",
         "http://purl.obolibrary.org/obo/BFO_0000030",
         "http://purl.obolibrary.org/obo/BFO_0000031",

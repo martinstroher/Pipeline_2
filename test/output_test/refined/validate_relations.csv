@@ -1,31 +1,22 @@
 ﻿Term,Category,Property,Property_IRI,Filler,Filler_Source,Confidence,Evidence,Validation_Status,Validation_Reason
 dolomitization,Geological Process,has_participant,http://purl.obolibrary.org/obo/BFO_0000057,calcite,domain_term,1.0,replaces calcite with dolomite,ACCEPTED,Valid.
 dolomitization,Geological Process,has_participant,http://purl.obolibrary.org/obo/BFO_0000057,dolomite,domain_term,1.0,replaces calcite with dolomite,ACCEPTED,Valid.
-dolomitization,Geological Process,occurs_in,http://purl.obolibrary.org/obo/BFO_0000066,carbonate reservoir,domain_term,0.8,"In Brazilian Pre-Salt carbonate reservoirs, this mineralogical alteration often enhances porosity and permeability",ACCEPTED,Valid.
-diagenesis,Geological Process,has_participant,http://purl.obolibrary.org/obo/BFO_0000057,sedimentary rock,domain_term,1.0,alters sediment or sedimentary rock,ACCEPTED,Valid.
-pre-salt sequence,Stratigraphic Unit,has_part,http://purl.obolibrary.org/obo/BFO_0000051,carbonate reservoir rock,domain_term,0.8,it commonly comprises lacustrine sediments and carbonate reservoir rocks,ACCEPTED,Valid.
-pre-salt sequence,Stratigraphic Unit,has_continuant_part,http://purl.obolibrary.org/obo/BFO_0000178,microbialite,domain_term,0.8,especially microbialites,ACCEPTED,Valid.
-permeability,quality,continuant_part_of,http://purl.obolibrary.org/obo/BFO_0000176,reservoir quality,domain_term,1.0,it is a key component of reservoir quality together with porosity,ACCEPTED,Valid.
-permeability,quality,participates_in,http://purl.obolibrary.org/obo/BFO_0000056,dolomitization,domain_term,0.8,it may be enhanced by diagenetic processes such as dolomitization,ACCEPTED,Valid.
-porosity,quality,continuant_part_of,http://purl.obolibrary.org/obo/BFO_0000176,reservoir quality,domain_term,1.0,it is a primary control on reservoir quality,ACCEPTED,Valid.
-porosity,quality,participates_in,http://purl.obolibrary.org/obo/BFO_0000056,dolomitization,domain_term,0.8,it may be enhanced by diagenetic processes such as dolomitization,ACCEPTED,Valid.
-carbonate reservoir,Sedimentary Rock,constituted_by,https://www.inf.ufrgs.br/bdi/ontologies/GEOCORE_0000017,carbonate mineral,domain_term,1.0,is composed predominantly of carbonate minerals,ACCEPTED,Valid.
-carbonate reservoir,Sedimentary Rock,constituted_by,https://www.inf.ufrgs.br/bdi/ontologies/GEOCORE_0000017,calcite,domain_term,1.0,such as calcite,ACCEPTED,Valid.
-carbonate reservoir,Sedimentary Rock,constituted_by,https://www.inf.ufrgs.br/bdi/ontologies/GEOCORE_0000017,dolomite,domain_term,1.0,such as calcite and dolomite,ACCEPTED,Valid.
-carbonate reservoir,Sedimentary Rock,has_quality,http://purl.obolibrary.org/obo/RO_0000086,porosity,domain_term,1.0,through its porosity and permeability,ACCEPTED,Valid.
-dolomite,Geological Object,derives_from,http://purl.obolibrary.org/obo/RO_0001000,calcite,domain_term,1.0,forms in carbonate reservoir rocks through diagenetic replacement of calcite,ACCEPTED,Valid.
-dolomite,Geological Object,located_in,http://purl.obolibrary.org/obo/BFO_0000171,carbonate reservoir,domain_term,1.0,forms in carbonate reservoir rocks,ACCEPTED,Valid.
-dolomite,Geological Object,generated_by,https://www.inf.ufrgs.br/bdi/ontologies/GEOCORE_0000013,diagenesis,domain_term,0.8,forms in carbonate reservoir rocks through diagenetic replacement of calcite,ACCEPTED,Valid.
-petroleum reservoir rock,Rock,has_quality,http://purl.obolibrary.org/obo/RO_0000086,porosity,domain_term,1.0,Its reservoir quality is primarily controlled by porosity,ACCEPTED,Valid.
-petroleum reservoir rock,Rock,has_quality,http://purl.obolibrary.org/obo/RO_0000086,permeability,domain_term,1.0,Its reservoir quality is primarily controlled by porosity and permeability,ACCEPTED,Valid.
-calcite,Geological Object,located_in,http://purl.obolibrary.org/obo/BFO_0000171,carbonate reservoir,domain_term,1.0,commonly composes carbonate reservoir rocks,ACCEPTED,Valid.
-calcite,Geological Object,located_in,http://purl.obolibrary.org/obo/BFO_0000171,microbialite,domain_term,1.0,calcite is an important constituent of microbialites,ACCEPTED,Valid.
-carbonate mineral,Geological Object,located_in,http://purl.obolibrary.org/obo/BFO_0000171,carbonate reservoir,domain_term,1.0,carbonate minerals constitute the framework of many carbonate reservoirs,ACCEPTED,Valid.
-reservoir quality,quality,inheres_in,http://purl.obolibrary.org/obo/BFO_0000197,carbonate reservoir,domain_term,1.0,it is a key attribute of carbonate reservoirs,ACCEPTED,Valid.
-reservoir quality,quality,inheres_in,http://purl.obolibrary.org/obo/BFO_0000197,microbialite,domain_term,1.0,carbonate reservoirs such as microbialites,ACCEPTED,Valid.
-pre-salt play,object aggregate,has_part,http://purl.obolibrary.org/obo/BFO_0000051,hydrocarbon accumulation,domain_term,0.8,consists of hydrocarbon accumulations in rift-related lacustrine carbonate reservoirs,ACCEPTED,Valid.
-pre-salt play,object aggregate,located_in,http://purl.obolibrary.org/obo/BFO_0000171,santos basin,domain_term,0.8,especially in the Santos Basin,ACCEPTED,Valid.
-petroleum reservoir rock,Rock,has_role,http://purl.obolibrary.org/obo/RO_0000087,PetroleumReservoirRockRole,critic_bearer,1.0,KEEP_AS_BEARER companion (has_role some PetroleumReservoirRockRole),ACCEPTED,critic KEEP_AS_BEARER
-pre-salt reservoir,role,has_role,http://purl.obolibrary.org/obo/RO_0000087,PreSaltReservoirRole,critic_bearer,1.0,KEEP_AS_BEARER companion (has_role some PreSaltReservoirRole),ACCEPTED,critic KEEP_AS_BEARER
-regional seal,role,has_role,http://purl.obolibrary.org/obo/RO_0000087,RegionalSealRole,critic_bearer,1.0,KEEP_AS_BEARER companion (has_role some RegionalSealRole),ACCEPTED,critic KEEP_AS_BEARER
+pre-salt sequence,Stratigraphic Unit,has_continuant_part,http://purl.obolibrary.org/obo/BFO_0000178,carbonate reservoir,domain_term,1.0,typically contains lacustrine carbonate reservoirs,ACCEPTED,Valid.
+pre-salt sequence,Stratigraphic Unit,has_continuant_part,http://purl.obolibrary.org/obo/BFO_0000178,microbialite,domain_term,1.0,typically contains lacustrine carbonate reservoirs such as microbialites,ACCEPTED,Valid.
+diagenesis,Geological Process,occurs_in,http://purl.obolibrary.org/obo/BFO_0000066,carbonate reservoir,domain_term,0.8,"In Brazilian Pre-Salt carbonate reservoirs, diagenesis strongly controls reservoir quality",ACCEPTED,Valid.
+dolomite,Earth Material,located_in,http://purl.obolibrary.org/obo/BFO_0000171,carbonate reservoir,domain_term,0.8,commonly occurs as a major constituent of carbonate reservoir rocks,ACCEPTED,Valid.
+dolomite,Earth Material,generated_by,https://www.inf.ufrgs.br/bdi/ontologies/GEOCORE_0000013,dolomitization,domain_term,1.0,the product of dolomitization,ACCEPTED,Valid.
+dolomite,Earth Material,derives_from,http://purl.obolibrary.org/obo/RO_0001000,calcite,domain_term,1.0,a diagenetic replacement of calcite,ACCEPTED,Valid.
+carbonate reservoir,Sedimentary Rock,constituted_by,https://www.inf.ufrgs.br/bdi/ontologies/GEOCORE_0000017,calcite,domain_term,1.0,composed predominantly of carbonate minerals such as calcite and dolomite,ACCEPTED,Valid.
+carbonate reservoir,Sedimentary Rock,constituted_by,https://www.inf.ufrgs.br/bdi/ontologies/GEOCORE_0000017,dolomite,domain_term,1.0,composed predominantly of carbonate minerals such as calcite and dolomite,ACCEPTED,Valid.
+carbonate reservoir,Sedimentary Rock,has_quality,http://purl.obolibrary.org/obo/RO_0000086,porosity,domain_term,1.0,storing and transmitting hydrocarbons through its porosity and permeability,ACCEPTED,Valid.
+carbonate reservoir,Sedimentary Rock,has_quality,http://purl.obolibrary.org/obo/RO_0000086,permeability,domain_term,1.0,storing and transmitting hydrocarbons through its porosity and permeability,ACCEPTED,Valid.
+calcite,Earth Material,continuant_part_of,http://purl.obolibrary.org/obo/BFO_0000176,carbonate reservoir,domain_term,0.8,forms a major constituent of carbonate reservoir rocks,ACCEPTED,Valid.
+calcite,Earth Material,located_in,http://purl.obolibrary.org/obo/BFO_0000171,microbialite,domain_term,0.8,calcite is present in facies such as microbialites,ACCEPTED,Valid.
+regional seal,Stratigraphic Unit,constituted_by,https://www.inf.ufrgs.br/bdi/ontologies/GEOCORE_0000017,evaporite,domain_term,1.0,this seal is formed predominantly by evaporites,ACCEPTED,Valid.
+reservoir quality,quality,has_continuant_part,http://purl.obolibrary.org/obo/BFO_0000178,porosity,domain_term,0.8,a composite rock property ... primarily as a function of porosity and permeability,ACCEPTED,Valid. | Warnings: Evidence is paraphrased (not exact quote from NLD). Word overlap: 83%.
+reservoir quality,quality,has_continuant_part,http://purl.obolibrary.org/obo/BFO_0000178,permeability,domain_term,0.8,a composite rock property ... primarily as a function of porosity and permeability,ACCEPTED,Valid. | Warnings: Evidence is paraphrased (not exact quote from NLD). Word overlap: 83%.
+reservoir quality,quality,inheres_in,http://purl.obolibrary.org/obo/BFO_0000197,carbonate reservoir,domain_term,0.8,used to evaluate the performance of carbonate reservoirs such as microbialites,ACCEPTED,Valid.
+reservoir quality,quality,inheres_in,http://purl.obolibrary.org/obo/BFO_0000197,microbialite,domain_term,0.8,carbonate reservoirs such as microbialites,ACCEPTED,Valid.
+regional seal,Stratigraphic Unit,has_role,http://purl.obolibrary.org/obo/RO_0000087,RegionalSealRole,critic_bearer,1.0,KEEP_AS_BEARER companion (has_role some RegionalSealRole),ACCEPTED,critic KEEP_AS_BEARER
 carbonate reservoir,Sedimentary Rock,has_role,http://purl.obolibrary.org/obo/RO_0000087,CarbonateReservoirRole,critic_bearer,1.0,KEEP_AS_BEARER companion (has_role some CarbonateReservoirRole),ACCEPTED,critic KEEP_AS_BEARER
