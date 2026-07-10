@@ -10,6 +10,7 @@ inputs/
 .venv*/
 usage_log.csv
 .env.bak*
+run_*.log
 
 # Per-run raw LLM response archive (scratch, regenerated every run — not a stable fixture)
 test/output_test/refined/validate_responses_archive/
