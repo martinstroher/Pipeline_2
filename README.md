@@ -62,7 +62,7 @@ The full pipeline runs Steps 0-7 and writes a Turtle OWL file (`output/6d_taxono
 | 6b | `relation_extractor.py` | Step 5 CSV | `output/6b_relations.csv` |
 | 6 | `taxonomy_builder.py` | Step 5b CSV | `output/refined/construct_taxonomy.csv` |
 | 6b | `relation_extractor.py` | Step 5b CSV | `output/refined/construct_relations.csv` |
-| validate | `validate/critic.py` | Steps 6 + 6b CSVs | `output/refined/validate_taxonomy.csv` + `validate_relations.csv` + `validate_edits.csv` + `validate_class_fates.csv` |
+| validate | `validate/critic.py` | Steps 6 + 6b CSVs | `output/refined/validate_taxonomy.csv` + `validate_relations.csv` + `validate_edits.csv` + `validate_class_fates.csv` + `validate_facet_frames.csv` + `validate_disjointness.csv` |
 | 7 | `owl_exporter.py` | validate CSVs | `output/refined/emit_ontology.ttl` |
 | 7b | `emit/verifier.py` | OWL file | `output/refined/emit_verification.json` |
 

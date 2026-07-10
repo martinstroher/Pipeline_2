@@ -13,6 +13,8 @@ Features:
 
 import os
 import re
+import ast
+import shutil
 from collections import defaultdict
 
 import pandas as pd
@@ -513,6 +515,50 @@ def _emit_defined_bearer_classes(g: Graph, defined_csv: str) -> int:
     return n
 
 
+def _parse_members(value) -> list[str]:
+    if isinstance(value, list):
+        return [str(v).strip() for v in value if str(v).strip()]
+    text = str(value or "").strip()
+    if not text:
+        return []
+    try:
+        parsed = ast.literal_eval(text)
+        if isinstance(parsed, list):
+            return [str(v).strip() for v in parsed if str(v).strip()]
+    except Exception:
+        pass
+    return [part.strip() for part in re.split(r"[|,]", text) if part.strip()]
+
+
+def _emit_domain_disjointness(g: Graph, disjointness_csv: str) -> int:
+    """Emit high-confidence domain disjointness diagnostics as OWL axioms.
+
+    Disabled by default in config because domain disjointness should be trusted
+    only with reasoner validation enabled.
+    """
+    if not disjointness_csv or not os.path.exists(disjointness_csv):
+        return 0
+    from rdflib.collection import Collection
+
+    df = read_csv(disjointness_csv)
+    n = 0
+    for _, row in df.iterrows():
+        members = _parse_members(row.get("members", ""))
+        if len(members) < 2:
+            continue
+        iris = [_term_to_iri(member) for member in members]
+        if len(iris) == 2:
+            g.add((iris[0], OWL.disjointWith, iris[1]))
+        else:
+            members_node = BNode()
+            Collection(g, members_node, iris)
+            ax = BNode()
+            g.add((ax, RDF.type, OWL.AllDisjointClasses))
+            g.add((ax, OWL.members, members_node))
+        n += 1
+    return n
+
+
 def _emit_companion_axioms(g: Graph) -> int:
     """Emit BFO companion restrictions for presalt classes that descend from
     Quality or Role but lack the canonical inheres_in / realized_in restriction.
@@ -627,6 +673,7 @@ def run_owl_export(
     minted_csv: str | None = None,
     instances_csv: str | None = None,
     defined_csv: str | None = None,
+    disjointness_csv: str | None = None,
 ):
     """
     Export taxonomy to OWL Turtle format.
@@ -643,6 +690,8 @@ def run_owl_export(
         defined_csv: Optional path to validate_defined_classes.csv (KEEP_AS_BEARER
                      realizable bearers emitted as owl:equivalentClass definitions).
                      Auto-derived from taxonomy_csv's dir if None.
+        disjointness_csv: Optional path to validate_disjointness.csv. Emitted only
+                  when `lateral_coherence.disjointness.enabled` is true.
     """
     if output_path is None:
         base = os.path.splitext(taxonomy_csv)[0]
@@ -662,6 +711,10 @@ def run_owl_export(
         candidate = os.path.join(tax_dir, "validate_defined_classes.csv")
         if os.path.exists(candidate):
             defined_csv = candidate
+    if disjointness_csv is None:
+        candidate = os.path.join(tax_dir, "validate_disjointness.csv")
+        if os.path.exists(candidate):
+            disjointness_csv = candidate
 
     df = read_csv(taxonomy_csv)
     log.info(f"OWL Export: {len(df)} taxonomy entries from {taxonomy_csv}")
@@ -811,6 +864,13 @@ def run_owl_export(
     if relations_csv and os.path.exists(relations_csv):
         rel_df = read_csv(relations_csv)
         accepted = rel_df[rel_df["Validation_Status"] == "ACCEPTED"]
+        if _CFG.lateral_coherence().emit_only_generic_relations and "Relation_Scope" in accepted.columns:
+            n_before_scope = len(accepted)
+            scopes = accepted["Relation_Scope"].fillna("generic").astype(str).str.strip().str.lower()
+            accepted = accepted[scopes.isin(["", "generic"])]
+            n_contextual = n_before_scope - len(accepted)
+            if n_contextual:
+                log.detail(f"Skipped {n_contextual} non-generic relation(s) from OWL class restrictions")
         log.info(f"Adding {len(accepted)} relation restrictions from {relations_csv}")
 
         # Declare used object properties
@@ -930,6 +990,15 @@ def run_owl_export(
         n_defined = _emit_defined_bearer_classes(g, defined_csv)
         if n_defined:
             log.detail(f"Emitted {n_defined} defined bearer classes (equivalentClass genus ⊓ role) from {defined_csv}")
+    lateral_cfg = _CFG.lateral_coherence()
+    if disjointness_csv and lateral_cfg.emit_disjointness:
+        java_available = bool(os.environ.get("JAVA_EXE") or shutil.which("java"))
+        if lateral_cfg.require_reasoner_for_disjointness and not java_available:
+            log.warn("Domain disjointness emission skipped: Java/HermiT is required by config but no Java executable was found")
+        else:
+            n_domain_disjoint = _emit_domain_disjointness(g, disjointness_csv)
+            if n_domain_disjoint:
+                log.detail(f"Emitted {n_domain_disjoint} domain disjointness axiom(s) from {disjointness_csv}")
 
     # ── Third backbone pass: link any upper classes introduced by minted
     #    target classes / instances / companion axioms up to BFO. ──

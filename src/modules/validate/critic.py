@@ -80,12 +80,17 @@ from src.utils.relation_validator import (
 
 
 _TAXONOMY_VERDICTS = {
-    "KEEP", "REPARENT", "KEEP_AS_BEARER",
-    "DROP_AS_MIXIN", "DROP_AS_REDUNDANT", "CONVERT_TO_INSTANCE",
+    "KEEP", "REPARENT", "KEEP_AS_BEARER", "KEEP_AS_DEFINED",
+    "DROP_AS_MIXIN", "DROP_AS_REDUNDANT", "DROP_AS_OVER_SPECIFIC",
+    "CONVERT_TO_INSTANCE",
 }
 _RELATION_VERDICTS = {"KEEP", "DROP", "FIX"}
+_RELATION_SCOPES = {"generic", "corpus_context", "individual_fact"}
 
-_DROP_TAX_VERDICTS = {"DROP_AS_MIXIN", "DROP_AS_REDUNDANT", "CONVERT_TO_INSTANCE"}
+_DROP_TAX_VERDICTS = {
+    "DROP_AS_MIXIN", "DROP_AS_REDUNDANT", "DROP_AS_OVER_SPECIFIC",
+    "CONVERT_TO_INSTANCE",
+}
 
 # KEEP_AS_BEARER: companion object-property → the BFO parent the minted filler
 # class is declared under. Keeps a material bearer under its genus and carries
@@ -501,7 +506,7 @@ def _call_dedup_critic(
     temperature: float,
     archive_path: str,
     archive_lock: threading.Lock,
-) -> list[dict]:
+) -> tuple[list[dict], list[dict], list[dict]]:
     """Stage 2: cross-term dedup over a category's survivors. The prompt emits
     only DROP_AS_REDUNDANT rows (KEEP is implicit), so there is no completeness
     guard — a sparse or empty response simply means 'keep everything'."""
@@ -511,6 +516,8 @@ def _call_dedup_critic(
     )
     raw_text = ""
     edits: list[dict] = []
+    facet_frames: list[dict] = []
+    disjointness: list[dict] = []
     try:
         raw_text = generate(
             prompt, model=model, system_instruction=system_instruction,
@@ -519,15 +526,22 @@ def _call_dedup_critic(
         data = json.loads(raw_text)
         if isinstance(data, dict) and isinstance(data.get("edits"), list):
             edits = data["edits"]
+        if isinstance(data, dict) and isinstance(data.get("facet_frames"), list):
+            facet_frames = data["facet_frames"]
+        if isinstance(data, dict):
+            raw_disjoint = data.get("disjointness") or data.get("disjoint_sets") or []
+            if isinstance(raw_disjoint, list):
+                disjointness = raw_disjoint
     except Exception as e:
         tqdm.write(f"  [{category}] dedup critic failed ({e}); keeping all survivors")
         edits = []
     _archive({
         "timestamp": datetime.now(timezone.utc).isoformat(), "call": "dedup",
         "category": category, "model": model, "n_survivors": len(survivors_payload),
-        "n_edits": len(edits), "response_text": raw_text,
+        "n_edits": len(edits), "n_facet_frames": len(facet_frames),
+        "n_disjointness": len(disjointness), "response_text": raw_text,
     }, archive_path, archive_lock)
-    return edits
+    return edits, facet_frames, disjointness
 
 
 def _ask_complete(
@@ -597,7 +611,7 @@ def _apply_taxonomy_edits(
     tax: pd.DataFrame,
     edits_by_id: dict[int, dict],
     valid_categories: set[str],
-) -> tuple[pd.DataFrame, pd.DataFrame, list[dict], list[dict]]:
+) -> tuple[pd.DataFrame, pd.DataFrame, list[dict], list[dict], list[dict]]:
     """Apply 6-verdict taxonomy edits.
 
     Returns:
@@ -606,12 +620,15 @@ def _apply_taxonomy_edits(
         log_rows       — full audit-log rows
         bearer_records — KEEP_AS_BEARER carries (bearer kept under its material
                          genus; the realizable/quality becomes a companion axiom)
+        defined_records — KEEP_AS_DEFINED definitions (term stays, definition
+                  emitted later as owl:equivalentClass)
     """
     log_rows: list[dict] = []
     keep_mask = [True] * len(tax)
     new_parents: dict[int, str] = {}
     instance_records: list[dict] = []
     bearer_records: list[dict] = []
+    defined_records: list[dict] = []
     # A KEEP_AS_BEARER companion filler is only ever a freshly-minted
     # realizable/quality class. Reject any carry whose filler collides with an
     # existing class: minting `<filler> ⊑ role / quality / …` would retype it.
@@ -698,6 +715,48 @@ def _apply_taxonomy_edits(
             log_rows.append({"id": rid, "kind": "taxonomy", "category": cat,
                              "term": row["Term"], "action": "KEEP_AS_BEARER",
                              "reason": f"bearer kept under '{new_parent or row['Parent_Term']}'; {prop} some {filler}: {reason}", **probes})
+        elif action == "KEEP_AS_DEFINED":
+            definition = edit.get("defined_by") if isinstance(edit.get("defined_by"), dict) else {}
+            base = str(definition.get("base_class", "") or definition.get("genus", "") or "").strip()
+            prop = str(definition.get("property", "") or "").strip()
+            filler = str(definition.get("filler", "") or "").strip()
+            def_reason = str(definition.get("rationale", "") or reason).strip()
+            if not (base and prop and filler):
+                log_rows.append({"id": rid, "kind": "taxonomy", "category": cat,
+                                 "term": row["Term"], "action": "KEEP",
+                                 "reason": f"(KEEP_AS_DEFINED rejected — incomplete definition) {reason}", **probes})
+                continue
+            prop_pc = PROPERTY_CONSTRAINTS.get(prop)
+            base_key = base.lower()
+            filler_key = filler.lower()
+            base_known = base in valid_categories or base_key in upper_lower or base_key in existing_term_lower
+            filler_known = filler in valid_categories or filler_key in upper_lower or filler_key in existing_term_lower
+            if prop_pc is None or not base_known or not filler_known:
+                missing = []
+                if prop_pc is None:
+                    missing.append(f"property '{prop}'")
+                if not base_known:
+                    missing.append(f"base '{base}'")
+                if not filler_known:
+                    missing.append(f"filler '{filler}'")
+                log_rows.append({"id": rid, "kind": "taxonomy", "category": cat,
+                                 "term": row["Term"], "action": "KEEP",
+                                 "reason": f"(KEEP_AS_DEFINED rejected — unknown {', '.join(missing)}) {reason}", **probes})
+                continue
+            new_parent = (edit.get("new_parent") or "").strip()
+            if new_parent:
+                new_parents[rid] = new_parent
+            defined_records.append({
+                "bearer": str(row["Term"]).strip(),
+                "genus": base,
+                "property": prop,
+                "filler": filler,
+                "definition_type": "cross_axis",
+                "rationale": def_reason,
+            })
+            log_rows.append({"id": rid, "kind": "taxonomy", "category": cat,
+                             "term": row["Term"], "action": "KEEP_AS_DEFINED",
+                             "reason": f"defined as {base} + {prop} some {filler}: {reason}", **probes})
         elif action in _DROP_TAX_VERDICTS:
             keep_mask[idx] = False
             log_rows.append({"id": rid, "kind": "taxonomy", "category": cat,
@@ -736,7 +795,7 @@ def _apply_taxonomy_edits(
     instances_df = pd.DataFrame(instance_records) if instance_records else pd.DataFrame(
         columns=["Term", "Target_Class", "Mint_Parent", "Original_Category", "Original_Parent", "Reason"]
     )
-    return cleaned, instances_df, log_rows, bearer_records
+    return cleaned, instances_df, log_rows, bearer_records, defined_records
 
 
 def _materialize_bearer_carries(
@@ -792,6 +851,7 @@ def _materialize_bearer_carries(
 
 def _build_defined_classes(
     bearer_records: list[dict],
+    explicit_defined_records: list[dict],
     cleaned_tax: pd.DataFrame,
 ) -> pd.DataFrame:
     """Rows the emitter turns into `owl:equivalentClass` definitions.
@@ -800,9 +860,13 @@ def _build_defined_classes(
     disposition) is defined as `genus ⊓ (<property> some <minted role>)` instead
     of being asserted as a primitive rigid kind — the OntoClean fix for a role
     fused into a class name. Quality carries stay primitive. The genus is the
-    bearer's final taxonomy parent (after any REPARENT)."""
-    cols = ["Bearer", "Genus", "Property", "Property_IRI", "Filler"]
-    if not bearer_records:
+    bearer's final taxonomy parent (after any REPARENT). KEEP_AS_DEFINED records
+    use the same output schema for general cross-axis definitions."""
+    cols = [
+        "Bearer", "Genus", "Property", "Property_IRI", "Filler",
+        "Definition_Type", "Definition_Rationale",
+    ]
+    if not bearer_records and not explicit_defined_records:
         return pd.DataFrame(columns=cols)
     genus_by_term = {
         str(t).strip().lower(): str(p).strip()
@@ -821,8 +885,31 @@ def _build_defined_classes(
             "Bearer": rec["bearer"], "Genus": genus,
             "Property": prop, "Property_IRI": pc.iri if pc else "",
             "Filler": rec["filler"],
+            "Definition_Type": "bearer_realizable",
+            "Definition_Rationale": "KEEP_AS_BEARER realizable carry",
+        })
+    for rec in explicit_defined_records:
+        prop = str(rec.get("property", "")).strip()
+        pc = PROPERTY_CONSTRAINTS.get(prop)
+        if not pc:
+            continue
+        rows.append({
+            "Bearer": rec.get("bearer", ""),
+            "Genus": rec.get("genus", ""),
+            "Property": prop,
+            "Property_IRI": pc.iri,
+            "Filler": rec.get("filler", ""),
+            "Definition_Type": rec.get("definition_type", "cross_axis"),
+            "Definition_Rationale": rec.get("rationale", ""),
         })
     return pd.DataFrame(rows, columns=cols)
+
+
+def _relation_scope(edit: dict | None) -> str:
+    if not isinstance(edit, dict):
+        return "generic"
+    scope = str(edit.get("relation_scope") or edit.get("scope") or "generic").strip().lower()
+    return scope if scope in _RELATION_SCOPES else "generic"
 
 
 def _apply_relation_edits(
@@ -838,6 +925,9 @@ def _apply_relation_edits(
     ts = datetime.now(timezone.utc).isoformat()
     cfg = get_config()
     project_ns = cfg.project_namespace()
+    if "Relation_Scope" not in rel.columns:
+        rel = rel.copy()
+        rel["Relation_Scope"] = "generic"
 
     for idx, row in rel.iterrows():
         rid = int(row["_critic_id"])
@@ -846,19 +936,23 @@ def _apply_relation_edits(
         if edit is None:
             log_rows.append({"id": rid, "kind": "relation", "category": cat,
                              "term": row["Term"], "action": "KEEP",
+                             "relation_scope": "generic",
                              "reason": "(implicit — not mentioned by critic)"})
             continue
         action = (edit.get("action") or "KEEP").upper()
         if action not in _RELATION_VERDICTS:
             log_rows.append({"id": rid, "kind": "relation", "category": cat,
                              "term": row["Term"], "action": "KEEP",
+                             "relation_scope": "generic",
                              "reason": f"(unknown verdict {action!r} — kept)"})
             continue
         reason = edit.get("reason", "")
+        scope = _relation_scope(edit)
         if action == "DROP":
             keep_mask[idx] = False
             log_rows.append({"id": rid, "kind": "relation", "category": cat,
-                             "term": row["Term"], "action": "DROP", "reason": reason})
+                             "term": row["Term"], "action": "DROP",
+                             "relation_scope": scope, "reason": reason})
         elif action == "FIX":
             patch: dict[str, str] = {}
             np_ = (edit.get("new_property") or "").strip()
@@ -882,19 +976,25 @@ def _apply_relation_edits(
             if nf_:
                 patch["Filler"] = nf_
             if patch:
+                patch["Relation_Scope"] = scope
                 updates[rid] = patch
                 bits = ", ".join(f"{k}→{v}" for k, v in patch.items())
                 tag = " [MINT]" if mint else ""
                 log_rows.append({"id": rid, "kind": "relation", "category": cat,
                                  "term": row["Term"], "action": "FIX",
+                                 "relation_scope": scope,
                                  "reason": f"{bits}{tag}: {reason}"})
             else:
+                updates[rid] = {"Relation_Scope": scope}
                 log_rows.append({"id": rid, "kind": "relation", "category": cat,
                                  "term": row["Term"], "action": "KEEP",
+                                 "relation_scope": scope,
                                  "reason": f"(FIX rejected — no new field) {reason}"})
         else:  # KEEP
+            updates[rid] = {"Relation_Scope": scope}
             log_rows.append({"id": rid, "kind": "relation", "category": cat,
-                             "term": row["Term"], "action": "KEEP", "reason": reason})
+                             "term": row["Term"], "action": "KEEP",
+                             "relation_scope": scope, "reason": reason})
 
     cleaned = rel.loc[keep_mask].copy()
     if updates:
@@ -985,6 +1085,8 @@ def run_critic(
     minted_out = os.path.join(output_dir, "validate_minted_properties.csv")
     defined_out = os.path.join(output_dir, "validate_defined_classes.csv")
     class_fates_out = os.path.join(output_dir, "validate_class_fates.csv")
+    facet_frames_out = os.path.join(output_dir, "validate_facet_frames.csv")
+    disjointness_out = os.path.join(output_dir, "validate_disjointness.csv")
 
     archive_dir = os.path.join(output_dir, "validate_responses_archive")
     os.makedirs(archive_dir, exist_ok=True)
@@ -1037,6 +1139,8 @@ def run_critic(
 
     all_tax_edits: dict[int, dict] = {}
     all_rel_edits: dict[int, dict] = {}
+    all_facet_frames: list[dict] = []
+    all_disjointness: list[dict] = []
     edits_lock = threading.Lock()
     max_workers = int(os.environ.get("MAX_CONCURRENT_CRITIC", 5))
 
@@ -1116,6 +1220,8 @@ def run_critic(
                     tax_edits_local[e["id"]] = e
 
         # ── Stage 2: cross-term dedup over survivors ──
+        facet_frames_local: list[dict] = []
+        disjointness_local: list[dict] = []
         def _is_dropped(rid: int) -> bool:
             e = tax_edits_local.get(rid)
             return bool(e) and (e.get("action", "") or "").upper() in _DROP_TAX_VERDICTS
@@ -1124,7 +1230,7 @@ def run_critic(
         if len(survivor_rows) >= 2:
             child_counts = _child_counts_among_survivors(survivor_rows)
             dedup_payload = _build_dedup_payload(survivor_rows, child_counts)
-            dedup_edits = _call_dedup_critic(
+            dedup_edits, facet_frames, disjointness = _call_dedup_critic(
                 cat, dedup_payload, dedup_system, dedup_template,
                 model, temperature, archive_path, archive_lock,
             )
@@ -1133,6 +1239,12 @@ def run_critic(
                     continue
                 if (e.get("action", "") or "").upper() == "DROP_AS_REDUNDANT":
                     tax_edits_local[e["id"]] = e  # override the Stage-1 KEEP
+            for frame in facet_frames:
+                if isinstance(frame, dict):
+                    facet_frames_local.append({"category": cat, **frame})
+            for disjoint in disjointness:
+                if isinstance(disjoint, dict):
+                    disjointness_local.append({"category": cat, **disjoint})
 
         # ── Mutual-drop guard: never lose a concept to a dangling redundancy ──
         _mutual_drop_guard(tax_edits_local, id_to_term, id_to_parent)
@@ -1166,6 +1278,8 @@ def run_critic(
         with edits_lock:
             all_tax_edits.update(tax_edits_local)
             all_rel_edits.update(rel_edits_local)
+            all_facet_frames.extend(facet_frames_local)
+            all_disjointness.extend(disjointness_local)
 
     workers = min(max_workers, len(categories)) if categories else 1
     log.info(f"Running critic on {len(categories)} categories with {workers} workers")
@@ -1181,7 +1295,7 @@ def run_critic(
                     tqdm.write(f"  [error] Category '{cat}': {e}")
                 pbar.update(1)
 
-    cleaned_tax, instances_df, tax_log, bearer_records = _apply_taxonomy_edits(
+    cleaned_tax, instances_df, tax_log, bearer_records, explicit_defined_records = _apply_taxonomy_edits(
         tax, all_tax_edits, valid_categories
     )
 
@@ -1200,7 +1314,7 @@ def run_critic(
     )
 
     # Realizable KEEP_AS_BEARER carries → defined-class handoff for the emitter.
-    defined_df = _build_defined_classes(bearer_records, cleaned_tax)
+    defined_df = _build_defined_classes(bearer_records, explicit_defined_records, cleaned_tax)
     if not defined_df.empty:
         write_csv(defined_df, defined_out)
         log.success(f"Defined bearer classes: {len(defined_df)} rows → {defined_out}")
@@ -1259,6 +1373,13 @@ def run_critic(
             merged = merged.drop_duplicates(subset=["IRI"], keep="last")
         write_csv(merged, minted_out)
         log.success(f"Minted properties: +{len(new_minted_df)} (total {len(merged)}) → {minted_out}")
+
+    if all_facet_frames:
+        write_csv(pd.DataFrame(all_facet_frames), facet_frames_out)
+        log.success(f"Facet frames: {len(all_facet_frames)} rows → {facet_frames_out}")
+    if all_disjointness:
+        write_csv(pd.DataFrame(all_disjointness), disjointness_out)
+        log.success(f"Disjointness diagnostics: {len(all_disjointness)} rows → {disjointness_out}")
 
     write_csv(pd.DataFrame(tax_log + rel_log), edits_out)
     fate_cols = [
