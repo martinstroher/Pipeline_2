@@ -115,6 +115,11 @@ def _dispatch_subcommand(args, parser) -> bool:
     return True if one fired. Returns False so the caller runs the standard
     pipeline.
     """
+    if args.validate_relations and not args.validate:
+        parser.error("--validate-relations requires --validate")
+    if args.validate_emit and not args.validate:
+        parser.error("--validate-emit requires --validate")
+
     if args.ablation:
         from src.evaluation.ablation_study import run_ablation
         from src.evaluation.layer1_analysis import run_layer1_analysis
@@ -145,6 +150,28 @@ def _dispatch_subcommand(args, parser) -> bool:
     if args.taxonomy:
         from src.modules.construct.taxonomy_builder import run_taxonomy_builder
         run_taxonomy_builder(args.taxonomy)
+        return True
+
+    if args.validate:
+        from src.modules.validate.critic import run_critic
+        from src.modules.emit.owl_exporter import run_owl_export
+        from src.modules.emit.verifier import run_ontology_verification
+
+        if args.validate_relations and not os.path.exists(args.validate_relations):
+            parser.error(f"--validate-relations file not found: {args.validate_relations}")
+        output_dir = os.path.dirname(args.validate) or "."
+        final_tax, final_rel = run_critic(
+            args.validate,
+            output_dir,
+            relations_csv=args.validate_relations,
+        )
+        if args.validate_emit:
+            owl_path = run_owl_export(final_tax, relations_csv=final_rel)
+            run_ontology_verification(
+                owl_path,
+                skip_oops=args.skip_oops,
+                skip_reasoner=args.skip_reasoner,
+            )
         return True
 
     if args.owl:
@@ -212,6 +239,25 @@ def _build_parser() -> argparse.ArgumentParser:
         type=str,
         default=None,
         help="Build taxonomy from a categorized CSV (e.g., output/ablation/cat_A.csv)",
+    )
+    parser.add_argument(
+        "--validate",
+        type=str,
+        default=None,
+        metavar="TAXONOMY_CSV",
+        help="Run the validate-step critic from an existing taxonomy CSV",
+    )
+    parser.add_argument(
+        "--validate-relations",
+        type=str,
+        default=None,
+        metavar="RELATIONS_CSV",
+        help="Optional relations CSV to validate alongside --validate",
+    )
+    parser.add_argument(
+        "--validate-emit",
+        action="store_true",
+        help="After --validate, also export OWL and run verification",
     )
     parser.add_argument(
         "--owl",

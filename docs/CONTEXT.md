@@ -309,7 +309,7 @@ The active domain is derived from the directory containing the active `ontology_
 ## Directory Structure
 
 ```
-pipeline.py               # Orchestrator + CLI (thin: _build_parser, _dispatch_subcommand, _run_refinement_pipeline, _clean_outputs, _check_stop helpers)
+pipeline.py               # Orchestrator + CLI (thin: _build_parser, _dispatch_subcommand, _run_refinement_pipeline, _clean_outputs, _check_stop helpers; includes --validate/--validate-relations/--validate-emit for rerunning the validate→emit tail from existing Step 6/6b outputs)
 domains/                  # Per-domain config + assets. Each subfolder is a complete retargetable bundle.
   README.md               # Author guide: layout, activation, per-prompt runtime-placeholder contract
   presalt/

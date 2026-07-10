@@ -77,12 +77,24 @@ The full pipeline runs Steps 0-7 and writes a Turtle OWL file (`output/6d_taxono
 | *(none)* | Run the full standard pipeline (Steps 0-7) |
 | `--skip-pdf` | Skip PDF→Markdown (Step 0); use existing `.md` files |
 | `--skip-extraction` | Skip extraction/aggregation/filter (Steps 1-3); use existing filtered terms |
+| `--validate TAXONOMY_CSV` | Run only the validate-step critic from an existing taxonomy CSV |
+| `--validate-relations RELATIONS_CSV` | Relations CSV to validate with `--validate` |
+| `--validate-emit` | After `--validate`, also export OWL and run verification |
 | `--ablation` | Run 4-condition ablation study instead of the standard pipeline |
 | `--conditions A,B,C,D` | Select ablation conditions to run (default: all four) |
 | `--analysis` | Run Layer 1 automated analysis on ablation output |
 | `--expert-eval` | Generate expert evaluation spreadsheet (5-sheet Excel) from ablation output |
 | `--layer2-analysis W1.xlsx W2.xlsx` | Run Layer 2 statistical analysis on completed expert workbooks |
 | `--layer2-key KEY.csv` | Blinding key CSV (required with `--layer2-analysis`) |
+
+To rerun only the production validate/export/verify tail from existing Step 6/6b outputs:
+
+```bash
+python pipeline.py \
+  --validate output/refined/construct_taxonomy.csv \
+  --validate-relations output/refined/construct_relations.csv \
+  --validate-emit
+```
 | `--taxonomy CSV` | Build taxonomy from a specific categorized CSV (ablation post-processing) |
 | `--owl CSV` | Export OWL from a specific taxonomy CSV (ablation post-processing) |
 | `--verify TTL` | Verify an OWL .ttl file (syntax + structure + optional OOPS! pitfalls) |
