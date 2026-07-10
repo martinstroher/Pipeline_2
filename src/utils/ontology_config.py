@@ -123,6 +123,20 @@ class ProjectMeta:
 
 
 @dataclass(frozen=True)
+class LateralCoherenceConfig:
+    """Domain-agnostic tuning for the validate-step lateral-coherence audit."""
+    enabled: bool = True
+    hints_enabled: bool = True
+    allow_defined_classes: bool = True
+    conservative_drop: bool = True
+    min_confidence_apply: float = 0.70
+    needs_review_below: float = 0.85
+    emit_only_generic_relations: bool = True
+    emit_disjointness: bool = False
+    require_reasoner_for_disjointness: bool = True
+
+
+@dataclass(frozen=True)
 class OntologyConfig:
     """Top-level configuration object, loaded once per process."""
     project: ProjectMeta
@@ -134,6 +148,7 @@ class OntologyConfig:
     relations: dict[str, PropertyConstraint]
     property_specializations_: tuple[PropertySpecialization, ...]
     non_distinguishing_metatypes_: frozenset[str]
+    lateral_coherence_: LateralCoherenceConfig
     _source_path: Path = field(repr=False)
 
     # ─── Convenience accessors ────────────────────────────────────────
@@ -299,6 +314,10 @@ class OntologyConfig:
     def non_distinguishing_metatypes(self) -> frozenset[str]:
         """Metatypes too generic to count as classification evidence in Step 6d."""
         return self.non_distinguishing_metatypes_
+
+    def lateral_coherence(self) -> LateralCoherenceConfig:
+        """Domain-agnostic parsimony/facet-coherence settings for validate."""
+        return self.lateral_coherence_
 
     def disjoint_metatype_pairs(self) -> tuple[frozenset[str], ...]:
         """Upper-ontology disjoint pairs expressed as metatype-label frozensets.
@@ -555,6 +574,36 @@ def _parse_property_specializations(
     return tuple(out)
 
 
+def _env_bool(name: str, default: bool) -> bool:
+    raw = os.environ.get(name)
+    if raw is None:
+        return default
+    return raw.strip().lower() in {"1", "true", "yes", "on"}
+
+
+def _parse_lateral_coherence(raw: dict | None) -> LateralCoherenceConfig:
+    raw = raw or {}
+    hints = raw.get("hints", {}) or {}
+    class_fates = raw.get("class_fates", {}) or {}
+    relation_scope = raw.get("relation_scope", {}) or {}
+    disjointness = raw.get("disjointness", {}) or {}
+
+    hints_enabled = bool(hints.get("enabled", True))
+    hints_enabled = _env_bool("LATERAL_HINTS_ENABLED", hints_enabled)
+
+    return LateralCoherenceConfig(
+        enabled=bool(raw.get("enabled", True)),
+        hints_enabled=hints_enabled,
+        allow_defined_classes=bool(class_fates.get("allow_defined_classes", True)),
+        conservative_drop=bool(class_fates.get("conservative_drop", True)),
+        min_confidence_apply=float(class_fates.get("min_confidence_apply", 0.70)),
+        needs_review_below=float(class_fates.get("needs_review_below", 0.85)),
+        emit_only_generic_relations=bool(relation_scope.get("emit_only_generic_relations", True)),
+        emit_disjointness=bool(disjointness.get("enabled", False)),
+        require_reasoner_for_disjointness=bool(disjointness.get("require_reasoner_validation", True)),
+    )
+
+
 def _build_config(raw: dict, source_path: Path) -> OntologyConfig:
     repo_root = source_path.parent
 
@@ -638,6 +687,7 @@ def _build_config(raw: dict, source_path: Path) -> OntologyConfig:
         relations,
     )
     non_distinguishing = frozenset(raw.get("non_distinguishing_metatypes", []) or [])
+    lateral_coherence = _parse_lateral_coherence(raw.get("lateral_coherence"))
 
     cfg = OntologyConfig(
         project=project,
@@ -649,6 +699,7 @@ def _build_config(raw: dict, source_path: Path) -> OntologyConfig:
         relations=relations,
         property_specializations_=specializations,
         non_distinguishing_metatypes_=non_distinguishing,
+        lateral_coherence_=lateral_coherence,
         _source_path=source_path,
     )
 

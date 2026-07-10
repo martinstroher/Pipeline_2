@@ -158,6 +158,56 @@ def _build_taxonomy_payload(rows: pd.DataFrame) -> list[dict]:
     return out
 
 
+def _label_tokens(label: str) -> list[str]:
+    return [tok for tok in str(label).strip().lower().replace("-", " ").split() if tok]
+
+
+def _build_weak_taxonomy_observations(
+    rows: pd.DataFrame,
+    all_terms: set[str],
+) -> list[dict]:
+    """Noisy, non-actionable cues for the taxonomy critic.
+
+    These observations deliberately avoid suggested actions/verdicts. They only
+    ask the critic to inspect possible lateral-coherence issues more carefully;
+    final decisions must be justified from NLDs, parent/sibling context, and
+    relation evidence.
+    """
+    out: list[dict] = []
+    all_lower = {term.strip().lower() for term in all_terms if str(term).strip()}
+    for _, r in rows.iterrows():
+        term = str(r["Term"]).strip()
+        parent = str(r.get("Parent_Term", "")).strip()
+        tokens = _label_tokens(term)
+        term_lower = term.lower()
+
+        if len(tokens) >= 3 or "-" in term:
+            out.append({
+                "id": int(r["_critic_id"]),
+                "term": term,
+                "observation_type": "stacked_or_compound_label",
+                "observed_pattern": "multi-token or hyphenated label",
+                "question": "Check whether this is a reusable kind or an over-specific property/facet combination.",
+            })
+
+        candidates = []
+        for other in sorted(all_lower, key=len, reverse=True):
+            if other == term_lower:
+                continue
+            if term_lower.endswith(f" {other}") and parent.lower() != other:
+                candidates.append(other)
+                break
+        if candidates:
+            out.append({
+                "id": int(r["_critic_id"]),
+                "term": term,
+                "observation_type": "label_contains_existing_class",
+                "observed_pattern": f"label ends with existing class label '{candidates[0]}'",
+                "question": "Check whether the NLD entails this existing class as a more specific parent.",
+            })
+    return out
+
+
 def _build_parent_context(
     chunk: pd.DataFrame,
     cat_term_nld: dict[str, str],
@@ -334,6 +384,13 @@ def _probe_cols(edit: dict | None) -> dict:
         "identity": str(edit.get("identity", "") or ""),
         "dependence": str(edit.get("dependence", "") or ""),
         "carried_by": json.dumps(cb, ensure_ascii=False) if isinstance(cb, dict) else "",
+        "class_fate": str(edit.get("class_fate", "") or ""),
+        "centrality": str(edit.get("centrality", "") or ""),
+        "cross_axis": edit.get("cross_axis", ""),
+        "over_specificity_reason": str(edit.get("over_specificity_reason", "") or "")[:300],
+        "placement_rationale": str(edit.get("placement_rationale", "") or "")[:300],
+        "needs_review": edit.get("needs_review", ""),
+        "confidence": edit.get("confidence", ""),
     }
 
 
@@ -350,6 +407,7 @@ def _call_taxonomy_critic(
     terms_payload: list[dict],
     relations_context: list[dict],
     parent_context: list[dict],
+    weak_observations: list[dict],
     target_classes: list[str],
     system_instruction: str,
     prompt_template: str,
@@ -364,6 +422,7 @@ def _call_taxonomy_critic(
         terms_json=json.dumps(terms_payload, indent=2),
         relations_context_json=json.dumps(relations_context, indent=2) if relations_context else "[]",
         parent_context_json=json.dumps(parent_context, indent=2) if parent_context else "[]",
+        weak_observations_json=json.dumps(weak_observations, indent=2) if weak_observations else "[]",
         target_classes_json=json.dumps(target_classes, indent=2),
     )
     raw_text = ""
@@ -383,7 +442,8 @@ def _call_taxonomy_critic(
     _archive({
         "timestamp": datetime.now(timezone.utc).isoformat(), "call": "taxonomy",
         "category": category, "model": model, "n_terms": len(terms_payload),
-        "n_edits": len(edits), "response_text": raw_text,
+        "n_edits": len(edits), "weak_observations": weak_observations,
+        "response_text": raw_text,
     }, archive_path, archive_lock)
     return edits
 
@@ -924,6 +984,7 @@ def run_critic(
     instances_out = os.path.join(output_dir, "validate_instances.csv")
     minted_out = os.path.join(output_dir, "validate_minted_properties.csv")
     defined_out = os.path.join(output_dir, "validate_defined_classes.csv")
+    class_fates_out = os.path.join(output_dir, "validate_class_fates.csv")
 
     archive_dir = os.path.join(output_dir, "validate_responses_archive")
     os.makedirs(archive_dir, exist_ok=True)
@@ -966,6 +1027,13 @@ def run_critic(
     target_classes = _build_target_classes()
     previously_minted = _build_previously_minted(minted_out)
     parent_lookup = _term_to_parent(tax)
+    lateral_cfg = get_config().lateral_coherence()
+    weak_observations_enabled = lateral_cfg.enabled and lateral_cfg.hints_enabled
+    all_term_labels = {str(t).strip() for t in tax["Term"].astype(str) if str(t).strip()}
+    if weak_observations_enabled:
+        log.info("Lateral-coherence weak observations: enabled (LATERAL_HINTS_ENABLED override supported)")
+    else:
+        log.info("Lateral-coherence weak observations: disabled")
 
     all_tax_edits: dict[int, dict] = {}
     all_rel_edits: dict[int, dict] = {}
@@ -1025,10 +1093,17 @@ def run_critic(
             rel_context = _build_relation_payload(chunk_own_rel, chunk_anc_rel)
             parent_context = _build_parent_context(chunk, cat_term_nld, valid_categories)
             tax_payload = _build_taxonomy_payload(chunk)
+            weak_observations = _build_weak_taxonomy_observations(chunk, all_term_labels) \
+                if weak_observations_enabled else []
 
-            def _invoke_tax(payload: list[dict], _rc=rel_context, _pc=parent_context) -> list[dict]:
+            def _invoke_tax(
+                payload: list[dict],
+                _rc=rel_context,
+                _pc=parent_context,
+                _wo=weak_observations,
+            ) -> list[dict]:
                 return _call_taxonomy_critic(
-                    cat, payload, _rc, _pc, target_classes,
+                    cat, payload, _rc, _pc, _wo, target_classes,
                     tax_system, tax_template, model, temperature,
                     archive_path, archive_lock,
                 )
@@ -1186,6 +1261,16 @@ def run_critic(
         log.success(f"Minted properties: +{len(new_minted_df)} (total {len(merged)}) → {minted_out}")
 
     write_csv(pd.DataFrame(tax_log + rel_log), edits_out)
+    fate_cols = [
+        "id", "term", "category", "action", "class_fate", "centrality",
+        "cross_axis", "placement_rationale", "over_specificity_reason",
+        "needs_review", "confidence", "reason",
+    ]
+    fate_df = pd.DataFrame(tax_log)
+    if not fate_df.empty:
+        fate_df = fate_df.reindex(columns=fate_cols)
+        write_csv(fate_df, class_fates_out)
+        log.success(f"Class fates: {len(fate_df)} rows → {class_fates_out}")
     by_action: dict[str, int] = {}
     for entry in tax_log + rel_log:
         by_action[entry["action"]] = by_action.get(entry["action"], 0) + 1

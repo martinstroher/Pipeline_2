@@ -80,6 +80,8 @@ PDFs  →  [Step 0]  →  Markdown files
 | **7 — Export** | The taxonomy is serialised as an OWL/Turtle file with `rdfs:subClassOf` links, `rdfs:label`, `rdfs:comment` (the NLD), and `owl:imports` for the BFO upper ontology. Critic-minted properties and CONVERT_TO_INSTANCE individuals are emitted from the validate-step outputs, and BFO Quality/Role descendants receive companion `inheres_in some IndependentContinuant` / `realized_in some Process` restrictions. Role-fused bearers from the critic (e.g. "Carbonate Reservoir") are emitted as **defined classes** — `bearer ≡ genus ⊓ (has_role some MintedRole)` via `owl:equivalentClass` — so a term that names a kind playing a role is no longer asserted as a primitive rigid kind (the OntoClean mixin fix). Case-insensitive IRI matching, self-reference guards, and upper→upper triple suppression prevent duplicate/invalid OWL triples. Disjointness conflict detection automatically resolves presalt: classes that inherit from both sides of BFO disjoint pairs, using the term's Category to determine which parent to keep. |
 | **7b — Verify** | The exported ontology is verified post-hoc: RDFLib syntax parsing, structural analysis (orphan classes, missing labels/comments, self-references, upper-ontology anchoring), optionally OOPS! pitfall scanning via REST API, and optionally HermiT reasoner consistency checking (requires Java and owlready2). Results are saved as a JSON report. |
 
+The validate step also writes `validate_class_fates.csv`, a diagnostic lateral-coherence artifact recording class-worthiness metadata such as class fate, centrality, cross-axis flags, placement rationale, confidence, and non-blocking review flags.
+
 ---
 
 ## Key design choices — why these matter

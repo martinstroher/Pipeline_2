@@ -1050,3 +1050,24 @@ property_specializations:
 non_distinguishing_metatypes:
   - Continuant
   - Occurrent
+
+# -------------------------------------------------------------------------
+# Lateral coherence — domain-agnostic validate-step tuning
+# -------------------------------------------------------------------------
+# These settings control parsimony/facet-coherence auditing. They are expressed
+# as generic ontology-policy knobs, never as Pre-Salt vocabulary rules.
+lateral_coherence:
+  enabled: true
+  hints:
+    enabled: true  # env override: LATERAL_HINTS_ENABLED=false
+  class_fates:
+    allow_defined_classes: true
+    conservative_drop: true
+    min_confidence_apply: 0.70
+    needs_review_below: 0.85
+  relation_scope:
+    emit_only_generic_relations: true
+  disjointness:
+    enabled: false  # enable after HermiT/Java is available and facet frames are stable
+    require_same_facet_frame: true
+    require_reasoner_validation: true

@@ -30,10 +30,11 @@ cp .env.example .env
 | `JAVA_EXE` | Path to Java executable for HermiT reasoner (default: `java` on PATH) |
 | `OOPS_URL` | OOPS! REST API endpoint for pitfall scanning (e.g. `http://localhost:8080/OOPS/rest`) |
 | `EXTRACTION_WORKERS` | Number of parallel workers for Step 1 extraction (default: `5`) |
-| `MINIMUM_FREQUENCY_FILTER` | Minimum document frequency for Step 3 filtering — number of distinct papers a term must appear in (default: `7`; ~8.5% of an 82-paper corpus) |
+| `MINIMUM_FREQUENCY_FILTER` | Minimum document frequency for Step 3 filtering — number of distinct papers a term must appear in (default: `5`; ~6% of an 82-paper corpus after the gpt-5.4 extraction migration) |
 | `ONTOLOGY_CONFIG_PATH` | Path to the ontology YAML (default: `domains/presalt/ontology_config.yaml`) — single source of truth for upper ontologies, relations, and the critic's class budget. Swap to retarget the pipeline to another domain. |
 | `STUDY_CONFIG_PATH` | Path to the expert-evaluation workbook config (default: `studies/expert_eval.yaml`) — instructions sheet rendered as Sheet 1 of the expert workbook |
 | `RELATION_PROVENANCE_TIERS` | Comma-separated subset of `{owl_axiom, bfo_shape_axiom, ro_release, critic_minted}` controlling which property constraints are active (default: all four) |
+| `LATERAL_HINTS_ENABLED` | Overrides `lateral_coherence.hints.enabled` in `ontology_config.yaml` (`true`/`false`). Weak observations are auxiliary context for the taxonomy critic only; they never directly edit the ontology. |
 | `MAX_CONCURRENT_CRITIC` | Number of categories the validate-step critic processes in parallel (default: `5`) |
 | `CRITIC_TAXONOMY_CHUNK_SIZE` | Terms per chunk in the validate-step Stage-1 taxonomy critic (default: `5`); smaller chunks keep each LLM call focused at the cost of more calls |
 
@@ -61,7 +62,7 @@ The full pipeline runs Steps 0-7 and writes a Turtle OWL file (`output/6d_taxono
 | 6b | `relation_extractor.py` | Step 5 CSV | `output/6b_relations.csv` |
 | 6 | `taxonomy_builder.py` | Step 5b CSV | `output/refined/construct_taxonomy.csv` |
 | 6b | `relation_extractor.py` | Step 5b CSV | `output/refined/construct_relations.csv` |
-| validate | `validate/critic.py` | Steps 6 + 6b CSVs | `output/refined/validate_taxonomy.csv` + `validate_relations.csv` + `validate_edits.csv` |
+| validate | `validate/critic.py` | Steps 6 + 6b CSVs | `output/refined/validate_taxonomy.csv` + `validate_relations.csv` + `validate_edits.csv` + `validate_class_fates.csv` |
 | 7 | `owl_exporter.py` | validate CSVs | `output/refined/emit_ontology.ttl` |
 | 7b | `emit/verifier.py` | OWL file | `output/refined/emit_verification.json` |
 
