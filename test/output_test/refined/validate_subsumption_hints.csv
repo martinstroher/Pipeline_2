@@ -1,0 +1,2 @@
+﻿category,id,term,action,old_parent,new_parent,confidence,needs_review,reason,applied
+Body of Rock,6,petroleum reservoir rock,REPARENT,Body of Rock,Rock,0.96,False,NLD explicitly defines petroleum reservoir rock as a subsurface rock unit; Rock is a more specific existing superclass than Body of Rock.,True

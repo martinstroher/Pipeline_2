@@ -1,3 +1,6 @@
-﻿Bearer,Genus,Property,Property_IRI,Filler
-regional seal,Stratigraphic Unit,has_role,http://purl.obolibrary.org/obo/RO_0000087,RegionalSealRole
-carbonate reservoir,Sedimentary Rock,has_role,http://purl.obolibrary.org/obo/RO_0000087,CarbonateReservoirRole
+﻿Bearer,Genus,Property,Property_IRI,Filler,Definition_Type,Definition_Rationale
+petroleum trap,Geological Structure,has_disposition,http://purl.obolibrary.org/obo/RO_0000091,HydrocarbonTrappingDisposition,bearer_realizable,KEEP_AS_BEARER realizable carry
+petroleum reservoir rock,Rock,has_disposition,http://purl.obolibrary.org/obo/RO_0000091,HydrocarbonStorageTransmissionDisposition,bearer_realizable,KEEP_AS_BEARER realizable carry
+reservoir facies,Sedimentary Facies,has_disposition,http://purl.obolibrary.org/obo/RO_0000091,HydrocarbonStorageAndTransmissionDisposition,bearer_realizable,KEEP_AS_BEARER realizable carry
+regional seal,Stratigraphic Unit,has_role,http://purl.obolibrary.org/obo/RO_0000087,RegionalSealRole,bearer_realizable,KEEP_AS_BEARER realizable carry
+carbonate reservoir,petroleum reservoir rock,constituted_by,https://www.inf.ufrgs.br/bdi/ontologies/GEOCORE_0000017,carbonate mineral,cross_axis,captures the central compositional restriction that distinguishes carbonate reservoirs from other reservoir rocks

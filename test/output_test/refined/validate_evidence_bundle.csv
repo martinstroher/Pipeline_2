@@ -1,0 +1,22 @@
+﻿Term,Frequency,Document_Coverage,CQ_Count,Matched_CQs,CQ_Reasoning,Is_Intermediate
+santos basin,1,1.0,1,CQ1,"Santos Basin is a major geological object of the Pre-Salt domain, but it is not itself a material, structure, boundary, stratigraphic unit, petrophysical property, or age.",False
+diagenetic process,1,1.0,1,CQ4,"It is explicitly a post-depositional geological process that modifies rocks after deposition, which directly matches the question about post-depositional processes and structures.",False
+dolomitization,1,1.0,1,CQ4,"Dolomitization is defined as a diagenetic, post-depositional alteration process in Pre-Salt carbonates, so it is relevant to post-depositional processes rather than to materials or petrophysical properties themselves.",False
+structural trap,1,1.0,1,CQ3,"A structural trap is a geological structure produced by deformation and occurring in Pre-Salt reservoirs, so it fits the CQ about geological structures.",False
+petroleum trap,1,1.0,1,CQ3,"It is a subsurface geological configuration controlling hydrocarbon accumulation, making it relevant as a geological structure occurring in the Pre-Salt domain.",False
+fault,1,1.0,1,CQ3,Fault is explicitly a geological structure that occurs in Pre-Salt reservoirs and therefore answers the question about geological structures.,False
+petroleum reservoir rock,1,1.0,1,CQ1,"It is itself a geological object in the Pre-Salt domain, whereas its mention of porosity and permeability is descriptive rather than making it a petrophysical characteristic.",False
+carbonate reservoir,1,1.0,1,CQ1,"A carbonate reservoir is a specific type of Pre-Salt geological object/body of rock, not a stratigraphic unit, boundary, or petrophysical property.",False
+reservoir facies,1,1.0,2,CQ9|CQ1,"Reservoir facies is a geological entity in the Pre-Salt domain and its definition explicitly ties it to porosity, permeability, and reservoir quality, which are petrophysical characteristics.",False
+regional seal,1,1.0,1,CQ8,"A regional seal is a laterally extensive stratigraphic unit associated with Pre-Salt reservoirs, so it is relevant to the deposits and stratigraphic units question.",False
+sedimentary rock,1,1.0,1,CQ2,"Sedimentary rock is a rock material type that composes key Pre-Salt elements such as carbonate reservoirs and evaporitic seals, making it relevant to the earth materials question.",False
+microbialite,1,1.0,1,CQ1,"Microbialite is a sedimentary rock and thus a geological object occurring in Pre-Salt reservoirs, even though its definition also notes its reservoir quality controls.",False
+chemical sedimentary rock,1,1.0,1,CQ2,Chemical sedimentary rock is an earth material category relevant to identifying what materials make up Pre-Salt geological objects.,False
+evaporite,1,1.0,1,CQ2,"Evaporite is a sedimentary rock material that constitutes key Pre-Salt elements, specifically the sealing interval above the reservoirs, so it answers the question about earth materials.",False
+Physical Property Of Rock,0,0.0,0,,,True
+permeability,1,1.0,1,CQ9,Permeability is explicitly a petrophysical rock property and a primary control on reservoir quality in Pre-Salt reservoirs.,False
+porosity,1,1.0,1,CQ9,Porosity is explicitly a petrophysical property of Pre-Salt reservoirs and directly answers the question about reservoir characteristics.,False
+reservoir quality,1,1.0,1,CQ9,"Reservoir quality is explicitly a petrophysical characteristic describing fluid storage and flow capacity in Pre-Salt reservoirs, which directly matches CQ9.",False
+dolomite,1,1.0,1,CQ2,"Dolomite is an earth material/mineral that constitutes Pre-Salt carbonate reservoir rocks, so it directly answers what materials make up those geological objects.",False
+carbonate mineral,1,1.0,1,CQ2,"It is an earth material that constitutes Pre-Salt carbonate reservoir rocks, so it directly answers what materials make up geological objects.",False
+calcite,1,1.0,1,CQ2,"Calcite is an earth material and a major constituent of Pre-Salt carbonate reservoir rocks, so it is relevant to the materials composing geological objects.",False

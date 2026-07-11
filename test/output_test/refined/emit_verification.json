@@ -5,21 +5,22 @@
       "layer": "syntax",
       "status": "PASS",
       "errors": [],
-      "triple_count": 305
+      "triple_count": 298
     },
     "structure": {
       "layer": "structure",
       "status": "PASS",
-      "classes": 47,
+      "classes": 54,
       "individuals": 1,
-      "triples": 305,
-      "upper_iris_referenced": 25,
+      "triples": 298,
+      "upper_iris_referenced": 26,
       "upper_iris_list": [
         "http://purl.obolibrary.org/obo/BFO_0000001",
         "http://purl.obolibrary.org/obo/BFO_0000002",
         "http://purl.obolibrary.org/obo/BFO_0000003",
         "http://purl.obolibrary.org/obo/BFO_0000004",
         "http://purl.obolibrary.org/obo/BFO_0000015",
+        "http://purl.obolibrary.org/obo/BFO_0000016",
         "http://purl.obolibrary.org/obo/BFO_0000017",
         "http://purl.obolibrary.org/obo/BFO_0000019",
         "http://purl.obolibrary.org/obo/BFO_0000020",
@@ -46,23 +47,12 @@
     },
     "oops_pitfalls": {
       "layer": "oops_pitfalls",
-      "status": "SKIP",
-      "pitfalls": [],
-      "pitfall_summary": {},
-      "errors": [
-        "OOPS! HTTP error: 500 Server Error:  for url: https://oops.linkeddata.es/rest"
-      ],
-      "oops_url": "https://oops.linkeddata.es/rest"
+      "status": "SKIP"
     },
     "reasoner": {
       "layer": "reasoner",
-      "status": "FAIL",
-      "consistent": null,
-      "unsatisfiable_classes": [],
-      "errors": [
-        "Reasoner error: Java error message is:\nThe operation couldn’t be completed. Unable to locate a Java Runtime.\nPlease visit http://www.java.com for information on installing Java.\n\n"
-      ]
+      "status": "SKIP"
     }
   },
-  "overall_status": "FAIL"
+  "overall_status": "PASS"
 }

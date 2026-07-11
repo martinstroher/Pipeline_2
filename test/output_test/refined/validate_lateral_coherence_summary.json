@@ -1,0 +1,34 @@
+{
+  "taxonomy_input_rows": 21,
+  "taxonomy_output_rows": 24,
+  "relation_input_rows": 14,
+  "relation_output_rows": 16,
+  "action_counts": {
+    "CONVERT_TO_INSTANCE": 1,
+    "KEEP": 26,
+    "KEEP_AS_BEARER": 4,
+    "KEEP_AS_DEFINED": 1,
+    "REPARENT": 1,
+    "DROP": 2
+  },
+  "class_fate_counts": {
+    "unspecified": 2,
+    "primitive": 14,
+    "defined": 5
+  },
+  "needs_review_count": 2,
+  "defined_class_count": 5,
+  "demotion_count": 0,
+  "relation_scope_counts": {
+    "generic": 11,
+    "individual_fact": 2,
+    "corpus_context": 3
+  },
+  "facet_frame_count": 5,
+  "subsumption_edit_count": 1,
+  "disjointness_candidate_count": 1,
+  "frame_completion_counts": {
+    "INSUFFICIENT_EVIDENCE": 5
+  },
+  "weak_observations_enabled": true
+}
