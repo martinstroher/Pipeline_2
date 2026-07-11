@@ -136,9 +136,6 @@ class LateralCoherenceConfig:
     relation_scope_min_confidence_emit: float = 0.70
     reconciliation_enabled: bool = True
     reconciliation_top_k: int = 3
-    reconciliation_nld_similarity: float = 0.82
-    reconciliation_label_similarity: float = 0.86
-    reconciliation_same_head_nld_similarity: float = 0.75
     allow_defined_classes: bool = True
     conservative_drop: bool = True
     min_confidence_apply: float = 0.70
@@ -627,9 +624,6 @@ def _parse_lateral_coherence(raw: dict | None) -> LateralCoherenceConfig:
         relation_scope_min_confidence_emit=float(relation_scope.get("min_confidence_emit", 0.70)),
         reconciliation_enabled=bool(reconciliation.get("enabled", True)),
         reconciliation_top_k=int(reconciliation.get("top_k", 3)),
-        reconciliation_nld_similarity=float(reconciliation.get("nld_similarity_threshold", 0.82)),
-        reconciliation_label_similarity=float(reconciliation.get("label_similarity_threshold", 0.86)),
-        reconciliation_same_head_nld_similarity=float(reconciliation.get("same_head_nld_similarity_threshold", 0.75)),
         allow_defined_classes=bool(class_fates.get("allow_defined_classes", True)),
         conservative_drop=bool(class_fates.get("conservative_drop", True)),
         min_confidence_apply=float(class_fates.get("min_confidence_apply", 0.70)),

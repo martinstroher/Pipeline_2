@@ -35,7 +35,7 @@ class LateralCoherenceHelperTests(unittest.TestCase):
             {"_critic_id": 2, "Term": "fault", "Parent_Term": "structure", "Category": "Structure", "NLD": "displaced fracture"},
         ])
         with patch("src.modules.validate.critic.get_embedding_model", return_value=FakeEmbeddings()):
-            candidates = _build_cross_category_candidates(taxonomy, {}, 2, 0.8, 0.85)
+            candidates = _build_cross_category_candidates(taxonomy, {}, 2)
 
         pairs = {
             frozenset((candidate["term_a"]["id"], candidate["term_b"]["id"]))
@@ -43,7 +43,7 @@ class LateralCoherenceHelperTests(unittest.TestCase):
         }
         self.assertIn(frozenset((0, 1)), pairs)
 
-    def test_same_head_requires_moderate_nld_similarity(self):
+    def test_top_k_includes_low_similarity_neighbor_for_llm_review(self):
         class FakeEmbeddings:
             def embed_documents(self, texts):
                 return [[1.0, 0.0], [0.6, 0.8]]
@@ -53,11 +53,29 @@ class LateralCoherenceHelperTests(unittest.TestCase):
             {"_critic_id": 1, "Term": "petroleum system", "Parent_Term": "system", "Category": "Petroleum", "NLD": "a hydrocarbon generation and trapping system"},
         ])
         with patch("src.modules.validate.critic.get_embedding_model", return_value=FakeEmbeddings()):
-            candidates = _build_cross_category_candidates(
-                taxonomy, {}, 3, 0.82, 0.86, 0.75,
-            )
+            candidates = _build_cross_category_candidates(taxonomy, {}, 3)
 
-        self.assertEqual(candidates, [])
+        self.assertEqual(len(candidates), 1)
+        self.assertEqual(candidates[0]["weak_similarity_signals"]["nld_cosine"], 0.6)
+
+    def test_top_k_is_selected_before_reverse_pair_deduplication(self):
+        class FakeEmbeddings:
+            def embed_documents(self, texts):
+                return [[1.0, 0.0], [0.9848, 0.1736], [0.866, 0.5]]
+
+        taxonomy = pd.DataFrame([
+            {"_critic_id": 0, "Term": "alpha", "Category": "A", "NLD": "alpha kind"},
+            {"_critic_id": 1, "Term": "beta", "Category": "B", "NLD": "beta kind"},
+            {"_critic_id": 2, "Term": "gamma", "Category": "C", "NLD": "gamma kind"},
+        ])
+        with patch("src.modules.validate.critic.get_embedding_model", return_value=FakeEmbeddings()):
+            candidates = _build_cross_category_candidates(taxonomy, {}, 1)
+
+        pairs = {
+            frozenset((candidate["term_a"]["id"], candidate["term_b"]["id"]))
+            for candidate in candidates
+        }
+        self.assertEqual(pairs, {frozenset((0, 1)), frozenset((1, 2))})
 
     def test_cross_category_same_kind_creates_alias(self):
         taxonomy = pd.DataFrame([

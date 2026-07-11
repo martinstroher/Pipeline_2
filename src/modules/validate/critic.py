@@ -578,11 +578,8 @@ def _build_cross_category_candidates(
     tax: pd.DataFrame,
     edits_by_id: dict[int, dict],
     top_k: int,
-    nld_threshold: float,
-    label_threshold: float,
-    same_head_nld_threshold: float = 0.75,
 ) -> list[dict]:
-    """Shortlist semantically similar cross-category pairs; never edit directly."""
+    """Union of each term's top-k cross-category NLD neighbors; never edit directly."""
     survivors = []
     for _, row in tax.iterrows():
         rid = int(row["_critic_id"])
@@ -604,24 +601,24 @@ def _build_cross_category_candidates(
     candidates: list[dict] = []
     for i, row_a in enumerate(survivors):
         ranked = np.argsort(-similarity[i])
-        selected = 0
+        nearest: list[int] = []
         for j in ranked:
             if i == j:
                 continue
             row_b = survivors[int(j)]
             if str(row_a.get("Category", "")) == str(row_b.get("Category", "")):
                 continue
+            nearest.append(int(j))
+            if len(nearest) >= top_k:
+                break
+        for j in nearest:
+            row_b = survivors[j]
             pair_key = tuple(sorted((int(row_a["_critic_id"]), int(row_b["_critic_id"]))))
             if pair_key in seen:
                 continue
-            label_sim = SequenceMatcher(None, labels[i], labels[int(j)]).ratio()
-            nld_sim = float(similarity[i, int(j)])
-            same_head = bool(labels[i] and labels[int(j)] and labels[i].split()[-1] == labels[int(j)].split()[-1])
-            semantic_match = nld_sim >= nld_threshold
-            label_match = label_sim >= label_threshold
-            head_match = same_head and nld_sim >= same_head_nld_threshold
-            if not (semantic_match or label_match or head_match):
-                continue
+            label_sim = SequenceMatcher(None, labels[i], labels[j]).ratio()
+            nld_sim = float(similarity[i, j])
+            same_head = bool(labels[i] and labels[j] and labels[i].split()[-1] == labels[j].split()[-1])
             seen.add(pair_key)
             candidates.append({
                 "pair_id": len(candidates),
@@ -641,9 +638,6 @@ def _build_cross_category_candidates(
                     "same_head_token": same_head,
                 },
             })
-            selected += 1
-            if selected >= top_k:
-                break
     return candidates
 
 
@@ -2323,9 +2317,6 @@ def run_critic(
         try:
             cross_candidates = _build_cross_category_candidates(
                 tax, all_tax_edits, lateral_cfg.reconciliation_top_k,
-                lateral_cfg.reconciliation_nld_similarity,
-                lateral_cfg.reconciliation_label_similarity,
-                lateral_cfg.reconciliation_same_head_nld_similarity,
             )
             reconciliation_decisions: list[dict] = []
             batch_size = 20
