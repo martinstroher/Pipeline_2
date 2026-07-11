@@ -10,6 +10,9 @@ You are auditing lateral taxonomy coherence for surviving classes in the **{cate
 ## Existing class labels (valid targets for reparenting)
 {existing_classes_json}
 
+## Candidate target context (NLD, parent, ancestors, category, metatypes)
+{target_context_json}
+
 ────────────────────────────────────────────────────────────
 ## Tasks
 ────────────────────────────────────────────────────────────
@@ -59,4 +62,3 @@ Return ONLY:
 - `collapses.id` must name a builder-invented intermediate, not a corpus term.
 - `frame_type` is `same_axis | mixed_axis | unclear`.
 - Completion candidates are suggestions only; provide 1-3 search terms and no more than {max_candidates} candidates total.
-- No geology/domain vocabulary is hardcoded in this method; reason only from supplied NLDs/branch structure and general ontology principles.

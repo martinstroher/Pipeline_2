@@ -13,9 +13,8 @@ Return ONLY:
 {{
   "decisions": [
     {{"candidate_id": 1, "accept": true,
-      "nld": "A concise Aristotelian definition in the form X is a Y that Z.",
       "reason": "multiple corpus sources treat it as a conventional named kind"}},
-    {{"candidate_id": 2, "accept": false, "nld": "",
+    {{"candidate_id": 2, "accept": false,
       "reason": "phrase is contextual rather than a reusable kind"}}
   ]
 }}
@@ -24,5 +23,4 @@ Return ONLY:
 Constraints:
 - Every candidate appears once.
 - Accept only when excerpts support the proposed label and parent as a reusable kind.
-- `nld` is required when accepted and must be grounded in the excerpts.
 - Do not use external domain knowledge to override missing corpus evidence.

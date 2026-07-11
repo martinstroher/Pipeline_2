@@ -74,10 +74,12 @@ import threading
 import glob
 import re
 import unicodedata
+from difflib import SequenceMatcher
 from concurrent.futures import ThreadPoolExecutor, as_completed
 from datetime import datetime, timezone
 
 import pandas as pd
+import numpy as np
 from tqdm import tqdm
 
 from src.utils import log
@@ -85,6 +87,7 @@ from src.utils.csv_io import read_csv, write_csv
 from src.utils.llm_client import get_client, generate
 from src.utils.ontology_config import get_config
 from src.utils.prompt_loader import load_prompt
+from src.utils.rag_setup import get_embedding_model
 from src.utils.relation_validator import (
     PROPERTY_CONSTRAINTS,
     get_metatypes,
@@ -367,10 +370,18 @@ def _build_parent_context(
 def _build_relation_payload(
     own_rows: pd.DataFrame,
     ancestor_rows: pd.DataFrame,
+    context_lookup: dict[str, dict] | None = None,
 ) -> list[dict]:
     """Combine own + ancestor relation rows. Ancestor rows carry chain_role='ancestor'
     and the critic is instructed not to vote on them."""
     out: list[dict] = []
+    context_lookup = context_lookup or {}
+    def _entity(term) -> dict:
+        key = str(term).strip().lower()
+        return context_lookup.get(key, {
+            "label": term, "nld": "", "parent": "", "ancestors": [],
+            "category": "", "metatypes": [], "is_individual": False,
+        })
     for _, r in own_rows.iterrows():
         out.append({
             "id": int(r["_critic_id"]),
@@ -379,6 +390,8 @@ def _build_relation_payload(
             "property": r["Property"],
             "filler": r["Filler"],
             "evidence": str(r.get("Evidence", ""))[:300],
+            "subject_context": _entity(r["Term"]),
+            "filler_context": _entity(r["Filler"]),
         })
     for _, r in ancestor_rows.iterrows():
         out.append({
@@ -388,6 +401,8 @@ def _build_relation_payload(
             "property": r["Property"],
             "filler": r["Filler"],
             "evidence": str(r.get("Evidence", ""))[:200],
+            "subject_context": _entity(r["Term"]),
+            "filler_context": _entity(r["Filler"]),
         })
     return out
 
@@ -448,6 +463,80 @@ def _build_taxonomy_context(rows: pd.DataFrame) -> list[dict]:
     ]
 
 
+def _build_entity_context_lookup(
+    tax: pd.DataFrame,
+    individual_terms: set[str] | None = None,
+) -> dict[str, dict]:
+    """Rich local/upper class context keyed by normalized label."""
+    individual_terms = {str(v).strip().lower() for v in (individual_terms or set())}
+    parents = _term_to_parent(tax)
+    row_by_term = {
+        str(row["Term"]).strip().lower(): row for _, row in tax.iterrows()
+    }
+    out: dict[str, dict] = {}
+    for key, row in row_by_term.items():
+        ancestors: list[str] = []
+        current = str(row.get("Parent_Term", "") or "").strip()
+        seen: set[str] = set()
+        while current and current.lower() not in seen and len(ancestors) < 4:
+            seen.add(current.lower())
+            ancestors.append(current)
+            current = parents.get(current.lower(), "")
+        category = str(row.get("Category", "") or "").strip()
+        out[key] = {
+            "label": row["Term"], "nld": str(row.get("NLD", ""))[:500],
+            "parent": row.get("Parent_Term", ""), "ancestors": ancestors,
+            "category": category, "metatypes": sorted(get_metatypes(category) or []),
+            "is_individual": key in individual_terms,
+        }
+
+    cfg = get_config()
+    for ontology in cfg.ontologies.values():
+        for cls in ontology.classes:
+            key = cls.label.strip().lower()
+            if key in out:
+                continue
+            out[key] = {
+                "label": cls.label,
+                "nld": str(cls.llm_definition or "")[:500],
+                "parent": "", "ancestors": [], "category": cls.label,
+                "metatypes": sorted(cls.metatypes), "is_individual": False,
+            }
+    return out
+
+
+def _select_facet_target_context(
+    rows: list[pd.Series],
+    context_lookup: dict[str, dict],
+    max_per_term: int = 5,
+) -> list[dict]:
+    """Select plausible parent contexts by ancestry and lexical/head similarity."""
+    selected: dict[str, dict] = {}
+    for row in rows:
+        term = str(row["Term"]).strip()
+        term_norm = _normalised_label(term)
+        parent = str(row.get("Parent_Term", "") or "").strip().lower()
+        candidates: list[tuple[float, str]] = []
+        for key, context in context_lookup.items():
+            if key == term.lower():
+                continue
+            label_norm = _normalised_label(str(context.get("label", "")))
+            if not label_norm:
+                continue
+            score = SequenceMatcher(None, term_norm, label_norm).ratio()
+            if term_norm.endswith(f" {label_norm}"):
+                score = max(score, 1.0)
+            if key == parent or str(context.get("label", "")) in context_lookup.get(parent, {}).get("ancestors", []):
+                score = max(score, 0.99)
+            if score >= 0.55:
+                candidates.append((score, key))
+        for _, key in sorted(candidates, reverse=True)[:max_per_term]:
+            selected[key] = context_lookup[key]
+        if parent in context_lookup:
+            selected[parent] = context_lookup[parent]
+    return list(selected.values())
+
+
 def _child_counts_among_survivors(survivor_rows: list[pd.Series]) -> dict[str, int]:
     """How many surviving rows name each (lower-cased) term as their parent.
     Computed in Python so the dedup critic's weak-intermediate check is
@@ -478,6 +567,80 @@ def _build_dedup_payload(
             "nld": str(r.get("NLD", ""))[:400],
         })
     return out
+
+
+def _normalised_label(label: str) -> str:
+    text = _normalise_search_text(label).replace("-", " ")
+    return " ".join(re.findall(r"[a-z0-9]+", text))
+
+
+def _build_cross_category_candidates(
+    tax: pd.DataFrame,
+    edits_by_id: dict[int, dict],
+    top_k: int,
+    nld_threshold: float,
+    label_threshold: float,
+) -> list[dict]:
+    """Shortlist semantically similar cross-category pairs; never edit directly."""
+    survivors = []
+    for _, row in tax.iterrows():
+        rid = int(row["_critic_id"])
+        edit = edits_by_id.get(rid, {})
+        if str(edit.get("action", "KEEP") or "KEEP").upper() in _DROP_TAX_VERDICTS:
+            continue
+        nld = str(row.get("NLD", "") or "").strip()
+        if not nld:
+            continue
+        survivors.append(row)
+    if len(survivors) < 2:
+        return []
+
+    texts = [str(row.get("NLD", ""))[:2000] for row in survivors]
+    vectors = np.asarray(get_embedding_model().embed_documents(texts), dtype=float)
+    similarity = vectors @ vectors.T  # BGE-M3 embeddings are normalized.
+    labels = [_normalised_label(str(row["Term"])) for row in survivors]
+    seen: set[tuple[int, int]] = set()
+    candidates: list[dict] = []
+    for i, row_a in enumerate(survivors):
+        ranked = np.argsort(-similarity[i])
+        selected = 0
+        for j in ranked:
+            if i == j:
+                continue
+            row_b = survivors[int(j)]
+            if str(row_a.get("Category", "")) == str(row_b.get("Category", "")):
+                continue
+            pair_key = tuple(sorted((int(row_a["_critic_id"]), int(row_b["_critic_id"]))))
+            if pair_key in seen:
+                continue
+            label_sim = SequenceMatcher(None, labels[i], labels[int(j)]).ratio()
+            nld_sim = float(similarity[i, int(j)])
+            same_head = bool(labels[i] and labels[int(j)] and labels[i].split()[-1] == labels[int(j)].split()[-1])
+            if nld_sim < nld_threshold and label_sim < label_threshold and not same_head:
+                continue
+            seen.add(pair_key)
+            candidates.append({
+                "pair_id": len(candidates),
+                "term_a": {
+                    "id": int(row_a["_critic_id"]), "label": row_a["Term"],
+                    "category": row_a.get("Category", ""), "parent": row_a.get("Parent_Term", ""),
+                    "nld": str(row_a.get("NLD", ""))[:500],
+                },
+                "term_b": {
+                    "id": int(row_b["_critic_id"]), "label": row_b["Term"],
+                    "category": row_b.get("Category", ""), "parent": row_b.get("Parent_Term", ""),
+                    "nld": str(row_b.get("NLD", ""))[:500],
+                },
+                "weak_similarity_signals": {
+                    "nld_cosine": round(nld_sim, 4),
+                    "label_similarity": round(label_sim, 4),
+                    "same_head_token": same_head,
+                },
+            })
+            selected += 1
+            if selected >= top_k:
+                break
+    return candidates
 
 
 def _build_taxonomy_decisions(
@@ -807,24 +970,23 @@ def _scope_payload_after_relation_edits(
 def _call_dedup_critic(
     category: str,
     survivors_payload: list[dict],
+    cross_candidates: list[dict],
     system_instruction: str,
     prompt_template: str,
     model: str,
     temperature: float,
     archive_path: str,
     archive_lock: threading.Lock,
-) -> tuple[list[dict], list[dict], list[dict]]:
-    """Stage 2: cross-term dedup over a category's survivors. The prompt emits
-    only DROP_AS_REDUNDANT rows (KEEP is implicit), so there is no completeness
-    guard — a sparse or empty response simply means 'keep everything'."""
+) -> tuple[list[dict], list[dict]]:
+    """Stage 2 reconciliation for local survivors or shortlisted global pairs."""
     prompt = prompt_template.format(
         category=category,
         survivors_json=json.dumps(survivors_payload, indent=2),
+        cross_candidates_json=json.dumps(cross_candidates, indent=2),
     )
     raw_text = ""
     edits: list[dict] = []
-    facet_frames: list[dict] = []
-    disjointness: list[dict] = []
+    reconciliations: list[dict] = []
     try:
         raw_text = generate(
             prompt, model=model, system_instruction=system_instruction,
@@ -833,28 +995,25 @@ def _call_dedup_critic(
         data = json.loads(raw_text)
         if isinstance(data, dict) and isinstance(data.get("edits"), list):
             edits = data["edits"]
-        if isinstance(data, dict) and isinstance(data.get("facet_frames"), list):
-            facet_frames = data["facet_frames"]
-        if isinstance(data, dict):
-            raw_disjoint = data.get("disjointness") or data.get("disjoint_sets") or []
-            if isinstance(raw_disjoint, list):
-                disjointness = raw_disjoint
+        if isinstance(data, dict) and isinstance(data.get("reconciliations"), list):
+            reconciliations = data["reconciliations"]
     except Exception as e:
         tqdm.write(f"  [{category}] dedup critic failed ({e}); keeping all survivors")
         edits = []
     _archive({
         "timestamp": datetime.now(timezone.utc).isoformat(), "call": "dedup",
         "category": category, "model": model, "n_survivors": len(survivors_payload),
-        "n_edits": len(edits), "n_facet_frames": len(facet_frames),
-        "n_disjointness": len(disjointness), "response_text": raw_text,
+        "n_cross_candidates": len(cross_candidates), "n_edits": len(edits),
+        "n_reconciliations": len(reconciliations), "response_text": raw_text,
     }, archive_path, archive_lock)
-    return edits, facet_frames, disjointness
+    return edits, reconciliations
 
 
 def _call_facet_critic(
     category: str,
     survivors_payload: list[dict],
     existing_classes: list[str],
+    target_context: list[dict],
     max_candidates: int,
     system_instruction: str,
     prompt_template: str,
@@ -867,6 +1026,7 @@ def _call_facet_critic(
         category=category,
         survivors_json=json.dumps(survivors_payload, indent=2),
         existing_classes_json=json.dumps(existing_classes, indent=2),
+        target_context_json=json.dumps(target_context, indent=2),
         max_candidates=max_candidates,
     )
     raw_text = ""
@@ -919,6 +1079,49 @@ def _call_frame_completion_verifier(
         "n_decisions": len(decisions), "response_text": raw_text,
     }, archive_path, archive_lock)
     return decisions
+
+
+def _generate_completion_nlds(
+    evidence_payload: list[dict],
+    decisions: list[dict],
+) -> list[dict]:
+    """Use the standard NLD workflow for accepted, evidence-backed new terms."""
+    from src.modules.define.nld_generator import generate_nld
+
+    evidence_by_id = {
+        int(item["candidate_id"]): item for item in evidence_payload
+        if isinstance(item.get("candidate_id"), int)
+    }
+    out: list[dict] = []
+    for decision in decisions:
+        enriched = dict(decision)
+        if not bool(decision.get("accept", False)):
+            out.append(enriched)
+            continue
+        candidate_id = decision.get("candidate_id")
+        evidence = evidence_by_id.get(candidate_id) if isinstance(candidate_id, int) else None
+        if not evidence:
+            enriched.update({"accept": False, "nld": "", "reason": "accepted candidate lacked evidence payload"})
+            out.append(enriched)
+            continue
+        context_parts = [
+            f"[{item.get('source', 'Unknown')}]\n{item.get('excerpt', '')}"
+            for item in evidence.get("evidence", [])
+        ]
+        context = "\n\n".join(context_parts)
+        try:
+            nld_json, _ = generate_nld(str(evidence.get("label", "")), context)
+            parsed = json.loads(nld_json)
+            nld = str(parsed.get("Definition", "") or "").strip() if isinstance(parsed, dict) else ""
+        except Exception as e:
+            nld = ""
+            enriched["reason"] = f"standard NLD generation failed: {e}"
+        if not nld:
+            enriched.update({"accept": False, "nld": ""})
+        else:
+            enriched["nld"] = nld
+        out.append(enriched)
+    return out
 
 
 def _normalise_search_text(text: str) -> str:
@@ -1108,6 +1311,148 @@ def _mutual_drop_guard(
         log.detail(f"Mutual-drop guard: kept '{id_to_term.get(rid, rid)}' ({note})")
 
 
+def _apply_cross_category_reconciliations(
+    candidates: list[dict],
+    decisions: list[dict],
+    tax: pd.DataFrame,
+    edits_by_id: dict[int, dict],
+    min_confidence: float,
+) -> tuple[dict[str, str], list[dict]]:
+    """Apply high-confidence global merge/subsumption decisions."""
+    candidate_by_id = {int(c["pair_id"]): c for c in candidates}
+    row_by_id = {int(row["_critic_id"]): row for _, row in tax.iterrows()}
+    aliases: dict[str, str] = {}
+    audit: list[dict] = []
+    for decision in decisions:
+        if not isinstance(decision, dict) or not isinstance(decision.get("pair_id"), int):
+            continue
+        pair = candidate_by_id.get(int(decision["pair_id"]))
+        if not pair:
+            continue
+        kind = str(decision.get("decision", "NEEDS_REVIEW") or "NEEDS_REVIEW").upper()
+        confidence = _as_float(decision.get("confidence", 0.0))
+        apply = confidence >= min_confidence and kind not in {"DISTINCT", "NEEDS_REVIEW"}
+        record = {
+            "Pair_ID": decision["pair_id"],
+            "Term_A": pair["term_a"]["label"], "Category_A": pair["term_a"]["category"],
+            "Term_B": pair["term_b"]["label"], "Category_B": pair["term_b"]["category"],
+            "Decision": kind, "Confidence": confidence,
+            "Needs_Review": bool(decision.get("needs_review", False)) or confidence < min_confidence,
+            "Reason": decision.get("reason", ""), "Applied": False,
+        }
+        if not apply:
+            audit.append(record)
+            continue
+
+        if kind == "SAME_KIND":
+            survivor_id = decision.get("survivor_id")
+            duplicate_id = decision.get("duplicate_id")
+            if not isinstance(survivor_id, int) or not isinstance(duplicate_id, int):
+                audit.append(record)
+                continue
+            survivor = row_by_id.get(survivor_id)
+            duplicate = row_by_id.get(duplicate_id)
+            if survivor is None or duplicate is None or survivor_id == duplicate_id:
+                audit.append(record)
+                continue
+            edits_by_id[duplicate_id] = {
+                **edits_by_id.get(duplicate_id, {}),
+                "action": "DROP_AS_REDUNDANT", "survivor": str(survivor["Term"]),
+                "reason": str(decision.get("reason", "cross-category co-extension")),
+            }
+            aliases[str(duplicate["Term"]).strip().lower()] = str(survivor["Term"]).strip()
+            record.update({"Survivor": survivor["Term"], "Duplicate": duplicate["Term"], "Applied": True})
+        elif kind in {"A_SUBCLASS_OF_B", "B_SUBCLASS_OF_A"}:
+            child_key, parent_key = (
+                ("term_a", "term_b") if kind == "A_SUBCLASS_OF_B" else ("term_b", "term_a")
+            )
+            child_id = int(pair[child_key]["id"])
+            parent_id = int(pair[parent_key]["id"])
+            child = row_by_id.get(child_id)
+            parent = row_by_id.get(parent_id)
+            if child is None or parent is None:
+                audit.append(record)
+                continue
+            current = dict(edits_by_id.get(child_id, {"action": "KEEP"}))
+            if str(current.get("action", "KEEP")).upper() in _DROP_TAX_VERDICTS:
+                audit.append(record)
+                continue
+            current.update({
+                "action": "REPARENT", "new_parent": str(parent["Term"]),
+                "new_category": str(parent.get("Category", "")),
+                "reason": str(decision.get("reason", "cross-category subsumption")),
+            })
+            edits_by_id[child_id] = current
+            record.update({"Child": child["Term"], "New_Parent": parent["Term"], "Applied": True})
+        audit.append(record)
+    return aliases, audit
+
+
+def _redirect_relation_aliases(rel: pd.DataFrame, aliases: dict[str, str]) -> pd.DataFrame:
+    if rel.empty or not aliases:
+        return rel
+    rel = rel.copy()
+    for column in ("Term", "Filler"):
+        rel[column] = rel[column].apply(
+            lambda value: aliases.get(str(value).strip().lower(), value)
+        )
+    return rel
+
+
+def _guard_reparent_cycles(
+    tax: pd.DataFrame,
+    edits_by_id: dict[int, dict],
+) -> list[str]:
+    """Revert critic reparents that would introduce a local taxonomy cycle."""
+    row_by_id = {int(row["_critic_id"]): row for _, row in tax.iterrows()}
+    id_by_term = {str(row["Term"]).strip().lower(): rid for rid, row in row_by_id.items()}
+    reverted: list[str] = []
+    while True:
+        parent_by_id: dict[int, int] = {}
+        for rid, row in row_by_id.items():
+            edit = edits_by_id.get(rid, {})
+            if str(edit.get("action", "KEEP") or "KEEP").upper() in _DROP_TAX_VERDICTS:
+                continue
+            parent = str(edit.get("new_parent", "") or row.get("Parent_Term", "")).strip().lower()
+            if parent in id_by_term:
+                parent_by_id[rid] = id_by_term[parent]
+        cycle: list[int] | None = None
+        for start in parent_by_id:
+            path: list[int] = []
+            positions: dict[int, int] = {}
+            current = start
+            while current in parent_by_id:
+                if current in positions:
+                    cycle = path[positions[current]:]
+                    break
+                positions[current] = len(path)
+                path.append(current)
+                current = parent_by_id[current]
+            if cycle:
+                break
+        if not cycle:
+            return reverted
+        edited_cycle = [
+            rid for rid in cycle
+            if str(edits_by_id.get(rid, {}).get("action", "")).upper() == "REPARENT"
+            or bool(str(edits_by_id.get(rid, {}).get("new_parent", "")).strip())
+        ]
+        if not edited_cycle:
+            return reverted
+        rid = edited_cycle[-1]
+        edit = dict(edits_by_id.get(rid, {}))
+        if str(edit.get("action", "")).upper() == "KEEP_AS_BEARER":
+            edit.pop("new_parent", None)
+        else:
+            edit["action"] = "KEEP"
+            edit.pop("new_parent", None)
+            edit.pop("new_category", None)
+        term = str(row_by_id[rid]["Term"])
+        edit["reason"] = f"(reparent reverted — would create taxonomy cycle) {edit.get('reason', '')}".strip()
+        edits_by_id[rid] = edit
+        reverted.append(term)
+
+
 # ─── Edit appliers ────────────────────────────────────────────────────────
 
 def _nearest_surviving_parent(
@@ -1172,6 +1517,7 @@ def _apply_taxonomy_edits(
     log_rows: list[dict] = []
     keep_mask = [True] * len(tax)
     new_parents: dict[int, str] = {}
+    new_categories: dict[int, str] = {}
     instance_records: list[dict] = []
     bearer_records: list[dict] = []
     defined_records: list[dict] = []
@@ -1213,6 +1559,8 @@ def _apply_taxonomy_edits(
                                  "reason": f"(REPARENT rejected — no new_parent) {reason}", **probes})
                 continue
             new_parents[rid] = new_parent
+            if str(edit.get("new_category", "") or "").strip():
+                new_categories[rid] = str(edit["new_category"]).strip()
             log_rows.append({"id": rid, "kind": "taxonomy", "category": cat,
                              "term": row["Term"], "action": "REPARENT",
                              "reason": f"parent → {new_parent}: {reason}", **probes})
@@ -1346,6 +1694,11 @@ def _apply_taxonomy_edits(
     if new_parents:
         cleaned["Parent_Term"] = cleaned.apply(
             lambda r: new_parents.get(int(r["_critic_id"]), r["Parent_Term"]),
+            axis=1,
+        )
+    if new_categories:
+        cleaned["Category"] = cleaned.apply(
+            lambda r: new_categories.get(int(r["_critic_id"]), r["Category"]),
             axis=1,
         )
 
@@ -1715,6 +2068,8 @@ def run_critic(
     frame_completion_out = os.path.join(output_dir, "validate_frame_completion.csv")
     lateral_summary_out = os.path.join(output_dir, "validate_lateral_coherence_summary.json")
     subsumption_out = os.path.join(output_dir, "validate_subsumption_hints.csv")
+    reconciliation_out = os.path.join(output_dir, "validate_term_reconciliation.csv")
+    completion_relations_out = os.path.join(output_dir, "validate_frame_completion_relations.csv")
 
     archive_dir = os.path.join(output_dir, "validate_responses_archive")
     os.makedirs(archive_dir, exist_ok=True)
@@ -1767,6 +2122,7 @@ def run_critic(
     lateral_cfg = get_config().lateral_coherence()
     weak_observations_enabled = lateral_cfg.enabled and lateral_cfg.hints_enabled
     all_term_labels = {str(t).strip() for t in tax["Term"].astype(str) if str(t).strip()}
+    entity_context_lookup = _build_entity_context_lookup(tax)
     if weak_observations_enabled:
         log.info("Lateral-coherence weak observations: enabled (LATERAL_HINTS_ENABLED override supported)")
     else:
@@ -1841,7 +2197,7 @@ def run_critic(
                 if chunk_anc:
                     chunk_anc_rel = rel[rel["Term"].astype(str).str.strip().str.lower().isin(chunk_anc)]
 
-            rel_context = _build_relation_payload(chunk_own_rel, chunk_anc_rel)
+            rel_context = _build_relation_payload(chunk_own_rel, chunk_anc_rel, entity_context_lookup)
             parent_context = _build_parent_context(chunk, cat_term_nld, valid_categories)
             tax_payload = _build_taxonomy_payload(chunk)
             weak_observations = _build_weak_taxonomy_observations(chunk, all_term_labels) \
@@ -1883,7 +2239,7 @@ def run_critic(
                 worth_own_rel = own_rel[
                     own_rel["Term"].astype(str).str.strip().str.lower().isin(worth_terms)
                 ] if not own_rel.empty else pd.DataFrame()
-                worth_rel_context = _build_relation_payload(worth_own_rel, pd.DataFrame())
+                worth_rel_context = _build_relation_payload(worth_own_rel, pd.DataFrame(), entity_context_lookup)
                 worth_observations = _build_weak_taxonomy_observations(worth_df, all_term_labels) \
                     if weak_observations_enabled else []
 
@@ -1918,14 +2274,12 @@ def run_critic(
                     )
 
         # ── Stage 2: cross-term dedup over class-worthy survivors ──
-        facet_frames_local: list[dict] = []
-        disjointness_local: list[dict] = []
         survivor_rows = [r for _, r in tax_group.iterrows() if not _is_dropped(int(r["_critic_id"]))]
         if len(survivor_rows) >= 2:
             child_counts = _child_counts_among_survivors(survivor_rows)
             dedup_payload = _build_dedup_payload(survivor_rows, child_counts)
-            dedup_edits, _, _ = _call_dedup_critic(
-                cat, dedup_payload, dedup_system, dedup_template,
+            dedup_edits, _ = _call_dedup_critic(
+                cat, dedup_payload, [], dedup_system, dedup_template,
                 model, temperature, archive_path, archive_lock,
             )
             for e in dedup_edits:
@@ -1937,160 +2291,11 @@ def run_critic(
                         "_pre_dedup_edit": dict(tax_edits_local.get(e["id"], {"action": "KEEP"})),
                     }
 
-        # ── Stage 2b: focused facet/subsumption/singleton audit ──
-        completion_candidates_local: list[dict] = []
-        subsumption_hints_local: list[dict] = []
-        survivor_rows = [r for _, r in tax_group.iterrows() if not _is_dropped(int(r["_critic_id"]))]
-        if lateral_cfg.enabled and lateral_cfg.frame_audit_enabled and survivor_rows:
-            facet_payload = _build_worthiness_payload(survivor_rows, tax_edits_local, term_evidence)
-            facet_result = _call_facet_critic(
-                cat, facet_payload, sorted(all_term_labels | set(target_classes)),
-                lateral_cfg.frame_completion_max_candidates,
-                facet_system, facet_template, model, temperature,
-                archive_path, archive_lock,
-            )
-            rows_by_id = {int(r["_critic_id"]): r for r in survivor_rows}
-            valid_targets_lower = {t.lower() for t in all_term_labels} | {t.lower() for t in target_classes}
-            for reparent in facet_result.get("reparents", []) if isinstance(facet_result.get("reparents"), list) else []:
-                if not (isinstance(reparent, dict) and isinstance(reparent.get("id"), int)):
-                    continue
-                rid = reparent["id"]
-                new_parent = str(reparent.get("new_parent", "") or "").strip()
-                if rid not in rows_by_id or new_parent.lower() not in valid_targets_lower:
-                    continue
-                try:
-                    confidence = float(reparent.get("confidence", 0.0) or 0.0)
-                except (TypeError, ValueError):
-                    confidence = 0.0
-                apply_reparent = confidence >= lateral_cfg.min_confidence_apply
-                subsumption_hints_local.append({
-                    "category": cat, "id": rid, "term": rows_by_id[rid]["Term"],
-                    "action": "REPARENT", "old_parent": rows_by_id[rid]["Parent_Term"],
-                    "new_parent": new_parent, "confidence": confidence,
-                    "needs_review": bool(reparent.get("needs_review", False)) or not apply_reparent,
-                    "reason": reparent.get("reason", ""), "applied": apply_reparent,
-                })
-                if not apply_reparent:
-                    continue
-                current = dict(tax_edits_local.get(rid, {"action": "KEEP"}))
-                if str(current.get("action", "KEEP")).upper() == "KEEP_AS_BEARER":
-                    current["new_parent"] = new_parent
-                elif str(current.get("action", "KEEP")).upper() != "KEEP_AS_DEFINED":
-                    current.update({"action": "REPARENT", "new_parent": new_parent})
-                current["reason"] = str(reparent.get("reason", "facet/subsumption audit"))
-                tax_edits_local[rid] = current
-            for collapse in facet_result.get("collapses", []) if isinstance(facet_result.get("collapses"), list) else []:
-                if not (isinstance(collapse, dict) and isinstance(collapse.get("id"), int)):
-                    continue
-                rid = collapse["id"]
-                survivor = str(collapse.get("survivor", "") or "").strip()
-                row = rows_by_id.get(rid)
-                if row is None or not bool(row.get("Is_Intermediate", False)) or survivor.lower() not in valid_targets_lower:
-                    continue
-                try:
-                    confidence = float(collapse.get("confidence", 0.0) or 0.0)
-                except (TypeError, ValueError):
-                    confidence = 0.0
-                apply_collapse = confidence >= lateral_cfg.min_confidence_apply
-                subsumption_hints_local.append({
-                    "category": cat, "id": rid, "term": row["Term"],
-                    "action": "COLLAPSE_SINGLETON", "old_parent": row["Parent_Term"],
-                    "new_parent": survivor, "confidence": confidence,
-                    "needs_review": bool(collapse.get("needs_review", False)) or not apply_collapse,
-                    "reason": collapse.get("reason", ""), "applied": apply_collapse,
-                })
-                if not apply_collapse:
-                    continue
-                tax_edits_local[rid] = {
-                    **tax_edits_local.get(rid, {}),
-                    "action": "DROP_AS_REDUNDANT", "survivor": survivor,
-                    "reason": str(collapse.get("reason", "singleton intermediate collapsed")),
-                }
-            for frame in facet_result.get("facet_frames", []) if isinstance(facet_result.get("facet_frames"), list) else []:
-                if isinstance(frame, dict):
-                    facet_frames_local.append({"category": cat, **frame})
-            for disjoint in facet_result.get("disjointness", []) if isinstance(facet_result.get("disjointness"), list) else []:
-                if isinstance(disjoint, dict):
-                    disjointness_local.append({"category": cat, **disjoint})
-            if lateral_cfg.frame_completion_enabled:
-                raw_candidates = facet_result.get("completion_candidates", []) \
-                    if isinstance(facet_result.get("completion_candidates"), list) else []
-                for candidate in raw_candidates[:lateral_cfg.frame_completion_max_candidates]:
-                    if isinstance(candidate, dict):
-                        completion_candidates_local.append({"category": cat, **candidate})
-
         # ── Mutual-drop guard: never lose a concept to a dangling redundancy ──
         _mutual_drop_guard(tax_edits_local, id_to_term, id_to_parent)
 
-        # ── Handoff: merged taxonomy decisions inform the relation critic ──
-        decisions = _build_taxonomy_decisions(tax_edits_local, id_to_term)
-
-        # ── Call 2: relation critic (only if there are own relations) ──
-        rel_edits_local: dict[int, dict] = {}
-        if len(own_rel) > 0:
-            rel_payload = _build_relation_payload(own_rel, ancestor_rel)
-            tax_context = _build_taxonomy_context(tax_group)
-            own_ids = {int(r["_critic_id"]) for _, r in own_rel.iterrows()}
-
-            def _invoke_rel(payload: list[dict]) -> list[dict]:
-                return _call_relation_critic(
-                    cat, payload, relations_menu, previously_minted,
-                    tax_context, decisions,
-                    rel_system, rel_template, model, temperature,
-                    archive_path, archive_lock,
-                )
-
-            rel_edits_list = _ask_complete(
-                _invoke_rel, rel_payload, own_ids, cat, "relation",
-            )
-            rel_edits_local = {
-                e["id"]: e for e in rel_edits_list
-                if isinstance(e, dict) and isinstance(e.get("id"), int)
-            }
-            if lateral_cfg.enabled and lateral_cfg.relation_scope_enabled:
-                scope_payload = _scope_payload_after_relation_edits(rel_payload, rel_edits_local)
-                scope_ids = {int(r["id"]) for r in scope_payload if isinstance(r.get("id"), int)}
-
-                def _invoke_scope(payload: list[dict]) -> list[dict]:
-                    return _call_relation_scope_critic(
-                        cat, payload, tax_context, decisions, scope_system, scope_template,
-                        model, temperature, archive_path, archive_lock,
-                    )
-
-                scope_decisions = _ask_complete(
-                    _invoke_scope, scope_payload, scope_ids, cat, "relation-scope",
-                ) if scope_payload else []
-                scoped_ids: set[int] = set()
-                for decision in scope_decisions:
-                    if not (isinstance(decision, dict) and isinstance(decision.get("id"), int)):
-                        continue
-                    rid = decision["id"]
-                    scoped_ids.add(rid)
-                    current = dict(rel_edits_local.get(rid, {"id": rid, "action": "KEEP", "reason": "scope-only KEEP"}))
-                    current.update({
-                        "relation_scope": _relation_scope(decision),
-                        "scope_reason": decision.get("reason", ""),
-                        "scope_confidence": decision.get("confidence", ""),
-                        "scope_needs_review": decision.get("needs_review", False),
-                    })
-                    rel_edits_local[rid] = current
-                for rid in scope_ids - scoped_ids:
-                    current = dict(rel_edits_local.get(rid, {"id": rid, "action": "KEEP", "reason": "scope fallback KEEP"}))
-                    current.update({
-                        "relation_scope": "corpus_context",
-                        "scope_reason": "scope critic omitted row after retry; conservative non-generic fallback",
-                        "scope_confidence": 0.0,
-                        "scope_needs_review": True,
-                    })
-                    rel_edits_local[rid] = current
-
         with edits_lock:
             all_tax_edits.update(tax_edits_local)
-            all_rel_edits.update(rel_edits_local)
-            all_facet_frames.extend(facet_frames_local)
-            all_disjointness.extend(disjointness_local)
-            all_completion_candidates.extend(completion_candidates_local)
-            all_subsumption_hints.extend(subsumption_hints_local)
 
     workers = min(max_workers, len(categories)) if categories else 1
     log.info(f"Running critic on {len(categories)} categories with {workers} workers")
@@ -2105,6 +2310,206 @@ def run_critic(
                 except Exception as e:
                     tqdm.write(f"  [error] Category '{cat}': {e}")
                 pbar.update(1)
+
+    # Global reconciliation uses the same semantic critic as local dedup, but
+    # only over BGE/label-shortlisted pairs from different categories.
+    reconciliation_aliases: dict[str, str] = {}
+    reconciliation_audit: list[dict] = []
+    if lateral_cfg.enabled and lateral_cfg.reconciliation_enabled:
+        try:
+            cross_candidates = _build_cross_category_candidates(
+                tax, all_tax_edits, lateral_cfg.reconciliation_top_k,
+                lateral_cfg.reconciliation_nld_similarity,
+                lateral_cfg.reconciliation_label_similarity,
+            )
+            reconciliation_decisions: list[dict] = []
+            batch_size = 20
+            for start in range(0, len(cross_candidates), batch_size):
+                candidate_batch = cross_candidates[start:start + batch_size]
+                _, decisions_batch = _call_dedup_critic(
+                    "GLOBAL", [], candidate_batch,
+                    dedup_system, dedup_template, model, temperature,
+                    archive_path, archive_lock,
+                )
+                returned_ids = {
+                    decision.get("pair_id") for decision in decisions_batch
+                    if isinstance(decision, dict)
+                }
+                for candidate in candidate_batch:
+                    if candidate["pair_id"] not in returned_ids:
+                        decisions_batch.append({
+                            "pair_id": candidate["pair_id"],
+                            "decision": "NEEDS_REVIEW", "confidence": 0.0,
+                            "needs_review": True,
+                            "reason": "reconciliation critic omitted candidate pair",
+                        })
+                reconciliation_decisions.extend(decisions_batch)
+            reconciliation_aliases, reconciliation_audit = _apply_cross_category_reconciliations(
+                cross_candidates, reconciliation_decisions, tax, all_tax_edits,
+                lateral_cfg.min_confidence_apply,
+            )
+        except Exception as e:
+            log.warn(f"Cross-category reconciliation skipped after local failure: {e}")
+    reconciliation_cols = [
+        "Pair_ID", "Term_A", "Category_A", "Term_B", "Category_B", "Decision",
+        "Confidence", "Needs_Review", "Reason", "Applied", "Survivor", "Duplicate",
+        "Child", "New_Parent",
+    ]
+    # Facet/subsumption auditing runs after global reconciliation so sibling
+    # frames see the effective category and no longer reason over duplicates.
+    if lateral_cfg.enabled and lateral_cfg.frame_audit_enabled:
+        effective_groups: dict[str, list[pd.Series]] = {}
+        for _, row in tax.iterrows():
+            rid = int(row["_critic_id"])
+            edit = all_tax_edits.get(rid, {})
+            if str(edit.get("action", "KEEP") or "KEEP").upper() in _DROP_TAX_VERDICTS:
+                continue
+            effective_category = str(edit.get("new_category", "") or row["Category"])
+            effective_groups.setdefault(effective_category, []).append(row)
+        surviving_labels = {
+            str(row["Term"]).strip() for rows in effective_groups.values() for row in rows
+        }
+
+        def _audit_facet_category(cat: str, rows: list[pd.Series]) -> None:
+            facet_payload = _build_worthiness_payload(rows, all_tax_edits, term_evidence)
+            facet_target_context = _select_facet_target_context(rows, entity_context_lookup)
+            facet_result = _call_facet_critic(
+                cat, facet_payload, sorted(surviving_labels | set(target_classes)),
+                facet_target_context, lateral_cfg.frame_completion_max_candidates,
+                facet_system, facet_template, model, temperature,
+                archive_path, archive_lock,
+            )
+            rows_by_id = {int(row["_critic_id"]): row for row in rows}
+            valid_targets_lower = {
+                label.lower() for label in surviving_labels | set(target_classes)
+            }
+            local_hints: list[dict] = []
+            local_frames: list[dict] = []
+            local_disjointness: list[dict] = []
+            local_completion: list[dict] = []
+
+            with edits_lock:
+                for reparent in facet_result.get("reparents", []) if isinstance(facet_result.get("reparents"), list) else []:
+                    if not (isinstance(reparent, dict) and isinstance(reparent.get("id"), int)):
+                        continue
+                    rid = reparent["id"]
+                    new_parent = str(reparent.get("new_parent", "") or "").strip()
+                    if rid not in rows_by_id or new_parent.lower() not in valid_targets_lower:
+                        continue
+                    confidence = _as_float(reparent.get("confidence", 0.0))
+                    apply_reparent = confidence >= lateral_cfg.min_confidence_apply
+                    local_hints.append({
+                        "category": cat, "id": rid, "term": rows_by_id[rid]["Term"],
+                        "action": "REPARENT", "old_parent": rows_by_id[rid]["Parent_Term"],
+                        "new_parent": new_parent, "confidence": confidence,
+                        "needs_review": bool(reparent.get("needs_review", False)) or not apply_reparent,
+                        "reason": reparent.get("reason", ""), "applied": apply_reparent,
+                    })
+                    if not apply_reparent:
+                        continue
+                    current = dict(all_tax_edits.get(rid, {"action": "KEEP"}))
+                    if str(current.get("action", "KEEP")).upper() == "KEEP_AS_BEARER":
+                        current["new_parent"] = new_parent
+                    elif str(current.get("action", "KEEP")).upper() != "KEEP_AS_DEFINED":
+                        current.update({"action": "REPARENT", "new_parent": new_parent})
+                    current["reason"] = str(reparent.get("reason", "facet/subsumption audit"))
+                    all_tax_edits[rid] = current
+
+                for collapse in facet_result.get("collapses", []) if isinstance(facet_result.get("collapses"), list) else []:
+                    if not (isinstance(collapse, dict) and isinstance(collapse.get("id"), int)):
+                        continue
+                    rid = collapse["id"]
+                    survivor = str(collapse.get("survivor", "") or "").strip()
+                    row = rows_by_id.get(rid)
+                    if row is None or not bool(row.get("Is_Intermediate", False)) or survivor.lower() not in valid_targets_lower:
+                        continue
+                    confidence = _as_float(collapse.get("confidence", 0.0))
+                    apply_collapse = confidence >= lateral_cfg.min_confidence_apply
+                    local_hints.append({
+                        "category": cat, "id": rid, "term": row["Term"],
+                        "action": "COLLAPSE_SINGLETON", "old_parent": row["Parent_Term"],
+                        "new_parent": survivor, "confidence": confidence,
+                        "needs_review": bool(collapse.get("needs_review", False)) or not apply_collapse,
+                        "reason": collapse.get("reason", ""), "applied": apply_collapse,
+                    })
+                    if apply_collapse:
+                        all_tax_edits[rid] = {
+                            **all_tax_edits.get(rid, {}), "action": "DROP_AS_REDUNDANT",
+                            "survivor": survivor,
+                            "reason": str(collapse.get("reason", "singleton intermediate collapsed")),
+                        }
+
+                id_to_term = {int(row["_critic_id"]): str(row["Term"]) for row in rows}
+                id_to_parent = {int(row["_critic_id"]): str(row["Parent_Term"]) for row in rows}
+                _mutual_drop_guard(all_tax_edits, id_to_term, id_to_parent)
+
+            for frame in facet_result.get("facet_frames", []) if isinstance(facet_result.get("facet_frames"), list) else []:
+                if isinstance(frame, dict):
+                    local_frames.append({"category": cat, **frame})
+            for disjoint in facet_result.get("disjointness", []) if isinstance(facet_result.get("disjointness"), list) else []:
+                if isinstance(disjoint, dict):
+                    local_disjointness.append({"category": cat, **disjoint})
+            if lateral_cfg.frame_completion_enabled:
+                raw_candidates = facet_result.get("completion_candidates", []) \
+                    if isinstance(facet_result.get("completion_candidates"), list) else []
+                for candidate in raw_candidates[:lateral_cfg.frame_completion_max_candidates]:
+                    if isinstance(candidate, dict):
+                        local_completion.append({"category": cat, **candidate})
+            with edits_lock:
+                all_subsumption_hints.extend(local_hints)
+                all_facet_frames.extend(local_frames)
+                all_disjointness.extend(local_disjointness)
+                all_completion_candidates.extend(local_completion)
+
+        facet_workers = min(max_workers, len(effective_groups)) if effective_groups else 1
+        with ThreadPoolExecutor(max_workers=facet_workers) as pool:
+            facet_futures = {
+                pool.submit(_audit_facet_category, cat, rows): cat
+                for cat, rows in effective_groups.items()
+            }
+            with tqdm(total=len(effective_groups), desc="Facet audit per category", unit="cat") as pbar:
+                for future in as_completed(facet_futures):
+                    cat = facet_futures[future]
+                    try:
+                        future.result()
+                        pbar.set_postfix_str(cat[:30])
+                    except Exception as e:
+                        tqdm.write(f"  [error] Facet category '{cat}': {e}")
+                    pbar.update(1)
+
+    global_id_to_term = {int(row["_critic_id"]): str(row["Term"]) for _, row in tax.iterrows()}
+    global_id_to_parent = {int(row["_critic_id"]): str(row["Parent_Term"]) for _, row in tax.iterrows()}
+    _mutual_drop_guard(all_tax_edits, global_id_to_term, global_id_to_parent)
+    cycle_reverts = _guard_reparent_cycles(tax, all_tax_edits)
+    if cycle_reverts:
+        log.warn(f"Reverted {len(cycle_reverts)} reparent(s) that would create taxonomy cycles")
+    valid_aliases: dict[str, str] = {}
+    for duplicate, survivor in reconciliation_aliases.items():
+        duplicate_id = next(
+            (rid for rid, term in global_id_to_term.items() if term.strip().lower() == duplicate), None
+        )
+        edit = all_tax_edits.get(duplicate_id, {}) if duplicate_id is not None else {}
+        if (
+            str(edit.get("action", "")).upper() == "DROP_AS_REDUNDANT"
+            and str(edit.get("survivor", "")).strip().lower() == survivor.strip().lower()
+        ):
+            valid_aliases[duplicate] = survivor
+    for record in reconciliation_audit:
+        duplicate = str(record.get("Duplicate", "") or "").strip().lower()
+        if bool(record.get("Applied")) and duplicate and duplicate not in valid_aliases:
+            record["Applied"] = False
+            record["Needs_Review"] = True
+            record["Reason"] = f"{record.get('Reason', '')} (merge reverted by global survivor/cycle guard)".strip()
+    reconciliation_df = pd.DataFrame(reconciliation_audit).reindex(columns=reconciliation_cols)
+    write_csv(reconciliation_df, reconciliation_out)
+    if reconciliation_audit:
+        applied_count = sum(bool(row.get("Applied")) for row in reconciliation_audit)
+        log.success(
+            f"Term reconciliation: {applied_count} applied / {len(reconciliation_audit)} candidates "
+            f"→ {reconciliation_out}"
+        )
+    if rel is not None and valid_aliases:
+        rel = _redirect_relation_aliases(rel, valid_aliases)
 
     cleaned_tax, instances_df, tax_log, bearer_records, explicit_defined_records, demotion_records = _apply_taxonomy_edits(
         tax, all_tax_edits, valid_categories
@@ -2133,6 +2538,7 @@ def run_critic(
                 evidence_payload[start:start + 5], completion_system, completion_template,
                 model, temperature, archive_path, archive_lock,
             ))
+        completion_decisions = _generate_completion_nlds(evidence_payload, completion_decisions)
         cleaned_tax, completion_df = _apply_frame_completion(
             cleaned_tax, completion_audit, completion_decisions, valid_categories,
         )
@@ -2141,6 +2547,168 @@ def run_critic(
     if len(completion_df):
         added_count = int((completion_df["Status"] == "ADDED").sum())
         log.success(f"Frame completion: {added_count} added / {len(completion_df)} candidates → {frame_completion_out}")
+
+    # Newly completed terms receive standard Step-6b extraction before the
+    # relation critics run, so they participate in the same validation path.
+    targeted_rel_df = pd.DataFrame(columns=[
+        "Term", "Category", "Property", "Property_IRI", "Filler",
+        "Filler_Source", "Confidence", "Evidence", "Validation_Status",
+        "Validation_Reason",
+    ])
+    if rel is not None and not completion_df.empty:
+        added_terms = completion_df[completion_df["Status"] == "ADDED"]["Candidate"].astype(str).tolist()
+        if added_terms:
+            from src.modules.construct.relation_extractor import extract_relations_for_terms
+            added_rows = cleaned_tax[cleaned_tax["Term"].astype(str).isin(added_terms)]
+            term_rows = [
+                {"term": row["Term"], "nld": row["NLD"], "category": row["Category"]}
+                for _, row in added_rows.iterrows()
+            ]
+            targeted_rel_df = extract_relations_for_terms(
+                term_rows,
+                cleaned_tax[["Term", "Category"]],
+                rel.drop(columns=["_critic_id"], errors="ignore").to_dict("records"),
+            )
+            completion_df.loc[
+                completion_df["Candidate"].astype(str).isin(added_terms),
+                "Relation_Extraction_Pending",
+            ] = False
+            write_csv(completion_df, frame_completion_out)
+    write_csv(targeted_rel_df, completion_relations_out)
+    if rel is not None and not targeted_rel_df.empty:
+        accepted_new = targeted_rel_df[targeted_rel_df["Validation_Status"] == "ACCEPTED"].copy()
+        rel = pd.concat([
+            rel.drop(columns=["_critic_id"], errors="ignore"), accepted_new,
+        ], ignore_index=True, sort=False)
+    if rel is not None:
+        rel = rel.reset_index(drop=True)
+        rel["_critic_id"] = range(len(rel))
+
+    # Relation correctness/scope runs only after taxonomy and frame completion
+    # are stable, with rich context for subjects and cross-category fillers.
+    if rel is not None and len(rel):
+        individual_terms = set(instances_df["Term"].astype(str)) if not instances_df.empty else set()
+        individual_lower = {term.strip().lower() for term in individual_terms}
+        for _, row in rel.iterrows():
+            if str(row["Term"]).strip().lower() not in individual_lower:
+                continue
+            rid = int(row["_critic_id"])
+            all_rel_edits[rid] = {
+                "id": rid, "action": "KEEP",
+                "reason": "accepted relation on converted named individual",
+                "relation_scope": "individual_fact",
+                "scope_reason": "subject was converted to owl:NamedIndividual",
+                "scope_confidence": 1.0,
+                "scope_needs_review": False,
+            }
+        relation_context_lookup = _build_entity_context_lookup(cleaned_tax, individual_terms)
+        final_parent_lookup = _term_to_parent(cleaned_tax)
+        final_categories = sorted(set(cleaned_tax["Category"].astype(str)))
+        id_to_term_global = {int(row["_critic_id"]): str(row["Term"]) for _, row in tax.iterrows()}
+        decisions_all = _build_taxonomy_decisions(all_tax_edits, id_to_term_global)
+
+        def _critique_relation_category(cat: str) -> None:
+            tax_group = cleaned_tax[cleaned_tax["Category"] == cat]
+            subject_terms = {str(term).strip().lower() for term in tax_group["Term"].astype(str)}
+            own_rel = rel[rel["Term"].astype(str).str.strip().str.lower().isin(subject_terms)]
+            own_rel = own_rel[
+                ~own_rel["Term"].astype(str).str.strip().str.lower().isin(individual_lower)
+            ]
+            if own_rel.empty:
+                return
+            ancestor_terms: set[str] = set()
+            for term in tax_group["Term"].astype(str):
+                for ancestor in _ancestor_chain(term, final_parent_lookup, set(final_categories)):
+                    ancestor_terms.add(ancestor.strip().lower())
+            ancestor_rel = rel[
+                rel["Term"].astype(str).str.strip().str.lower().isin(ancestor_terms)
+            ] if ancestor_terms else pd.DataFrame()
+            rel_payload = _build_relation_payload(own_rel, ancestor_rel, relation_context_lookup)
+            involved_keys = {
+                str(row.get(field, "")).strip().lower()
+                for row in rel_payload for field in ("term", "filler")
+                if str(row.get(field, "")).strip()
+            }
+            tax_context = [
+                relation_context_lookup[key] for key in involved_keys if key in relation_context_lookup
+            ]
+            relevant_decisions = [
+                decision for decision in decisions_all
+                if str(decision.get("term", "")).strip().lower() in subject_terms
+            ]
+            own_ids = {int(row["_critic_id"]) for _, row in own_rel.iterrows()}
+
+            def _invoke_rel(payload: list[dict]) -> list[dict]:
+                return _call_relation_critic(
+                    cat, payload, relations_menu, previously_minted,
+                    tax_context, relevant_decisions,
+                    rel_system, rel_template, model, temperature,
+                    archive_path, archive_lock,
+                )
+
+            rel_edits = _ask_complete(_invoke_rel, rel_payload, own_ids, cat, "relation")
+            rel_edits_local = {
+                edit["id"]: edit for edit in rel_edits
+                if isinstance(edit, dict) and isinstance(edit.get("id"), int)
+            }
+            if lateral_cfg.enabled and lateral_cfg.relation_scope_enabled:
+                scope_payload = _scope_payload_after_relation_edits(rel_payload, rel_edits_local)
+                scope_ids = {int(row["id"]) for row in scope_payload if isinstance(row.get("id"), int)}
+
+                def _invoke_scope(payload: list[dict]) -> list[dict]:
+                    return _call_relation_scope_critic(
+                        cat, payload, tax_context, relevant_decisions,
+                        scope_system, scope_template, model, temperature,
+                        archive_path, archive_lock,
+                    )
+
+                scope_decisions = _ask_complete(
+                    _invoke_scope, scope_payload, scope_ids, cat, "relation-scope",
+                ) if scope_payload else []
+                scoped_ids: set[int] = set()
+                for decision in scope_decisions:
+                    if not (isinstance(decision, dict) and isinstance(decision.get("id"), int)):
+                        continue
+                    rid = decision["id"]
+                    scoped_ids.add(rid)
+                    current = dict(rel_edits_local.get(
+                        rid, {"id": rid, "action": "KEEP", "reason": "scope-only KEEP"},
+                    ))
+                    current.update({
+                        "relation_scope": _relation_scope(decision),
+                        "scope_reason": decision.get("reason", ""),
+                        "scope_confidence": decision.get("confidence", ""),
+                        "scope_needs_review": decision.get("needs_review", False),
+                    })
+                    rel_edits_local[rid] = current
+                for rid in scope_ids - scoped_ids:
+                    current = dict(rel_edits_local.get(
+                        rid, {"id": rid, "action": "KEEP", "reason": "scope fallback KEEP"},
+                    ))
+                    current.update({
+                        "relation_scope": "corpus_context",
+                        "scope_reason": "scope critic omitted row after retry; conservative non-generic fallback",
+                        "scope_confidence": 0.0,
+                        "scope_needs_review": True,
+                    })
+                    rel_edits_local[rid] = current
+            with edits_lock:
+                all_rel_edits.update(rel_edits_local)
+
+        relation_workers = min(max_workers, len(final_categories)) if final_categories else 1
+        with ThreadPoolExecutor(max_workers=relation_workers) as pool:
+            relation_futures = {
+                pool.submit(_critique_relation_category, cat): cat for cat in final_categories
+            }
+            with tqdm(total=len(final_categories), desc="Relation critic per category", unit="cat") as pbar:
+                for future in as_completed(relation_futures):
+                    cat = relation_futures[future]
+                    try:
+                        future.result()
+                        pbar.set_postfix_str(cat[:30])
+                    except Exception as e:
+                        tqdm.write(f"  [error] Relation category '{cat}': {e}")
+                    pbar.update(1)
 
     removed_taxonomy_terms = {
         str(entry["term"]).strip().lower()
@@ -2299,8 +2867,11 @@ def run_critic(
         "relation_scope_counts": scope_counts,
         "facet_frame_count": len(all_facet_frames),
         "subsumption_edit_count": len(all_subsumption_hints),
+        "reconciliation_candidate_count": len(reconciliation_audit),
+        "reconciliation_applied_count": sum(bool(row.get("Applied")) for row in reconciliation_audit),
         "disjointness_candidate_count": len(all_disjointness),
         "frame_completion_counts": completion_counts,
+        "frame_completion_relation_rows": len(targeted_rel_df),
         "weak_observations_enabled": weak_observations_enabled,
     }
     with open(lateral_summary_out, "w", encoding="utf-8") as fh:

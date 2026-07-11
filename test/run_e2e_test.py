@@ -199,6 +199,14 @@ def run_test():
             os.path.join(refined_dir_abs, "validate_subsumption_hints.csv"),
             ["term", "action", "old_parent", "new_parent", "confidence", "applied"], 0,
         ),
+        "term reconciliation": (
+            os.path.join(refined_dir_abs, "validate_term_reconciliation.csv"),
+            ["Term_A", "Category_A", "Term_B", "Category_B", "Decision", "Confidence", "Applied"], 0,
+        ),
+        "frame completion relations": (
+            os.path.join(refined_dir_abs, "validate_frame_completion_relations.csv"),
+            ["Term", "Category", "Property", "Filler", "Validation_Status"], 0,
+        ),
         "disjointness": (
             os.path.join(refined_dir_abs, "validate_disjointness.csv"),
             ["category", "parent", "members", "confidence", "needs_review", "reason"], 0,
@@ -402,7 +410,11 @@ def run_test():
         try:
             with open(summary_path, "r", encoding="utf-8") as f:
                 lateral_summary = json.load(f)
-            required_summary = {"action_counts", "class_fate_counts", "relation_scope_counts", "frame_completion_counts"}
+            required_summary = {
+                "action_counts", "class_fate_counts", "relation_scope_counts",
+                "frame_completion_counts", "reconciliation_candidate_count",
+                "reconciliation_applied_count", "frame_completion_relation_rows",
+            }
             missing_summary = required_summary - set(lateral_summary)
             if missing_summary:
                 print(f"  [FAIL] validate summary missing keys: {sorted(missing_summary)}")

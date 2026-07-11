@@ -1072,6 +1072,11 @@ lateral_coherence:
     enabled: true  # env override: LATERAL_FRAME_COMPLETION_ENABLED=false
     min_document_count: 2
     max_candidates_per_frame: 5
+  reconciliation:
+    enabled: true
+    top_k: 3
+    nld_similarity_threshold: 0.82
+    label_similarity_threshold: 0.86
   relation_scope:
     enabled: true  # env override: LATERAL_RELATION_SCOPE_ENABLED=false
     emit_only_generic_relations: true

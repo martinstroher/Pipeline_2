@@ -110,6 +110,104 @@ def _extract_batch(
     return result
 
 
+def _materialize_llm_relations(
+    batch: list[dict],
+    llm_results: list[dict],
+    known_terms_lower: set[str],
+    term_to_cat: dict[str, str],
+    accepted_relations: set[tuple[str, str, str]],
+) -> tuple[list[dict], dict[str, int]]:
+    rows: list[dict] = []
+    stats = {"accepted": 0, "rejected": 0, "empty": 0}
+    for i, item in enumerate(llm_results):
+        term = batch[i]["term"]
+        category = batch[i]["category"]
+        nld = batch[i]["nld"]
+        relations = item.get("relations", [])
+        if not relations:
+            stats["empty"] += 1
+        for rel in relations:
+            prop_name = rel.get("property", "")
+            filler = rel.get("filler", "")
+            confidence = float(rel.get("confidence", 0.0))
+            evidence = rel.get("evidence", "")
+            if prop_name not in PROPERTY_CONSTRAINTS:
+                rows.append(_make_row(
+                    term, category, prop_name, "", filler, "unknown",
+                    confidence, evidence, "REJECTED", f"Unknown property '{prop_name}'",
+                ))
+                stats["rejected"] += 1
+                continue
+            filler_source = _resolve_filler_source(filler, known_terms_lower)
+            filler_cat = term_to_cat.get(filler.strip().lower(), "")
+            specialized_prop = _specialize_property(prop_name, category, filler_cat)
+            prop_constraint = PROPERTY_CONSTRAINTS.get(specialized_prop)
+            prop_iri = prop_constraint.iri if prop_constraint else ""
+            result = validate_relation_full(
+                subject_term=term,
+                subject_cat=category,
+                property_name=specialized_prop,
+                object_term=filler,
+                object_cat=filler_cat if filler_cat else "unknown",
+                confidence=confidence,
+                evidence=evidence,
+                nld_text=nld,
+                existing_relations=accepted_relations,
+                confidence_threshold=CONFIDENCE_THRESHOLD,
+            )
+            status = "ACCEPTED" if result.is_valid else "REJECTED"
+            reason = result.reason
+            if result.warnings:
+                reason += " | Warnings: " + "; ".join(result.warnings)
+            rows.append(_make_row(
+                term, category, specialized_prop, prop_iri, filler,
+                filler_source, confidence, evidence, status, reason,
+            ))
+            if result.is_valid:
+                accepted_relations.add((term, specialized_prop, filler))
+                stats["accepted"] += 1
+            else:
+                stats["rejected"] += 1
+    return rows, stats
+
+
+def extract_relations_for_terms(
+    term_rows: list[dict],
+    known_terms: pd.DataFrame,
+    existing_rows: list[dict] | None = None,
+) -> pd.DataFrame:
+    """Run standard Step-6b extraction/validation only for supplied new terms."""
+    if not term_rows:
+        return pd.DataFrame(columns=[
+            "Term", "Category", "Property", "Property_IRI", "Filler",
+            "Filler_Source", "Confidence", "Evidence", "Validation_Status",
+            "Validation_Reason",
+        ])
+    all_terms = known_terms["Term"].dropna().astype(str).tolist()
+    known_terms_lower = {term.strip().lower() for term in all_terms}
+    known_terms_str = ", ".join(sorted(all_terms))
+    term_to_cat = dict(zip(
+        known_terms["Term"].astype(str).str.strip().str.lower(),
+        known_terms["Category"].astype(str),
+    ))
+    accepted_relations = {
+        (str(row.get("Term", "")), str(row.get("Property", "")), str(row.get("Filler", "")))
+        for row in (existing_rows or []) if row.get("Validation_Status") == "ACCEPTED"
+    }
+    output: list[dict] = []
+    for start in range(0, len(term_rows), BATCH_SIZE):
+        batch = term_rows[start:start + BATCH_SIZE]
+        llm_results = _extract_batch(
+            [{"term": row["term"], "nld": row["nld"]} for row in batch],
+            known_terms_str,
+        )
+        rows, _ = _materialize_llm_relations(
+            batch, llm_results, known_terms_lower, term_to_cat, accepted_relations,
+        )
+        output.extend(rows)
+    return pd.DataFrame(output)
+
+
 def run_relation_extraction(
     categorized_csv: str | None = None,
     output_path: str | None = None,
@@ -197,80 +295,15 @@ def run_relation_extraction(
     for batch_start in range(0, len(pending_list), BATCH_SIZE):
         batch = pending_list[batch_start : batch_start + BATCH_SIZE]
         batch_for_llm = [{"term": b["term"], "nld": b["nld"]} for b in batch]
-        batch_cats = {b["term"]: b["category"] for b in batch}
 
         try:
             llm_results = _extract_batch(batch_for_llm, known_terms_str)
-
-            for i, item in enumerate(llm_results):
-                term = batch[i]["term"]
-                category = batch_cats[term]
-                nld = batch[i]["nld"]
-                relations = item.get("relations", [])
-
-                if not relations:
-                    stats["empty"] += 1
-
-                for rel in relations:
-                    prop_name = rel.get("property", "")
-                    filler = rel.get("filler", "")
-                    confidence = float(rel.get("confidence", 0.0))
-                    evidence = rel.get("evidence", "")
-
-                    # Skip unknown properties
-                    if prop_name not in PROPERTY_CONSTRAINTS:
-                        row = _make_row(
-                            term, category, prop_name, "", filler, "unknown",
-                            confidence, evidence, "REJECTED",
-                            f"Unknown property '{prop_name}'",
-                        )
-                        all_rows.append(row)
-                        stats["rejected"] += 1
-                        continue
-
-                    # Resolve filler source
-                    filler_source = _resolve_filler_source(filler, known_terms_lower)
-
-                    # Resolve filler category (for validation)
-                    filler_cat = term_to_cat.get(filler.strip().lower(), "")
-
-                    # Specialize property
-                    specialized_prop = _specialize_property(prop_name, category, filler_cat)
-
-                    # Get IRI
-                    prop_constraint = PROPERTY_CONSTRAINTS.get(specialized_prop)
-                    prop_iri = prop_constraint.iri if prop_constraint else ""
-
-                    # Validate
-                    result = validate_relation_full(
-                        subject_term=term,
-                        subject_cat=category,
-                        property_name=specialized_prop,
-                        object_term=filler,
-                        object_cat=filler_cat if filler_cat else "unknown",
-                        confidence=confidence,
-                        evidence=evidence,
-                        nld_text=nld,
-                        existing_relations=accepted_relations,
-                        confidence_threshold=CONFIDENCE_THRESHOLD,
-                    )
-
-                    status = "ACCEPTED" if result.is_valid else "REJECTED"
-                    reason = result.reason
-                    if result.warnings:
-                        reason += " | Warnings: " + "; ".join(result.warnings)
-
-                    row = _make_row(
-                        term, category, specialized_prop, prop_iri, filler,
-                        filler_source, confidence, evidence, status, reason,
-                    )
-                    all_rows.append(row)
-
-                    if result.is_valid:
-                        accepted_relations.add((term, specialized_prop, filler))
-                        stats["accepted"] += 1
-                    else:
-                        stats["rejected"] += 1
+            batch_rows, batch_stats = _materialize_llm_relations(
+                batch, llm_results, known_terms_lower, term_to_cat, accepted_relations,
+            )
+            all_rows.extend(batch_rows)
+            for key in ("accepted", "rejected", "empty"):
+                stats[key] += batch_stats[key]
 
         except Exception as e:
             tqdm.write("")

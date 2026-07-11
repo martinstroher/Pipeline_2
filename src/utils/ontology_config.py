@@ -134,6 +134,10 @@ class LateralCoherenceConfig:
     frame_completion_max_candidates: int = 5
     relation_scope_enabled: bool = True
     relation_scope_min_confidence_emit: float = 0.70
+    reconciliation_enabled: bool = True
+    reconciliation_top_k: int = 3
+    reconciliation_nld_similarity: float = 0.82
+    reconciliation_label_similarity: float = 0.86
     allow_defined_classes: bool = True
     conservative_drop: bool = True
     min_confidence_apply: float = 0.70
@@ -594,6 +598,7 @@ def _parse_lateral_coherence(raw: dict | None) -> LateralCoherenceConfig:
     class_fates = raw.get("class_worthiness", raw.get("class_fates", {})) or {}
     frame_audit = raw.get("frame_audit", {}) or {}
     frame_completion = raw.get("frame_completion", {}) or {}
+    reconciliation = raw.get("reconciliation", {}) or {}
     relation_scope = raw.get("relation_scope", {}) or {}
     disjointness = raw.get("disjointness", {}) or {}
 
@@ -619,6 +624,10 @@ def _parse_lateral_coherence(raw: dict | None) -> LateralCoherenceConfig:
         frame_completion_max_candidates=int(frame_completion.get("max_candidates_per_frame", 5)),
         relation_scope_enabled=relation_scope_enabled,
         relation_scope_min_confidence_emit=float(relation_scope.get("min_confidence_emit", 0.70)),
+        reconciliation_enabled=bool(reconciliation.get("enabled", True)),
+        reconciliation_top_k=int(reconciliation.get("top_k", 3)),
+        reconciliation_nld_similarity=float(reconciliation.get("nld_similarity_threshold", 0.82)),
+        reconciliation_label_similarity=float(reconciliation.get("label_similarity_threshold", 0.86)),
         allow_defined_classes=bool(class_fates.get("allow_defined_classes", True)),
         conservative_drop=bool(class_fates.get("conservative_drop", True)),
         min_confidence_apply=float(class_fates.get("min_confidence_apply", 0.70)),

@@ -2,12 +2,17 @@
 <<personas_critic_auditor>>
 
 [PROMPT_TEMPLATE]
-You are doing a focused **deduplication** pass over the terms of the **{category}** branch of an upper-ontology-aligned taxonomy. Your ONLY job is sibling near-synonym / co-extensional redundancy and intermediate value.
+You are doing focused **term reconciliation** for an upper-ontology-aligned taxonomy. Depending on the payload, compare either one category's survivors or shortlisted cross-category pairs.
 
 Each row is a term with its definition (NLD), its parent, whether it is a builder-invented intermediate, and how many surviving children it has (computed for you).
 
 ## Terms
 {survivors_json}
+
+## Cross-category candidate pairs (weak similarity signals; may be wrong)
+{cross_candidates_json}
+
+Similarity only selected pairs for inspection. It is NOT evidence of equivalence or subsumption.
 
 ────────────────────────────────────────────────────────────
 ## Checks (run across the whole set)
@@ -21,6 +26,13 @@ Each row is a term with its definition (NLD), its parent, whether it is a builde
    - **Role / phase → DROP_AS_REDUNDANT** — contingent or relational, not a genus.
    - Rigid sortal but `child_count < 2` and not a standard kind → DROP_AS_REDUNDANT (one-off bridge, pure indirection).
    On any drop, `survivor` = the term's parent (children reparent there).
+
+3. **Cross-category reconciliation.** For each candidate pair choose exactly one:
+  - `SAME_KIND` — co-extensional; provide survivor and duplicate ids.
+  - `A_SUBCLASS_OF_B` — A is strictly narrower than B.
+  - `B_SUBCLASS_OF_A` — B is strictly narrower than A.
+  - `DISTINCT` — related but neither equivalent nor strict subtype.
+  - `NEEDS_REVIEW` — evidence is insufficient; keep both.
 
 ────────────────────────────────────────────────────────────
 ## Abstention
@@ -54,6 +66,12 @@ Return ONLY a JSON object with this exact shape. Include a row ONLY when you dro
 
     {{"id": 27, "action": "DROP_AS_REDUNDANT", "survivor": "Animal",
       "reason": "intermediate mixin: groups children by use, no identity of its own (Check 2a) — dropped despite child_count=3"}}
+  ],
+  "reconciliations": [
+    {{"pair_id": 0, "decision": "SAME_KIND", "survivor_id": 12, "duplicate_id": 14,
+      "confidence": 0.95, "needs_review": false, "reason": "NLDs are co-extensional"}},
+    {{"pair_id": 1, "decision": "A_SUBCLASS_OF_B", "child_id": 20, "parent_id": 21,
+      "confidence": 0.91, "needs_review": false, "reason": "A adds a strict differentia to B"}}
   ]
 }}
 ```
@@ -62,4 +80,7 @@ Return ONLY a JSON object with this exact shape. Include a row ONLY when you dro
 - Only `DROP_AS_REDUNDANT` rows appear; everything else is implicitly KEPT.
 - `survivor` is REQUIRED on every row and must be a term that you are NOT dropping.
 - Never drop both members of a redundant pair — keep exactly one.
+- Every supplied cross-category pair appears exactly once in `reconciliations`.
+- `decision` is exactly `SAME_KIND | A_SUBCLASS_OF_B | B_SUBCLASS_OF_A | DISTINCT | NEEDS_REVIEW`.
+- Do not use weak similarity signals as the reason; decide from labels, NLDs, parents, and categories.
 - `reason` is one short sentence (≤200 chars).

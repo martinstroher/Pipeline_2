@@ -20,10 +20,10 @@ Choose one scope per row:
 - **individual_fact** — the subject is a named individual, or the relation is explicitly factual about particular named entities.
 
 Calibration:
-- `Evaporite constituted_by Halite` stated as a compositional definition → generic.
-- `Mineral located_in NamedField` reported from one study → corpus_context.
-- `NamedBasin has_part NamedFormation` → individual_fact.
-- `Dolomite derives_from Calcite` is generic only if the NLD defines the kind through that derivation; an observed replacement in specific samples is corpus_context.
+- `Bicycle has_part Wheel` stated as part of the class definition → generic.
+- `Bird located_in NamedWetland` reported by one field study → corpus_context.
+- `NamedBuilding has_part NamedRoom` → individual_fact.
+- `Artifact generated_by ManufacturingProcess` is generic only if the NLD defines the kind through that process; an observed specimen-production event is corpus_context.
 
 Return ONLY:
 

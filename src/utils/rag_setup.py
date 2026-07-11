@@ -31,6 +31,19 @@ DENSE_WEIGHT = float(os.environ.get("DENSE_WEIGHT", 0.5))
 
 _BM25_RETRIEVER = None
 _CROSS_ENCODER = None
+_EMBEDDINGS = None
+
+
+def get_embedding_model() -> HuggingFaceEmbeddings:
+    """Shared lazy BGE-M3 encoder for corpus RAG and small in-memory tasks."""
+    global _EMBEDDINGS
+    if _EMBEDDINGS is None:
+        _EMBEDDINGS = HuggingFaceEmbeddings(
+            model_name=EMBED_MODEL,
+            model_kwargs={'device': 'cpu', 'trust_remote_code': True},
+            encode_kwargs={'normalize_embeddings': True},
+        )
+    return _EMBEDDINGS
 
 def load_documents(docs_dir: str) -> List:
     loader = DirectoryLoader(docs_dir, glob="**/*.md", loader_cls=TextLoader,
@@ -83,22 +96,14 @@ def create_vector_store(documents: List, chunk_size: int) -> Chroma:
         shutil.rmtree(db_path)
         
     log.info(f"Creating dense index (BGE-M3) at {db_path}...")
-    embeddings = HuggingFaceEmbeddings(
-        model_name=EMBED_MODEL,
-        model_kwargs={'device': 'cpu', 'trust_remote_code': True}, # 'cuda' if GPU available
-        encode_kwargs={'normalize_embeddings': True}
-    )
+    embeddings = get_embedding_model()
     vector_store = Chroma.from_documents(documents, embeddings, persist_directory=db_path)
     vector_store.persist()
     return vector_store
 
 def load_vector_store(chunk_size: int = 1024) -> Chroma:
     db_path = get_chroma_path(chunk_size)
-    embeddings = HuggingFaceEmbeddings(
-        model_name=EMBED_MODEL,
-        model_kwargs={'device': 'cpu', 'trust_remote_code': True},
-        encode_kwargs={'normalize_embeddings': True}
-    )
+    embeddings = get_embedding_model()
     vector_store = Chroma(persist_directory=db_path, embedding_function=embeddings)
     return vector_store
 
