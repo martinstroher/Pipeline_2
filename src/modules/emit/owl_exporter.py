@@ -864,13 +864,21 @@ def run_owl_export(
     if relations_csv and os.path.exists(relations_csv):
         rel_df = read_csv(relations_csv)
         accepted = rel_df[rel_df["Validation_Status"] == "ACCEPTED"]
-        if _CFG.lateral_coherence().emit_only_generic_relations and "Relation_Scope" in accepted.columns:
+        lateral_cfg = _CFG.lateral_coherence()
+        if lateral_cfg.emit_only_generic_relations and "Relation_Scope" in accepted.columns:
             n_before_scope = len(accepted)
             scopes = accepted["Relation_Scope"].fillna("generic").astype(str).str.strip().str.lower()
-            accepted = accepted[scopes.isin(["", "generic"])]
+            keep_scope = scopes.isin(["", "generic"])
+            if lateral_cfg.relation_scope_enabled and "Scope_Confidence" in accepted.columns:
+                confidence = pd.to_numeric(accepted["Scope_Confidence"], errors="coerce").fillna(0.0)
+                keep_scope &= confidence >= lateral_cfg.relation_scope_min_confidence_emit
+            accepted = accepted[keep_scope]
             n_contextual = n_before_scope - len(accepted)
             if n_contextual:
-                log.detail(f"Skipped {n_contextual} non-generic relation(s) from OWL class restrictions")
+                log.detail(
+                    f"Skipped {n_contextual} contextual/individual/low-confidence "
+                    "relation(s) from OWL class restrictions"
+                )
         log.info(f"Adding {len(accepted)} relation restrictions from {relations_csv}")
 
         # Declare used object properties

@@ -127,6 +127,13 @@ class LateralCoherenceConfig:
     """Domain-agnostic tuning for the validate-step lateral-coherence audit."""
     enabled: bool = True
     hints_enabled: bool = True
+    class_worthiness_enabled: bool = True
+    frame_audit_enabled: bool = True
+    frame_completion_enabled: bool = True
+    frame_completion_min_documents: int = 2
+    frame_completion_max_candidates: int = 5
+    relation_scope_enabled: bool = True
+    relation_scope_min_confidence_emit: float = 0.70
     allow_defined_classes: bool = True
     conservative_drop: bool = True
     min_confidence_apply: float = 0.70
@@ -584,16 +591,34 @@ def _env_bool(name: str, default: bool) -> bool:
 def _parse_lateral_coherence(raw: dict | None) -> LateralCoherenceConfig:
     raw = raw or {}
     hints = raw.get("hints", {}) or {}
-    class_fates = raw.get("class_fates", {}) or {}
+    class_fates = raw.get("class_worthiness", raw.get("class_fates", {})) or {}
+    frame_audit = raw.get("frame_audit", {}) or {}
+    frame_completion = raw.get("frame_completion", {}) or {}
     relation_scope = raw.get("relation_scope", {}) or {}
     disjointness = raw.get("disjointness", {}) or {}
 
     hints_enabled = bool(hints.get("enabled", True))
     hints_enabled = _env_bool("LATERAL_HINTS_ENABLED", hints_enabled)
+    class_worthiness_enabled = _env_bool(
+        "LATERAL_CLASS_WORTHINESS_ENABLED", bool(class_fates.get("enabled", True))
+    )
+    frame_completion_enabled = _env_bool(
+        "LATERAL_FRAME_COMPLETION_ENABLED", bool(frame_completion.get("enabled", True))
+    )
+    relation_scope_enabled = _env_bool(
+        "LATERAL_RELATION_SCOPE_ENABLED", bool(relation_scope.get("enabled", True))
+    )
 
     return LateralCoherenceConfig(
         enabled=bool(raw.get("enabled", True)),
         hints_enabled=hints_enabled,
+        class_worthiness_enabled=class_worthiness_enabled,
+        frame_audit_enabled=bool(frame_audit.get("enabled", True)),
+        frame_completion_enabled=frame_completion_enabled,
+        frame_completion_min_documents=int(frame_completion.get("min_document_count", 2)),
+        frame_completion_max_candidates=int(frame_completion.get("max_candidates_per_frame", 5)),
+        relation_scope_enabled=relation_scope_enabled,
+        relation_scope_min_confidence_emit=float(relation_scope.get("min_confidence_emit", 0.70)),
         allow_defined_classes=bool(class_fates.get("allow_defined_classes", True)),
         conservative_drop=bool(class_fates.get("conservative_drop", True)),
         min_confidence_apply=float(class_fates.get("min_confidence_apply", 0.70)),

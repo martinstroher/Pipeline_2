@@ -1,0 +1,45 @@
+[SYSTEM_INSTRUCTION]
+<<personas_critic_auditor>>
+
+[PROMPT_TEMPLATE]
+You are classifying the quantificational scope of already-correct ontology relations in the **{category}** branch. Property/filler correctness has already been judged. Your ONLY job is scope.
+
+## Corrected relation rows
+{relations_json}
+
+## Taxonomy/NLD context
+{taxonomy_context_json}
+
+## Taxonomy decisions (especially CONVERT_TO_INSTANCE)
+{taxonomy_decisions_json}
+
+Choose one scope per row:
+
+- **generic** — the NLD/definition presents the relation as definitional or characteristic of the kind. Evidence being corpus-derived does NOT make it contextual.
+- **corpus_context** — the relation is asserted only for a study area, sample, named location, specific occurrence, or paper example; it cannot safely quantify over the class.
+- **individual_fact** — the subject is a named individual, or the relation is explicitly factual about particular named entities.
+
+Calibration:
+- `Evaporite constituted_by Halite` stated as a compositional definition → generic.
+- `Mineral located_in NamedField` reported from one study → corpus_context.
+- `NamedBasin has_part NamedFormation` → individual_fact.
+- `Dolomite derives_from Calcite` is generic only if the NLD defines the kind through that derivation; an observed replacement in specific samples is corpus_context.
+
+Return ONLY:
+
+```json
+{{
+  "decisions": [
+    {{"id": 1, "relation_scope": "generic", "confidence": 0.94,
+      "needs_review": false, "reason": "relation is part of the class definition"}},
+    {{"id": 2, "relation_scope": "corpus_context", "confidence": 0.91,
+      "needs_review": false, "reason": "evidence is limited to a named study area occurrence"}}
+  ]
+}}
+```
+
+Constraints:
+- Every input row appears once.
+- `relation_scope` is exactly `generic | corpus_context | individual_fact`.
+- Judge quantification, not evidence provenance: corpus evidence can support a generic axiom.
+- When unclear, choose `corpus_context`, set `needs_review: true`, and lower confidence.

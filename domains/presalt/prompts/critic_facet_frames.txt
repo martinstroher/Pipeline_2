@@ -1,0 +1,62 @@
+[SYSTEM_INSTRUCTION]
+<<personas_critic_auditor>>
+
+[PROMPT_TEMPLATE]
+You are auditing lateral taxonomy coherence for surviving classes in the **{category}** branch. Taxonomy correctness, class-worthiness, and deduplication have already run. Do not re-judge synonyms or class worthiness.
+
+## Surviving classes
+{survivors_json}
+
+## Existing class labels (valid targets for reparenting)
+{existing_classes_json}
+
+────────────────────────────────────────────────────────────
+## Tasks
+────────────────────────────────────────────────────────────
+
+1. **Missing subsumption:** if a survivor clearly belongs under a more specific EXISTING class, propose REPARENT. Use NLD entailment, not label overlap alone.
+2. **Facet frames:** group siblings that use one division axis; flag sibling sets that mix independent axes.
+3. **Singleton intermediates:** for a builder-invented intermediate with one surviving child, propose collapse only if it adds no reusable grouping value. Otherwise keep or request frame completion.
+4. **Frame completion candidates:** for a central conventional same-axis frame that appears incomplete, propose likely missing named members. Proposals are NOT added automatically; corpus attestation is checked later.
+5. **Candidate disjointness:** only high-confidence mutually exclusive same-axis members. Never infer disjointness from siblinghood alone.
+
+Do not generate combinatorial facet cross-products. Missing members must be conventional named concepts likely relevant to the branch, not merely logically possible combinations.
+
+────────────────────────────────────────────────────────────
+## Output
+────────────────────────────────────────────────────────────
+
+Return ONLY:
+
+```json
+{{
+  "reparents": [
+    {{"id": 10, "new_parent": "ExistingClass", "confidence": 0.93,
+      "needs_review": false, "reason": "NLD explicitly defines the term as a subtype of ExistingClass"}}
+  ],
+  "collapses": [
+    {{"id": 20, "survivor": "ExistingParent", "confidence": 0.90,
+      "needs_review": false, "reason": "invented singleton adds no reusable grouping differentia"}}
+  ],
+  "facet_frames": [
+    {{"parent": "Parent", "axis": "composition", "members": ["A", "B"],
+      "frame_type": "same_axis", "reason": "siblings divide by composition"}}
+  ],
+  "completion_candidates": [
+    {{"label": "MissingKind", "parent": "Parent", "search_terms": ["missing kind", "synonym"],
+      "centrality": "high", "confidence": 0.88,
+      "reason": "conventional missing member of the same-axis frame"}}
+  ],
+  "disjointness": [
+    {{"parent": "Parent", "members": ["A", "B"], "confidence": 0.94,
+      "needs_review": false, "reason": "same-axis mutually exclusive kinds"}}
+  ]
+}}
+```
+
+### Constraints
+- `reparents.new_parent` and `collapses.survivor` must be EXISTING labels.
+- `collapses.id` must name a builder-invented intermediate, not a corpus term.
+- `frame_type` is `same_axis | mixed_axis | unclear`.
+- Completion candidates are suggestions only; provide 1-3 search terms and no more than {max_candidates} candidates total.
+- No geology/domain vocabulary is hardcoded in this method; reason only from supplied NLDs/branch structure and general ontology principles.

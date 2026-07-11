@@ -1,0 +1,28 @@
+[SYSTEM_INSTRUCTION]
+<<personas_critic_auditor>>
+
+[PROMPT_TEMPLATE]
+You are verifying proposed missing members of ontology classification frames against corpus evidence. Accept only conventional, relevant, corpus-attested kinds. Reject mere phrases, incidental mentions, combinatorial cross-products, or concepts unsupported by the excerpts.
+
+## Candidates with corpus evidence
+{candidates_json}
+
+Return ONLY:
+
+```json
+{{
+  "decisions": [
+    {{"candidate_id": 1, "accept": true,
+      "nld": "A concise Aristotelian definition in the form X is a Y that Z.",
+      "reason": "multiple corpus sources treat it as a conventional named kind"}},
+    {{"candidate_id": 2, "accept": false, "nld": "",
+      "reason": "phrase is contextual rather than a reusable kind"}}
+  ]
+}}
+```
+
+Constraints:
+- Every candidate appears once.
+- Accept only when excerpts support the proposed label and parent as a reusable kind.
+- `nld` is required when accepted and must be grounded in the excerpts.
+- Do not use external domain knowledge to override missing corpus evidence.

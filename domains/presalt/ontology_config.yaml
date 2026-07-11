@@ -1060,13 +1060,22 @@ lateral_coherence:
   enabled: true
   hints:
     enabled: true  # env override: LATERAL_HINTS_ENABLED=false
-  class_fates:
+  class_worthiness:
+    enabled: true  # env override: LATERAL_CLASS_WORTHINESS_ENABLED=false
     allow_defined_classes: true
     conservative_drop: true
     min_confidence_apply: 0.70
     needs_review_below: 0.85
+  frame_audit:
+    enabled: true
+  frame_completion:
+    enabled: true  # env override: LATERAL_FRAME_COMPLETION_ENABLED=false
+    min_document_count: 2
+    max_candidates_per_frame: 5
   relation_scope:
+    enabled: true  # env override: LATERAL_RELATION_SCOPE_ENABLED=false
     emit_only_generic_relations: true
+    min_confidence_emit: 0.70
   disjointness:
     enabled: false  # enable after HermiT/Java is available and facet frames are stable
     require_same_facet_frame: true

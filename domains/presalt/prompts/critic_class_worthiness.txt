@@ -1,0 +1,89 @@
+[SYSTEM_INSTRUCTION]
+<<personas_critic_auditor>>
+
+[PROMPT_TEMPLATE]
+You are auditing whether surviving terms in the **{category}** branch deserve to exist as named ontology classes. Taxonomy correctness has already been judged. Your ONLY job is class-worthiness / parsimony.
+
+## Candidates (with NLD, corrected parent, frequency, document coverage, CQ evidence)
+{candidates_json}
+
+## Sibling/branch context (read-only)
+{sibling_context_json}
+
+## Relation context (read-only)
+{relations_context_json}
+
+## Existing class labels (required for bases and for KEEP_DEFINED fillers)
+{existing_classes_json}
+
+## Existing relation properties (the only valid property targets)
+{properties_json}
+
+## Weak heuristic observations (optional; may be wrong)
+{weak_observations_json}
+
+Weak observations are NOT evidence or recommendations. Ignore them when they conflict with NLD, sibling, relation, frequency, or CQ evidence. Never choose a fate solely because an observation exists.
+
+────────────────────────────────────────────────────────────
+## One authoritative fate per candidate
+────────────────────────────────────────────────────────────
+
+- **KEEP_PRIMITIVE** — a genuine, reusable, representative kind on one primary classification axis.
+- **KEEP_DEFINED** — a central/reusable cross-axis or property-defined concept worth keeping as a named class. Supply `defined_by` using only EXISTING classes/properties.
+- **DEMOTE_TO_PROPERTY** — a useful distinction, but mainly a property/facet value rather than a reusable kind. Supply `demoted_as` for audit; no universal axiom will be added to the base class.
+- **DROP_CLASS** — low-centrality one-off phrase, stacked qualifier, non-reusable cross-product, or unnecessary class-level detail.
+
+A non-vacuous differentia is NOT sufficient by itself. Ask whether an expert would reuse the term as a stable kind and whether it materially serves the competency questions/domain scope.
+
+Use frequency and CQ evidence as signals, not mechanical thresholds. A rare but central conventional kind may stay; a frequent descriptive phrase may still be demoted. Builder-minted intermediates have zero frequency by design, so judge their grouping value from the branch context.
+
+Be conservative: when evidence is balanced, KEEP_PRIMITIVE and set `needs_review: true`. Do not drop merely because a label is compound.
+
+────────────────────────────────────────────────────────────
+## Generic examples
+────────────────────────────────────────────────────────────
+
+- `Dog` under `Mammal`, reused biological kind → KEEP_PRIMITIVE.
+- `SourceMaterial` defined as `Material + has_disposition some GenerationDisposition`, central/reused → KEEP_DEFINED.
+- `RhombohedralMineral` differing only by crystal habit, low centrality → DEMOTE_TO_PROPERTY (`base_class: Mineral`, `property: has_quality`, `filler: RhombohedralHabit`).
+- `RedLargeImportedApple`, stacked low-centrality qualities/context → DROP_CLASS.
+- `ViralPneumonia`, central and reusable causal cross-axis concept → KEEP_DEFINED (`Pneumonia + caused_by some Virus`).
+
+────────────────────────────────────────────────────────────
+## Output
+────────────────────────────────────────────────────────────
+
+Return ONLY this JSON shape, with every candidate exactly once:
+
+```json
+{{
+  "decisions": [
+    {{"id": 1, "fate": "KEEP_PRIMITIVE", "centrality": "high", "cross_axis": false,
+      "needs_review": false, "confidence": 0.95,
+      "placement_rationale": "reusable kind with a stable identity and clear parent",
+      "reason": "recognized reusable kind; CQ/frequency evidence supports scope"}},
+    {{"id": 2, "fate": "KEEP_DEFINED", "centrality": "high", "cross_axis": true,
+      "defined_by": {{"base_class": "Pneumonia", "property": "caused_by", "filler": "Virus", "rationale": "central causal cross-axis concept"}},
+      "needs_review": false, "confidence": 0.90,
+      "placement_rationale": "definition preserves both the base kind and causal facet",
+      "reason": "central reusable concept; not a primitive single-axis kind"}},
+    {{"id": 3, "fate": "DEMOTE_TO_PROPERTY", "centrality": "low", "cross_axis": true,
+      "demoted_as": {{"base_class": "Mineral", "property": "has_quality", "filler": "RhombohedralHabit", "rationale": "crystal habit is a quality value"}},
+      "needs_review": true, "confidence": 0.78,
+      "placement_rationale": "descriptive property refinement, not a reusable kind",
+      "reason": "low-centrality property-value specialization"}},
+    {{"id": 4, "fate": "DROP_CLASS", "centrality": "low", "cross_axis": true,
+      "needs_review": false, "confidence": 0.91,
+      "placement_rationale": "stacked descriptive phrase adds no reusable class",
+      "reason": "one-off low-centrality cross-product"}}
+  ]
+}}
+```
+
+### Constraints
+- `fate` is exactly `KEEP_PRIMITIVE | KEEP_DEFINED | DEMOTE_TO_PROPERTY | DROP_CLASS`.
+- `centrality` is exactly `high | medium | low`.
+- `confidence` is 0..1; `needs_review` is diagnostic only and never blocks the run.
+- KEEP_DEFINED requires complete `defined_by` with existing `base_class`, `property`, and `filler`.
+- DEMOTE_TO_PROPERTY requires complete `demoted_as` using an existing base class/property; its filler may be a descriptive audit value because no OWL axiom is emitted.
+- Reasons must cite semantic/evidence signals, never weak observations alone.

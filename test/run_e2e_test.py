@@ -174,6 +174,36 @@ def run_test():
     taxonomy_csv_abs = os.path.join(refined_dir_abs, "construct_taxonomy.csv")
     validate_tax_abs = os.path.join(refined_dir_abs, "validate_taxonomy.csv")
     validate_rel_abs = os.path.join(refined_dir_abs, "validate_relations.csv")
+    lateral_artifacts = {
+        "evidence": (
+            os.path.join(refined_dir_abs, "validate_evidence_bundle.csv"),
+            ["Term", "Frequency", "Document_Coverage", "CQ_Count", "Matched_CQs"], 1,
+        ),
+        "class fates": (
+            os.path.join(refined_dir_abs, "validate_class_fates.csv"),
+            ["term", "action", "proposed_fate", "class_fate", "confidence", "needs_review"], 1,
+        ),
+        "demotions": (
+            os.path.join(refined_dir_abs, "validate_demotions.csv"),
+            ["Term", "Base_Class", "Property", "Filler", "Rationale"], 0,
+        ),
+        "facet frames": (
+            os.path.join(refined_dir_abs, "validate_facet_frames.csv"),
+            ["category", "parent", "axis", "members", "frame_type", "reason"], 0,
+        ),
+        "frame completion": (
+            os.path.join(refined_dir_abs, "validate_frame_completion.csv"),
+            ["Candidate", "Parent_Term", "Document_Count", "Status", "Relation_Extraction_Pending"], 0,
+        ),
+        "subsumption hints": (
+            os.path.join(refined_dir_abs, "validate_subsumption_hints.csv"),
+            ["term", "action", "old_parent", "new_parent", "confidence", "applied"], 0,
+        ),
+        "disjointness": (
+            os.path.join(refined_dir_abs, "validate_disjointness.csv"),
+            ["category", "parent", "members", "confidence", "needs_review", "reason"], 0,
+        ),
+    }
     # OWL exporter uses the critic's validate_taxonomy.csv -> validate_taxonomy.ttl by
     # default (the construct_taxonomy -> emit_ontology rename only fires when the input
     # name still contains 'construct_taxonomy').
@@ -356,6 +386,45 @@ def run_test():
         all_passed = all_passed and ok
     else:
         print("  [WARN] Step 6b (relations): file missing — relation extraction may have been skipped")
+
+    # --- validate: lateral-coherence artifacts ---
+    for label, (path, columns, min_rows) in lateral_artifacts.items():
+        ok, rows, errors = validate_csv(path, columns, min_rows=min_rows, label=f"validate {label}")
+        if ok:
+            print(f"  [OK]   validate {label}: {len(rows)} rows")
+        else:
+            for error in errors:
+                print(f"  [FAIL] validate {label}: {error}")
+        all_passed = all_passed and ok
+
+    summary_path = os.path.join(refined_dir_abs, "validate_lateral_coherence_summary.json")
+    if os.path.exists(summary_path):
+        try:
+            with open(summary_path, "r", encoding="utf-8") as f:
+                lateral_summary = json.load(f)
+            required_summary = {"action_counts", "class_fate_counts", "relation_scope_counts", "frame_completion_counts"}
+            missing_summary = required_summary - set(lateral_summary)
+            if missing_summary:
+                print(f"  [FAIL] validate summary missing keys: {sorted(missing_summary)}")
+                all_passed = False
+            else:
+                print("  [OK]   validate lateral-coherence summary")
+        except Exception as e:
+            print(f"  [FAIL] validate summary parse error: {e}")
+            all_passed = False
+    else:
+        print("  [FAIL] validate lateral-coherence summary missing")
+        all_passed = False
+
+    if os.path.exists(validate_rel_abs):
+        with open(validate_rel_abs, "r", encoding="utf-8-sig") as f:
+            relation_headers = set(csv.DictReader(f).fieldnames or [])
+        required_scope = {"Relation_Scope", "Scope_Reason", "Scope_Confidence", "Scope_Needs_Review"}
+        if not required_scope <= relation_headers:
+            print(f"  [FAIL] validate relations missing scope columns: {sorted(required_scope - relation_headers)}")
+            all_passed = False
+        else:
+            print("  [OK]   validate relation-scope columns")
 
     # --- Step 7: OWL Turtle ---
     if os.path.exists(owl_ttl_abs):

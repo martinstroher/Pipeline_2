@@ -36,13 +36,6 @@ Use one of these ONLY when replacing a property that is genuinely wrong. A prope
     - a **taxonomy decision requires re-expression** (e.g. the subject was REPARENTed under `role` → restate via `has_role`).
   Do **NOT** FIX merely because a property is absent from the menu, to specialise/genericise parthood, or to reword. When replacing a wrong property, pick the closest menu target; if none fits and no role-detour works, attach a `mint` block (see next section).
 
-For every own relation, also set **`relation_scope`**:
-- `generic` — true of the class/kind itself; safe to emit as an OWL class axiom.
-- `corpus_context` — true only in the papers' study area, dataset, basin, field, or examples; useful evidence but NOT a universal class axiom.
-- `individual_fact` — a factual relation involving a named individual rather than a generic class restriction.
-
-Scope is independent of property correctness. A relation can be semantically plausible but still `corpus_context` and therefore excluded from generic OWL class restrictions.
-
 ────────────────────────────────────────────────────────────
 ## Property minting (last resort)
 ────────────────────────────────────────────────────────────
@@ -82,16 +75,13 @@ Return ONLY a JSON object with this exact shape:
 {{
   "edits": [
     {{"id": 33, "action": "KEEP",
-      "relation_scope": "generic",
       "reason": "menu property; non-vacuous evidence"}},
 
     {{"id": 40, "action": "DROP",
-      "relation_scope": "generic",
       "reason": "tautological self-part"}},
 
     {{"id": 41, "action": "FIX",
       "new_property": "located_in", "new_filler": "Building",
-      "relation_scope": "generic",
       "reason": "non-canonical 'found in' → menu property located_in"}},
 
     {{"id": 52, "action": "FIX",
@@ -102,7 +92,6 @@ Return ONLY a JSON object with this exact shape:
         "range": "MaterialEntity",
         "justification": "No menu property captures the securing relation; subProperty of has_participant."
       }},
-      "relation_scope": "generic",
       "reason": "no menu entry fits; minted generic verb 'secures'"}}
   ]
 }}
@@ -111,6 +100,4 @@ Return ONLY a JSON object with this exact shape:
 ### Output constraints
 - Every `own` relation row MUST appear exactly once in `edits`. Do not omit `own` rows. Do not invent ids.
 - Rows with `chain_role: ancestor` are NOT voted on — omit them from `edits`.
-- `relation_scope` is REQUIRED on every own row and is exactly one of: `generic | corpus_context | individual_fact`.
-- Use `corpus_context` for broad classes linked to named locations, datasets, examples, or study-area facts unless the subject class is explicitly scoped to that context.
 - `reason` is one short sentence (≤200 chars).

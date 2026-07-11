@@ -35,6 +35,9 @@ cp .env.example .env
 | `STUDY_CONFIG_PATH` | Path to the expert-evaluation workbook config (default: `studies/expert_eval.yaml`) — instructions sheet rendered as Sheet 1 of the expert workbook |
 | `RELATION_PROVENANCE_TIERS` | Comma-separated subset of `{owl_axiom, bfo_shape_axiom, ro_release, critic_minted}` controlling which property constraints are active (default: all four) |
 | `LATERAL_HINTS_ENABLED` | Overrides `lateral_coherence.hints.enabled` in `ontology_config.yaml` (`true`/`false`). Weak observations are auxiliary context for the taxonomy critic only; they never directly edit the ontology. |
+| `LATERAL_CLASS_WORTHINESS_ENABLED` | Enable/disable the focused primitive/defined/demote/drop critic. |
+| `LATERAL_FRAME_COMPLETION_ENABLED` | Enable/disable corpus-attested frame completion. |
+| `LATERAL_RELATION_SCOPE_ENABLED` | Enable/disable the focused generic/context/individual relation-scope critic. |
 | `MAX_CONCURRENT_CRITIC` | Number of categories the validate-step critic processes in parallel (default: `5`) |
 | `CRITIC_TAXONOMY_CHUNK_SIZE` | Terms per chunk in the validate-step Stage-1 taxonomy critic (default: `5`); smaller chunks keep each LLM call focused at the cost of more calls |
 
@@ -62,7 +65,7 @@ The full pipeline runs Steps 0-7 and writes a Turtle OWL file (`output/6d_taxono
 | 6b | `relation_extractor.py` | Step 5 CSV | `output/6b_relations.csv` |
 | 6 | `taxonomy_builder.py` | Step 5b CSV | `output/refined/construct_taxonomy.csv` |
 | 6b | `relation_extractor.py` | Step 5b CSV | `output/refined/construct_relations.csv` |
-| validate | `validate/critic.py` | Steps 6 + 6b CSVs | `output/refined/validate_taxonomy.csv` + `validate_relations.csv` + `validate_edits.csv` + `validate_class_fates.csv` + `validate_facet_frames.csv` + `validate_disjointness.csv` |
+| validate | `validate/critic.py` | Steps 6 + 6b CSVs | cleaned taxonomy/relations + evidence, class-fate/demotion, facet/frame-completion, disjointness, and summary artifacts under `output/refined/` |
 | 7 | `owl_exporter.py` | validate CSVs | `output/refined/emit_ontology.ttl` |
 | 7b | `emit/verifier.py` | OWL file | `output/refined/emit_verification.json` |
 
@@ -177,7 +180,7 @@ src/
       taxonomy_builder.py   # Step 6: Group-based LLM hierarchy builder, UPPER_IRIS anchoring
       relation_extractor.py # Step 6b: LLM relation extraction + BFO domain/range validation
     validate/
-      critic.py             # validate: two-pass critic per category (taxonomy then relations), phantom-filler cleanup
+      critic.py             # validate: focused taxonomy, worthiness, dedup, facet/frame, relation correctness/scope stages
     emit/
       owl_exporter.py       # Step 7: rdflib Turtle export, OWL restrictions, upper backbone
       verifier.py           # Step 7b: Post-export verification (syntax, structure, OOPS!, HermiT)
