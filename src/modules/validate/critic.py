@@ -580,6 +580,7 @@ def _build_cross_category_candidates(
     top_k: int,
     nld_threshold: float,
     label_threshold: float,
+    same_head_nld_threshold: float = 0.75,
 ) -> list[dict]:
     """Shortlist semantically similar cross-category pairs; never edit directly."""
     survivors = []
@@ -616,7 +617,10 @@ def _build_cross_category_candidates(
             label_sim = SequenceMatcher(None, labels[i], labels[int(j)]).ratio()
             nld_sim = float(similarity[i, int(j)])
             same_head = bool(labels[i] and labels[int(j)] and labels[i].split()[-1] == labels[int(j)].split()[-1])
-            if nld_sim < nld_threshold and label_sim < label_threshold and not same_head:
+            semantic_match = nld_sim >= nld_threshold
+            label_match = label_sim >= label_threshold
+            head_match = same_head and nld_sim >= same_head_nld_threshold
+            if not (semantic_match or label_match or head_match):
                 continue
             seen.add(pair_key)
             candidates.append({
@@ -2321,6 +2325,7 @@ def run_critic(
                 tax, all_tax_edits, lateral_cfg.reconciliation_top_k,
                 lateral_cfg.reconciliation_nld_similarity,
                 lateral_cfg.reconciliation_label_similarity,
+                lateral_cfg.reconciliation_same_head_nld_similarity,
             )
             reconciliation_decisions: list[dict] = []
             batch_size = 20

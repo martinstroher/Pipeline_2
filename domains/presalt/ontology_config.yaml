@@ -1077,6 +1077,7 @@ lateral_coherence:
     top_k: 3
     nld_similarity_threshold: 0.82
     label_similarity_threshold: 0.86
+    same_head_nld_similarity_threshold: 0.75
   relation_scope:
     enabled: true  # env override: LATERAL_RELATION_SCOPE_ENABLED=false
     emit_only_generic_relations: true

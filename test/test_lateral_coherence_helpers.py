@@ -43,6 +43,22 @@ class LateralCoherenceHelperTests(unittest.TestCase):
         }
         self.assertIn(frozenset((0, 1)), pairs)
 
+    def test_same_head_requires_moderate_nld_similarity(self):
+        class FakeEmbeddings:
+            def embed_documents(self, texts):
+                return [[1.0, 0.0], [0.6, 0.8]]
+
+        taxonomy = pd.DataFrame([
+            {"_critic_id": 0, "Term": "lacustrine system", "Parent_Term": "system", "Category": "Environment", "NLD": "a lake depositional system"},
+            {"_critic_id": 1, "Term": "petroleum system", "Parent_Term": "system", "Category": "Petroleum", "NLD": "a hydrocarbon generation and trapping system"},
+        ])
+        with patch("src.modules.validate.critic.get_embedding_model", return_value=FakeEmbeddings()):
+            candidates = _build_cross_category_candidates(
+                taxonomy, {}, 3, 0.82, 0.86, 0.75,
+            )
+
+        self.assertEqual(candidates, [])
+
     def test_cross_category_same_kind_creates_alias(self):
         taxonomy = pd.DataFrame([
             {"_critic_id": 0, "Term": "carbonate", "Parent_Term": "material", "Category": "Material"},
