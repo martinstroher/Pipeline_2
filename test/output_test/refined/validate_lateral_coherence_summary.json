@@ -1,34 +1,38 @@
 {
   "taxonomy_input_rows": 21,
-  "taxonomy_output_rows": 24,
+  "taxonomy_output_rows": 21,
   "relation_input_rows": 14,
-  "relation_output_rows": 16,
+  "relation_output_rows": 12,
   "action_counts": {
     "CONVERT_TO_INSTANCE": 1,
-    "KEEP": 26,
-    "KEEP_AS_BEARER": 4,
+    "KEEP": 25,
+    "KEEP_AS_BEARER": 2,
     "KEEP_AS_DEFINED": 1,
+    "DROP_AS_MIXIN": 1,
     "REPARENT": 1,
-    "DROP": 2
+    "DROP": 4
   },
   "class_fate_counts": {
-    "unspecified": 2,
-    "primitive": 14,
-    "defined": 5
+    "unspecified": 3,
+    "primitive": 15,
+    "defined": 3
   },
-  "needs_review_count": 2,
-  "defined_class_count": 5,
+  "needs_review_count": 1,
+  "defined_class_count": 3,
   "demotion_count": 0,
   "relation_scope_counts": {
-    "generic": 11,
+    "generic": 7,
     "individual_fact": 2,
     "corpus_context": 3
   },
-  "facet_frame_count": 5,
-  "subsumption_edit_count": 1,
+  "facet_frame_count": 6,
+  "subsumption_edit_count": 0,
+  "reconciliation_candidate_count": 8,
+  "reconciliation_applied_count": 0,
   "disjointness_candidate_count": 1,
   "frame_completion_counts": {
-    "INSUFFICIENT_EVIDENCE": 5
+    "INSUFFICIENT_EVIDENCE": 9
   },
+  "frame_completion_relation_rows": 0,
   "weak_observations_enabled": true
 }

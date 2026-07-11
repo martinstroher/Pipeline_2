@@ -1,2 +1,2 @@
 ﻿category,parent,members,confidence,needs_review,reason
-Earth Material,carbonate mineral,"['calcite', 'dolomite']",0.96,False,"These are distinct mineral kinds with different constitutive chemistry as stated in the NLDs, so they are mutually exclusive subtype classes on the same mineral-kind axis."
+Earth Material,carbonate mineral,"['calcite', 'dolomite']",0.96,False,"Calcite and dolomite are distinct mineral species with different chemical compositions and crystal structures, so no instance can be both."

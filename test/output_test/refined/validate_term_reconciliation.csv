@@ -1,0 +1,9 @@
+﻿Pair_ID,Term_A,Category_A,Term_B,Category_B,Decision,Confidence,Needs_Review,Reason,Applied,Survivor,Duplicate,Child,New_Parent
+0,dolomitization,Geological Process,dolomite,Earth Material,DISTINCT,0.99,False,"Dolomitization is a diagenetic process, whereas dolomite is a carbonate mineral produced or involved in that process.",False,,,,
+1,petroleum reservoir rock,Body of Rock,sedimentary rock,Sedimentary Rock,DISTINCT,0.9,False,"A petroleum reservoir rock is defined by storage/flow capacity, while sedimentary rock is defined by mode of formation.",False,,,,
+2,petroleum reservoir rock,Body of Rock,chemical sedimentary rock,Sedimentary Rock,DISTINCT,0.95,False,"A petroleum reservoir rock is a reservoir-bearing rock body, whereas chemical sedimentary rock is a rock type defined by precipitation origin.",False,,,,
+3,petroleum reservoir rock,Body of Rock,Physical Property Of Rock,quality,DISTINCT,0.99,False,"Petroleum reservoir rock is a rock body, whereas Physical Property Of Rock is a quality inhering in rock.",False,,,,
+4,carbonate reservoir,Body of Rock,carbonate mineral,Earth Material,DISTINCT,0.99,False,"A carbonate reservoir is a rock body composed largely of carbonate minerals; a carbonate mineral is a constituent material, not the reservoir.",False,,,,
+5,carbonate reservoir,Body of Rock,calcite,Earth Material,DISTINCT,0.99,False,"A carbonate reservoir is a rock body, whereas calcite is a mineral that may constitute part of that rock.",False,,,,
+6,sedimentary rock,Sedimentary Rock,Physical Property Of Rock,quality,DISTINCT,0.99,False,"Sedimentary rock is a rock type, whereas Physical Property Of Rock is a quality borne by rock.",False,,,,
+7,chemical sedimentary rock,Sedimentary Rock,Physical Property Of Rock,quality,DISTINCT,0.99,False,"Chemical sedimentary rock is a rock type, whereas Physical Property Of Rock is a quality inhering in rock.",False,,,,

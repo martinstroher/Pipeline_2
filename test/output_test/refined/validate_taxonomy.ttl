@@ -8,13 +8,7 @@
 presalt:CarbonateReservoir a owl:Class ;
     rdfs:label "Carbonate Reservoir"@en ;
     rdfs:comment "Carbonate reservoir is a petroleum reservoir rock that is composed predominantly of carbonate minerals such as calcite and dolomite and can store and transmit hydrocarbons. In the Brazilian Pre-Salt, microbialites commonly constitute the primary reservoir facies, and reservoir quality is mainly controlled by porosity and permeability. Diagenetic processes such as dolomitization may further modify and often improve its storage and flow properties."@en ;
-    rdfs:subClassOf [ a owl:Restriction ;
-            owl:onProperty georeservoir:GEOCORE_0000017 ;
-            owl:someValuesFrom presalt:Calcite ],
-        [ a owl:Restriction ;
-            owl:onProperty georeservoir:GEOCORE_0000017 ;
-            owl:someValuesFrom presalt:Dolomite ],
-        presalt:PetroleumReservoirRock ;
+    rdfs:subClassOf presalt:PetroleumReservoirRock ;
     owl:equivalentClass [ a owl:Class ;
             owl:intersectionOf ( presalt:PetroleumReservoirRock [ a owl:Restriction ;
                         owl:onProperty georeservoir:GEOCORE_0000017 ;
@@ -50,15 +44,6 @@ presalt:RegionalSeal a owl:Class ;
                         owl:onProperty bfo:RO_0000087 ;
                         owl:someValuesFrom presalt:Regionalsealrole ] ) ] .
 
-presalt:ReservoirFacies a owl:Class ;
-    rdfs:label "Reservoir Facies"@en ;
-    rdfs:comment "Reservoir facies is a sedimentary rock facies that is distinguished by depositional and diagenetic characteristics controlling its capacity to store and transmit hydrocarbons. In the Brazilian Pre-Salt, reservoir facies refers to the specific carbonate rock types that make up the productive interval, with microbialite being the primary reservoir facies in the Santos Basin sequences. Its reservoir quality is mainly expressed through porosity and permeability, which determine fluid storage and flow behavior."@en ;
-    rdfs:subClassOf georeservoir:GEORES_0000029 ;
-    owl:equivalentClass [ a owl:Class ;
-            owl:intersectionOf ( georeservoir:GEORES_0000029 [ a owl:Restriction ;
-                        owl:onProperty bfo:RO_0000091 ;
-                        owl:someValuesFrom presalt:Hydrocarbonstorageandtransmissiondisposition ] ) ] .
-
 presalt:ReservoirQuality a owl:Class ;
     rdfs:label "Reservoir Quality"@en ;
     rdfs:comment "Reservoir quality is a composite rock property that describes the capacity of a reservoir to store and transmit fluids, primarily as a function of porosity and permeability. In Brazilian Pre-Salt carbonate reservoirs, reservoir quality is especially critical in microbialite facies, where depositional texture and diagenetic processes such as dolomitization strongly influence pore systems and fluid flow behavior."@en ;
@@ -70,12 +55,16 @@ presalt:ReservoirQuality a owl:Class ;
 presalt:SantosBasin a owl:NamedIndividual,
         georeservoir:GEORES_0000039 ;
     rdfs:label "Santos Basin"@en ;
-    rdfs:comment "[critic CONVERT_TO_INSTANCE] proper-noun named basin; denotes one specific geological entity (step 1)"@en .
+    rdfs:comment "[critic CONVERT_TO_INSTANCE] proper-noun named basin denoting one specific geological entity, so step 1 applies"@en .
 
 presalt:StructuralTrap a owl:Class ;
     rdfs:label "Structural Trap"@en ;
     rdfs:comment "Structural trap is a type of petroleum trap that is formed by tectonic deformation of rock layers, creating a geometric closure that prevents hydrocarbon escape and allows accumulation. In the Brazilian Pre-Salt, structural traps commonly result from rift-related faulting and folding, with faults acting either as migration pathways or as sealing barriers. Their effectiveness depends on the structural configuration and the presence of a competent regional seal, typically evaporites above the carbonate reservoir."@en ;
     rdfs:subClassOf presalt:PetroleumTrap .
+
+bfo:BFO_0000016 a owl:Class ;
+    rdfs:label "disposition"@en ;
+    rdfs:subClassOf bfo:BFO_0000017 .
 
 bfo:BFO_0000019 a owl:Class ;
     rdfs:label "quality"@en ;
@@ -100,6 +89,14 @@ bfo:BFO_0000054 a owl:ObjectProperty ;
 bfo:RO_0000087 a owl:ObjectProperty ;
     rdfs:label "has role"@en .
 
+bfo:RO_0000091 a owl:ObjectProperty ;
+    rdfs:label "has disposition"@en .
+
+presalt:Calcite a owl:Class ;
+    rdfs:label "Calcite"@en ;
+    rdfs:comment "Calcite is a carbonate mineral that consists of calcium carbonate and commonly forms a major constituent of carbonate reservoir rocks in the Brazilian Pre-Salt. In these reservoirs, calcite occurs in facies such as microbialites and can be altered during diagenesis, including replacement by dolomite through dolomitization. Its abundance strongly influences reservoir properties because subsequent dissolution, cementation, or replacement affects porosity and permeability."@en ;
+    rdfs:subClassOf presalt:CarbonateMineral .
+
 presalt:ChemicalSedimentaryRock a owl:Class ;
     rdfs:label "Chemical Sedimentary Rock"@en ;
     rdfs:comment "Chemical sedimentary rock is a sedimentary rock that forms by the precipitation of dissolved minerals directly from water rather than by the accumulation of transported clastic particles. In the Brazilian Pre-Salt context, evaporites are a key example of chemical sedimentary rocks, precipitated from evaporating water bodies and commonly acting as the regional seal above carbonate reservoirs."@en ;
@@ -109,6 +106,14 @@ presalt:DiageneticProcess a owl:Class ;
     rdfs:label "Diagenetic Process"@en ;
     rdfs:comment "Diagenetic process is a geological process that alters the mineralogical and petrophysical properties of sediment or rock after deposition through physical and chemical modification. In Brazilian Pre-Salt carbonate reservoirs, diagenetic processes such as dolomitization can replace calcite with dolomite and thereby modify porosity and permeability. These post-depositional changes are important controls on reservoir quality."@en ;
     rdfs:subClassOf georeservoir:GEOCORE_0000002 .
+
+presalt:Dolomite a owl:Class ;
+    rdfs:label "Dolomite"@en ;
+    rdfs:comment "Dolomite is a carbonate mineral that consists of calcium magnesium carbonate and commonly occurs as a major constituent of carbonate reservoir rocks. In the Brazilian Pre-Salt context, it is important because it can form through dolomitization, a diagenetic replacement of calcite that often improves reservoir porosity and permeability."@en ;
+    rdfs:subClassOf [ a owl:Restriction ;
+            owl:onProperty georeservoir:GEOCORE_0000013 ;
+            owl:someValuesFrom presalt:Dolomitization ],
+        presalt:CarbonateMineral .
 
 presalt:Dolomitization a owl:Class ;
     rdfs:label "Dolomitization"@en ;
@@ -123,17 +128,7 @@ presalt:Dolomitization a owl:Class ;
 
 presalt:Hydrocarbonstorageandtransmissiondisposition a owl:Class ;
     rdfs:label "HydrocarbonStorageAndTransmissionDisposition"@en ;
-    rdfs:comment "A disposition that is borne by a sedimentary facies whose depositional and diagenetic characteristics enable it to store and transmit hydrocarbons."@en ;
-    rdfs:subClassOf bfo:BFO_0000016 .
-
-presalt:Hydrocarbonstoragetransmissiondisposition a owl:Class ;
-    rdfs:label "HydrocarbonStorageTransmissionDisposition"@en ;
-    rdfs:comment "A disposition that is borne by a body of rock that has sufficient porosity and permeability to store and transmit hydrocarbons."@en ;
-    rdfs:subClassOf bfo:BFO_0000016 .
-
-presalt:Hydrocarbontrappingdisposition a owl:Class ;
-    rdfs:label "HydrocarbonTrappingDisposition"@en ;
-    rdfs:comment "A disposition that is borne by a geological structure that prevents the further migration of hydrocarbons and allows them to accumulate in a reservoir beneath an effective seal."@en ;
+    rdfs:comment "A disposition that is borne by a body of rock with sufficient porosity and permeability to store and transmit hydrocarbons."@en ;
     rdfs:subClassOf bfo:BFO_0000016 .
 
 presalt:Permeability a owl:Class ;
@@ -147,11 +142,7 @@ presalt:Permeability a owl:Class ;
 presalt:PetroleumTrap a owl:Class ;
     rdfs:label "Petroleum Trap"@en ;
     rdfs:comment "Petroleum trap is a subsurface geological configuration that prevents the further migration of hydrocarbons and allows them to accumulate in a reservoir beneath an effective seal. In the Brazilian Pre-Salt, traps commonly involve structural deformation of rock layers, while evaporites typically provide the regional seal and faults may act either as migration pathways or as sealing barriers."@en ;
-    rdfs:subClassOf georeservoir:GEOCORE_0000004 ;
-    owl:equivalentClass [ a owl:Class ;
-            owl:intersectionOf ( georeservoir:GEOCORE_0000004 [ a owl:Restriction ;
-                        owl:onProperty bfo:RO_0000091 ;
-                        owl:someValuesFrom presalt:Hydrocarbontrappingdisposition ] ) ] .
+    rdfs:subClassOf georeservoir:GEOCORE_0000004 .
 
 presalt:Porosity a owl:Class ;
     rdfs:label "Porosity"@en ;
@@ -163,7 +154,7 @@ presalt:Porosity a owl:Class ;
 
 presalt:Regionalsealrole a owl:Class ;
     rdfs:label "RegionalSealRole"@en ;
-    rdfs:comment "A role that is borne by a laterally extensive, low-permeability stratigraphic unit that prevents the vertical escape of hydrocarbons and seals petroleum accumulations over a broad area."@en ;
+    rdfs:comment "A role that is borne by a stratigraphic unit that prevents the vertical escape of hydrocarbons and seals petroleum accumulations over a broad area."@en ;
     rdfs:subClassOf [ a owl:Restriction ;
             owl:onProperty bfo:BFO_0000054 ;
             owl:someValuesFrom bfo:BFO_0000015 ],
@@ -177,16 +168,15 @@ georeservoir:GEOCORE_0000002 a owl:Class ;
     rdfs:label "geological process"@en ;
     rdfs:subClassOf bfo:BFO_0000015 .
 
+georeservoir:GEOCORE_0000008 a owl:Class ;
+    rdfs:label "amount of rock"@en ;
+    rdfs:subClassOf georeservoir:GEOCORE_0000006 .
+
 georeservoir:GEOCORE_0000013 a owl:ObjectProperty ;
     rdfs:label "generated by"@en .
 
-georeservoir:GEORES_0000001 a owl:Class ;
-    rdfs:label "body of rock"@en ;
-    rdfs:subClassOf georeservoir:GEOCORE_0000001 .
-
-georeservoir:GEORES_0000028 a owl:Class ;
-    rdfs:label "facies"@en ;
-    rdfs:subClassOf bfo:BFO_0000031 .
+georeservoir:GEOCORE_0000017 a owl:ObjectProperty ;
+    rdfs:label "constituted by"@en .
 
 georeservoir:GEORES_0000039 a owl:Class ;
     rdfs:label "basin"@en ;
@@ -218,19 +208,6 @@ bfo:BFO_0000141 a owl:Class ;
 bfo:RO_0000086 a owl:ObjectProperty ;
     rdfs:label "has quality"@en .
 
-presalt:Calcite a owl:Class ;
-    rdfs:label "Calcite"@en ;
-    rdfs:comment "Calcite is a carbonate mineral that consists of calcium carbonate and commonly forms a major constituent of carbonate reservoir rocks in the Brazilian Pre-Salt. In these reservoirs, calcite occurs in facies such as microbialites and can be altered during diagenesis, including replacement by dolomite through dolomitization. Its abundance strongly influences reservoir properties because subsequent dissolution, cementation, or replacement affects porosity and permeability."@en ;
-    rdfs:subClassOf presalt:CarbonateMineral .
-
-presalt:Dolomite a owl:Class ;
-    rdfs:label "Dolomite"@en ;
-    rdfs:comment "Dolomite is a carbonate mineral that consists of calcium magnesium carbonate and commonly occurs as a major constituent of carbonate reservoir rocks. In the Brazilian Pre-Salt context, it is important because it can form through dolomitization, a diagenetic replacement of calcite that often improves reservoir porosity and permeability."@en ;
-    rdfs:subClassOf [ a owl:Restriction ;
-            owl:onProperty georeservoir:GEOCORE_0000013 ;
-            owl:someValuesFrom presalt:Dolomitization ],
-        presalt:CarbonateMineral .
-
 presalt:PetroleumReservoirRock a owl:Class ;
     rdfs:label "Petroleum Reservoir Rock"@en ;
     rdfs:comment "Petroleum reservoir rock is a subsurface rock unit that has sufficient porosity and permeability to store and transmit hydrocarbons. In the Brazilian Pre-Salt, reservoir rocks are commonly carbonate rocks composed of minerals such as calcite and dolomite, with microbialites forming a primary reservoir facies in the Santos Basin. Their reservoir quality depends mainly on the rock's capacity to contain void space and allow fluid flow, which can be modified by diagenetic processes such as dolomitization."@en ;
@@ -240,11 +217,15 @@ presalt:PetroleumReservoirRock a owl:Class ;
         [ a owl:Restriction ;
             owl:onProperty bfo:RO_0000086 ;
             owl:someValuesFrom presalt:Permeability ],
-        georeservoir:GEOCORE_0000008 ;
+        georeservoir:GEORES_0000001 ;
     owl:equivalentClass [ a owl:Class ;
-            owl:intersectionOf ( georeservoir:GEOCORE_0000008 [ a owl:Restriction ;
+            owl:intersectionOf ( georeservoir:GEORES_0000001 [ a owl:Restriction ;
                         owl:onProperty bfo:RO_0000091 ;
-                        owl:someValuesFrom presalt:Hydrocarbonstoragetransmissiondisposition ] ) ] .
+                        owl:someValuesFrom presalt:Hydrocarbonstorageandtransmissiondisposition ] ) ] .
+
+georeservoir:GEOCORE_0000004 a owl:Class ;
+    rdfs:label "geological structure"@en ;
+    rdfs:subClassOf bfo:BFO_0000031 .
 
 georeservoir:GEOCORE_0000006 a owl:Class ;
     rdfs:label "earth material"@en ;
@@ -253,10 +234,6 @@ georeservoir:GEOCORE_0000006 a owl:Class ;
 georeservoir:GEORES_0000002 a owl:Class ;
     rdfs:label "stratigraphic unit"@en ;
     rdfs:subClassOf georeservoir:GEORES_0000001 .
-
-georeservoir:GEORES_0000029 a owl:Class ;
-    rdfs:label "sedimentary facies"@en ;
-    rdfs:subClassOf georeservoir:GEORES_0000028 .
 
 georeservoir:GEORES_0000032 a owl:Class ;
     rdfs:label "sedimentary rock"@en ;
@@ -267,10 +244,6 @@ bfo:BFO_0000002 a owl:Class ;
     rdfs:subClassOf bfo:BFO_0000001 ;
     owl:disjointWith bfo:BFO_0000003 .
 
-bfo:BFO_0000016 a owl:Class ;
-    rdfs:label "disposition"@en ;
-    rdfs:subClassOf bfo:BFO_0000017 .
-
 bfo:BFO_0000017 a owl:Class ;
     rdfs:label "realizable entity"@en ;
     rdfs:subClassOf bfo:BFO_0000020 .
@@ -280,8 +253,9 @@ bfo:BFO_0000020 a owl:Class ;
     rdfs:subClassOf bfo:BFO_0000002 ;
     owl:disjointWith bfo:BFO_0000031 .
 
-bfo:RO_0000091 a owl:ObjectProperty ;
-    rdfs:label "has disposition"@en .
+bfo:BFO_0000031 a owl:Class ;
+    rdfs:label "generically dependent continuant"@en ;
+    rdfs:subClassOf bfo:BFO_0000002 .
 
 presalt:CarbonateMineral a owl:Class ;
     rdfs:label "Carbonate Mineral"@en ;
@@ -296,20 +270,9 @@ presalt:PhysicalPropertyOfRock a owl:Class ;
             owl:someValuesFrom bfo:BFO_0000004 ],
         bfo:BFO_0000019 .
 
-georeservoir:GEOCORE_0000004 a owl:Class ;
-    rdfs:label "geological structure"@en ;
-    rdfs:subClassOf bfo:BFO_0000031 .
-
-georeservoir:GEOCORE_0000008 a owl:Class ;
-    rdfs:label "amount of rock"@en ;
-    rdfs:subClassOf georeservoir:GEOCORE_0000006 .
-
-georeservoir:GEOCORE_0000017 a owl:ObjectProperty ;
-    rdfs:label "constituted by"@en .
-
-bfo:BFO_0000031 a owl:Class ;
-    rdfs:label "generically dependent continuant"@en ;
-    rdfs:subClassOf bfo:BFO_0000002 .
+georeservoir:GEORES_0000001 a owl:Class ;
+    rdfs:label "body of rock"@en ;
+    rdfs:subClassOf georeservoir:GEOCORE_0000001 .
 
 bfo:BFO_0000197 a owl:ObjectProperty ;
     rdfs:label "inheres in"@en .
