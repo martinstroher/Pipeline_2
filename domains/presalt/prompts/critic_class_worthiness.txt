@@ -28,23 +28,28 @@ Weak observations are NOT evidence or recommendations. Ignore them when they con
 ## One authoritative fate per candidate
 ────────────────────────────────────────────────────────────
 
-- **KEEP_PRIMITIVE** — necessary in the core because it is a broad branch anchor, a genus needed by multiple retained children, a required generic-relation endpoint, or contributes CQ coverage not supplied by its parent/siblings.
-- **KEEP_DEFINED** — the same necessary core value, but for a central cross-axis or property-defined concept. Supply `defined_by` using only EXISTING classes/properties.
+- **KEEP_PRIMITIVE** — necessary in the core because it is a broad branch anchor, a genus needed by multiple retained children, a required generic-relation endpoint, contributes CQ coverage not supplied by its parent/siblings, or is an atomic member of a small coherent scientific frame.
+- **KEEP_DEFINED** — the same necessary core value, but for a central cross-axis or property-defined concept. Supply `defined_by` using only EXISTING classes/properties. A candidate with `taxonomy_action: KEEP_AS_BEARER` already has its valid definition in `taxonomy_definition`; preserve that action rather than inventing a replacement definition.
 - **DEMOTE_TO_PROPERTY** — a useful distinction, but mainly a property/facet value rather than a reusable kind. Supply `demoted_as` for audit; no universal axiom will be added to the base class.
 - **DROP_CLASS** — a valid domain term that lacks marginal core value. Supply `drop_basis` as exactly `NO_MARGINAL_VALUE | NARROW_EXTENSION_DETAIL | STACKED_CONTEXT`. Synonymy/redundancy is not a valid basis here.
 
 A genuine kind, conventional technical name, or non-vacuous differentia is NOT sufficient. Ask what the core loses if this class is absent. KEEP only when its CQ contribution, generic relations, branch structure, or indispensable domain distinction is not already represented by its parent/siblings.
 
+**Coherent scientific frames:** shared CQ coverage with a parent is expected for sibling species, taxa, formal ranks, origin classes, and other same-axis kinds. An atomic conventional member of a small frame may be core-worthy when it is corpus-attested and distinctly classifiable on that frame's axis. Set `core_basis: COHERENT_FRAME_MEMBER`, `coherent_frame: true`, name the `frame_axis`, and list existing `frame_siblings`. This does NOT protect modifier-heavy, percentage-defined, geographic, or stacked-context specializations.
+
+**Existing bearer definitions:** `taxonomy_action: KEEP_AS_BEARER` means taxonomy review already separated a material bearer from a role/function/disposition/quality. Never rewrite a role, function, or disposition carry as a quality/property demotion. A complete role/function/disposition bearer is normally `KEEP_DEFINED`; exclude it only when the entire named bearer is a stacked contextual specialization. Quality carries may still be demoted when they are analysis-driven groupings.
+
 Use frequency and CQ evidence as signals, not mechanical thresholds. A rare but central conventional kind may stay; a frequent descriptive phrase may still be demoted. Builder-minted intermediates have zero frequency by design, so judge their grouping value from the branch context.
 
-When evidence is balanced, choose DROP_CLASS and set `needs_review: true`; uncertainty is diagnostic and does not expand the core. Compoundness alone never decides fate. Do NOT drop a term because it is synonymous/co-extensional with a sibling: keep it for the reconciliation stage, which alone chooses the survivor.
+When evidence is balanced and neither a coherent frame nor a valid realizable-bearer case applies, choose DROP_CLASS and set `needs_review: true`; uncertainty is diagnostic and does not expand the core. Compoundness alone never decides fate. Do NOT drop a term because it is synonymous/co-extensional with a sibling: keep it for the reconciliation stage, which alone chooses the survivor.
 
 ────────────────────────────────────────────────────────────
 ## Generic examples
 ────────────────────────────────────────────────────────────
 
-- `Dog` under `Mammal`, reused biological kind → KEEP_PRIMITIVE.
-- `SourceMaterial` defined as `Material + has_disposition some GenerationDisposition`, central/reused → KEEP_DEFINED.
+- `Dog` under `Mammal`, reused biological kind → KEEP_PRIMITIVE (`core_basis: BRANCH_ANCHOR`).
+- Distinct atomic species under `ChemicalSpecies`, each corpus-attested on the same composition axis → KEEP_PRIMITIVE (`core_basis: COHERENT_FRAME_MEMBER`), even though all answer the same material CQ.
+- `SourceMaterial` defined as `Material + has_disposition some GenerationDisposition`, central/reused → KEEP_DEFINED (`core_basis: REUSABLE_DEFINED_BEARER`).
 - `RhombohedralMineral` differing only by crystal habit, low centrality → DEMOTE_TO_PROPERTY (`base_class: Mineral`, `property: has_quality`, `filler: RhombohedralHabit`).
 - `RedLargeImportedApple`, stacked low-centrality qualities/context → DROP_CLASS.
 - `ViralPneumonia`, central and reusable causal cross-axis concept → KEEP_DEFINED (`Pneumonia + caused_by some Virus`).
@@ -58,11 +63,15 @@ Return ONLY this JSON shape, with every candidate exactly once:
 ```json
 {{
   "decisions": [
-    {{"id": 1, "fate": "KEEP_PRIMITIVE", "centrality": "high", "cross_axis": false,
+    {{"id": 1, "fate": "KEEP_PRIMITIVE", "core_basis": "BRANCH_ANCHOR",
+      "coherent_frame": false, "frame_axis": "", "frame_siblings": [],
+      "centrality": "high", "cross_axis": false,
       "needs_review": false, "confidence": 0.95,
       "placement_rationale": "reusable kind with a stable identity and clear parent",
       "reason": "recognized reusable kind; CQ/frequency evidence supports scope"}},
-    {{"id": 2, "fate": "KEEP_DEFINED", "centrality": "high", "cross_axis": true,
+    {{"id": 2, "fate": "KEEP_DEFINED", "core_basis": "REUSABLE_DEFINED_BEARER",
+      "coherent_frame": false, "frame_axis": "", "frame_siblings": [],
+      "centrality": "high", "cross_axis": true,
       "defined_by": {{"base_class": "Pneumonia", "property": "caused_by", "filler": "Virus", "rationale": "central causal cross-axis concept"}},
       "needs_review": false, "confidence": 0.90,
       "placement_rationale": "definition preserves both the base kind and causal facet",
@@ -83,6 +92,8 @@ Return ONLY this JSON shape, with every candidate exactly once:
 
 ### Constraints
 - `fate` is exactly `KEEP_PRIMITIVE | KEEP_DEFINED | DEMOTE_TO_PROPERTY | DROP_CLASS`.
+- Every KEEP requires `core_basis` exactly one of `BRANCH_ANCHOR | SHARED_GENUS | RELATION_ENDPOINT | UNIQUE_CQ_VALUE | COHERENT_FRAME_MEMBER | REUSABLE_DEFINED_BEARER`.
+- Every decision includes `coherent_frame` (boolean), `frame_axis` (short string or `""`), and `frame_siblings` (existing labels only). `COHERENT_FRAME_MEMBER` requires at least one sibling and a non-empty axis.
 - `centrality` is exactly `high | medium | low`.
 - `confidence` is 0..1; `needs_review` is diagnostic only and never blocks the run.
 - KEEP_DEFINED requires complete `defined_by` with existing `base_class`, `property`, and `filler`.

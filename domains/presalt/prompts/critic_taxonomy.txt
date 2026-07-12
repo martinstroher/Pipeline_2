@@ -41,6 +41,7 @@ Read the NLD as `X is a Y that <differentia>`, then walk these in order:
    - **Dependence** — `+D` = exists only via another entity (`role`, `boundary`); `-D` = self-standing (`rock`, `person`). *Violation:* `+D` parent over a `-D` child (e.g. `rock` filed under `role`) → REPARENT onto an independent genus.
    - **Identity** — `+I` = has its own way to tell two instances apart; `-I` = none (normal for quality/role/process). Advisory: record it, never REPARENT on it alone.
    If you can't name a better **existing** genus → KEEP.
+  - **Single-axis guard:** distinguish an inhering quality or measurement from the physical structure/site that grounds it. A type/component of a quality belongs under the quality branch; a pore, cavity, network, body, or other physical entity belongs under the corresponding material/site/structure branch. Never use IS-A across those axes merely because the NLD mentions both. Prefer the most specific supported existing domain genus over a generic upper root.
 5. **Restates its parent?** the differentia is necessary for the genus, so it adds nothing → **DROP_AS_REDUNDANT** (`survivor` = parent).
 6. otherwise → **KEEP**. (When unsure, KEEP.)
 
