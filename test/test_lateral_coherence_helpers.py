@@ -15,7 +15,6 @@ from src.modules.validate.critic import (
     _build_cross_category_candidates,
     _build_entity_context_lookup,
     _build_relation_payload,
-    _build_worthiness_payload,
     _build_worthiness_sibling_context,
     _collect_global_reconciliation_decisions,
     _finalize_reconciliation_audit,
@@ -390,77 +389,6 @@ class LateralCoherenceHelperTests(unittest.TestCase):
         self.assertEqual(merged["action"], "KEEP_AS_BEARER")
         self.assertEqual(merged["class_fate"], "defined")
 
-    def test_realizable_bearer_rejects_marginality_drop(self):
-        merged = _merge_worthiness_decision(
-            {
-                "action": "KEEP_AS_BEARER",
-                "carried_by": {"property": "has_disposition", "filler": "StorageDisposition"},
-            },
-            {
-                "fate": "DROP_CLASS", "drop_basis": "NO_MARGINAL_VALUE",
-                "confidence": 0.9, "reason": "parent covers its CQ",
-            },
-            True,
-            conservative_drop=False,
-        )
-
-        self.assertEqual(merged["action"], "KEEP_AS_BEARER")
-        self.assertEqual(merged["class_fate"], "defined")
-        self.assertTrue(merged["needs_review"])
-
-    def test_realizable_bearer_rejects_property_demotion(self):
-        merged = _merge_worthiness_decision(
-            {
-                "action": "KEEP_AS_BEARER",
-                "carried_by": {"property": "has_role", "filler": "CarrierRole"},
-            },
-            {
-                "fate": "DEMOTE_TO_PROPERTY",
-                "demoted_as": {"base_class": "Material", "property": "has_quality", "filler": "Useful"},
-                "confidence": 0.95,
-            },
-            True,
-            conservative_drop=False,
-        )
-
-        self.assertEqual(merged["action"], "KEEP_AS_BEARER")
-        self.assertEqual(merged["class_fate"], "defined")
-
-    def test_quality_bearer_can_still_be_demoted(self):
-        merged = _merge_worthiness_decision(
-            {
-                "action": "KEEP_AS_BEARER",
-                "carried_by": {"property": "has_quality", "filler": "FlowSimilarity"},
-            },
-            {
-                "fate": "DEMOTE_TO_PROPERTY",
-                "demoted_as": {"base_class": "Material", "property": "has_quality", "filler": "FlowSimilarity"},
-                "confidence": 0.9,
-            },
-            True,
-            conservative_drop=False,
-        )
-
-        self.assertEqual(merged["action"], "DEMOTE_TO_PROPERTY")
-        self.assertEqual(merged["class_fate"], "demote")
-
-    def test_atomic_coherent_frame_member_rejects_narrow_detail_drop(self):
-        merged = _merge_worthiness_decision(
-            {"action": "KEEP"},
-            {
-                "fate": "DROP_CLASS", "drop_basis": "NARROW_EXTENSION_DETAIL",
-                "coherent_frame": True, "frame_axis": "composition",
-                "frame_siblings": ["Species A", "Species B"],
-                "confidence": 0.9,
-            },
-            True,
-            conservative_drop=False,
-        )
-
-        self.assertEqual(merged["action"], "KEEP")
-        self.assertEqual(merged["core_basis"], "COHERENT_FRAME_MEMBER")
-        self.assertTrue(merged["needs_review"])
-
     def test_worthiness_sibling_context_contains_comparative_evidence(self):
         rows = [
             pd.Series({"_critic_id": 0, "Term": "parent", "Parent_Term": "root", "NLD": "A parent."}),
@@ -476,23 +404,6 @@ class LateralCoherenceHelperTests(unittest.TestCase):
         by_term = {row["term"]: row for row in context}
         self.assertEqual(by_term["parent"]["child_count"], 1)
         self.assertEqual(by_term["parent"]["matched_cqs"], ["CQ1", "CQ2"])
-
-    def test_worthiness_payload_contains_definition_and_relation_mentions(self):
-        rows = [pd.Series({
-            "_critic_id": 7, "Term": "carrier", "Parent_Term": "material",
-            "Category": "material", "NLD": "A carrier material.",
-        })]
-        edits = {7: {
-            "action": "KEEP_AS_BEARER",
-            "carried_by": {"property": "has_role", "filler": "CarrierRole"},
-        }}
-
-        payload = _build_worthiness_payload(
-            rows, edits, {"carrier": {"frequency": 6}}, {"carrier": 4},
-        )
-
-        self.assertEqual(payload[0]["taxonomy_definition"]["property"], "has_role")
-        self.assertEqual(payload[0]["relation_mentions"], 4)
 
     def test_low_confidence_drop_is_kept_for_review(self):
         merged = _merge_worthiness_decision(

@@ -18,12 +18,10 @@ You are auditing lateral taxonomy coherence for surviving classes in the **{cate
 ────────────────────────────────────────────────────────────
 
 1. **Missing subsumption:** if a survivor clearly belongs under a more specific EXISTING class, propose REPARENT. Use NLD entailment, not label overlap alone.
-  - Enforce one IS-A axis: never place an inhering quality/property under the physical structure, site, or bearer that grounds it, or vice versa. Related cross-axis concepts belong in relations/defined classes, not one subclass branch.
 2. **Facet frames:** group siblings that use one division axis; flag sibling sets that mix independent axes.
 3. **Singleton intermediates:** for a builder-invented intermediate with one surviving child, propose collapse only if it adds no reusable grouping value. Otherwise keep or request frame completion.
 4. **Frame completion candidates:** for a central conventional same-axis frame that appears incomplete, propose likely missing named members. Proposals are NOT added automatically; corpus attestation is checked later.
 5. **Candidate disjointness:** only high-confidence mutually exclusive same-axis members. Never infer disjointness from siblinghood alone.
-  - For each retained coherent same-axis frame, inspect all members rather than an arbitrary subset. Propose disjointness only when one instance cannot instantiate two member classes; do not declare aggregate qualities disjoint merely because their origins or components differ.
 
 Do not generate combinatorial facet cross-products. Missing members must be conventional named concepts likely relevant to the branch, not merely logically possible combinations.
 
