@@ -35,10 +35,11 @@ cp .env.example .env
 | `STUDY_CONFIG_PATH` | Path to the expert-evaluation workbook config (default: `studies/expert_eval.yaml`) — instructions sheet rendered as Sheet 1 of the expert workbook |
 | `RELATION_PROVENANCE_TIERS` | Comma-separated subset of `{owl_axiom, bfo_shape_axiom, ro_release, critic_minted}` controlling which property constraints are active (default: all four) |
 | `LATERAL_HINTS_ENABLED` | Overrides `lateral_coherence.hints.enabled` in `ontology_config.yaml` (`true`/`false`). Weak observations are auxiliary context for the taxonomy critic only; they never directly edit the ontology. |
-| `LATERAL_CLASS_WORTHINESS_ENABLED` | Enable/disable the focused primitive/defined/demote/drop critic. |
-| `LATERAL_FRAME_COMPLETION_ENABLED` | Enable/disable corpus-attested frame completion. |
+| `LATERAL_CLASS_WORTHINESS_ENABLED` | Enable/disable the existing core-selection critic (`KEEP_PRIMITIVE`, `KEEP_DEFINED`, demote, or exclude). |
+| `LATERAL_FRAME_COMPLETION_ENABLED` | Enable/disable corpus-attested missing-frame diagnostics. |
+| `LATERAL_FRAME_COMPLETION_AUTO_ADD` | Add attested frame candidates automatically; defaults to `false` so completion remains diagnostic. |
 | `LATERAL_RELATION_SCOPE_ENABLED` | Enable/disable the focused generic/context/individual relation-scope critic. |
-| `MAX_CONCURRENT_CRITIC` | Number of categories the validate-step critic processes in parallel (default: `5`) |
+| `MAX_CONCURRENT_CRITIC` | Maximum concurrent validate-step LLM calls for category work and global reconciliation batches (default: `5`) |
 | `CRITIC_TAXONOMY_CHUNK_SIZE` | Terms per chunk in the validate-step Stage-1 taxonomy critic (default: `5`); smaller chunks keep each LLM call focused at the cost of more calls |
 
 ### Run
@@ -65,7 +66,7 @@ The full pipeline runs Steps 0-7 and writes a Turtle OWL file (`output/6d_taxono
 | 6b | `relation_extractor.py` | Step 5 CSV | `output/6b_relations.csv` |
 | 6 | `taxonomy_builder.py` | Step 5b CSV | `output/refined/construct_taxonomy.csv` |
 | 6b | `relation_extractor.py` | Step 5b CSV | `output/refined/construct_relations.csv` |
-| validate | `validate/critic.py` | Steps 6 + 6b CSVs | cleaned taxonomy/relations + evidence, class-fate/demotion, top-3 BGE NLD term reconciliation, subsumption/facet/frame-completion, disjointness, and summary artifacts under `output/refined/` |
+| validate | `validate/critic.py` | Steps 6 + 6b CSVs | lean core taxonomy/relations + evidence, class-fate/demotion, conflict-safe top-3 BGE NLD reconciliation, subsumption/facet diagnostics, diagnostic frame completion, disjointness, and summary artifacts under `output/refined/` |
 | 7 | `owl_exporter.py` | validate CSVs | `output/refined/emit_ontology.ttl` |
 | 7b | `emit/verifier.py` | OWL file | `output/refined/emit_verification.json` |
 

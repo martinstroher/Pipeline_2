@@ -130,6 +130,7 @@ class LateralCoherenceConfig:
     class_worthiness_enabled: bool = True
     frame_audit_enabled: bool = True
     frame_completion_enabled: bool = True
+    frame_completion_auto_add: bool = False
     frame_completion_min_documents: int = 2
     frame_completion_max_candidates: int = 5
     relation_scope_enabled: bool = True
@@ -608,6 +609,9 @@ def _parse_lateral_coherence(raw: dict | None) -> LateralCoherenceConfig:
     frame_completion_enabled = _env_bool(
         "LATERAL_FRAME_COMPLETION_ENABLED", bool(frame_completion.get("enabled", True))
     )
+    frame_completion_auto_add = _env_bool(
+        "LATERAL_FRAME_COMPLETION_AUTO_ADD", bool(frame_completion.get("auto_add", False))
+    )
     relation_scope_enabled = _env_bool(
         "LATERAL_RELATION_SCOPE_ENABLED", bool(relation_scope.get("enabled", True))
     )
@@ -618,6 +622,7 @@ def _parse_lateral_coherence(raw: dict | None) -> LateralCoherenceConfig:
         class_worthiness_enabled=class_worthiness_enabled,
         frame_audit_enabled=bool(frame_audit.get("enabled", True)),
         frame_completion_enabled=frame_completion_enabled,
+        frame_completion_auto_add=frame_completion_auto_add,
         frame_completion_min_documents=int(frame_completion.get("min_document_count", 2)),
         frame_completion_max_candidates=int(frame_completion.get("max_candidates_per_frame", 5)),
         relation_scope_enabled=relation_scope_enabled,

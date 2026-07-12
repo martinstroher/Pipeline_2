@@ -2,7 +2,7 @@
 <<personas_critic_auditor>>
 
 [PROMPT_TEMPLATE]
-You are auditing whether surviving terms in the **{category}** branch deserve to exist as named ontology classes. Taxonomy correctness has already been judged. Your ONLY job is class-worthiness / parsimony.
+You are selecting the lean **core ontology** for the **{category}** branch. Taxonomy correctness and basic ontological admissibility have already been judged. Your ONLY job is marginal core necessity / parsimony.
 
 ## Candidates (with NLD, corrected parent, frequency, document coverage, CQ evidence)
 {candidates_json}
@@ -28,16 +28,16 @@ Weak observations are NOT evidence or recommendations. Ignore them when they con
 ## One authoritative fate per candidate
 ────────────────────────────────────────────────────────────
 
-- **KEEP_PRIMITIVE** — a genuine, reusable, representative kind on one primary classification axis.
-- **KEEP_DEFINED** — a central/reusable cross-axis or property-defined concept worth keeping as a named class. Supply `defined_by` using only EXISTING classes/properties.
+- **KEEP_PRIMITIVE** — necessary in the core because it is a broad branch anchor, a genus needed by multiple retained children, a required generic-relation endpoint, or contributes CQ coverage not supplied by its parent/siblings.
+- **KEEP_DEFINED** — the same necessary core value, but for a central cross-axis or property-defined concept. Supply `defined_by` using only EXISTING classes/properties.
 - **DEMOTE_TO_PROPERTY** — a useful distinction, but mainly a property/facet value rather than a reusable kind. Supply `demoted_as` for audit; no universal axiom will be added to the base class.
-- **DROP_CLASS** — low-centrality one-off phrase, stacked qualifier, non-reusable cross-product, or unnecessary class-level detail.
+- **DROP_CLASS** — a valid domain term that lacks marginal core value. Supply `drop_basis` as exactly `NO_MARGINAL_VALUE | NARROW_EXTENSION_DETAIL | STACKED_CONTEXT`. Synonymy/redundancy is not a valid basis here.
 
-A non-vacuous differentia is NOT sufficient by itself. Ask whether an expert would reuse the term as a stable kind and whether it materially serves the competency questions/domain scope.
+A genuine kind, conventional technical name, or non-vacuous differentia is NOT sufficient. Ask what the core loses if this class is absent. KEEP only when its CQ contribution, generic relations, branch structure, or indispensable domain distinction is not already represented by its parent/siblings.
 
 Use frequency and CQ evidence as signals, not mechanical thresholds. A rare but central conventional kind may stay; a frequent descriptive phrase may still be demoted. Builder-minted intermediates have zero frequency by design, so judge their grouping value from the branch context.
 
-Be conservative: when evidence is balanced, KEEP_PRIMITIVE and set `needs_review: true`. Do not drop merely because a label is compound.
+When evidence is balanced, choose DROP_CLASS and set `needs_review: true`; uncertainty is diagnostic and does not expand the core. Compoundness alone never decides fate. Do NOT drop a term because it is synonymous/co-extensional with a sibling: keep it for the reconciliation stage, which alone chooses the survivor.
 
 ────────────────────────────────────────────────────────────
 ## Generic examples
@@ -72,7 +72,8 @@ Return ONLY this JSON shape, with every candidate exactly once:
       "needs_review": true, "confidence": 0.78,
       "placement_rationale": "descriptive property refinement, not a reusable kind",
       "reason": "low-centrality property-value specialization"}},
-    {{"id": 4, "fate": "DROP_CLASS", "centrality": "low", "cross_axis": true,
+    {{"id": 4, "fate": "DROP_CLASS", "drop_basis": "STACKED_CONTEXT",
+      "centrality": "low", "cross_axis": true,
       "needs_review": false, "confidence": 0.91,
       "placement_rationale": "stacked descriptive phrase adds no reusable class",
       "reason": "one-off low-centrality cross-product"}}
@@ -86,4 +87,5 @@ Return ONLY this JSON shape, with every candidate exactly once:
 - `confidence` is 0..1; `needs_review` is diagnostic only and never blocks the run.
 - KEEP_DEFINED requires complete `defined_by` with existing `base_class`, `property`, and `filler`.
 - DEMOTE_TO_PROPERTY requires complete `demoted_as` using an existing base class/property; its filler may be a descriptive audit value because no OWL axiom is emitted.
+- DROP_CLASS requires `drop_basis: NO_MARGINAL_VALUE | NARROW_EXTENSION_DETAIL | STACKED_CONTEXT`. Never use synonymy, co-extension, duplicate wording, or overlap as a DROP_CLASS basis; reconciliation owns those decisions.
 - Reasons must cite semantic/evidence signals, never weak observations alone.

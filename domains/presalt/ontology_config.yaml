@@ -1063,13 +1063,14 @@ lateral_coherence:
   class_worthiness:
     enabled: true  # env override: LATERAL_CLASS_WORTHINESS_ENABLED=false
     allow_defined_classes: true
-    conservative_drop: true
+    conservative_drop: false  # needs_review is diagnostic; valid core exclusions still apply
     min_confidence_apply: 0.70
     needs_review_below: 0.85
   frame_audit:
     enabled: true
   frame_completion:
     enabled: true  # env override: LATERAL_FRAME_COMPLETION_ENABLED=false
+    auto_add: false  # diagnostics only unless explicitly enabled
     min_document_count: 2
     max_candidates_per_frame: 5
   reconciliation:

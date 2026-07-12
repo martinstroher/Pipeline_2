@@ -282,11 +282,27 @@ def _build_worthiness_payload(
 def _build_worthiness_sibling_context(
     rows: list[pd.Series],
     taxonomy_edits: dict[int, dict],
+    evidence: dict[str, dict],
 ) -> list[dict]:
+    corrected_parents = {
+        int(row["_critic_id"]): str(
+            taxonomy_edits.get(int(row["_critic_id"]), {}).get("new_parent", "")
+            or row["Parent_Term"]
+        ).strip()
+        for row in rows
+    }
+    child_counts: dict[str, int] = {}
+    for parent in corrected_parents.values():
+        if parent:
+            child_counts[parent.lower()] = child_counts.get(parent.lower(), 0) + 1
     return [
         {
             "term": row["Term"],
-            "parent": str(taxonomy_edits.get(int(row["_critic_id"]), {}).get("new_parent", "") or row["Parent_Term"]),
+            "parent": corrected_parents[int(row["_critic_id"])],
+            "child_count": child_counts.get(str(row["Term"]).strip().lower(), 0),
+            "frequency": int(evidence.get(str(row["Term"]).strip().lower(), {}).get("frequency", 0)),
+            "cq_count": int(evidence.get(str(row["Term"]).strip().lower(), {}).get("cq_count", 0)),
+            "matched_cqs": evidence.get(str(row["Term"]).strip().lower(), {}).get("matched_cqs", []),
             "nld": str(row.get("NLD", ""))[:180],
         }
         for row in rows
@@ -667,7 +683,8 @@ def _probe_cols(edit: dict | None) -> dict:
     for the audit log."""
     if not isinstance(edit, dict):
         return {"probe1_genus_ok": "", "probe2_bucket": "", "probe3_rewrite": "",
-                "rigidity": "", "identity": "", "dependence": "", "carried_by": ""}
+                "rigidity": "", "identity": "", "dependence": "", "carried_by": "",
+                "drop_basis": ""}
     cb = edit.get("carried_by")
     return {
         "probe1_genus_ok": edit.get("probe1_genus_ok", ""),
@@ -679,6 +696,7 @@ def _probe_cols(edit: dict | None) -> dict:
         "carried_by": json.dumps(cb, ensure_ascii=False) if isinstance(cb, dict) else "",
         "proposed_fate": str(edit.get("proposed_fate", "") or ""),
         "class_fate": str(edit.get("class_fate", "") or ""),
+        "drop_basis": str(edit.get("drop_basis", "") or ""),
         "centrality": str(edit.get("centrality", "") or ""),
         "cross_axis": edit.get("cross_axis", ""),
         "over_specificity_reason": str(edit.get("over_specificity_reason", "") or "")[:300],
@@ -825,6 +843,7 @@ def _merge_worthiness_decision(
         "over_specificity_reason": decision.get("reason", "") if fate in {"DROP_CLASS", "DEMOTE_TO_PROPERTY"} else "",
     })
     prior_action = str(merged.get("action", "KEEP") or "KEEP").upper()
+    retained_class_fate = "defined" if prior_action in {"KEEP_AS_BEARER", "KEEP_AS_DEFINED"} else "primitive"
     if prior_action == "CONVERT_TO_INSTANCE":
         return merged
     if prior_action == "KEEP_AS_BEARER" and fate in {"KEEP_PRIMITIVE", "KEEP_DEFINED"}:
@@ -837,8 +856,16 @@ def _merge_worthiness_decision(
         )
         return merged
     if fate == "DROP_CLASS":
-        merged["action"] = "DROP_AS_OVER_SPECIFIC"
-        merged["reason"] = decision.get("reason", "class-worthiness critic: drop class")
+        drop_basis = str(decision.get("drop_basis", "") or "").upper()
+        if drop_basis in {"NO_MARGINAL_VALUE", "NARROW_EXTENSION_DETAIL", "STACKED_CONTEXT"}:
+            merged["action"] = "DROP_AS_OVER_SPECIFIC"
+            merged["drop_basis"] = drop_basis
+            merged["reason"] = decision.get("reason", "class-worthiness critic: drop class")
+        else:
+            merged["action"] = prior_action
+            merged["class_fate"] = retained_class_fate
+            merged["needs_review"] = True
+            merged["reason"] = "DROP_CLASS rejected: missing/invalid core-exclusion basis; kept for reconciliation/review"
     elif fate == "DEMOTE_TO_PROPERTY":
         demoted_as = decision.get("demoted_as") if isinstance(decision.get("demoted_as"), dict) else {}
         required = all(str(demoted_as.get(k, "")).strip() for k in ("base_class", "property", "filler"))
@@ -847,9 +874,15 @@ def _merge_worthiness_decision(
             merged["demoted_as"] = demoted_as
             merged["reason"] = decision.get("reason", "class-worthiness critic: demote to property")
         else:
+            merged["class_fate"] = retained_class_fate
             merged["needs_review"] = True
-    elif fate == "KEEP_DEFINED" and allow_defined_classes:
-        if prior_action != "KEEP_AS_BEARER":
+            merged["reason"] = "DEMOTE_TO_PROPERTY rejected: incomplete property representation"
+    elif fate == "KEEP_DEFINED":
+        if not allow_defined_classes:
+            merged["class_fate"] = retained_class_fate
+            merged["needs_review"] = True
+            merged["reason"] = "KEEP_DEFINED rejected: defined classes are disabled"
+        elif prior_action != "KEEP_AS_BEARER":
             defined_by = decision.get("defined_by") if isinstance(decision.get("defined_by"), dict) else {}
             required = all(str(defined_by.get(k, "")).strip() for k in ("base_class", "property", "filler"))
             if required:
@@ -857,7 +890,9 @@ def _merge_worthiness_decision(
                 merged["defined_by"] = defined_by
                 merged["reason"] = decision.get("reason", "class-worthiness critic: keep defined")
             else:
+                merged["class_fate"] = retained_class_fate
                 merged["needs_review"] = True
+                merged["reason"] = "KEEP_DEFINED rejected: incomplete class definition"
     return merged
 
 
@@ -1005,6 +1040,57 @@ def _call_dedup_critic(
         "n_reconciliations": len(reconciliations), "response_text": raw_text,
     }, archive_path, archive_lock)
     return edits, reconciliations
+
+
+def _collect_global_reconciliation_decisions(
+    candidates: list[dict],
+    batch_size: int,
+    max_workers: int,
+    invoke_batch,
+) -> list[dict]:
+    """Run independent reconciliation batches concurrently, preserving order."""
+    batches = [
+        candidates[start:start + batch_size]
+        for start in range(0, len(candidates), batch_size)
+    ]
+    if not batches:
+        return []
+
+    batch_results: list[list[dict] | None] = [None] * len(batches)
+    workers = min(max(1, max_workers), len(batches))
+    with ThreadPoolExecutor(max_workers=workers) as pool:
+        futures = {
+            pool.submit(invoke_batch, candidate_batch): batch_index
+            for batch_index, candidate_batch in enumerate(batches)
+        }
+        for future in as_completed(futures):
+            batch_index = futures[future]
+            try:
+                batch_results[batch_index] = future.result()
+            except Exception as exc:
+                log.warn(
+                    f"Global reconciliation batch {batch_index + 1}/{len(batches)} "
+                    f"failed: {exc}"
+                )
+                batch_results[batch_index] = []
+
+    decisions: list[dict] = []
+    for candidate_batch, result in zip(batches, batch_results):
+        decisions_batch = list(result or [])
+        returned_ids = {
+            decision.get("pair_id") for decision in decisions_batch
+            if isinstance(decision, dict)
+        }
+        for candidate in candidate_batch:
+            if candidate["pair_id"] not in returned_ids:
+                decisions_batch.append({
+                    "pair_id": candidate["pair_id"],
+                    "decision": "NEEDS_REVIEW", "confidence": 0.0,
+                    "needs_review": True,
+                    "reason": "reconciliation critic omitted candidate pair",
+                })
+        decisions.extend(decisions_batch)
+    return decisions
 
 
 def _call_facet_critic(
@@ -1316,11 +1402,12 @@ def _apply_cross_category_reconciliations(
     edits_by_id: dict[int, dict],
     min_confidence: float,
 ) -> tuple[dict[str, str], list[dict]]:
-    """Apply high-confidence global merge/subsumption decisions."""
+    """Apply at most one unambiguous global mutation per term."""
     candidate_by_id = {int(c["pair_id"]): c for c in candidates}
     row_by_id = {int(row["_critic_id"]): row for _, row in tax.iterrows()}
     aliases: dict[str, str] = {}
     audit: list[dict] = []
+    prepared: list[tuple[dict, dict | None]] = []
     for decision in decisions:
         if not isinstance(decision, dict) or not isinstance(decision.get("pair_id"), int):
             continue
@@ -1339,27 +1426,32 @@ def _apply_cross_category_reconciliations(
             "Reason": decision.get("reason", ""), "Applied": False,
         }
         if not apply:
-            audit.append(record)
+            prepared.append((record, None))
             continue
 
+        mutation: dict | None = None
         if kind == "SAME_KIND":
             survivor_id = decision.get("survivor_id")
             duplicate_id = decision.get("duplicate_id")
             if not isinstance(survivor_id, int) or not isinstance(duplicate_id, int):
-                audit.append(record)
+                record["Needs_Review"] = True
+                record["Reason"] = f"{record['Reason']} (invalid survivor/duplicate ids)".strip()
+                prepared.append((record, None))
                 continue
             survivor = row_by_id.get(survivor_id)
             duplicate = row_by_id.get(duplicate_id)
             if survivor is None or duplicate is None or survivor_id == duplicate_id:
-                audit.append(record)
+                record["Needs_Review"] = True
+                record["Reason"] = f"{record['Reason']} (invalid SAME_KIND endpoints)".strip()
+                prepared.append((record, None))
                 continue
-            edits_by_id[duplicate_id] = {
-                **edits_by_id.get(duplicate_id, {}),
-                "action": "DROP_AS_REDUNDANT", "survivor": str(survivor["Term"]),
+            record.update({"Survivor": survivor["Term"], "Duplicate": duplicate["Term"]})
+            mutation = {
+                "target_id": duplicate_id,
+                "signature": ("SAME_KIND", survivor_id),
+                "kind": "SAME_KIND", "survivor": survivor, "duplicate": duplicate,
                 "reason": str(decision.get("reason", "cross-category co-extension")),
             }
-            aliases[str(duplicate["Term"]).strip().lower()] = str(survivor["Term"]).strip()
-            record.update({"Survivor": survivor["Term"], "Duplicate": duplicate["Term"], "Applied": True})
         elif kind in {"A_SUBCLASS_OF_B", "B_SUBCLASS_OF_A"}:
             child_key, parent_key = (
                 ("term_a", "term_b") if kind == "A_SUBCLASS_OF_B" else ("term_b", "term_a")
@@ -1369,21 +1461,114 @@ def _apply_cross_category_reconciliations(
             child = row_by_id.get(child_id)
             parent = row_by_id.get(parent_id)
             if child is None or parent is None:
-                audit.append(record)
+                record["Needs_Review"] = True
+                record["Reason"] = f"{record['Reason']} (invalid subsumption endpoints)".strip()
+                prepared.append((record, None))
                 continue
-            current = dict(edits_by_id.get(child_id, {"action": "KEEP"}))
-            if str(current.get("action", "KEEP")).upper() in _DROP_TAX_VERDICTS:
-                audit.append(record)
-                continue
-            current.update({
-                "action": "REPARENT", "new_parent": str(parent["Term"]),
-                "new_category": str(parent.get("Category", "")),
+            record.update({"Child": child["Term"], "New_Parent": parent["Term"]})
+            mutation = {
+                "target_id": child_id,
+                "signature": ("REPARENT", parent_id),
+                "kind": "REPARENT", "child": child, "parent": parent,
                 "reason": str(decision.get("reason", "cross-category subsumption")),
+            }
+        prepared.append((record, mutation))
+
+    mutation_groups: dict[int, list[int]] = {}
+    for index, (_, mutation) in enumerate(prepared):
+        if mutation is not None:
+            mutation_groups.setdefault(int(mutation["target_id"]), []).append(index)
+
+    winners: set[int] = set()
+    for indices in mutation_groups.values():
+        signatures = {prepared[index][1]["signature"] for index in indices}
+        if len(signatures) > 1:
+            for index in indices:
+                record = prepared[index][0]
+                record["Needs_Review"] = True
+                record["Reason"] = f"{record['Reason']} (conflicting reconciliation targets; not applied)".strip()
+            continue
+        winners.add(max(indices, key=lambda index: (prepared[index][0]["Confidence"], -index)))
+        for index in indices:
+            if index in winners:
+                continue
+            record = prepared[index][0]
+            record["Needs_Review"] = True
+            record["Reason"] = f"{record['Reason']} (duplicate mutation proposal; not applied)".strip()
+
+    for index, (record, mutation) in enumerate(prepared):
+        if mutation is None or index not in winners:
+            audit.append(record)
+            continue
+        target_id = int(mutation["target_id"])
+        current = dict(edits_by_id.get(target_id, {"action": "KEEP"}))
+        if str(current.get("action", "KEEP")).upper() in _DROP_TAX_VERDICTS:
+            record["Needs_Review"] = True
+            record["Reason"] = f"{record['Reason']} (target does not survive core selection)".strip()
+            audit.append(record)
+            continue
+        if mutation["kind"] == "SAME_KIND":
+            survivor = mutation["survivor"]
+            duplicate = mutation["duplicate"]
+            current.update({
+                "action": "DROP_AS_REDUNDANT", "survivor": str(survivor["Term"]),
+                "reason": mutation["reason"],
             })
-            edits_by_id[child_id] = current
-            record.update({"Child": child["Term"], "New_Parent": parent["Term"], "Applied": True})
+            edits_by_id[target_id] = current
+            aliases[str(duplicate["Term"]).strip().lower()] = str(survivor["Term"]).strip()
+            record["Applied"] = True
+        else:
+            parent = mutation["parent"]
+            if str(current.get("action", "KEEP")).upper() not in {"KEEP_AS_BEARER", "KEEP_AS_DEFINED"}:
+                current["action"] = "REPARENT"
+            current.update({
+                "new_parent": str(parent["Term"]),
+                "new_category": str(parent.get("Category", "")),
+                "reason": mutation["reason"],
+            })
+            edits_by_id[target_id] = current
+            record["Applied"] = True
         audit.append(record)
     return aliases, audit
+
+
+def _finalize_reconciliation_audit(
+    audit: list[dict],
+    final_taxonomy: pd.DataFrame,
+    valid_aliases: dict[str, str],
+) -> None:
+    """Mark Applied only when the materialized final taxonomy reflects it."""
+    final_terms = {
+        str(term).strip().lower() for term in final_taxonomy["Term"].astype(str)
+    }
+    final_parents = {
+        str(term).strip().lower(): str(parent).strip().lower()
+        for term, parent in zip(
+            final_taxonomy["Term"].astype(str),
+            final_taxonomy["Parent_Term"].astype(str),
+        )
+    }
+    for record in audit:
+        if not bool(record.get("Applied")):
+            continue
+        duplicate = str(record.get("Duplicate", "") or "").strip().lower()
+        if duplicate:
+            survivor = str(record.get("Survivor", "") or "").strip().lower()
+            reflected = (
+                duplicate not in final_terms
+                and survivor in final_terms
+                and valid_aliases.get(duplicate, "").strip().lower() == survivor
+            )
+        else:
+            child = str(record.get("Child", "") or "").strip().lower()
+            reflected = final_parents.get(child) == str(
+                record.get("New_Parent", "") or ""
+            ).strip().lower()
+        if reflected:
+            continue
+        record["Applied"] = False
+        record["Needs_Review"] = True
+        record["Reason"] = f"{record.get('Reason', '')} (not reflected in final taxonomy)".strip()
 
 
 def _redirect_relation_aliases(rel: pd.DataFrame, aliases: dict[str, str]) -> pd.DataFrame:
@@ -1460,8 +1645,10 @@ def _nearest_surviving_parent(
     surviving_lower: set[str],
     upper_lower: set[str],
     valid_categories: set[str],
+    excluded_lower: set[str] | None = None,
 ) -> str | None:
     """Follow edit survivors/original ancestors to the nearest live parent."""
+    excluded_lower = excluded_lower or set()
     row_by_term = {
         str(row["Term"]).strip().lower(): row
         for _, row in tax.iterrows()
@@ -1472,9 +1659,9 @@ def _nearest_surviving_parent(
     while current and current.lower() not in seen:
         key = current.lower()
         seen.add(key)
-        if key in surviving_lower or key in upper_lower:
+        if (key in surviving_lower or key in upper_lower) and key not in excluded_lower:
             return current
-        if key in category_lower:
+        if key in category_lower and key not in excluded_lower:
             return category_lower[key]
         row = row_by_term.get(key)
         if row is None:
@@ -1483,7 +1670,7 @@ def _nearest_surviving_parent(
         action = str(edit.get("action", "KEEP") or "KEEP").upper()
         if action == "DROP_AS_REDUNDANT":
             survivor = str(edit.get("survivor", "") or "").strip()
-            if survivor:
+            if survivor and survivor.lower() not in excluded_lower:
                 current = survivor
                 continue
         if action in {"REPARENT", "KEEP_AS_BEARER"}:
@@ -1702,16 +1889,32 @@ def _apply_taxonomy_edits(
 
     # Orphan re-parenting: collapse through a dropped parent's explicit
     # survivor/nearest surviving ancestor; Category is the last resort only.
-    surviving_lower = {str(t).lower() for t in cleaned["Term"].astype(str)}
+    surviving_lower = {str(t).strip().lower() for t in cleaned["Term"].astype(str)}
     for idx, row in cleaned.iterrows():
         parent = str(row["Parent_Term"]).strip()
-        if not parent or parent in valid_categories:
+        term_key = str(row["Term"]).strip().lower()
+        parent_key = parent.lower()
+        if not parent:
             continue
-        if parent.lower() in surviving_lower or parent.lower() in upper_lower:
+        if parent_key == term_key and term_key in upper_lower:
+            log.detail(
+                f"Upper-class identity: '{row['Term']}' reuses '{parent}'; "
+                "self-parent suppressed"
+            )
+            cleaned.at[idx, "Parent_Term"] = ""
+            continue
+        if parent in valid_categories:
+            continue
+        if parent_key in surviving_lower or parent_key in upper_lower:
             continue
         replacement = _nearest_surviving_parent(
             parent, tax, edits_by_id, surviving_lower, upper_lower, valid_categories,
-        ) or str(row["Category"])
+            excluded_lower={term_key},
+        )
+        fallback = str(row["Category"]).strip()
+        if not replacement and fallback.lower() != term_key:
+            replacement = fallback
+        replacement = replacement or ""
         log.detail(f"Orphan re-parent: '{row['Term']}' → '{replacement}' (was '{parent}', dropped)")
         cleaned.at[idx, "Parent_Term"] = replacement
 
@@ -2228,7 +2431,9 @@ def run_critic(
         survivor_rows = [r for _, r in tax_group.iterrows() if not _is_dropped(int(r["_critic_id"]))]
         if lateral_cfg.enabled and lateral_cfg.class_worthiness_enabled and survivor_rows:
             worth_chunk_size = max(1, int(os.environ.get("CRITIC_CLASS_WORTHINESS_CHUNK_SIZE", 5)))
-            sibling_context = _build_worthiness_sibling_context(survivor_rows, tax_edits_local)
+            sibling_context = _build_worthiness_sibling_context(
+                survivor_rows, tax_edits_local, term_evidence,
+            )
             for start in range(0, len(survivor_rows), worth_chunk_size):
                 worth_rows = survivor_rows[start:start + worth_chunk_size]
                 worth_payload = _build_worthiness_payload(worth_rows, tax_edits_local, term_evidence)
@@ -2318,28 +2523,25 @@ def run_critic(
             cross_candidates = _build_cross_category_candidates(
                 tax, all_tax_edits, lateral_cfg.reconciliation_top_k,
             )
-            reconciliation_decisions: list[dict] = []
             batch_size = 20
-            for start in range(0, len(cross_candidates), batch_size):
-                candidate_batch = cross_candidates[start:start + batch_size]
+            batch_count = (len(cross_candidates) + batch_size - 1) // batch_size
+            reconciliation_workers = min(max(1, max_workers), batch_count) if batch_count else 1
+            log.info(
+                f"Global reconciliation: {len(cross_candidates)} pairs in "
+                f"{batch_count} batches with {reconciliation_workers} workers"
+            )
+
+            def _invoke_global_batch(candidate_batch: list[dict]) -> list[dict]:
                 _, decisions_batch = _call_dedup_critic(
                     "GLOBAL", [], candidate_batch,
                     dedup_system, dedup_template, model, temperature,
                     archive_path, archive_lock,
                 )
-                returned_ids = {
-                    decision.get("pair_id") for decision in decisions_batch
-                    if isinstance(decision, dict)
-                }
-                for candidate in candidate_batch:
-                    if candidate["pair_id"] not in returned_ids:
-                        decisions_batch.append({
-                            "pair_id": candidate["pair_id"],
-                            "decision": "NEEDS_REVIEW", "confidence": 0.0,
-                            "needs_review": True,
-                            "reason": "reconciliation critic omitted candidate pair",
-                        })
-                reconciliation_decisions.extend(decisions_batch)
+                return decisions_batch
+
+            reconciliation_decisions = _collect_global_reconciliation_decisions(
+                cross_candidates, batch_size, max_workers, _invoke_global_batch,
+            )
             reconciliation_aliases, reconciliation_audit = _apply_cross_category_reconciliations(
                 cross_candidates, reconciliation_decisions, tax, all_tax_edits,
                 lateral_cfg.min_confidence_apply,
@@ -2404,9 +2606,9 @@ def run_critic(
                     if not apply_reparent:
                         continue
                     current = dict(all_tax_edits.get(rid, {"action": "KEEP"}))
-                    if str(current.get("action", "KEEP")).upper() == "KEEP_AS_BEARER":
+                    if str(current.get("action", "KEEP")).upper() in {"KEEP_AS_BEARER", "KEEP_AS_DEFINED"}:
                         current["new_parent"] = new_parent
-                    elif str(current.get("action", "KEEP")).upper() != "KEEP_AS_DEFINED":
+                    else:
                         current.update({"action": "REPARENT", "new_parent": new_parent})
                     current["reason"] = str(reparent.get("reason", "facet/subsumption audit"))
                     all_tax_edits[rid] = current
@@ -2490,12 +2692,15 @@ def run_critic(
             and str(edit.get("survivor", "")).strip().lower() == survivor.strip().lower()
         ):
             valid_aliases[duplicate] = survivor
-    for record in reconciliation_audit:
-        duplicate = str(record.get("Duplicate", "") or "").strip().lower()
-        if bool(record.get("Applied")) and duplicate and duplicate not in valid_aliases:
-            record["Applied"] = False
-            record["Needs_Review"] = True
-            record["Reason"] = f"{record.get('Reason', '')} (merge reverted by global survivor/cycle guard)".strip()
+    if rel is not None and valid_aliases:
+        rel = _redirect_relation_aliases(rel, valid_aliases)
+
+    cleaned_tax, instances_df, tax_log, bearer_records, explicit_defined_records, demotion_records = _apply_taxonomy_edits(
+        tax, all_tax_edits, valid_categories
+    )
+    _finalize_reconciliation_audit(
+        reconciliation_audit, cleaned_tax, valid_aliases,
+    )
     reconciliation_df = pd.DataFrame(reconciliation_audit).reindex(columns=reconciliation_cols)
     write_csv(reconciliation_df, reconciliation_out)
     if reconciliation_audit:
@@ -2504,12 +2709,6 @@ def run_critic(
             f"Term reconciliation: {applied_count} applied / {len(reconciliation_audit)} candidates "
             f"→ {reconciliation_out}"
         )
-    if rel is not None and valid_aliases:
-        rel = _redirect_relation_aliases(rel, valid_aliases)
-
-    cleaned_tax, instances_df, tax_log, bearer_records, explicit_defined_records, demotion_records = _apply_taxonomy_edits(
-        tax, all_tax_edits, valid_categories
-    )
 
     completion_cols = [
         "Candidate_ID", "Candidate", "Parent_Term", "Category", "Search_Terms",
@@ -2528,21 +2727,31 @@ def run_critic(
         evidence_payload, completion_audit = _attest_completion_candidates(
             proposed, lateral_cfg.frame_completion_min_documents,
         )
-        completion_decisions: list[dict] = []
-        for start in range(0, len(evidence_payload), 5):
-            completion_decisions.extend(_call_frame_completion_verifier(
-                evidence_payload[start:start + 5], completion_system, completion_template,
-                model, temperature, archive_path, archive_lock,
-            ))
-        completion_decisions = _generate_completion_nlds(evidence_payload, completion_decisions)
-        cleaned_tax, completion_df = _apply_frame_completion(
-            cleaned_tax, completion_audit, completion_decisions, valid_categories,
-        )
+        if lateral_cfg.frame_completion_auto_add:
+            completion_decisions: list[dict] = []
+            for start in range(0, len(evidence_payload), 5):
+                completion_decisions.extend(_call_frame_completion_verifier(
+                    evidence_payload[start:start + 5], completion_system, completion_template,
+                    model, temperature, archive_path, archive_lock,
+                ))
+            completion_decisions = _generate_completion_nlds(evidence_payload, completion_decisions)
+            cleaned_tax, completion_df = _apply_frame_completion(
+                cleaned_tax, completion_audit, completion_decisions, valid_categories,
+            )
+        else:
+            for row in completion_audit:
+                if row["Status"] == "ATTESTED":
+                    row["Decision_Reason"] = "diagnostic only; automatic frame completion disabled"
+            completion_df = pd.DataFrame(completion_audit)
     completion_df = completion_df.reindex(columns=completion_cols)
     write_csv(completion_df, frame_completion_out)
     if len(completion_df):
         added_count = int((completion_df["Status"] == "ADDED").sum())
-        log.success(f"Frame completion: {added_count} added / {len(completion_df)} candidates → {frame_completion_out}")
+        mode = "auto-add" if lateral_cfg.frame_completion_auto_add else "diagnostic-only"
+        log.success(
+            f"Frame completion ({mode}): {added_count} added / "
+            f"{len(completion_df)} candidates → {frame_completion_out}"
+        )
 
     # Newly completed terms receive standard Step-6b extraction before the
     # relation critics run, so they participate in the same validation path.
@@ -2821,7 +3030,7 @@ def run_critic(
 
     write_csv(pd.DataFrame(tax_log + rel_log), edits_out)
     fate_cols = [
-        "id", "term", "category", "action", "proposed_fate", "class_fate", "centrality",
+        "id", "term", "category", "action", "proposed_fate", "class_fate", "drop_basis", "centrality",
         "cross_axis", "placement_rationale", "over_specificity_reason",
         "needs_review", "confidence", "reason",
     ]
@@ -2867,6 +3076,7 @@ def run_critic(
         "reconciliation_applied_count": sum(bool(row.get("Applied")) for row in reconciliation_audit),
         "disjointness_candidate_count": len(all_disjointness),
         "frame_completion_counts": completion_counts,
+        "frame_completion_auto_add": lateral_cfg.frame_completion_auto_add,
         "frame_completion_relation_rows": len(targeted_rel_df),
         "weak_observations_enabled": weak_observations_enabled,
     }

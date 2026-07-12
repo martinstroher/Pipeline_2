@@ -1,5 +1,6 @@
 import unittest
 import sys
+import threading
 from pathlib import Path
 from unittest.mock import patch
 
@@ -14,6 +15,9 @@ from src.modules.validate.critic import (
     _build_cross_category_candidates,
     _build_entity_context_lookup,
     _build_relation_payload,
+    _build_worthiness_sibling_context,
+    _collect_global_reconciliation_decisions,
+    _finalize_reconciliation_audit,
     _generate_completion_nlds,
     _guard_reparent_cycles,
     _merge_worthiness_decision,
@@ -21,6 +25,7 @@ from src.modules.validate.critic import (
     _mutual_drop_guard,
 )
 from src.modules.construct.relation_extractor import extract_relations_for_terms
+from src.utils.ontology_config import get_config
 
 
 class LateralCoherenceHelperTests(unittest.TestCase):
@@ -77,6 +82,30 @@ class LateralCoherenceHelperTests(unittest.TestCase):
         }
         self.assertEqual(pairs, {frozenset((0, 1)), frozenset((1, 2))})
 
+    def test_global_reconciliation_batches_run_concurrently_in_pair_order(self):
+        second_batch_finished = threading.Event()
+
+        def invoke_batch(batch):
+            pair_id = batch[0]["pair_id"]
+            if pair_id == 0:
+                self.assertTrue(second_batch_finished.wait(timeout=2))
+            elif pair_id == 1:
+                second_batch_finished.set()
+            if pair_id == 2:
+                return []
+            return [{"pair_id": pair_id, "decision": "DISTINCT"}]
+
+        candidates = [{"pair_id": pair_id} for pair_id in range(3)]
+        decisions = _collect_global_reconciliation_decisions(
+            candidates, batch_size=1, max_workers=2, invoke_batch=invoke_batch,
+        )
+
+        self.assertEqual([decision["pair_id"] for decision in decisions], [0, 1, 2])
+        self.assertEqual(
+            [decision["decision"] for decision in decisions],
+            ["DISTINCT", "DISTINCT", "NEEDS_REVIEW"],
+        )
+
     def test_cross_category_same_kind_creates_alias(self):
         taxonomy = pd.DataFrame([
             {"_critic_id": 0, "Term": "carbonate", "Parent_Term": "material", "Category": "Material"},
@@ -100,6 +129,71 @@ class LateralCoherenceHelperTests(unittest.TestCase):
         self.assertEqual(aliases["carbonate"], "carbonate rock")
         self.assertEqual(edits[0]["action"], "DROP_AS_REDUNDANT")
         self.assertTrue(audit[0]["Applied"])
+
+    def test_reconciliation_does_not_override_core_exclusion(self):
+        taxonomy = pd.DataFrame([
+            {"_critic_id": 0, "Term": "detail", "Parent_Term": "material", "Category": "A"},
+            {"_critic_id": 1, "Term": "kind", "Parent_Term": "material", "Category": "B"},
+        ])
+        candidates = [{
+            "pair_id": 0,
+            "term_a": {"id": 0, "label": "detail", "category": "A"},
+            "term_b": {"id": 1, "label": "kind", "category": "B"},
+        }]
+        decisions = [{
+            "pair_id": 0, "decision": "SAME_KIND", "survivor_id": 1,
+            "duplicate_id": 0, "confidence": 0.95,
+        }]
+        edits = {0: {"action": "DROP_AS_OVER_SPECIFIC"}}
+
+        aliases, audit = _apply_cross_category_reconciliations(
+            candidates, decisions, taxonomy, edits, 0.7,
+        )
+
+        self.assertEqual(edits[0]["action"], "DROP_AS_OVER_SPECIFIC")
+        self.assertEqual(aliases, {})
+        self.assertFalse(audit[0]["Applied"])
+
+    def test_conflicting_reconciliation_parents_are_not_applied(self):
+        taxonomy = pd.DataFrame([
+            {"_critic_id": 0, "Term": "child", "Parent_Term": "root", "Category": "A"},
+            {"_critic_id": 1, "Term": "parent one", "Parent_Term": "root", "Category": "B"},
+            {"_critic_id": 2, "Term": "parent two", "Parent_Term": "root", "Category": "C"},
+        ])
+        candidates = [
+            {"pair_id": 0, "term_a": {"id": 0, "label": "child", "category": "A"},
+             "term_b": {"id": 1, "label": "parent one", "category": "B"}},
+            {"pair_id": 1, "term_a": {"id": 0, "label": "child", "category": "A"},
+             "term_b": {"id": 2, "label": "parent two", "category": "C"}},
+        ]
+        decisions = [
+            {"pair_id": 0, "decision": "A_SUBCLASS_OF_B", "confidence": 0.95},
+            {"pair_id": 1, "decision": "A_SUBCLASS_OF_B", "confidence": 0.91},
+        ]
+        edits = {}
+
+        _, audit = _apply_cross_category_reconciliations(
+            candidates, decisions, taxonomy, edits, 0.7,
+        )
+
+        self.assertNotIn(0, edits)
+        self.assertTrue(all(not row["Applied"] and row["Needs_Review"] for row in audit))
+
+    def test_reconciliation_audit_matches_materialized_taxonomy(self):
+        audit = [{
+            "Applied": True, "Needs_Review": False, "Reason": "candidate",
+            "Child": "child", "New_Parent": "proposed", "Duplicate": "",
+        }]
+        final_taxonomy = pd.DataFrame([
+            {"Term": "child", "Parent_Term": "final parent"},
+            {"Term": "proposed", "Parent_Term": "root"},
+        ])
+
+        _finalize_reconciliation_audit(audit, final_taxonomy, {})
+
+        self.assertFalse(audit[0]["Applied"])
+        self.assertTrue(audit[0]["Needs_Review"])
+        self.assertIn("not reflected", audit[0]["Reason"])
 
     def test_reparent_cycle_is_reverted(self):
         taxonomy = pd.DataFrame([
@@ -183,6 +277,36 @@ class LateralCoherenceHelperTests(unittest.TestCase):
 
         self.assertEqual(cleaned.set_index("Term").loc["chalcedony", "Parent_Term"], "silica")
 
+    def test_dropped_parent_does_not_alias_child_to_itself(self):
+        taxonomy = pd.DataFrame([
+            {"_critic_id": 0, "Term": "diagenesis", "Parent_Term": "Geological Process", "Category": "Geological Process"},
+            {"_critic_id": 1, "Term": "early diagenesis", "Parent_Term": "diagenesis", "Category": "Geological Process"},
+            {"_critic_id": 2, "Term": "eodiagenesis", "Parent_Term": "early diagenesis", "Category": "Geological Process"},
+        ])
+        edits = {
+            0: {"action": "KEEP"},
+            1: {"action": "DROP_AS_REDUNDANT", "survivor": "eodiagenesis"},
+            2: {"action": "KEEP"},
+        }
+
+        cleaned, *_ = _apply_taxonomy_edits(taxonomy, edits, {"Geological Process"})
+
+        self.assertEqual(cleaned.set_index("Term").loc["eodiagenesis", "Parent_Term"], "diagenesis")
+
+    def test_upper_class_identity_suppresses_self_parent(self):
+        taxonomy = pd.DataFrame([{
+            "_critic_id": 0,
+            "Term": "sedimentary facies",
+            "Parent_Term": "Sedimentary Facies",
+            "Category": "Sedimentary Facies",
+        }])
+
+        cleaned, *_ = _apply_taxonomy_edits(
+            taxonomy, {0: {"action": "KEEP"}}, {"Sedimentary Facies"},
+        )
+
+        self.assertEqual(cleaned.iloc[0]["Parent_Term"], "")
+
     def test_worthiness_demote_is_authoritative(self):
         merged = _merge_worthiness_decision(
             {"action": "KEEP"},
@@ -200,6 +324,86 @@ class LateralCoherenceHelperTests(unittest.TestCase):
 
         self.assertEqual(merged["action"], "DEMOTE_TO_PROPERTY")
         self.assertEqual(merged["class_fate"], "demote")
+
+    def test_incomplete_demotion_keeps_primitive_audit_fate(self):
+        merged = _merge_worthiness_decision(
+            {"action": "KEEP"},
+            {"fate": "DEMOTE_TO_PROPERTY", "demoted_as": {}, "confidence": 0.9},
+            True,
+            conservative_drop=False,
+        )
+
+        self.assertEqual(merged["action"], "KEEP")
+        self.assertEqual(merged["class_fate"], "primitive")
+        self.assertTrue(merged["needs_review"])
+
+    def test_incomplete_definition_keeps_primitive_audit_fate(self):
+        merged = _merge_worthiness_decision(
+            {"action": "KEEP"},
+            {"fate": "KEEP_DEFINED", "defined_by": {}, "confidence": 0.9},
+            True,
+        )
+
+        self.assertEqual(merged["action"], "KEEP")
+        self.assertEqual(merged["class_fate"], "primitive")
+        self.assertTrue(merged["needs_review"])
+
+    def test_valid_core_exclusion_applies_even_when_needs_review(self):
+        merged = _merge_worthiness_decision(
+            {"action": "KEEP"},
+            {
+                "fate": "DROP_CLASS", "drop_basis": "NARROW_EXTENSION_DETAIL",
+                "confidence": 0.55, "needs_review": True,
+                "reason": "valid detail but adds no marginal core value",
+            },
+            True,
+            conservative_drop=False,
+        )
+
+        self.assertEqual(merged["action"], "DROP_AS_OVER_SPECIFIC")
+        self.assertEqual(merged["drop_basis"], "NARROW_EXTENSION_DETAIL")
+        self.assertTrue(merged["needs_review"])
+
+    def test_drop_without_core_exclusion_basis_is_kept(self):
+        merged = _merge_worthiness_decision(
+            {"action": "KEEP"},
+            {
+                "fate": "DROP_CLASS", "confidence": 0.95,
+                "reason": "duplicate of a sibling",
+            },
+            True,
+            conservative_drop=False,
+        )
+
+        self.assertEqual(merged["action"], "KEEP")
+        self.assertTrue(merged["needs_review"])
+
+    def test_invalid_drop_preserves_existing_bearer_audit_fate(self):
+        merged = _merge_worthiness_decision(
+            {"action": "KEEP_AS_BEARER"},
+            {"fate": "DROP_CLASS", "confidence": 0.95, "reason": "duplicate"},
+            True,
+            conservative_drop=False,
+        )
+
+        self.assertEqual(merged["action"], "KEEP_AS_BEARER")
+        self.assertEqual(merged["class_fate"], "defined")
+
+    def test_worthiness_sibling_context_contains_comparative_evidence(self):
+        rows = [
+            pd.Series({"_critic_id": 0, "Term": "parent", "Parent_Term": "root", "NLD": "A parent."}),
+            pd.Series({"_critic_id": 1, "Term": "child", "Parent_Term": "parent", "NLD": "A child."}),
+        ]
+        evidence = {
+            "parent": {"frequency": 8, "cq_count": 2, "matched_cqs": ["CQ1", "CQ2"]},
+            "child": {"frequency": 5, "cq_count": 1, "matched_cqs": ["CQ1"]},
+        }
+
+        context = _build_worthiness_sibling_context(rows, {}, evidence)
+
+        by_term = {row["term"]: row for row in context}
+        self.assertEqual(by_term["parent"]["child_count"], 1)
+        self.assertEqual(by_term["parent"]["matched_cqs"], ["CQ1", "CQ2"])
 
     def test_low_confidence_drop_is_kept_for_review(self):
         merged = _merge_worthiness_decision(
@@ -281,6 +485,10 @@ class LateralCoherenceHelperTests(unittest.TestCase):
 
         self.assertIn("later stage", completed["Term"].tolist())
         self.assertEqual(audit.iloc[0]["Status"], "ADDED")
+
+    def test_frame_completion_auto_add_is_disabled_by_default(self):
+        self.assertTrue(get_config().lateral_coherence().frame_completion_enabled)
+        self.assertFalse(get_config().lateral_coherence().frame_completion_auto_add)
 
 
 if __name__ == "__main__":
