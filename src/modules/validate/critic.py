@@ -255,7 +255,9 @@ def _build_worthiness_payload(
     rows: list[pd.Series],
     taxonomy_edits: dict[int, dict],
     evidence: dict[str, dict],
+    relation_mentions: dict[str, int] | None = None,
 ) -> list[dict]:
+    relation_mentions = relation_mentions or {}
     out: list[dict] = []
     for row in rows:
         rid = int(row["_critic_id"])
@@ -270,8 +272,10 @@ def _build_worthiness_payload(
             "is_intermediate": bool(row.get("Is_Intermediate", False)),
             "nld": str(row.get("NLD", ""))[:500],
             "taxonomy_action": str(edit.get("action", "KEEP") or "KEEP").upper(),
+            "taxonomy_definition": edit.get("carried_by") or edit.get("defined_by") or {},
             "frequency": int(ev.get("frequency", 0)),
             "document_coverage": float(ev.get("document_coverage", 0.0)),
+            "relation_mentions": int(relation_mentions.get(str(row["Term"]).strip().lower(), 0)),
             "cq_count": int(ev.get("cq_count", 0)),
             "matched_cqs": ev.get("matched_cqs", []),
             "cq_reasoning": str(ev.get("cq_reasoning", ""))[:300],
@@ -283,7 +287,9 @@ def _build_worthiness_sibling_context(
     rows: list[pd.Series],
     taxonomy_edits: dict[int, dict],
     evidence: dict[str, dict],
+    relation_mentions: dict[str, int] | None = None,
 ) -> list[dict]:
+    relation_mentions = relation_mentions or {}
     corrected_parents = {
         int(row["_critic_id"]): str(
             taxonomy_edits.get(int(row["_critic_id"]), {}).get("new_parent", "")
@@ -301,6 +307,7 @@ def _build_worthiness_sibling_context(
             "parent": corrected_parents[int(row["_critic_id"])],
             "child_count": child_counts.get(str(row["Term"]).strip().lower(), 0),
             "frequency": int(evidence.get(str(row["Term"]).strip().lower(), {}).get("frequency", 0)),
+            "relation_mentions": int(relation_mentions.get(str(row["Term"]).strip().lower(), 0)),
             "cq_count": int(evidence.get(str(row["Term"]).strip().lower(), {}).get("cq_count", 0)),
             "matched_cqs": evidence.get(str(row["Term"]).strip().lower(), {}).get("matched_cqs", []),
             "nld": str(row.get("NLD", ""))[:180],
@@ -684,7 +691,8 @@ def _probe_cols(edit: dict | None) -> dict:
     if not isinstance(edit, dict):
         return {"probe1_genus_ok": "", "probe2_bucket": "", "probe3_rewrite": "",
                 "rigidity": "", "identity": "", "dependence": "", "carried_by": "",
-                "drop_basis": ""}
+                "drop_basis": "", "core_basis": "", "coherent_frame": "",
+                "frame_axis": "", "frame_siblings": ""}
     cb = edit.get("carried_by")
     return {
         "probe1_genus_ok": edit.get("probe1_genus_ok", ""),
@@ -697,6 +705,10 @@ def _probe_cols(edit: dict | None) -> dict:
         "proposed_fate": str(edit.get("proposed_fate", "") or ""),
         "class_fate": str(edit.get("class_fate", "") or ""),
         "drop_basis": str(edit.get("drop_basis", "") or ""),
+        "core_basis": str(edit.get("core_basis", "") or ""),
+        "coherent_frame": edit.get("coherent_frame", ""),
+        "frame_axis": str(edit.get("frame_axis", "") or ""),
+        "frame_siblings": json.dumps(edit.get("frame_siblings", []), ensure_ascii=False),
         "centrality": str(edit.get("centrality", "") or ""),
         "cross_axis": edit.get("cross_axis", ""),
         "over_specificity_reason": str(edit.get("over_specificity_reason", "") or "")[:300],
@@ -838,17 +850,64 @@ def _merge_worthiness_decision(
         "centrality": decision.get("centrality", "medium"),
         "cross_axis": decision.get("cross_axis", False),
         "placement_rationale": decision.get("placement_rationale", ""),
+        "core_basis": decision.get("core_basis", ""),
+        "coherent_frame": decision.get("coherent_frame", False),
+        "frame_axis": decision.get("frame_axis", ""),
+        "frame_siblings": decision.get("frame_siblings", []),
         "needs_review": needs_review,
         "confidence": confidence,
         "over_specificity_reason": decision.get("reason", "") if fate in {"DROP_CLASS", "DEMOTE_TO_PROPERTY"} else "",
     })
     prior_action = str(merged.get("action", "KEEP") or "KEEP").upper()
     retained_class_fate = "defined" if prior_action in {"KEEP_AS_BEARER", "KEEP_AS_DEFINED"} else "primitive"
+    carry = merged.get("carried_by") if isinstance(merged.get("carried_by"), dict) else {}
+    carry_property = str(carry.get("property", "") or "").strip()
+    protected_realizable_bearer = (
+        prior_action == "KEEP_AS_BEARER"
+        and bool(str(carry.get("filler", "") or "").strip())
+        and _BEARER_PROPERTIES.get(carry_property) in _DEFINING_BEARER_PARENTS
+    )
+    frame_siblings = decision.get("frame_siblings") if isinstance(decision.get("frame_siblings"), list) else []
+    valid_coherent_frame = (
+        bool(decision.get("coherent_frame", False))
+        and bool(str(decision.get("frame_axis", "") or "").strip())
+        and bool([str(value).strip() for value in frame_siblings if str(value).strip()])
+    )
     if prior_action == "CONVERT_TO_INSTANCE":
         return merged
     if prior_action == "KEEP_AS_BEARER" and fate in {"KEEP_PRIMITIVE", "KEEP_DEFINED"}:
         merged["class_fate"] = "defined"
         return merged
+    if protected_realizable_bearer and fate == "DEMOTE_TO_PROPERTY":
+        merged["class_fate"] = "defined"
+        merged["needs_review"] = True
+        merged["reason"] = (
+            "DEMOTE_TO_PROPERTY rejected: a role/function/disposition bearer must retain "
+            "its defined-bearer semantics"
+        )
+        return merged
+    if protected_realizable_bearer and fate == "DROP_CLASS":
+        drop_basis = str(decision.get("drop_basis", "") or "").upper()
+        if drop_basis != "STACKED_CONTEXT":
+            merged["class_fate"] = "defined"
+            merged["needs_review"] = True
+            merged["reason"] = (
+                "DROP_CLASS rejected: a complete realizable bearer may be excluded only "
+                "as a stacked contextual specialization"
+            )
+            return merged
+    if valid_coherent_frame and fate == "DROP_CLASS":
+        drop_basis = str(decision.get("drop_basis", "") or "").upper()
+        if drop_basis in {"NO_MARGINAL_VALUE", "NARROW_EXTENSION_DETAIL"}:
+            merged["action"] = prior_action
+            merged["class_fate"] = retained_class_fate
+            merged["core_basis"] = "COHERENT_FRAME_MEMBER"
+            merged["needs_review"] = True
+            merged["reason"] = (
+                "DROP_CLASS rejected: an atomic coherent-frame member is not merely "
+                "narrow extension detail"
+            )
+            return merged
     if not apply_fate:
         merged["reason"] = (
             f"class-worthiness fate {fate} not applied: confidence {confidence:.2f} "
@@ -2314,6 +2373,16 @@ def run_critic(
             t2c = _term_to_category(tax)
             rel["Category"] = rel["Term"].astype(str).str.strip().str.lower().map(t2c).fillna("")
 
+    relation_mentions: dict[str, int] = {}
+    if rel is not None:
+        for _, relation_row in rel.iterrows():
+            endpoints = {
+                str(relation_row.get("Term", "") or "").strip().lower(),
+                str(relation_row.get("Filler", "") or "").strip().lower(),
+            }
+            for endpoint in endpoints - {""}:
+                relation_mentions[endpoint] = relation_mentions.get(endpoint, 0) + 1
+
     valid_categories = set(tax["Category"].astype(str).unique())
     categories = sorted(valid_categories)
     relations_menu = _build_relations_menu()
@@ -2432,11 +2501,13 @@ def run_critic(
         if lateral_cfg.enabled and lateral_cfg.class_worthiness_enabled and survivor_rows:
             worth_chunk_size = max(1, int(os.environ.get("CRITIC_CLASS_WORTHINESS_CHUNK_SIZE", 5)))
             sibling_context = _build_worthiness_sibling_context(
-                survivor_rows, tax_edits_local, term_evidence,
+                survivor_rows, tax_edits_local, term_evidence, relation_mentions,
             )
             for start in range(0, len(survivor_rows), worth_chunk_size):
                 worth_rows = survivor_rows[start:start + worth_chunk_size]
-                worth_payload = _build_worthiness_payload(worth_rows, tax_edits_local, term_evidence)
+                worth_payload = _build_worthiness_payload(
+                    worth_rows, tax_edits_local, term_evidence, relation_mentions,
+                )
                 worth_df = pd.DataFrame(worth_rows)
                 worth_terms = {str(row["Term"]).strip().lower() for row in worth_rows}
                 worth_own_rel = own_rel[
@@ -2569,7 +2640,9 @@ def run_critic(
         }
 
         def _audit_facet_category(cat: str, rows: list[pd.Series]) -> None:
-            facet_payload = _build_worthiness_payload(rows, all_tax_edits, term_evidence)
+            facet_payload = _build_worthiness_payload(
+                rows, all_tax_edits, term_evidence, relation_mentions,
+            )
             facet_target_context = _select_facet_target_context(rows, entity_context_lookup)
             facet_result = _call_facet_critic(
                 cat, facet_payload, sorted(surviving_labels | set(target_classes)),
@@ -3030,7 +3103,8 @@ def run_critic(
 
     write_csv(pd.DataFrame(tax_log + rel_log), edits_out)
     fate_cols = [
-        "id", "term", "category", "action", "proposed_fate", "class_fate", "drop_basis", "centrality",
+        "id", "term", "category", "action", "proposed_fate", "class_fate", "drop_basis",
+        "core_basis", "coherent_frame", "frame_axis", "frame_siblings", "centrality",
         "cross_axis", "placement_rationale", "over_specificity_reason",
         "needs_review", "confidence", "reason",
     ]
