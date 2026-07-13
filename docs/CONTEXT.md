@@ -1,7 +1,7 @@
 # System Context & Architecture
 
 ## Overview
-This pipeline allows geoscientists to extract, define, and classify terminology from unstructured PDF documents, producing a formal OWL ontology anchored to published upper ontologies (BFO, GeoCore, GeoReservoir). It follows a 7-step sequential pipeline. Each step reads from `output/` (or `inputs/`) and writes to `output/`.
+This pipeline allows geoscientists to extract, define, and classify terminology from unstructured PDF documents, producing a formal OWL ontology anchored to published upper ontologies (BFO, GeoCore, GeoReservoir). It follows a multi-step sequential pipeline with an LLM-driven validation/construction phase. Each step reads from `output/` (or `inputs/`) and writes to `output/`.
 
 ## Architecture
 
@@ -13,7 +13,7 @@ graph TD
     D -->|term_aggregator.py| E(Aggregated CSV)
     E -->|term_filter.py| F(Filtered CSV)
     F -->|nld_generator.py + RAG| G(NLDs + Definitions CSV)
-    G -->|term_categorizer.py + RAG| H(Categorized Ontology CSV)
+    G -->|category_assigner.py + RAG| H(Categorized Ontology CSV)
     H -->|cq_scorer.py| H2(Filtered Categorized CSV — CQ≥1)
     H2 -->|taxonomy_builder.py| I(Taxonomy CSV)
     H -->|taxonomy_builder.py| I
@@ -96,23 +96,23 @@ The ontology scope is defined by 10 competency questions (CQs) that specify what
 - **Note (model change, 2026-07 — removable):** The threshold was previously freq≥7, chosen on the earlier *Gemini* extraction, which yielded 976 / 614 / 368 terms at freq≥5 / 7 / 10. Migrating to gpt-5.4 produced a leaner, more consolidated extraction (~43% as many terms at every threshold), so freq≥7 now yields only 265 terms. The threshold was re-derived on the new distribution and lowered to freq≥5 (407 terms) to preserve ontology coverage and Layer-2 expert-evaluation headroom (the expert workbook samples 200 terms). Remove this note once the change is settled in the thesis narrative.
 - Output: `output/3_filtered_top_terms.csv`
 
-### `src/modules/nld_generator.py` — Step 4: Definition Generation
-- **Tech**: Gemini 2.5 Pro + RAG retrieval
+### `src/modules/define/nld_generator.py` — Step 4: Definition Generation
+- **Tech**: gpt-5.4 (Azure AI Foundry) + RAG retrieval
 - For each filtered term, retrieves the top-5 most relevant corpus chunks via hybrid search.
 - Generates an Aristotelian NLD ("X is a Y that Z") grounded in the retrieved context.
 - Few-shot examples and an English-language/polysemy instruction are included in the system prompt.
 - **Robustness:** Required environment variables (`FILTERED_TERMS_OUTPUT`, `CONSOLIDATED_LLM_RESULTS_WITH_NLDS`, `OUTPUT_FAILURE_FILE`) are validated at startup with clear error messages. JSON parse failures set `Context_Used = false` (boolean) rather than a string sentinel. All CSV reads use `utf-8-sig` encoding for BOM-safe interoperability.
 - Output: `output/4_nld_generated_definitions.csv`
 
-### `src/modules/term_categorizer.py` — Step 5: Ontology Classification
-- **Tech**: Gemini 2.5 Pro + RAG retrieval
+### `src/modules/classify/category_assigner.py` — Step 5: Ontology Classification
+- **Tech**: gpt-5.4 (Azure AI Foundry) + RAG retrieval
 - Classifies each term+NLD into one of N upper-ontology categories using an N-tier waterfall driven by `cfg.waterfall_ontologies()`. For Pre-Salt the cascade is GeoReservoir → GeoCore → BFO, with `NOT_CLASSIFIED` as the documented fallback. The categories list and per-category definitions are injected into the prompt as the single `{categories_block}` placeholder rendered by `cfg.categorization_block()`; no category names are hardcoded in the module.
 - Waterfall priority ensures each term maps to the most domain-specific applicable namespace first. Reordering or extending the cascade is a YAML-only edit (`waterfall:` + a new `ontologies.<key>` block) — no Python change is required.
 - **Realizables are not assignable here.** The BFO realizables `role`, `disposition`, and `function` are flagged `categorizer: false` in `ontology_config.yaml`, so they are omitted from the `{categories_block}` menu and from `categories_for()`. Terms that bear a role/function are categorized as their material bearer (e.g. a rock body → `object`), and the realizable is introduced only later by the validate-step critic via `KEEP_AS_BEARER` minting + OntoClean bucketing. This preserves the critic's bearer-preservation mechanism, which a Step-5 role-typing would otherwise defeat. `quality` remains assignable at Step 5 (genuine qualities like porosity/permeability are reliable there; pseudo-qualities are handled by the critic's `DROP_AS_MIXIN`). The flag does **not** remove metatypes, so these classes stay valid relation domain/range targets, taxonomy parents, and critic REPARENT/mint targets.
 - Output: `output/5_categorized_ontology.csv`
 
 ### `src/modules/classify/cq_scorer.py` — Step 5b: CQ-Driven Refinement
-- **Tech**: Gemini 2.5 Pro (synonym triage + CQ scoring)
+- **Tech**: gpt-5.4 (Azure AI Foundry; synonym triage + CQ scoring)
 - Mandatory sub-step of the `classify` verb. Runs after Step 5 and before Step 6; downstream steps consume its filtered output instead of the raw Step 5 CSV.
 - **Sub-step A — Deterministic cleanup:** Detects encoding/accent duplicates (Unicode NFKD normalisation) and hyphenation variants (build-up/buildup). Merges to the longer/accented canonical form.
 - **Sub-step B — Synonym triage:** Groups terms sharing a head noun within the same category (≥50% word overlap). Sends clusters to the LLM for 3-way classification: SYNONYM (merge to canonical), SPECIALIZATION (keep both + emit parent-child hint), or DISTINCT (keep both). NLDs are included so the LLM judges meaning, not just surface form. SPECIALIZATION pairs are written to `5b_specialization_hints.csv` and passed to the taxonomy builder as parent-child constraints.
@@ -122,7 +122,7 @@ The ontology scope is defined by 10 competency questions (CQs) that specify what
 - Output: `<refined>/5b_cleanup_report.csv`, `<refined>/5b_cq_matrix.csv`, `<refined>/5b_specialization_hints.csv`, `<refined>/classify_categories.csv`
 
 ### `src/modules/construct/taxonomy_builder.py` — Step 6: Taxonomy Construction
-- **Tech**: Gemini 2.5 Pro
+- **Tech**: gpt-5.4 (Azure AI Foundry)
 - Builds a hierarchical taxonomy per ontology group (GeoReservoir, GeoCore, BFO) using NLDs for naming.
 - Accepts optional `hints_csv` parameter with pre-identified SPECIALIZATION pairs from Step 5b. When provided, these are injected into the prompt as parent-child constraints.
 - Processes terms in chunks of up to 150 per LLM call to avoid cross-chunk inconsistency.
@@ -135,7 +135,7 @@ The ontology scope is defined by 10 competency questions (CQs) that specify what
 - Output: `output/6_taxonomy.csv`
 
 ### `src/modules/relation_extractor.py` — Step 6b: Relation Extraction
-- **Tech**: Gemini 2.5 Pro + `relation_validator.py`
+- **Tech**: gpt-5.4 (Azure AI Foundry) + `relation_validator.py`
 - Extracts ontological relations from NLDs using 16 Tier 1 BFO/RO properties (has_part, part_of, has_participant, participates_in, occurs_in, located_in, derives_from, derives_into, generated_by, constituted_by, has_quality, inheres_in, preceded_by, precedes, generated_in, has_age).
 - Processes terms in batches of 10 (configurable via `RELATION_BATCH_SIZE`).
 - 3 few-shot examples guide extraction; confidence threshold filters weak relations (≥0.7).
@@ -325,7 +325,7 @@ studies/                  # Cross-domain study artifacts (not domain-specific)
   expert_eval.yaml        # Expert-evaluation workbook instructions sheet (49 rows)
 src/
   modules/                # Steps 1-7 (extraction → OWL export)
-  utils/                  # ontology_config + study_config loaders, csv_io, checkpoint, RAG setup, PDF conversion, logging, Gemini client, relation validator, prompt loader (verbatim, no interpolation)
+  utils/                  # ontology_config + study_config loaders, csv_io, checkpoint, RAG setup, PDF conversion, logging, LLM client (Azure OpenAI), relation validator, prompt loader (verbatim, no interpolation)
   evaluation/             # Ablation study, Layer 1 & 2 analysis, expert eval, property-constraints audit
 inputs/                   # Source PDFs + generated .md files
 output/                   # Step outputs (1_raw → 6d_taxonomy_reclassified.ttl)

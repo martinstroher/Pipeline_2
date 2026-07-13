@@ -1,6 +1,6 @@
 # PreSaltOntoLearn — Geological Ontology Learning Pipeline
 
-An LLM-driven ontology learning pipeline for Brazilian Pre-Salt petroleum geology. Processes scientific PDFs through a 7-step pipeline — extraction, aggregation, filtering, RAG-grounded NLD generation, ontology categorization, taxonomy building, and OWL export — producing a Protege-compatible `.ttl` ontology anchored to BFO, GeoCore, and GeoReservoir upper ontologies.
+An LLM-driven ontology learning pipeline for Brazilian Pre-Salt petroleum geology. Processes scientific PDFs through an automated pipeline — extraction, aggregation, filtering, RAG-grounded NLD generation, ontology categorization, CQ-driven refinement, taxonomy building, relation extraction, LLM-driven ontology construction/validation, and OWL export — producing a Protege-compatible `.ttl` ontology anchored to BFO, GeoCore, and GeoReservoir upper ontologies.
 
 ---
 
@@ -61,9 +61,8 @@ The full pipeline runs Steps 0-7 and writes a Turtle OWL file (`output/6d_taxono
 | 2 | `term_aggregator.py` | Step 1 JSON | `output/2_aggregated_counts.csv` |
 | 3 | `term_filter.py` | Step 2 CSV | `output/3_filtered_top_terms.csv` |
 | 4 | `nld_generator.py` | Step 3 + RAG | `output/4_nld_generated_definitions.csv` |
-| 5 | `term_categorizer.py` | Step 4 CSV | `output/5_categorized_ontology.csv` |
-| 6 | `taxonomy_builder.py` | Step 5 CSV | `output/6_taxonomy.csv` |
-| 6b | `relation_extractor.py` | Step 5 CSV | `output/6b_relations.csv` |
+| 5 | `category_assigner.py` | Step 4 CSV | `output/classify_categories.csv` |
+| 5b | `cq_scorer.py` | Step 5 CSV | `output/refined/classify_categories.csv` |
 | 6 | `taxonomy_builder.py` | Step 5b CSV | `output/refined/construct_taxonomy.csv` |
 | 6b | `relation_extractor.py` | Step 5b CSV | `output/refined/construct_relations.csv` |
 | validate | `validate/critic.py` | Steps 6 + 6b CSVs | lean core taxonomy/relations + evidence, realizable-bearer definitions, coherent-frame retention, class-fate/demotion, conflict-safe top-3 BGE NLD reconciliation, single-axis subsumption/facet diagnostics, diagnostic frame completion, disjointness, and summary artifacts under `output/refined/` |
@@ -160,7 +159,7 @@ domains/                  # Per-domain config + assets. Each subfolder is a comp
   README.md               # Author guide: layout, activation, per-prompt runtime-placeholder contract
   presalt/
     ontology_config.yaml  # Single source of truth: waterfall, upper-ontology metadata, BFO disjoint pairs, 71 relation property constraints
-    prompts/              # 8 production prompts (verbatim — personas inlined, no load-time interpolation)
+    prompts/              # 14 production prompts (including focused validate stages)
     resources/            # Upper-ontology OWL files: bfo-core.owl, geocore-full.owl, geores-full.owl, ro-core.owl
     competency_questions.txt  # CQs evaluated by Step 5b
 studies/                  # Cross-domain study artifacts (not Pre-Salt-specific)
