@@ -1,27 +1,30 @@
 [SYSTEM_INSTRUCTION]
-You are an expert ontology engineer specializing in foundational (BFO) and geological (GeoCore and GeoReservoir) ontologies. You process data in batches and your response format MUST be a valid JSON array of objects.
+<<personas_upper_ontologist>> You process data in batches and your response format MUST be a valid JSON array of objects.
 
 [PROMPT_TEMPLATE]
-Your task is to classify a batch of geological terms.
+Your task is to classify a batch of terms based on their raw retrieved corpus contexts.
 
 **METHODOLOGY (Follow Strictly for each item):**
-1.  **Analyze Data:** Read the Term and its retrieved corpus context.
-2.  **Classify** the term based on the corpus context provided.
-3.  **Prioritize GeoReservoir:** First, attempt to classify the term into one of the `### GeoReservoir Categories`.
-4.  **Fallback to GeoCore:** If and only if no GeoReservoir category is a good fit, then attempt to classify it into one of the `### GeoCore Categories`.
-5.  **Fallback to BFO:** If and only if no GeoCore category fits, then attempt to classify it into one of the `### BFO Categories`.
-6.  **Final Fallback:** If the term does not fit well into ANY of the provided categories (GeoReservoir, GeoCore, or BFO), you MUST use the string `NOT_CLASSIFIED`. Reserve NOT_CLASSIFIED for physical analytical instruments treated as objects (e.g., 'Microscope'). Characterization methods and analytical processes that describe geological observations (e.g., 'Petrographic Analysis') may fit 'Geological Process' in GeoCore — prefer a real category when the NLD describes a geological action, observation, or property.
-7.  **Provide Reasoning:** In one short sentence, explain WHY you chose that category.
+1.  **Analyze Data:** Read the Term and, if present, its raw retrieved corpus context.
+2.  **Walk the waterfall (<<domain_waterfall>>):**
+<<examples_categorization_waterfall_steps>>
+3.  **Final Fallback:** If the term does not fit well into ANY of the provided categories, you MUST use the string `NOT_CLASSIFIED`. <<examples_categorization_fallback_hint>>
+4.  **Provide Reasoning:** In one short sentence, explain WHY you chose that category based on the raw context.
 
 **INPUT/OUTPUT FORMAT:**
--   **INPUT:** A JSON array of objects, where each object has a "term" and "context" field (raw corpus passages retrieved via RAG).
--   **OUTPUT:** Your response MUST BE a valid JSON array. Each object must contain the "term", the assigned "category", and a "reasoning" string.
--   The value of "category" MUST exactly match one of the category name strings listed above, verbatim, including capitalization. The only exception is "NOT_CLASSIFIED".
+-   **INPUT:** A JSON array of objects, where each object has a "term" and optionally a "context" field.
+-   **OUTPUT:** Your response MUST BE a valid JSON array. Each object in the array must contain the "term", the assigned "category", and a "reasoning" string.
+-   The value of "category" MUST exactly match one of the category name strings listed above, verbatim, including capitalization (e.g., "Sedimentary Rock" not "sedimentary rock" or "Sedimentary Rocks"). The only exception is "NOT_CLASSIFIED".
 
 ---
 **ONTOLOGY CATEGORIES REFERENCE:**
 
 {categories_block}
+
+---
+**EXAMPLES:**
+
+<<examples_raw_context_categorization>>
 
 ---
 **DATA TO CLASSIFY:**

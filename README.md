@@ -33,6 +33,13 @@ cp .env.example .env
 | `MINIMUM_FREQUENCY_FILTER` | Minimum document frequency for Step 3 filtering — number of distinct papers a term must appear in (default: `5`; ~6% of an 82-paper corpus after the gpt-5.4 extraction migration) |
 | `ONTOLOGY_CONFIG_PATH` | Path to the ontology YAML (default: `domains/presalt/ontology_config.yaml`) — single source of truth for upper ontologies, relations, and the critic's class budget. Swap to retarget the pipeline to another domain. |
 | `STUDY_CONFIG_PATH` | Path to the expert-evaluation workbook config (default: `studies/expert_eval.yaml`) — instructions sheet rendered as Sheet 1 of the expert workbook |
+| `ABLATION_OUTPUT_DIR` | Directory for condition artifacts, manifests, workbooks, and analyses (default: `output/ablation`) |
+| `ABLATION_FROZEN_A_NLD` | Frozen production Condition-A NLD artifact (default: `CONSOLIDATED_LLM_RESULTS_WITH_NLDS`, normally `output/define_nld.csv`) |
+| `ABLATION_FROZEN_A_CATEGORY` | Frozen production Condition-A categorization (default: `CATEGORIZED_LLM_TERMS`, normally `output/classify_categories.csv`) |
+| `ABLATION_EXPECTED_TERM_COUNT` | Required paired term count for the study (default: `407`) |
+| `EXPERT_ONTOLOGY_DIR` | Approved validate-artifact directory used by final-ontology modules (default: `output/refined`) |
+| `EXPERT_BOOTSTRAP_ITERATIONS` | Clustered bootstrap replicates for Layer 2 confidence intervals (default: `5000`) |
+| `EXPERT_STRICT_APPROVED_POPULATIONS` | Require the approved final-artifact population counts before workbook generation (default: `true`) |
 | `RELATION_PROVENANCE_TIERS` | Comma-separated subset of `{owl_axiom, bfo_shape_axiom, ro_release, critic_minted}` controlling which property constraints are active (default: all four) |
 | `LATERAL_HINTS_ENABLED` | Overrides `lateral_coherence.hints.enabled` in `ontology_config.yaml` (`true`/`false`). Weak observations are auxiliary context for the taxonomy critic only; they never directly edit the ontology. |
 | `LATERAL_CLASS_WORTHINESS_ENABLED` | Enable/disable the existing core-selection critic (`KEEP_PRIMITIVE`, `KEEP_DEFINED`, demote, or exclude). |
@@ -86,8 +93,8 @@ The full pipeline runs Steps 0-7 and writes a Turtle OWL file (`output/6d_taxono
 | `--ablation` | Run 4-condition ablation study instead of the standard pipeline |
 | `--conditions A,B,C,D` | Select ablation conditions to run (default: all four) |
 | `--analysis` | Run Layer 1 automated analysis on ablation output |
-| `--expert-eval` | Generate expert evaluation spreadsheet (5-sheet Excel) from ablation output |
-| `--layer2-analysis W1.xlsx W2.xlsx` | Run Layer 2 statistical analysis on completed expert workbooks |
+| `--expert-eval` | Generate three independently shuffled 8-sheet expert workbooks plus a separate blinding key |
+| `--layer2-analysis W1.xlsx W2.xlsx W3.xlsx` | Run item-aggregated Layer 2 statistics on completed expert workbooks |
 | `--layer2-key KEY.csv` | Blinding key CSV (required with `--layer2-analysis`) |
 
 To rerun only the production validate/export/verify tail from existing Step 6/6b outputs:
@@ -110,37 +117,46 @@ python pipeline.py \
 
 ## Ablation Workflow
 
-The thesis deliverable uses an ablation study to justify the RAG+NLD design choices:
+The thesis deliverable uses a controlled 407-term ablation study to measure how representation choices change upper-ontology assignments. These automated comparisons measure **sensitivity and agreement, not accuracy**; Condition A is an experimental anchor, not a gold standard.
 
 ```
-# 1. Run all 4 conditions
+# 1. Run all 4 conditions. A is copied from frozen production artifacts;
+#    B, C, and D run sequentially with three workers inside each condition.
+#    A complete run also launches Layer 1 and workbook generation.
 python pipeline.py --ablation
 
 # 2. Run Layer 1 automated analysis
 python pipeline.py --analysis
 
-# 3. Generate expert evaluation spreadsheet
+# 3. Regenerate the three expert workbooks without rerunning paid conditions
 python pipeline.py --expert-eval
 
 # 4. After expert review, run Layer 2 statistical analysis
-python pipeline.py --layer2-analysis expert1.xlsx expert2.xlsx --layer2-key key.csv
-
-# 5. Build taxonomy + OWL on the winning condition
-python pipeline.py --taxonomy output/ablation/cat_A.csv
-python pipeline.py --owl output/ablation/6_taxonomy_A.csv
+python pipeline.py \
+  --layer2-analysis output/ablation/expert_evaluation_1.xlsx output/ablation/expert_evaluation_2.xlsx output/ablation/expert_evaluation_3.xlsx \
+  --layer2-key output/ablation/blinding_key_42.csv
 ```
 
 **Ablation conditions and what each comparison tests:**
-- **A** (Full): RAG context + NLD-informed categorization ← baseline (the full system)
+- **A** (Full): frozen production RAG context + NLD-informed categorization; copied byte-for-byte, never regenerated
 - **B** (NoRAG): NLD generated from LLM knowledge only, no retrieval ← **A vs B isolates RAG contribution**
 - **C** (NoNLD): Categorization from term string alone, no NLD ← **A vs C isolates NLD contribution**
-- **D** (RawRAG): Raw retrieved chunks passed directly, no structured NLD ← **A vs D isolates NLD structuring**
+- **D** (RawRAG): the exact five stored Condition-A chunks passed directly, with no new retrieval or structured NLD ← **A vs D isolates NLD structuring**
+
+A/B/C use the production categorization prompt. D uses the equivalent prompt with only the representation field changed from `nld` to `context`. The runner requires high reasoning effort and seed 42, rejects incomplete/error/invalid-category outputs, and records prompt, config, term-set, source, and artifact SHA-256 hashes in `experiment_manifest.json`. Partial `--conditions` runs stop before Layer 1 and workbook generation.
+
+Layer 1 reports exact and ontology-tier agreement, Cohen's kappa, independent RAG/NLD/structuring sensitivity flags, category/tier confusion matrices, global Cochran's Q over A-anchored agreement, gated Holm-corrected McNemar tests, Holm-corrected Stuart-Maxwell tier tests, and descriptive `NOT_CLASSIFIED`/`Context_Used` summaries.
+
+Layer 2 samples 100 terms proportionally by Condition-A tier and corpus-frequency band. Each workbook contains `Instructions`, `Representation`, `Category_Correct`, `Taxonomy`, `Defined_Classes`, `Relations`, `Individuals`, and `Critic_Decisions`. The final modules sample 40/185 taxonomy links, all 13 definitions, 25/125 general relations, 15/58 named entities, and 40/116 exclusion/demotion decisions. Inference averages experts per sampled item first; final task families are never collapsed into one score.
 
 ---
 
 ## Running Tests
 
 ```bash
+python test/test_evaluation_study.py
+python test/test_prompt_refactor_parity.py
+python test/diff_instructions_sheet.py
 python test/run_e2e_test.py
 ```
 
@@ -163,8 +179,8 @@ domains/                  # Per-domain config + assets. Each subfolder is a comp
     resources/            # Upper-ontology OWL files: bfo-core.owl, geocore-full.owl, geores-full.owl, ro-core.owl
     competency_questions.txt  # CQs evaluated by Step 5b
 studies/                  # Cross-domain study artifacts (not Pre-Salt-specific)
-  prompts/                # 2 ablation-only prompts (ablation_categorization_{nld,rag}.txt)
-  expert_eval.yaml        # Expert-evaluation workbook instructions sheet (49 rows)
+  prompts/                # D-only raw-context categorization prompt; A/B/C use the production prompt
+  expert_eval.yaml        # Modular expert-evaluation workbook instructions (63 rows)
 src/
   modules/
     extract/
@@ -196,18 +212,21 @@ src/
     prompt_loader.py      # Loads prompts verbatim across [<active-domain>/prompts/, studies/prompts/] in priority order
     relation_validator.py # BFO domain/range validation for extracted relations (sources constraints from ontology_config.yaml)
   evaluation/
-    ablation_study.py     # 4-condition ablation runner with checkpointing and encoding-safe I/O
-    layer1_analysis.py    # Automated analysis: agreement, Cochran's Q, migration, NOT_CLASSIFIED
-    expert_eval_generator.py  # 5-sheet Excel generator for expert review (200 terms, stratified tiers; instructions sourced from studies/expert_eval.yaml)
-    expert_eval_analyzer.py   # Layer 2 statistics: Wilcoxon (Friedman-gated), ICC, kappa, taxonomy
+    ablation_study.py     # Frozen-A, manifest-backed 4-condition runner; sequential conditions, 3 workers within each
+    layer1_analysis.py    # Automated sensitivity/agreement analysis with paired-matrix validation
+    expert_eval_generator.py  # Public generator entry point
+    expert_eval_workbook.py   # 100-term stratified sample + 8-sheet, 3-expert workbook engine
+    expert_eval_analyzer.py   # Public Layer 2 analyzer entry point
+    expert_eval_analysis.py   # Item-aggregated inference, bootstrap CIs, agreement, separate final-task results
     property_constraints_audit.py  # Writes output/property_constraints_audit.csv (relation provenance + active/inactive)
 inputs/                   # Source PDFs (and generated .md files)
 output/                   # Step outputs (1_raw → 6d_taxonomy_reclassified.ttl)
-  ablation/               # Ablation condition outputs (cat_A.csv … cat_D.csv)
+  ablation/               # Conditions, manifests, Layer 1 outputs, workbooks, blinding key, Layer 2 outputs
   property_constraints_audit.csv  # Generated by python -m src.evaluation.property_constraints_audit
 test/                     # Validation suite (run in this order before any production run)
   test_ontology_config_parity.py  # 26 checks: YAML produces identical literals + waterfall order + categorization_block headers
-  diff_instructions_sheet.py      # 49 workbook rows must stay byte-equal to fixtures/instructions_baseline.json
+  test_evaluation_study.py        # Ablation, Layer 1, sampling/fate, item-level inference, relation-status regressions
+  diff_instructions_sheet.py      # 63 workbook rows must stay byte-equal to fixtures/instructions_baseline.json
   regression_t1.py                # Deterministic 6d→7→7b regression vs fixtures/t1_baseline.json
   run_e2e_test.py                 # End-to-end smoke test (Steps 0-7 with real LLM calls; ~$0.10-0.50)
 ```

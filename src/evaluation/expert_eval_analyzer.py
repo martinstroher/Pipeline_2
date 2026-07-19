@@ -1,8 +1,7 @@
-"""
-Expert Evaluation Analyzer (Layer 2 Analysis).
+"""Public entry point for modular Layer 2 expert analysis.
 
-Loads expert-completed workbooks, unblinds them using the key, and runs
-statistical tests to determine which ablation condition produces the best results.
+The executable path delegates to ``src.evaluation.expert_eval_analysis``.
+Legacy analysis helpers remain available for historical workbook compatibility.
 
 Statistical tests:
   Term Relevance:    Descriptive stats, ICC (inter-annotator agreement)
@@ -656,7 +655,7 @@ def run_layer2_analysis(
     key_path: str,
     output_dir: str | None = None,
 ) -> dict:
-    """Run all Layer 2 analyses and save results.
+    """Run the modular, item-aggregated Layer 2 analysis.
 
     Args:
         workbook_paths: List of paths to completed expert workbooks.
@@ -668,83 +667,13 @@ def run_layer2_analysis(
     """
     if output_dir is None:
         output_dir = ANALYSIS_DIR
+    from src.evaluation.expert_eval_analysis import run_modular_analysis
 
-    os.makedirs(output_dir, exist_ok=True)
-
-    print(f"\nLayer 2 Analysis: {len(workbook_paths)} expert workbooks")
-
-    # Load data
-    experts = load_expert_responses(workbook_paths)
-    key_df = read_csv(key_path)
-
-    results = {}
-
-    # 1. Term Relevance
-    print("\n1. Term Relevance Analysis:")
-    rel = analyze_term_relevance(experts)
-    results["term_relevance"] = rel
-    if "descriptive" in rel:
-        d = rel["descriptive"]
-        print(f"   Mean={d['mean']}, Median={d['median']}, SD={d['std']}")
-    if "icc" in rel:
-        print(f"   ICC(2,1)={rel['icc']['icc_2_1']} ({rel['icc']['interpretation']})")
-
-    # 2. NLD Quality
-    print("\n2. NLD Quality Analysis (A vs B):")
-    nld = analyze_nld_quality(experts, key_df)
-    results["nld_quality"] = nld
-    if "wilcoxon" in nld:
-        w = nld["wilcoxon"]
-        print(f"   Wilcoxon: W={w['W']}, p={w['p_value']}, effect_r={w['effect_size_r']}")
-        print(f"   Mean quality diff (A-B): {w['mean_diff_A_minus_B']}")
-    if "sign_test" in nld:
-        s = nld["sign_test"]
-        print(f"   Preference: A={s['prefer_A']}, B={s['prefer_B']}, Tie={s['tie']}, p={s['p_value']}")
-
-    # 3. Category Correctness
-    print("\n3. Category Correctness Analysis (4 conditions):")
-    cat = analyze_category_correctness(experts, key_df)
-    results["category_correctness"] = cat
-    if "friedman" in cat:
-        f = cat["friedman"]
-        print(f"   Friedman: chi2={f['chi2']}, p={f['p_value']}, Kendall's W={f['kendalls_w']}")
-    if "proportion_correct" in cat:
-        for cond, stats_dict in cat["proportion_correct"].items():
-            print(f"   {cond}: mean_score={stats_dict['mean_score']}, "
-                  f"correct={stats_dict['proportion_correct']}")
-
-    # 4. Taxonomy Correctness
-    has_taxonomy = any("taxonomy" in data for data in experts.values())
-    if has_taxonomy:
-        print("\n4. Taxonomy Correctness Analysis:")
-        tax = analyze_taxonomy_correctness(experts, key_df)
-        results["taxonomy_correctness"] = tax
-        if "descriptive" in tax:
-            d = tax["descriptive"]
-            print(f"   {d['n_pairs_evaluated']} pairs evaluated by {d['n_experts']} experts")
-            print(f"   Mean score={d['mean_score']}, correct={d['proportion_correct']}, "
-                  f"partial+correct={d['proportion_partial_or_correct']}")
-        if "fleiss_kappa" in tax:
-            print(f"   Fleiss' kappa={tax['fleiss_kappa']['kappa']} "
-                  f"({tax['fleiss_kappa']['interpretation']})")
-    else:
-        print("\n4. Taxonomy Correctness: Skipped (no taxonomy sheet in workbooks)")
-
-    # 5. Cross-layer
-    print("\n5. Cross-Layer Correlations:")
-    cross = analyze_cross_layer(experts, key_df)
-    results["cross_layer"] = cross
-    if "nld_vs_category" in cross:
-        c = cross["nld_vs_category"]
-        print(f"   NLD quality <-> Category correctness: rho={c['spearman_rho']}, p={c['p_value']}")
-
-    # Save results
-    results_path = os.path.join(output_dir, "layer2_results.json")
-    with open(results_path, "w", encoding="utf-8") as f:
-        json.dump(results, f, indent=2, default=str)
-    print(f"\nAll Layer 2 results saved to {results_path}")
-
-    return results
+    return run_modular_analysis(
+        workbook_paths=workbook_paths,
+        key_path=key_path,
+        output_dir=output_dir,
+    )
 
 
 # ---------------------------------------------------------------------------

@@ -126,8 +126,14 @@ def _dispatch_subcommand(args, parser) -> bool:
         from src.evaluation.expert_eval_generator import generate_expert_evaluation
         conds = [c.strip().upper() for c in args.conditions.split(",")]
         run_ablation(conditions=conds)
-        run_layer1_analysis()
-        generate_expert_evaluation()
+        if set(conds) == {"A", "B", "C", "D"}:
+            run_layer1_analysis()
+            generate_expert_evaluation()
+        else:
+            log.info(
+                "Partial ablation complete. Layer 1 and expert workbooks require "
+                "all four conditions and were not generated."
+            )
         return True
 
     if args.analysis:

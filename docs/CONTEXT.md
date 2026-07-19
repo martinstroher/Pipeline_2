@@ -93,7 +93,7 @@ The ontology scope is defined by 10 competency questions (CQs) that specify what
 ### `src/modules/term_filter.py` — Step 3: Quality Control
 - Applies a minimum document-frequency threshold (`MINIMUM_FREQUENCY_FILTER`, default 5). Since the LLM extracts each term at most once per paper, Frequency equals the number of distinct papers mentioning that term (document frequency). A threshold of 5 for an 82-paper corpus (~6%) retains terms that reflect cross-author consensus while excluding idiosyncratic or peripheral terminology.
 - **Threshold rationale:** The threshold was selected after examining the frequency distribution of the 82-paper corpus (gpt-5.4 extraction): freq≥5 yielded 407 well-focused domain terms, freq≥7 yielded 265 terms (dropping legitimate concepts with narrower but significant coverage), and freq≥10 yielded 157 terms. The choice of freq≥5 (≈6% of the corpus) balances coverage against noise — manual inspection confirmed the terms entering at freq 5–6 are legitimate domain concepts (e.g. accommodation zone, calcimudstone, carbonate build-up), with generic noise ("bedding", "accommodation") only appearing at freq≤3. Downstream quality filters (NOT_CLASSIFIED removal at Step 5, cycle detection at Step 6) provide additional robustness, so the threshold does not need to be perfect — it needs to be reasonable.
-- **Note (model change, 2026-07 — removable):** The threshold was previously freq≥7, chosen on the earlier *Gemini* extraction, which yielded 976 / 614 / 368 terms at freq≥5 / 7 / 10. Migrating to gpt-5.4 produced a leaner, more consolidated extraction (~43% as many terms at every threshold), so freq≥7 now yields only 265 terms. The threshold was re-derived on the new distribution and lowered to freq≥5 (407 terms) to preserve ontology coverage and Layer-2 expert-evaluation headroom (the expert workbook samples 200 terms). Remove this note once the change is settled in the thesis narrative.
+- **Note (model change, 2026-07 — removable):** The threshold was previously freq≥7, chosen on the earlier *Gemini* extraction, which yielded 976 / 614 / 368 terms at freq≥5 / 7 / 10. Migrating to gpt-5.4 produced a leaner, more consolidated extraction (~43% as many terms at every threshold), so freq≥7 now yields only 265 terms. The threshold was re-derived on the new distribution and lowered to freq≥5 (407 terms) to preserve ontology coverage and Layer-2 expert-evaluation headroom (the representation workbook uses a stratified 100-term sample). Remove this note once the change is settled in the thesis narrative.
 - Output: `output/3_filtered_top_terms.csv`
 
 ### `src/modules/define/nld_generator.py` — Step 4: Definition Generation
@@ -277,7 +277,7 @@ The audit script `python -m src.evaluation.property_constraints_audit` writes `o
 Workbook-prose config for the expert-evaluation study (cross-domain, not Pre-Salt-specific). Loaded by `src/utils/study_config.py` (same frozen-dataclass + `@lru_cache` singleton pattern as `ontology_config.py`).
 
 ### Top-level keys
-- `instructions_sheet.rows`: list of `[section, details]` pairs rendered verbatim as Sheet 1 of the expert evaluation workbook (Likert anchors, calibration examples, project title). 49 rows in the current file.
+- `instructions_sheet.rows`: list of `[section, details]` pairs rendered verbatim as Sheet 1 of the expert evaluation workbook (rating anchors, module guidance, calibration examples, project title). 63 rows in the current file.
 
 ### Loader API
 - `get_study_config() → StudyConfig` — cached singleton
@@ -287,7 +287,7 @@ Workbook-prose config for the expert-evaluation study (cross-domain, not Pre-Sal
 - `STUDY_CONFIG_PATH` — default `studies/expert_eval.yaml`; point at another file to run a different evaluation study
 
 ### Regression test
-`test/diff_instructions_sheet.py` snapshots the rendered Sheet 1 and must remain byte-equal (49 rows) after any change to the YAML. Refresh the baseline via `test/snapshot_instructions_sheet.py` only when the change is intentional.
+`test/diff_instructions_sheet.py` snapshots the rendered Sheet 1 and must remain byte-equal (63 rows) after any change to the YAML. Refresh the baseline via `test/snapshot_instructions_sheet.py` only when the change is intentional.
 
 ---
 
@@ -297,7 +297,7 @@ Prompts are end-to-end artifacts authored per domain. There is no load-time inte
 
 `src/utils/prompt_loader.py` resolves each filename across two prompt roots in priority order:
 1. `<active-domain>/prompts/` — production pipeline prompts (10 for Pre-Salt)
-2. `studies/prompts/` — cross-domain study prompts (2 ablation-only prompts)
+2. `studies/prompts/` — cross-domain study prompts (the D-only raw-context categorizer)
 
 The active domain is derived from the directory containing the active `ontology_config.yaml`. See [domains/README.md](../domains/README.md) for the per-prompt runtime-placeholder contract and the full retargeting guide.
 
@@ -321,8 +321,8 @@ domains/                  # Per-domain config + assets. Each subfolder is a comp
     resources/            # Upper-ontology OWL files: bfo-core.owl, geocore-full.owl, geores-full.owl, ro-core.owl
     competency_questions.txt
 studies/                  # Cross-domain study artifacts (not domain-specific)
-  prompts/                # 2 ablation-only prompts
-  expert_eval.yaml        # Expert-evaluation workbook instructions sheet (49 rows)
+  prompts/                # D-only raw-context categorization prompt
+  expert_eval.yaml        # Modular expert-evaluation workbook instructions (63 rows)
 src/
   modules/                # Steps 1-7 (extraction → OWL export)
   utils/                  # ontology_config + study_config loaders, csv_io, checkpoint, RAG setup, PDF conversion, logging, LLM client (Azure OpenAI), relation validator, prompt loader (verbatim, no interpolation)
@@ -338,7 +338,8 @@ output/                   # Step outputs (1_raw → 6d_taxonomy_reclassified.ttl
 chroma_db_1024/           # Cached ChromaDB vector index (created on first run)
 test/                     # Validation suite (run in this order before any production run)
   test_ontology_config_parity.py  # 26 checks — must pass after any YAML/loader change
-  diff_instructions_sheet.py      # 49 workbook instruction rows must stay byte-equal to baseline
+  test_evaluation_study.py        # Evaluation controls, pairing, sampling/fates, inference-unit regressions
+  diff_instructions_sheet.py      # 63 workbook instruction rows must stay byte-equal to baseline
   regression_t1.py                # Deterministic 6d→7→7b regression (329 classes / 26 individuals / 3350 triples / 39 upper IRIs)
   run_e2e_test.py                 # End-to-end smoke test (Steps 0-7 with real LLM calls)
 ```
@@ -347,13 +348,11 @@ test/                     # Validation suite (run in this order before any produ
 
 ## Evaluation Architecture
 
-The pipeline supports a two-layer evaluation framework for thesis validation:
+The pipeline supports automated representation sensitivity plus expert evaluation of both representations and the approved final ontology.
 
-- **Layer 1** (`layer1_analysis.py`): Fully automated. Computes cross-condition agreement matrices, Cochran's Q significance tests, category migration patterns, and NOT_CLASSIFIED rates across all 4 ablation conditions.
-- **Layer 2** (`expert_eval_generator.py` + `expert_eval_analyzer.py`): Expert-in-the-loop. Generates a blinded **5-sheet** Excel workbook for 3 domain experts to evaluate **200 terms**:
-  - **Term Relevance** (1-5 Likert)
-  - **NLD Quality** (blinded A vs B, 1-5 + preference)
-  - **Category Correctness** (stratified by ontology tier — GeoReservoir with full descriptions, GeoCore/BFO simplified)
-  - **Taxonomy Correctness** (~80 parent-child IS-A pairs, stratified by category). Selection: only IS-A edges (`rdfs:subClassOf` / `rdf:type`); ~75 % from edges involving the selected terms (equal samples per category), ~25 % from intermediate-node edges for hierarchy-depth coverage; trimmed to 80, shuffled with seed=42.
-  - Results analysed with Wilcoxon signed-rank (gated by Friedman omnibus significance), ICC, Fleiss' kappa. Taxonomy analysis includes per-category accuracy and inter-rater agreement.
-- **CQ filter validation** (combined mode via `--expert-eval --refine --threshold T`): Generates a combined workbook sampling ~150 kept + ~50 removed terms (blinded). Expert relevance scores are analysed with Mann-Whitney U (kept vs removed) to validate that the CQ filter preferentially retains relevant terms. Blinding key includes `CQ_Status` and `CQ_Count` columns.
+- **Controlled ablation** (`ablation_study.py`): Requires one complete 407-term set. Condition A is copied byte-for-byte from `output/define_nld.csv` and `output/classify_categories.csv`; it is never regenerated. Condition D reuses A's exact stored `Context` strings and performs no retrieval. A/B/C use the production `term_categorization.txt`; D uses the structurally equivalent raw-context prompt. Conditions execute sequentially, with three workers for NLD terms or categorization batches inside one active condition. High reasoning effort and seed 42 are enforced. Missing terms, duplicates, errors, and unknown categories abort the run. `experiment_manifest.json` records Git commit, model settings, term-set/config/prompt/source/artifact SHA-256 hashes, timestamps, and failure status.
+- **Layer 1** (`layer1_analysis.py`): Validates a complete, unique, error-free A/B/C/D paired matrix before analysis. Reports exact and ontology-tier agreement with Cohen's kappa; independent `A != B` RAG, `A != C` NLD, and `A != D` structuring sensitivity flags; exact/tier confusion matrices; global Cochran's Q across the three A-anchored agreement indicators; gated Holm-corrected McNemar post-hoc tests; Holm-corrected Stuart-Maxwell tier tests; and descriptive `NOT_CLASSIFIED`/`Context_Used` summaries. It measures sensitivity and agreement, not accuracy.
+- **Layer 2 workbook engine** (`expert_eval_generator.py` + `expert_eval_workbook.py`): Uses seed 42 to sample 100/407 representation terms proportionally by Condition-A ontology tier and corpus-frequency band. The hidden key records frequency stratum, A tier, A/B display order, contributing conditions for deduplicated assignments, and downstream fate (`FINAL_CLASS`, `FINAL_INDIVIDUAL`, `DEMOTED`, `CRITIC_EXCLUDED`, or `CQ_EXCLUDED`). Three experts receive the same sampled items with independently shuffled rows and A/B display order.
+- **Representation modules**: `Representation` combines one relevance rating with two blinded NLD ratings and a 1/2/Tie preference. `Category_Correct` contains every unique term/category assignment produced by A/B/C/D for the sampled terms. Experts see term, category, and category description only; condition, tier, NLD, RAG context, and critic fate remain hidden.
+- **Final-ontology modules**: `Taxonomy` samples 40/185 complete class links; `Defined_Classes` includes all 13 constructed definitions; `Relations` samples 25/125 accepted general relations; `Individuals` samples 15/58 named entities; `Critic_Decisions` samples 40/116 exclusion/demotion decisions. Questions use geological language. Taxonomy correctness and core-vocabulary support are separate, as are relation correctness and general scope.
+- **Layer 2 analysis** (`expert_eval_analyzer.py` + `expert_eval_analysis.py`): Averages expert ratings per sampled term or final-ontology item before inferential tests. NLD analysis uses Wilcoxon A-vs-B, rank-biserial effect size, term-majority preference sign test, ICC(2,1), and pairwise quadratic-weighted kappa. Category analysis reports item-clustered bootstrap confidence intervals, Friedman plus Kendall's W, gated A-vs-B/C/D Wilcoxon tests with Holm correction, and Fleiss' kappa. Final taxonomy, defined-class, relation, individual, and critic-decision outcomes each receive separate correctness/support estimates, bootstrap intervals, and agreement; no composite ontology score is computed.

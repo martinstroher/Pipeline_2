@@ -33,7 +33,7 @@ domains/<your_domain>/
 
 Two more artifacts sit outside the domain because they describe cross-domain studies:
 
-- `studies/prompts/ablation_categorization_{nld,rag}.txt` — ablation-only prompts
+- `studies/prompts/ablation_categorization_rag.txt` — Condition-D raw-context prompt; A/B/C use the active domain's production categorizer
 - `studies/expert_eval.yaml` — expert-evaluation workbook instructions sheet
 
 ## Activation
@@ -77,7 +77,6 @@ call time.
 | `critic_relations.txt` | `{category}`, `{relations_json}`, `{relations_menu_json}`, `{previously_minted_json}`, `{taxonomy_context_json}`, `{taxonomy_decisions_json}` |
 | `cq_scoring.txt` | `{batch_size}`, `{terms_json}` |
 | `cq_synonym_triage.txt` | `{clusters_json}` |
-| `ablation_categorization_nld.txt` (studies/) | `{categories_block}`, `{json_batch}` |
 | `ablation_categorization_rag.txt` (studies/) | `{categories_block}`, `{json_batch}` |
 
 `{categories_block}` is rendered by `OntologyConfig.categorization_block()` from
@@ -113,7 +112,8 @@ After any change to a prompt, `ontology_config.yaml`, or `studies/expert_eval.ya
 
 ```powershell
 python test/test_ontology_config_parity.py    # 26 checks; must show "=== PARITY PASSED ==="
-python test/diff_instructions_sheet.py        # 49 rows; byte-equal to baseline
+python test/test_prompt_refactor_parity.py    # active prompts resolve without drift or missing placeholders
+python test/diff_instructions_sheet.py        # 63 rows; byte-equal to baseline
 python test/regression_t1.py                  # deterministic 6d→7→7b regression
 ```
 

@@ -128,26 +128,21 @@ The pipeline's design choices are validated by an **ablation study** — running
 
 | Condition | What it does | What comparison shows |
 |-----------|-------------|-----------------------|
-| **A — Full** | RAG retrieval + Aristotelian NLD + classification | baseline |
+| **A — Full** | Frozen production RAG context + Aristotelian NLD + classification; copied without regeneration | experimental anchor |
 | **B — NoRAG** | NLD generated from LLM knowledge only (no retrieval) | A vs B → RAG contribution |
 | **C — NoNLD** | Classification from the bare term string only | A vs C → NLD contribution |
-| **D — RawRAG** | Raw retrieved passages as context (no structured NLD) | A vs D → structuring benefit |
+| **D — RawRAG** | The exact stored Condition-A passages as context (no new retrieval and no structured NLD) | A vs D → structuring benefit |
 
 This directly replicates the core comparison from Lopes Junior (2024): the thesis showed NLD > definiendum for upper-ontology classification. We replicate this on a new domain and a new architecture (RAG-augmented LLM instead of a supervised classifier trained on OBO Foundry).
 
+All four conditions use the same 407 terms. A/B/C use the production classification prompt; D changes only the input representation from `nld` to `context`. Conditions run sequentially with three workers inside each condition, and a manifest locks the term set, prompts, ontology configuration, model settings, frozen inputs, and output hashes.
+
 ### Two evaluation layers
 
-- **Layer 1 — Automated:** Cross-condition agreement matrices, Cochran's Q significance test, NOT_CLASSIFIED rates, category migration analysis. Runs on all terms with no expert effort.
-- **Layer 2 — Expert-in-the-loop:** A blinded 5-sheet Excel workbook is generated for 3 domain experts (geologists) to evaluate 200 terms:
-  - **Sheet 2 — Term Relevance** (1-5 Likert, condition-independent)
-  - **Sheet 3 — NLD Quality** (blinded A-vs-B comparison, 1-5 + preference)
-  - **Sheet 4 — Category Correctness** (stratified by ontology tier: GeoReservoir categories get full binary validation with descriptions; GeoCore/BFO categories get simplified evaluation — see note below)
-  - **Sheet 5 — Taxonomy Correctness** (~80 parent-child IS-A pairs: "Is X a type of Y?"). Pairs are stratified by category (~75 % involving selected terms, ~25 % intermediate-node edges for depth coverage), shuffled and blinded.
-  - Analysed with Wilcoxon signed-rank (with Friedman omnibus gate for post-hoc), ICC, and Fleiss' kappa.
-
-**Stratified expert evaluation by ontology tier:** Following NeOn methodology and OntoClean best practices, the category evaluation is stratified. Geologists validate GeoReservoir assignments with full confidence (their domain). GeoCore/BFO assignments receive simplified evaluation, and formal ontological alignment is validated separately by the thesis author. This separates domain plausibility (expert task) from formal correctness (engineering task).
-
-The winning ablation condition is then used to build the final taxonomy and OWL export.
+- **Layer 1 — Automated sensitivity:** Exact and ontology-tier agreement, Cohen's kappa, independent RAG/NLD/structuring sensitivity flags, category and tier confusion matrices, global Cochran's Q, gated Holm-corrected McNemar tests, Holm-corrected Stuart-Maxwell tier tests, and descriptive `NOT_CLASSIFIED`/context-use rates. These results show whether representations change assignments; they do not establish which assignment is correct.
+- **Layer 2A — Representation experts:** A seeded sample of 100/407 terms is proportional to Condition-A ontology tier and corpus-frequency band. Three geologists receive the same items in independently shuffled workbooks. They rate relevance once, compare blinded A/B definitions, and judge every unique A/B/C/D term-category proposal without seeing a definition, condition, tier, or downstream critic fate.
+- **Layer 2B — Final ontology experts:** The same workbooks independently evaluate 40/185 class links, all 13 constructed definitions, 25/125 general relations, 15/58 named entities, and 40/116 exclusion or demotion decisions. Questions use geological language and separate relationship correctness from core-vocabulary usefulness, and relation correctness from general scope.
+- **Analysis:** Expert ratings are averaged per sampled item before Wilcoxon or Friedman inference. NLD results include rank-biserial effect size and a preference sign test. Category post-hoc A-vs-B/C/D tests run only after a significant Friedman test and use Holm correction. ICC, weighted agreement, Fleiss' kappa, and item-clustered bootstrap confidence intervals are reported. Taxonomy, definitions, relations, named entities, and critic decisions remain separate outcomes; no composite ontology score is produced.
 
 ---
 
@@ -193,7 +188,7 @@ The pipeline architecture is domain-agnostic. The Pre-Salt-specific knowledge li
 | `domains/<name>/prompts/` | 14 production prompts (term extraction, NLD generation, categorization, taxonomy, focused validate critics, relations, CQ scoring …) |
 | `domains/<name>/resources/` | Reference OWL files for the upper ontologies (loaded by `owl_exporter.py` for the upper backbone) |
 | `domains/<name>/competency_questions.txt` | CQs used by Step 5b (mandatory) |
-| `studies/expert_eval.yaml` | Cross-domain workbook prose: 49 instruction-sheet rows. Edit only if your evaluation Likert anchors or calibration examples differ. |
+| `studies/expert_eval.yaml` | Cross-domain workbook prose: 63 instruction-sheet rows for the eight modular sheets. Edit only if evaluation anchors or calibration examples differ. |
 
 No Python code needs to change to retarget. Point the loader at the new YAML via `ONTOLOGY_CONFIG_PATH=domains/<name>/ontology_config.yaml`; the prompt loader picks up `domains/<name>/prompts/` from the same parent folder automatically. The expert workbook generator (`src/evaluation/expert_eval_generator.py`) reads `instructions_sheet.rows` from `studies/expert_eval.yaml` and renders Sheet 1 from it verbatim.
 

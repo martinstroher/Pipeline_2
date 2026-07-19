@@ -128,6 +128,26 @@ examples:
               "category": "NOT_CLASSIFIED",
               "reasoning": "Analytical instrument used to characterize formations, not an ontological domain concept."}}]
 
+  # Condition-D counterparts to the production examples. Only the
+  # representation field changes from `nld` to raw retrieved `context`.
+  raw_context_categorization: |
+    Input:  [{{"term": "Grainstone",
+              "context": "Grainstones are grain-supported sedimentary carbonate rocks that lack micrite matrix and commonly contain bivalves, ostracods, or ooids."}}]
+    Output: [{{"term": "Grainstone",
+              "category": "Sedimentary Rock",
+              "reasoning": "Directly describes a type of sedimentary rock classified under GeoReservoir."}}]
+
+    Input:  [{{"term": "Normal Fault",
+              "context": "Normal faults are geological structures formed by extensional tectonics where the hanging wall moves down relative to the footwall."}}]
+    Output: [{{"term": "Normal Fault",
+              "category": "Geological Structure",
+              "reasoning": "Describes the internal structural arrangement of a geological object, fitting GeoCore."}}]
+
+    Input:  [{{"term": "Core Sample"}}]
+    Output: [{{"term": "Core Sample",
+              "category": "NOT_CLASSIFIED",
+              "reasoning": "Analytical instrument used to characterize formations, not an ontological domain concept."}}]
+
 
   # ── taxonomy_building.txt ────────────────────────────────────────────────
   # Shared-genus example showing when to invent an intermediate class.

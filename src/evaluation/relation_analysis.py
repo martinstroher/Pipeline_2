@@ -30,8 +30,9 @@ def load_relations(path: str) -> pd.DataFrame:
 def descriptive_stats(df: pd.DataFrame) -> str:
     """Compute and format descriptive statistics."""
     total = len(df)
-    accepted = df[df["Validation_Status"] == "accepted"]
-    rejected = df[df["Validation_Status"] != "accepted"]
+    accepted_mask = df["Validation_Status"].astype(str).str.upper() == "ACCEPTED"
+    accepted = df[accepted_mask]
+    rejected = df[~accepted_mask]
     n_accepted = len(accepted)
     n_rejected = len(rejected)
     unique_terms_with_relations = accepted["Term"].nunique()
@@ -85,7 +86,9 @@ def descriptive_stats(df: pd.DataFrame) -> str:
 
 def generate_precision_sample(df: pd.DataFrame, n: int = SAMPLE_SIZE) -> pd.DataFrame:
     """Sample n accepted relations for expert review."""
-    accepted = df[df["Validation_Status"] == "accepted"].copy()
+    accepted = df[
+        df["Validation_Status"].astype(str).str.upper() == "ACCEPTED"
+    ].copy()
 
     if len(accepted) <= n:
         sample = accepted
