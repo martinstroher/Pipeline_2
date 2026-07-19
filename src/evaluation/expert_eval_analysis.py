@@ -8,9 +8,11 @@ is computed.
 from __future__ import annotations
 
 import json
+import hashlib
 import os
 import re
 from itertools import combinations
+from pathlib import Path
 
 import numpy as np
 import pandas as pd
@@ -31,6 +33,48 @@ REQUIRED_SHEETS = (
 )
 CORRECTNESS_CHOICES = ("yes", "partial", "no", "unsure")
 BINARY_CHOICES = ("yes", "no", "unsure")
+
+
+def _sha256_file(path: str | Path) -> str:
+    digest = hashlib.sha256()
+    with open(path, "rb") as handle:
+        for chunk in iter(lambda: handle.read(1024 * 1024), b""):
+            digest.update(chunk)
+    return digest.hexdigest()
+
+
+def _validate_source_manifest(key_path: str) -> str:
+    """Verify that workbook source artifacts have not changed since sampling."""
+    key = Path(key_path).resolve()
+    candidates = [
+        key.parent.parent / "expert_evaluation_manifest.json",
+        key.parent / "expert_evaluation_manifest.json",
+    ]
+    manifest_path = next((path for path in candidates if path.exists()), None)
+    if manifest_path is None:
+        raise FileNotFoundError(
+            "Expert evaluation manifest not found beside the private key. "
+            "Do not analyze workbooks without their source-hash manifest."
+        )
+    manifest = json.loads(manifest_path.read_text(encoding="utf-8"))
+    source_paths = manifest.get("source_paths") or {}
+    source_hashes = manifest.get("source_sha256") or {}
+    if set(source_paths) != set(source_hashes) or not source_paths:
+        raise ValueError("Expert evaluation manifest has incomplete source path/hash mappings")
+    mismatches = []
+    for name, path in source_paths.items():
+        if not os.path.exists(path):
+            mismatches.append(f"{name}: missing {path}")
+            continue
+        observed = _sha256_file(path)
+        if observed != source_hashes[name]:
+            mismatches.append(f"{name}: expected {source_hashes[name]}, observed {observed}")
+    if mismatches:
+        raise ValueError(
+            "Expert evaluation source artifacts changed after workbook generation: "
+            + "; ".join(mismatches[:10])
+        )
+    return str(manifest_path)
 
 
 def _expert_id(path: str, fallback_index: int) -> str:
@@ -253,7 +297,11 @@ def _icc_2_1(matrix: np.ndarray) -> dict:
         + (raters - 1) * ms_error
         + (raters / subjects) * (ms_raters - ms_error)
     )
-    value = (ms_subjects - ms_error) / denominator if denominator else np.nan
+    value = (
+        (ms_subjects - ms_error) / denominator
+        if abs(denominator) >= 1e-12
+        else np.nan
+    )
     interpretation = (
         "excellent" if value >= 0.90 else
         "good" if value >= 0.75 else
@@ -376,6 +424,11 @@ def _fleiss_kappa(
         "interpretation": interpretation,
         "n_items": len(counts),
         "n_raters": n_raters,
+        "category_marginals": {
+            category: round(float(rate), 4)
+            for category, rate in zip(categories, category_rates)
+        },
+        "prevalence_warning": bool(category_rates.max() >= 0.70),
     }
 
 
@@ -425,15 +478,23 @@ def _summarize_judgments(
     mean_score = items["Mean_Score"].mean()
     proportion_yes = items["Yes_Proportion"].mean()
     distribution = work["Raw"].value_counts().reindex(allowed, fill_value=0).to_dict()
+    decisive_ratings = int(work["Decisive"].sum())
+    unsure_ratings = int((~work["Decisive"]).sum())
+    all_unsure_items = int(items["Decisive_Ratings"].eq(0).sum())
     return {
         "n_items": int(len(items)),
         "n_ratings": int(len(work)),
+        "decisive_ratings": decisive_ratings,
+        "unsure_ratings": unsure_ratings,
+        "unsure_rate": round(unsure_ratings / len(work), 4) if len(work) else None,
+        "all_unsure_items": all_unsure_items,
         "mean_score": round(float(mean_score), 4) if pd.notna(mean_score) else None,
         "mean_score_ci_95": [score_lower, score_upper],
         "proportion_yes": (
             round(float(proportion_yes), 4) if pd.notna(proportion_yes) else None
         ),
         "proportion_yes_ci_95": [lower, upper],
+        "proportion_yes_denominator": "decisive non-Unsure ratings, aggregated by item",
         "rating_distribution": {key: int(value) for key, value in distribution.items()},
         "fleiss_kappa": _fleiss_kappa(work, item_column, "Raw", allowed),
     }
@@ -474,7 +535,7 @@ def analyze_representation(
         "mean_difference_A_minus_B": round(float(differences.mean()), 4),
         "wilcoxon": {
             "W": statistic,
-            "p_value": round(p_value, 8),
+            "p_value": p_value,
             "n_nonzero_pairs": int(len(nonzero)),
             "rank_biserial": round(float(_rank_biserial(differences)), 4),
         },
@@ -482,7 +543,7 @@ def analyze_representation(
             "prefer_A": prefer_a,
             "prefer_B": prefer_b,
             "ties": ties,
-            "p_value": round(preference_p, 8),
+            "p_value": preference_p,
             "unit_of_analysis": "term-level majority preference",
         },
         "agreement": {
@@ -539,8 +600,10 @@ def analyze_categories(
         )
 
     item_scores = category.groupby(["Term", "Condition"])["Correct_Score"].mean().reset_index()
-    wide = item_scores.pivot(index="Term", columns="Condition", values="Correct_Score")
-    wide = wide.reindex(columns=list(conditions)).dropna()
+    wide_all = item_scores.pivot(index="Term", columns="Condition", values="Correct_Score")
+    wide_all = wide_all.reindex(columns=list(conditions))
+    wide = wide_all.dropna()
+    excluded_terms = len(wide_all) - len(wide)
     if len(wide) < 2:
         statistic, p_value, kendalls_w = 0.0, 1.0, 0.0
         omnibus = {
@@ -551,6 +614,8 @@ def analyze_categories(
             "p_value": p_value,
             "kendalls_w": kendalls_w,
             "n_complete_terms": len(wide),
+            "n_total_terms": len(wide_all),
+            "n_excluded_incomplete_or_unsure": excluded_terms,
             "unit_of_analysis": "term-condition mean across experts",
         }
     else:
@@ -570,9 +635,11 @@ def analyze_categories(
             "performed": True,
             "chi2": round(statistic, 6),
             "df": len(conditions) - 1,
-            "p_value": round(p_value, 8),
+            "p_value": p_value,
             "kendalls_w": round(float(kendalls_w), 4),
             "n_complete_terms": len(wide),
+            "n_total_terms": len(wide_all),
+            "n_excluded_incomplete_or_unsure": excluded_terms,
             "unit_of_analysis": "term-condition mean across experts",
         }
 
@@ -595,9 +662,13 @@ def analyze_categories(
                 "mean_difference": round(float(differences.mean()), 4),
                 "rank_biserial": round(float(_rank_biserial(differences)), 4),
                 "n_nonzero_pairs": int(len(nonzero)),
+                "nonzero_fraction": round(len(nonzero) / len(wide), 4),
+                "sparse_contrast_warning": bool(
+                    len(nonzero) < 10 or len(nonzero) / len(wide) < 0.10
+                ),
             })
         for row, adjusted in zip(posthoc, _holm_adjust(raw_p_values)):
-            row["p_value_holm"] = round(float(adjusted), 8)
+            row["p_value_holm"] = float(adjusted)
             row["significant"] = bool(adjusted < 0.05)
     else:
         posthoc = [{
@@ -762,6 +833,7 @@ def run_modular_analysis(
         )
 
     experts = load_completed_workbooks(workbook_paths)
+    source_manifest_path = _validate_source_manifest(key_path)
     key = read_csv(key_path)
     if set(experts) != set(key["Expert_ID"].dropna().astype(str).unique()):
         raise ValueError(
@@ -787,6 +859,8 @@ def run_modular_analysis(
             "n_experts": len(experts),
             "bootstrap_iterations": bootstrap_iterations,
             "seed": seed,
+            "source_manifest": source_manifest_path,
+            "source_hashes_validated": True,
             "inference_unit": "sampled item after averaging expert ratings",
             "final_ontology_composite_score": False,
         },

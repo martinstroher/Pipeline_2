@@ -19,7 +19,7 @@ instructions_sheet:
     - ["PURPOSE", "Evaluate geological representations and the final Pre-Salt knowledge model. The representation tasks are blinded; do not try to identify which system produced an item."]
     - ["STUDY DESIGN", "All experts receive the same sampled items in a different order. Definition 1 and Definition 2 are independently swapped for each expert."]
     - ["GENERAL RULE", "Judge each row independently from the geological meaning shown. Use Notes for a short explanation when a judgment is not obvious."]
-    - ["UNSURE", "Choose Unsure only when you do not have enough expertise or evidence to judge. Choose Partial when you can judge the item and it is only partly correct."]
+    - ["UNSURE", "In the categorical modules, choose Unsure only when you do not have enough expertise or evidence to judge. Choose Partial when you can judge the item and it is only partly correct. Representation ratings use the required 1-5 scales and 1/2/Tie preference."]
     - ["", ""]
     - ["SHEET: REPRESENTATION", ""]
     - ["Task", "For each term, rate its Pre-Salt relevance once. Then rate Definition 1 and Definition 2 independently and choose the better definition or Tie."]

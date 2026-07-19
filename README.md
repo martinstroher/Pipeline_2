@@ -133,8 +133,8 @@ python pipeline.py --expert-eval
 
 # 4. After expert review, run Layer 2 statistical analysis
 python pipeline.py \
-  --layer2-analysis output/ablation/expert_evaluation_1.xlsx output/ablation/expert_evaluation_2.xlsx output/ablation/expert_evaluation_3.xlsx \
-  --layer2-key output/ablation/blinding_key_42.csv
+  --layer2-analysis output/ablation/expert_workbooks/expert_evaluation_1.xlsx output/ablation/expert_workbooks/expert_evaluation_2.xlsx output/ablation/expert_workbooks/expert_evaluation_3.xlsx \
+  --layer2-key output/ablation/private/blinding_key_42.csv
 ```
 
 **Ablation conditions and what each comparison tests:**
@@ -149,12 +149,26 @@ Layer 1 reports exact and ontology-tier agreement, Cohen's kappa, independent RA
 
 Layer 2 samples 100 terms proportionally by Condition-A tier and corpus-frequency band. Each workbook contains `Instructions`, `Representation`, `Category_Correct`, `Taxonomy`, `Defined_Classes`, `Relations`, `Individuals`, and `Critic_Decisions`. The final modules sample 40/185 taxonomy links, all 13 definitions, 25/125 general relations, 15/58 named entities, and 40/116 exclusion/demotion decisions. Inference averages experts per sampled item first; final task families are never collapsed into one score.
 
+Only files under `output/ablation/expert_workbooks/` are distributable. The unblinding key is written separately under `output/ablation/private/`; never send that directory to experts.
+Layer 2 refuses to run if any ablation, ontology, prompt/config, or sampling source no longer matches `expert_evaluation_manifest.json`.
+
+### Offline process rehearsal
+
+Before any paid run, exercise the complete workflow without Azure or human ratings:
+
+```bash
+python -m src.evaluation.offline_rehearsal --overwrite
+```
+
+This writes explicitly synthetic artifacts to `output/ablation_rehearsal/`, including mock-filled workbooks, both analysis layers, a hash manifest, and `OFFLINE_REHEARSAL_FINDINGS.md`. The B proxy is derived from frozen A and the category/mock ratings are deterministic, so these outputs validate mechanics only and must never be reported as study evidence.
+
 ---
 
 ## Running Tests
 
 ```bash
 python test/test_evaluation_study.py
+python test/test_offline_rehearsal.py
 python test/test_prompt_refactor_parity.py
 python test/diff_instructions_sheet.py
 python test/run_e2e_test.py
@@ -218,6 +232,7 @@ src/
     expert_eval_workbook.py   # 100-term stratified sample + 8-sheet, 3-expert workbook engine
     expert_eval_analyzer.py   # Public Layer 2 analyzer entry point
     expert_eval_analysis.py   # Item-aggregated inference, bootstrap CIs, agreement, separate final-task results
+    offline_rehearsal.py      # Zero-Azure synthetic A/B/C/D + mock workbook + Layer 1/2 preflight
     property_constraints_audit.py  # Writes output/property_constraints_audit.csv (relation provenance + active/inactive)
 inputs/                   # Source PDFs (and generated .md files)
 output/                   # Step outputs (1_raw → 6d_taxonomy_reclassified.ttl)
@@ -226,6 +241,7 @@ output/                   # Step outputs (1_raw → 6d_taxonomy_reclassified.ttl
 test/                     # Validation suite (run in this order before any production run)
   test_ontology_config_parity.py  # 26 checks: YAML produces identical literals + waterfall order + categorization_block headers
   test_evaluation_study.py        # Ablation, Layer 1, sampling/fate, item-level inference, relation-status regressions
+  test_offline_rehearsal.py       # Full deterministic zero-Azure workflow and workbook/key isolation regression
   diff_instructions_sheet.py      # 63 workbook rows must stay byte-equal to fixtures/instructions_baseline.json
   regression_t1.py                # Deterministic 6d→7→7b regression vs fixtures/t1_baseline.json
   run_e2e_test.py                 # End-to-end smoke test (Steps 0-7 with real LLM calls; ~$0.10-0.50)

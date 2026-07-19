@@ -27,6 +27,7 @@ from pathlib import Path
 import numpy as np
 import pandas as pd
 from openpyxl.styles import Alignment, Border, Font, PatternFill, Side
+from openpyxl.formatting.rule import CellIsRule
 from openpyxl.utils import get_column_letter
 from openpyxl.worksheet.datavalidation import DataValidation
 
@@ -657,6 +658,7 @@ def _final_frames_for_expert(
 _HEADER_FILL = PatternFill(start_color="1F4E78", end_color="1F4E78", fill_type="solid")
 _HEADER_FONT = Font(bold=True, color="FFFFFF")
 _INPUT_FILL = PatternFill(start_color="FFF2CC", end_color="FFF2CC", fill_type="solid")
+_MISSING_FILL = PatternFill(start_color="F4CCCC", end_color="F4CCCC", fill_type="solid")
 _WRAP = Alignment(wrap_text=True, vertical="top")
 _CENTER = Alignment(horizontal="center", vertical="center", wrap_text=True)
 _BORDER = Border(
@@ -758,11 +760,17 @@ def _format_data_sheet(ws, input_validations: dict[str, str | None]) -> None:
             validation = DataValidation(
                 type="list",
                 formula1=f'"{options}"',
-                allow_blank=True,
+                allow_blank=False,
                 showErrorMessage=True,
+                errorTitle="Response required",
+                error="Select one of the listed responses before submitting the workbook.",
             )
             validation.add(f"{column_letter}2:{column_letter}{ws.max_row}")
             ws.add_data_validation(validation)
+            ws.conditional_formatting.add(
+                f"{column_letter}2:{column_letter}{ws.max_row}",
+                CellIsRule(operator="equal", formula=['""'], fill=_MISSING_FILL),
+            )
 
 
 def _write_workbook(
@@ -791,11 +799,15 @@ def generate_modular_evaluation(
     if n_experts < 1:
         raise ValueError("n_experts must be positive")
     ablation_dir = output_dir or os.environ.get("ABLATION_OUTPUT_DIR", "output/ablation")
+    workbook_dir = os.path.join(ablation_dir, "expert_workbooks")
+    private_dir = os.path.join(ablation_dir, "private")
     ontology_dir = ontology_dir or os.environ.get("EXPERT_ONTOLOGY_DIR", "output/refined")
     terms_path = os.environ.get("FILTERED_TERMS_OUTPUT", "output/extract_filtered.csv")
     expected_terms = int(os.environ.get("ABLATION_EXPECTED_TERM_COUNT", 407))
     strict_populations = os.environ.get("EXPERT_STRICT_APPROVED_POPULATIONS", "true").lower() == "true"
     os.makedirs(ablation_dir, exist_ok=True)
+    os.makedirs(workbook_dir, exist_ok=True)
+    os.makedirs(private_dir, exist_ok=True)
 
     inputs = load_study_inputs(
         ablation_dir=ablation_dir,
@@ -858,12 +870,15 @@ def generate_modular_evaluation(
             "Category_Correct": category,
             **final_frames,
         }
-        workbook_path = os.path.join(ablation_dir, f"expert_evaluation_{expert_number}.xlsx")
+        workbook_path = os.path.join(
+            workbook_dir,
+            f"expert_evaluation_{expert_number}.xlsx",
+        )
         _write_workbook(workbook_path, instructions, frames)
         workbook_paths.append(workbook_path)
         key_parts.extend([representation_key, category_key, *final_keys])
 
-    key_path = os.path.join(ablation_dir, f"blinding_key_{seed}.csv")
+    key_path = os.path.join(private_dir, f"blinding_key_{seed}.csv")
     key = pd.concat(key_parts, ignore_index=True, sort=False)
     write_csv(key, key_path)
 
@@ -896,6 +911,10 @@ def generate_modular_evaluation(
         "category_rows": len(category_items),
         "final_sample_sizes": {name: len(frame) for name, frame in final_samples.items()},
         "final_fate_counts": pd.Series(final_fates).value_counts().sort_index().to_dict(),
+        "source_paths": {
+            name: str(Path(path).resolve())
+            for name, path in source_paths.items()
+        },
         "source_sha256": {name: _sha256_file(path) for name, path in source_paths.items()},
         "workbooks": workbook_paths,
         "blinding_key": key_path,

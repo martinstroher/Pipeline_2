@@ -232,7 +232,7 @@ def _build_parser() -> argparse.ArgumentParser:
         nargs="+",
         default=None,
         metavar="WORKBOOK",
-        help="Run Layer 2 analysis on completed expert workbooks (e.g., --layer2-analysis expert1.xlsx expert2.xlsx --layer2-key blinding_key_42.csv)",
+        help="Run Layer 2 analysis on three completed expert workbooks; use the separate private/blinding_key_42.csv with --layer2-key",
     )
     parser.add_argument(
         "--layer2-key",

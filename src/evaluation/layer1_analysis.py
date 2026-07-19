@@ -183,7 +183,11 @@ def _agreement_indicators(df: pd.DataFrame) -> pd.DataFrame:
 
 
 def cochrans_q_test(df: pd.DataFrame) -> dict:
-    """Test whether A-B, A-C, and A-D exact agreement rates are equal."""
+    """Test whether the three A-anchored exact-agreement rates are equal.
+
+    The test has k=3 paired binary indicators and therefore df=k-1=2. It
+    compares sensitivity rates; it is not a test of category correctness.
+    """
     indicators = _agreement_indicators(df)
     columns = ["A_B_Agreement", "A_C_Agreement", "A_D_Agreement"]
     matrix = indicators[columns].to_numpy(dtype=float)
@@ -206,7 +210,7 @@ def cochrans_q_test(df: pd.DataFrame) -> dict:
         "Test": "Cochran Q on A-anchored exact agreement",
         "Q": round(statistic, 6),
         "df": n_measures - 1,
-        "p_value": round(p_value, 8),
+        "p_value": p_value,
         "N_terms": n_terms,
         "A_B_Agreement_Rate": round(float(rates[0]), 6),
         "A_C_Agreement_Rate": round(float(rates[1]), 6),
@@ -294,7 +298,11 @@ def mcnemar_posthoc(
     omnibus_p_value: float,
     alpha: float = 0.05,
 ) -> pd.DataFrame:
-    """Compare the three A-anchored agreement indicators pairwise."""
+    """Exact McNemar contrasts between A-anchored agreement indicators.
+
+    Each contrast is the exact binomial form of McNemar's paired test on the
+    discordant indicator pairs. Holm correction controls the three-test family.
+    """
     indicators = _agreement_indicators(df)
     columns = ["A_B_Agreement", "A_C_Agreement", "A_D_Agreement"]
     rows = []
@@ -314,6 +322,7 @@ def mcnemar_posthoc(
             "First_Only": first_only,
             "Second_Only": second_only,
             "Discordant": discordant,
+            "Discordant_Fraction": round(discordant / len(indicators), 6),
             "First_Rate": round(float(indicators[first].mean()), 6),
             "Second_Rate": round(float(indicators[second].mean()), 6),
             "Rate_Difference": round(
@@ -356,6 +365,7 @@ def _stuart_maxwell_test(first: pd.Series, second: pd.Series) -> dict:
                     matrix[row_index, column_index]
                     + matrix[column_index, row_index]
                 )
+    expected_degrees_freedom = max(len(labels) - 1, 0)
     degrees_freedom = int(np.linalg.matrix_rank(covariance))
     if degrees_freedom == 0:
         statistic = 0.0
@@ -369,6 +379,9 @@ def _stuart_maxwell_test(first: pd.Series, second: pd.Series) -> dict:
     return {
         "Statistic": statistic,
         "df": degrees_freedom,
+        "Levels": len(labels),
+        "Expected_df": expected_degrees_freedom,
+        "Rank_Deficient": degrees_freedom < expected_degrees_freedom,
         "p_value": p_value,
         "Marginal_L1_Distance": marginal_l1,
     }

@@ -144,6 +144,8 @@ All four conditions use the same 407 terms. A/B/C use the production classificat
 - **Layer 2B — Final ontology experts:** The same workbooks independently evaluate 40/185 class links, all 13 constructed definitions, 25/125 general relations, 15/58 named entities, and 40/116 exclusion or demotion decisions. Questions use geological language and separate relationship correctness from core-vocabulary usefulness, and relation correctness from general scope.
 - **Analysis:** Expert ratings are averaged per sampled item before Wilcoxon or Friedman inference. NLD results include rank-biserial effect size and a preference sign test. Category post-hoc A-vs-B/C/D tests run only after a significant Friedman test and use Holm correction. ICC, weighted agreement, Fleiss' kappa, and item-clustered bootstrap confidence intervals are reported. Taxonomy, definitions, relations, named entities, and critic decisions remain separate outcomes; no composite ontology score is produced.
 
+Before paid execution, `python -m src.evaluation.offline_rehearsal --overwrite` exercises the complete workflow with deterministic synthetic surrogates and mock ratings. It writes only to `output/ablation_rehearsal/`, performs no Azure calls, verifies deterministic reruns, and labels every artifact as unsuitable for scientific inference. Real distributable workbooks are written under `expert_workbooks/`; the unblinding key is isolated under `private/`, and Layer 2 verifies all source hashes before analysis.
+
 ---
 
 ## What the output looks like
