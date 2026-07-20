@@ -774,16 +774,16 @@ def analyze_final_ontology(
             ),
         },
         "defined_classes": {
-            "definition_correctness": _final_outcome(
+            "overall_definition_correctness": _final_outcome(
                 defined,
-                "Definition_Correct (Yes/Partial/No/Unsure)",
+                "Overall_Definition_Correct (Yes/Partial/No/Unsure)",
                 CORRECTNESS_CHOICES,
                 bootstrap_iterations,
                 seed + 30,
             ),
-            "presalt_scope_support": _final_outcome(
+            "defining_feature_support": _final_outcome(
                 defined,
-                "Broadly_True_in_PreSalt (Yes/No/Unsure)",
+                "Feature_Is_Defining_in_PreSalt (Yes/No/Unsure)",
                 BINARY_CHOICES,
                 bootstrap_iterations,
                 seed + 40,
@@ -827,7 +827,7 @@ def analyze_final_ontology(
         subset = decisions[decisions["Decision_Type"] == decision_type]
         summary = _final_outcome(
             subset,
-            "Agree (Yes/Partial/No/Unsure)",
+            "Decision_Appropriate (Yes/Partial/No/Unsure)",
             CORRECTNESS_CHOICES,
             bootstrap_iterations,
             seed + 90 + offset * 10,

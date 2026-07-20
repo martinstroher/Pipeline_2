@@ -115,9 +115,15 @@ def main() -> int:
         assert "Useful_PreSalt_Distinction (Yes/No/Unsure)" in {
             cell.value for cell in workbook["Taxonomy"][1]
         }
-        assert "Broadly_True_in_PreSalt (Yes/No/Unsure)" in {
+        assert "Feature_Is_Defining_in_PreSalt (Yes/No/Unsure)" in {
             cell.value for cell in workbook["Defined_Classes"][1]
         }
+        critic_headers = {cell.value for cell in workbook["Critic_Decisions"][1]}
+        assert {
+            "Critic_Decision",
+            "Resulting_Treatment",
+            "Decision_Appropriate (Yes/Partial/No/Unsure)",
+        }.issubset(critic_headers)
 
     print("=== OFFLINE REHEARSAL TEST PASSED ===")
     return 0

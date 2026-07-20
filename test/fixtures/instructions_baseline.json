@@ -108,6 +108,10 @@
     "You are not shown the complete category vocabulary and are not expected to select a replacement. For Partial or No, use Notes only when a brief geological explanation would help."
   ],
   [
+    "Leave unclassified",
+    "Evaluate this proposal too. Mark Yes when the term is outside scope or not a reusable geological concept. Mark No when it is a meaningful Pre-Salt concept that should receive some category; you do not need to name that category."
+  ],
+  [
     "",
     ""
   ],
@@ -152,12 +156,12 @@
     ""
   ],
   [
-    "Task",
-    "Judge whether the concept is correctly described as the stated base kind with the stated distinguishing characteristic. Use Notes for any concise correction."
+    "Overall definition",
+    "Judge whether the proposed base kind and distinguishing feature together define the intended geological concept without making it too broad, too narrow, or wrong."
   ],
   [
-    "Pre-Salt scope",
-    "Answer Yes when the characteristic is broadly true for the concept in the Pre-Salt domain; answer No when it is specific to one field, formation, sample, or paper."
+    "Defining feature",
+    "Separately answer whether the proposed feature genuinely distinguishes this concept from its base kind across the Pre-Salt domain, rather than describing only one local occurrence or paper."
   ],
   [
     "",
@@ -205,7 +209,7 @@
   ],
   [
     "Task",
-    "Judge whether the proposed treatment is appropriate for a concise Pre-Salt core vocabulary."
+    "The sheet shows the critic's decision and the resulting treatment after that decision. Judge whether this treatment is appropriate for a concise Pre-Salt core vocabulary."
   ],
   [
     "Exclusion",
@@ -220,8 +224,8 @@
     "For every row, choose one complete option: keep as a separate concept; keep its information but not as a separate concept; leave it out; or Unsure."
   ],
   [
-    "Agreement versus treatment",
-    "Agree evaluates the pipeline decision shown in the row, including its stated basis. Preferred Treatment records what you think should happen. If you prefer the same treatment for a different reason, explain that briefly in Notes."
+    "Decision versus treatment",
+    "Decision Appropriate evaluates the critic decision and displayed after-state. Preferred Treatment records what you think should happen. If you prefer the same treatment for a different reason, explain that briefly in Notes."
   ],
   [
     "",
@@ -240,8 +244,8 @@
     "Grainstone as a type of Carbonate Rock: Yes. Grainstone as a type of Geological Process: No."
   ],
   [
-    "Defined-class scope",
-    "A reservoir rock distinguished by its capacity to store and transmit hydrocarbons is broadly true in the Pre-Salt domain: Yes. A mineral association reported only in one named field is not broadly true for the whole concept: No."
+    "Defined feature",
+    "A reservoir rock distinguished by its capacity to store and transmit hydrocarbons uses a defining feature: Yes. A mineral association reported only in one named field is not a defining feature of the whole concept: No."
   ],
   [
     "Relation scope",

@@ -194,7 +194,7 @@ domains/                  # Per-domain config + assets. Each subfolder is a comp
     competency_questions.txt  # CQs evaluated by Step 5b
 studies/                  # Cross-domain study artifacts (not Pre-Salt-specific)
   prompts/                # D-only raw-context categorization prompt; A/B/C use the production prompt
-  expert_eval.yaml        # Modular expert-evaluation workbook instructions (65 rows)
+  expert_eval.yaml        # Modular expert-evaluation workbook instructions (66 rows)
 src/
   modules/
     extract/
@@ -242,7 +242,7 @@ test/                     # Validation suite (run in this order before any produ
   test_ontology_config_parity.py  # 26 checks: YAML produces identical literals + waterfall order + categorization_block headers
   test_evaluation_study.py        # Ablation, Layer 1, sampling/fate, item-level inference, relation-status regressions
   test_offline_rehearsal.py       # Full deterministic zero-Azure workflow and workbook/key isolation regression
-  diff_instructions_sheet.py      # 65 workbook rows must stay byte-equal to fixtures/instructions_baseline.json
+  diff_instructions_sheet.py      # 66 workbook rows must stay byte-equal to fixtures/instructions_baseline.json
   regression_t1.py                # Deterministic 6d→7→7b regression vs fixtures/t1_baseline.json
   run_e2e_test.py                 # End-to-end smoke test (Steps 0-7 with real LLM calls; ~$0.10-0.50)
 ```

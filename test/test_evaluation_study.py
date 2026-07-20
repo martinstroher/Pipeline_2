@@ -295,6 +295,17 @@ def test_modular_blinding_and_analysis() -> None:
         "Suggested_Category" not in category_visible.columns
         and "Proposed_Category" in category_visible.columns,
     )
+    not_classified_items = category_items.copy()
+    not_classified_items.loc[0, "Assigned_Category"] = "NOT_CLASSIFIED"
+    not_classified_visible, _ = _category_for_expert(
+        not_classified_items,
+        "expert_1",
+        42,
+    )
+    _expect(
+        "NOT_CLASSIFIED is presented as an evaluable leave-unclassified decision",
+        "Leave unclassified" in set(not_classified_visible["Proposed_Category"]),
+    )
 
     category_rows = []
     raw_score = {
@@ -341,7 +352,7 @@ def test_modular_blinding_and_analysis() -> None:
             {"Row_ID": "TAX-002", "Relationship_Correct (Yes/Partial/No/Unsure)": "Partial", "Useful_PreSalt_Distinction (Yes/No/Unsure)": "No"},
         ]),
         "Defined_Classes": repeated([
-            {"Row_ID": "DEF-001", "Definition_Correct (Yes/Partial/No/Unsure)": "Yes", "Broadly_True_in_PreSalt (Yes/No/Unsure)": "Yes"},
+            {"Row_ID": "DEF-001", "Overall_Definition_Correct (Yes/Partial/No/Unsure)": "Yes", "Feature_Is_Defining_in_PreSalt (Yes/No/Unsure)": "Yes"},
         ]),
         "Relations": repeated([
             {"Row_ID": "REL-001", "Statement_Correct (Yes/Partial/No/Unsure)": "Yes", "Generally_True (Yes/No/Unsure)": "No"},
@@ -350,8 +361,8 @@ def test_modular_blinding_and_analysis() -> None:
             {"Row_ID": "IND-001", "Specific_Named_Entity (Yes/No/Unsure)": "Yes", "Type_Correct (Yes/Partial/No/Unsure)": "Yes"},
         ]),
         "Critic_Decisions": repeated([
-            {"Row_ID": "DEC-001", "Decision_Type": "DEMOTE", "Agree (Yes/Partial/No/Unsure)": "Yes", "Preferred_Treatment": "Keep information but not as separate concept"},
-            {"Row_ID": "DEC-002", "Decision_Type": "EXCLUDE", "Agree (Yes/Partial/No/Unsure)": "Partial", "Preferred_Treatment": "Leave out"},
+            {"Row_ID": "DEC-001", "Decision_Type": "DEMOTE", "Decision_Appropriate (Yes/Partial/No/Unsure)": "Yes", "Preferred_Treatment": "Keep information but not as separate concept"},
+            {"Row_ID": "DEC-002", "Decision_Type": "EXCLUDE", "Decision_Appropriate (Yes/Partial/No/Unsure)": "Partial", "Preferred_Treatment": "Leave out"},
         ]),
     }
     final_results = analyze_final_ontology(final_frames, bootstrap_iterations=50, seed=42)

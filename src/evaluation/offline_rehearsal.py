@@ -596,8 +596,8 @@ def _fill_final_sheets(
         confidence_level = 2 if str(item.get("Definition_Type", "")) == "bearer_realizable" else 1
         definition = _verdict(confidence_level, expert_id, row_id, "definition", seed)
         general = _verdict(2, expert_id, row_id, "definition-general", seed, partial=False)
-        sheet.cell(row_index, headers["Definition_Correct (Yes/Partial/No/Unsure)"], definition)
-        sheet.cell(row_index, headers["Broadly_True_in_PreSalt (Yes/No/Unsure)"], general)
+        sheet.cell(row_index, headers["Overall_Definition_Correct (Yes/Partial/No/Unsure)"], definition)
+        sheet.cell(row_index, headers["Feature_Is_Defining_in_PreSalt (Yes/No/Unsure)"], general)
         sheet.cell(row_index, headers["Notes"], f"[{PROVENANCE}]")
 
     sheet = workbook["Relations"]
@@ -645,7 +645,7 @@ def _fill_final_sheets(
         needs_review = str(item.get("needs_review", "False")).lower() == "true"
         level = 2 if confidence >= 0.9 and not needs_review else 1
         agree = _verdict(level, expert_id, row_id, "critic", seed)
-        sheet.cell(row_index, headers["Agree (Yes/Partial/No/Unsure)"], agree)
+        sheet.cell(row_index, headers["Decision_Appropriate (Yes/Partial/No/Unsure)"], agree)
         decision_type = str(item.get("Decision_Type"))
         if agree == "Unsure":
             treatment = "Unsure"
@@ -831,8 +831,8 @@ def _write_findings_report(
     final_outcomes = [
         ("Taxonomy relationship", final["taxonomy"]["relationship_correctness"]),
         ("Useful Pre-Salt distinction", final["taxonomy"]["useful_presalt_distinction"]),
-        ("Defined-class correctness", final["defined_classes"]["definition_correctness"]),
-        ("Broadly true in Pre-Salt", final["defined_classes"]["presalt_scope_support"]),
+        ("Overall defined-class correctness", final["defined_classes"]["overall_definition_correctness"]),
+        ("Feature is defining in Pre-Salt", final["defined_classes"]["defining_feature_support"]),
         ("Relation statement", final["relations"]["statement_correctness"]),
         ("Relation general scope", final["relations"]["general_scope_support"]),
         ("Named entity", final["individuals"]["named_entity_correctness"]),

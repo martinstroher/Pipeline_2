@@ -277,7 +277,7 @@ The audit script `python -m src.evaluation.property_constraints_audit` writes `o
 Workbook-prose config for the expert-evaluation study (cross-domain, not Pre-Salt-specific). Loaded by `src/utils/study_config.py` (same frozen-dataclass + `@lru_cache` singleton pattern as `ontology_config.py`).
 
 ### Top-level keys
-- `instructions_sheet.rows`: list of `[section, details]` pairs rendered verbatim as Sheet 1 of the expert evaluation workbook (rating anchors, module guidance, calibration examples, project title). 65 rows in the current file.
+- `instructions_sheet.rows`: list of `[section, details]` pairs rendered verbatim as Sheet 1 of the expert evaluation workbook (rating anchors, module guidance, calibration examples, project title). 66 rows in the current file.
 
 ### Loader API
 - `get_study_config() → StudyConfig` — cached singleton
@@ -287,7 +287,7 @@ Workbook-prose config for the expert-evaluation study (cross-domain, not Pre-Sal
 - `STUDY_CONFIG_PATH` — default `studies/expert_eval.yaml`; point at another file to run a different evaluation study
 
 ### Regression test
-`test/diff_instructions_sheet.py` snapshots the rendered Sheet 1 and must remain byte-equal (65 rows) after any change to the YAML. Refresh the baseline via `test/snapshot_instructions_sheet.py` only when the change is intentional.
+`test/diff_instructions_sheet.py` snapshots the rendered Sheet 1 and must remain byte-equal (66 rows) after any change to the YAML. Refresh the baseline via `test/snapshot_instructions_sheet.py` only when the change is intentional.
 
 ---
 
@@ -322,7 +322,7 @@ domains/                  # Per-domain config + assets. Each subfolder is a comp
     competency_questions.txt
 studies/                  # Cross-domain study artifacts (not domain-specific)
   prompts/                # D-only raw-context categorization prompt
-  expert_eval.yaml        # Modular expert-evaluation workbook instructions (65 rows)
+  expert_eval.yaml        # Modular expert-evaluation workbook instructions (66 rows)
 src/
   modules/                # Steps 1-7 (extraction → OWL export)
   utils/                  # ontology_config + study_config loaders, csv_io, checkpoint, RAG setup, PDF conversion, logging, LLM client (Azure OpenAI), relation validator, prompt loader (verbatim, no interpolation)
@@ -339,7 +339,7 @@ chroma_db_1024/           # Cached ChromaDB vector index (created on first run)
 test/                     # Validation suite (run in this order before any production run)
   test_ontology_config_parity.py  # 26 checks — must pass after any YAML/loader change
   test_evaluation_study.py        # Evaluation controls, pairing, sampling/fates, inference-unit regressions
-  diff_instructions_sheet.py      # 65 workbook instruction rows must stay byte-equal to baseline
+  diff_instructions_sheet.py      # 66 workbook instruction rows must stay byte-equal to baseline
   regression_t1.py                # Deterministic 6d→7→7b regression (329 classes / 26 individuals / 3350 triples / 39 upper IRIs)
   run_e2e_test.py                 # End-to-end smoke test (Steps 0-7 with real LLM calls)
 ```
@@ -353,7 +353,7 @@ The pipeline supports automated representation sensitivity plus expert evaluatio
 - **Controlled ablation** (`ablation_study.py`): Requires one complete 407-term set. Condition A is copied byte-for-byte from `output/define_nld.csv` and `output/classify_categories.csv`; it is never regenerated. Condition D reuses A's exact stored `Context` strings and performs no retrieval. A/B/C use the production `term_categorization.txt`; D uses the structurally equivalent raw-context prompt. Conditions execute sequentially, with three workers for NLD terms or categorization batches inside one active condition. High reasoning effort and seed 42 are enforced. Missing terms, duplicates, errors, and unknown categories abort the run. `experiment_manifest.json` records Git commit, model settings, term-set/config/prompt/source/artifact SHA-256 hashes, timestamps, and failure status.
 - **Layer 1** (`layer1_analysis.py`): Validates a complete, unique, error-free A/B/C/D paired matrix before analysis. Reports exact and ontology-tier agreement with Cohen's kappa; independent `A != B` RAG, `A != C` NLD, and `A != D` structuring sensitivity flags; exact/tier confusion matrices; global Cochran's Q across the three A-anchored agreement indicators; gated Holm-corrected McNemar post-hoc tests; Holm-corrected Stuart-Maxwell tier tests; and descriptive `NOT_CLASSIFIED`/`Context_Used` summaries. It measures sensitivity and agreement, not accuracy.
 - **Layer 2 workbook engine** (`expert_eval_generator.py` + `expert_eval_workbook.py`): Uses seed 42 to sample 100/407 representation terms proportionally by Condition-A ontology tier and corpus-frequency band. The hidden key records frequency stratum, A tier, A/B display order, contributing conditions for deduplicated assignments, and downstream fate (`FINAL_CLASS`, `FINAL_INDIVIDUAL`, `DEMOTED`, `CRITIC_EXCLUDED`, or `CQ_EXCLUDED`). Three experts receive the same sampled items with independently shuffled rows and A/B display order.
-- **Representation modules**: `Representation` combines one relevance rating with two blinded NLD ratings and a 1/2/Tie/Unsure preference; every rating also permits explicit `Unsure`. `Category_Correct` contains every unique term/category assignment produced by A/B/C/D for the sampled terms. Experts see only the term, proposed category, and its definition; condition, tier, NLD, RAG context, critic fate, and the complete category vocabulary remain hidden. They judge the shown proposal and are never asked to select a replacement from an unseen list.
-- **Final-ontology modules**: `Taxonomy` samples 40/185 complete class links and separately asks whether each distinction is useful for understanding/comparing Pre-Salt systems; `Defined_Classes` includes all 13 constructed definitions and tests whether their characteristics are broadly true in the Pre-Salt domain; `Relations` samples 25/125 accepted general relations with corpus excerpts placed after the judgment columns; `Individuals` samples 15/58 named entities; `Critic_Decisions` samples 40/116 exclusion/demotion decisions. Row IDs and system rationales are hidden. No task asks geologists to reconstruct an unseen category, parent, or type vocabulary.
+- **Representation modules**: `Representation` combines one relevance rating with two blinded NLD ratings and a 1/2/Tie/Unsure preference; every rating also permits explicit `Unsure`. `Category_Correct` contains every unique term/category assignment produced by A/B/C/D for the sampled terms. Experts see only the term, proposed category, and its definition; condition, tier, NLD, RAG context, critic fate, and the complete category vocabulary remain hidden. `NOT_CLASSIFIED` is displayed as `Leave unclassified`: Yes means outside scope/not a reusable concept, while No means a meaningful concept should receive some category. No replacement category is requested.
+- **Final-ontology modules**: `Taxonomy` samples 40/185 complete class links and separately asks whether each distinction is useful for understanding/comparing Pre-Salt systems. `Defined_Classes` includes all 13 constructed definitions: overall correctness tests the base kind plus feature together, while defining-feature support tests whether the feature distinguishes the concept across Pre-Salt rather than one local occurrence. `Relations` samples 25/125 accepted general relations with corpus excerpts placed after the judgment columns. `Individuals` samples 15/58 named entities. `Critic_Decisions` samples 40/116 exclusion/demotion decisions and displays both the critic decision and resulting post-decision treatment; demotions show the actual base class/relation/filler representation. Row IDs and persuasive system rationales are hidden. No task asks geologists to reconstruct an unseen category, parent, or type vocabulary.
 - **Layer 2 analysis** (`expert_eval_analyzer.py` + `expert_eval_analysis.py`): Averages expert ratings per sampled term or final-ontology item before inferential tests. NLD analysis uses Wilcoxon A-vs-B, rank-biserial effect size, term-majority preference sign test, ICC(2,1), and pairwise quadratic-weighted kappa. Category analysis reports item-clustered bootstrap confidence intervals, Friedman plus Kendall's W, gated A-vs-B/C/D Wilcoxon tests with Holm correction, and Fleiss' kappa. Final taxonomy, defined-class, relation, individual, and critic-decision outcomes each receive separate correctness/support estimates, bootstrap intervals, and agreement; no composite ontology score is computed.
 - **Offline rehearsal** (`offline_rehearsal.py`): Runs the complete artifact path without importing the Azure client. It byte-copies A, creates explicitly synthetic B/C/D surrogates, runs Layer 1, generates and mock-fills three workbooks, runs Layer 2, and emits a warning file, source/output hashes, and a findings report under `output/ablation_rehearsal/`. The rehearsal is process evidence only. Distributable workbooks and the private blinding key are placed in separate subdirectories.

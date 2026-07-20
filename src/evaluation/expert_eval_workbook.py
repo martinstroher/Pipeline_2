@@ -425,6 +425,31 @@ def select_final_ontology_items(
         "DEMOTE",
         "EXCLUDE",
     )
+    demotion_details = inputs.demotions[
+        ["Term", "Base_Class", "Property", "Filler"]
+    ].copy()
+    demotion_details["_term_key"] = demotion_details["Term"].map(_normalise)
+    decisions["_term_key"] = decisions["term"].map(_normalise)
+    decisions = decisions.merge(
+        demotion_details.drop(columns="Term"),
+        on="_term_key",
+        how="left",
+        validate="one_to_one",
+    ).drop(columns="_term_key")
+    decisions["Resulting_Treatment"] = [
+        (
+            f"No longer a separate class; represented as {base_class} "
+            f"with {_humanise_label(property_name)} {_humanise_label(filler)}."
+            if decision_type == "DEMOTE"
+            else "Not included as a separate concept in the final ontology."
+        )
+        for decision_type, base_class, property_name, filler in zip(
+            decisions["Decision_Type"],
+            decisions["Base_Class"],
+            decisions["Property"],
+            decisions["Filler"],
+        )
+    ]
     populations = {
         "Taxonomy": taxonomy,
         "Defined_Classes": defined,
@@ -437,7 +462,10 @@ def select_final_ontology_items(
         "Defined_Classes": {"Bearer", "Genus", "Property", "Filler"},
         "Relations": {"Term", "Property", "Filler", "Evidence"},
         "Individuals": {"Term", "Target_Class", "Reason"},
-        "Critic_Decisions": {"term", "category", "action", "reason", "Decision_Type"},
+        "Critic_Decisions": {
+            "term", "category", "action", "reason", "Decision_Type",
+            "Resulting_Treatment",
+        },
     }
     for name, frame in populations.items():
         _require_columns(frame, required_columns[name], f"{name} population")
@@ -551,6 +579,13 @@ def _category_for_expert(
         "Assigned_Category": "Proposed_Category",
         "Category_Description": "Category_Definition",
     })
+    unclassified = visible["Proposed_Category"] == "NOT_CLASSIFIED"
+    visible.loc[unclassified, "Proposed_Category"] = "Leave unclassified"
+    visible.loc[unclassified, "Category_Definition"] = (
+        "The system proposes leaving this term without an ontology category. "
+        "Mark Yes when it is outside scope or not a reusable geological concept; "
+        "mark No when it is a meaningful Pre-Salt concept that should receive some category."
+    )
     visible["Correct (Yes/Partial/No/Unsure)"] = ""
     visible["Notes"] = ""
     key = items.copy()
@@ -578,13 +613,13 @@ def _final_frames_for_expert(
     defined_visible = pd.DataFrame({
         "Row_ID": defined["Row_ID"],
         "Concept": defined["Bearer"],
-        "Base_Kind": defined["Genus"],
-        "Distinguishing_Characteristic": [
+        "Proposed_Base_Kind": defined["Genus"],
+        "Proposed_Distinguishing_Feature": [
             f"{_humanise_label(prop)} {_humanise_label(filler)}"
             for prop, filler in zip(defined["Property"], defined["Filler"])
         ],
-        "Definition_Correct (Yes/Partial/No/Unsure)": "",
-        "Broadly_True_in_PreSalt (Yes/No/Unsure)": "",
+        "Overall_Definition_Correct (Yes/Partial/No/Unsure)": "",
+        "Feature_Is_Defining_in_PreSalt (Yes/No/Unsure)": "",
         "Notes": "",
     })
 
@@ -627,8 +662,9 @@ def _final_frames_for_expert(
         "Row_ID": decisions["Row_ID"],
         "Concept": decisions["term"],
         "Current_Category": decisions["category"],
-        "Pipeline_Decision": decision_text,
-        "Agree (Yes/Partial/No/Unsure)": "",
+        "Critic_Decision": decision_text,
+        "Resulting_Treatment": decisions["Resulting_Treatment"],
+        "Decision_Appropriate (Yes/Partial/No/Unsure)": "",
         "Preferred_Treatment": "",
         "Notes": "",
     })
@@ -681,8 +717,8 @@ _INPUT_VALIDATIONS = {
         "Notes": None,
     },
     "Defined_Classes": {
-        "Definition_Correct (Yes/Partial/No/Unsure)": "Yes,Partial,No,Unsure",
-        "Broadly_True_in_PreSalt (Yes/No/Unsure)": "Yes,No,Unsure",
+        "Overall_Definition_Correct (Yes/Partial/No/Unsure)": "Yes,Partial,No,Unsure",
+        "Feature_Is_Defining_in_PreSalt (Yes/No/Unsure)": "Yes,No,Unsure",
         "Notes": None,
     },
     "Relations": {
@@ -696,7 +732,7 @@ _INPUT_VALIDATIONS = {
         "Notes": None,
     },
     "Critic_Decisions": {
-        "Agree (Yes/Partial/No/Unsure)": "Yes,Partial,No,Unsure",
+        "Decision_Appropriate (Yes/Partial/No/Unsure)": "Yes,Partial,No,Unsure",
         "Preferred_Treatment": "Keep as separate concept,Keep information but not as separate concept,Leave out,Unsure",
         "Notes": None,
     },
