@@ -155,6 +155,8 @@ def _validated_choice(value: object, allowed: tuple[str, ...], label: str) -> st
 
 
 def _numeric_rating(value: object, label: str) -> float:
+    if _choice(value).lower() == "unsure":
+        return np.nan
     try:
         rating = float(value)
     except (TypeError, ValueError):
@@ -182,15 +184,17 @@ def unblind_representation(
             second_condition = str(hidden["Definition_2_Condition"])
             if {first_condition, second_condition} != {"A", "B"}:
                 raise ValueError(f"{expert_id}:{row_id} invalid definition condition order")
-            quality_first = _numeric_rating(item.get("Quality_1 (1-5)"), f"{expert_id}:{row_id}:Quality_1")
-            quality_second = _numeric_rating(item.get("Quality_2 (1-5)"), f"{expert_id}:{row_id}:Quality_2")
+            quality_first = _numeric_rating(item.get("Quality_1 (1-5/Unsure)"), f"{expert_id}:{row_id}:Quality_1")
+            quality_second = _numeric_rating(item.get("Quality_2 (1-5/Unsure)"), f"{expert_id}:{row_id}:Quality_2")
             quality = {first_condition: quality_first, second_condition: quality_second}
             preference = _validated_choice(
-                item.get("Preference (1/2/Tie)"),
-                ("1", "2", "tie"),
+                item.get("Preference (1/2/Tie/Unsure)"),
+                ("1", "2", "tie", "unsure"),
                 f"{expert_id}:{row_id}:Preference",
             )
-            if preference == "tie":
+            if preference == "unsure":
+                preference_a = np.nan
+            elif preference == "tie":
                 preference_a = 0
             else:
                 preferred_condition = first_condition if preference == "1" else second_condition
@@ -200,7 +204,7 @@ def unblind_representation(
                 "Term": hidden["Term"],
                 "Expert": expert_id,
                 "Relevance": _numeric_rating(
-                    item.get("Relevance (1-5)"),
+                    item.get("Relevance (1-5/Unsure)"),
                     f"{expert_id}:{row_id}:Relevance",
                 ),
                 "Quality_A": quality["A"],
@@ -510,9 +514,12 @@ def analyze_representation(
         Relevance=("Relevance", "mean"),
         Quality_A=("Quality_A", "mean"),
         Quality_B=("Quality_B", "mean"),
-        Preference_Sum=("Preference_A", "sum"),
+        Preference_Sum=("Preference_A", lambda values: values.sum(min_count=1)),
     ).reset_index()
-    differences = (item_means["Quality_A"] - item_means["Quality_B"]).to_numpy(dtype=float)
+    quality_items = item_means.dropna(subset=["Quality_A", "Quality_B"])
+    differences = (
+        quality_items["Quality_A"] - quality_items["Quality_B"]
+    ).to_numpy(dtype=float)
     nonzero = differences[differences != 0]
     if len(nonzero):
         wilcoxon = stats.wilcoxon(nonzero, zero_method="wilcox", alternative="two-sided")
@@ -520,19 +527,35 @@ def analyze_representation(
     else:
         statistic, p_value = 0.0, 1.0
 
-    item_preference = np.sign(item_means["Preference_Sum"].to_numpy(dtype=float))
+    preference_items = item_means.dropna(subset=["Preference_Sum"])
+    item_preference = np.sign(
+        preference_items["Preference_Sum"].to_numpy(dtype=float)
+    )
     prefer_a = int((item_preference > 0).sum())
     prefer_b = int((item_preference < 0).sum())
     ties = int((item_preference == 0).sum())
+    unsure_preferences = len(item_means) - len(preference_items)
     decisive = prefer_a + prefer_b
     preference_p = float(stats.binomtest(prefer_a, decisive, p=0.5).pvalue) if decisive else 1.0
 
     quality_results = {
         "unit_of_analysis": "term-level mean across experts",
-        "n_terms": len(item_means),
-        "quality_A_mean": round(float(item_means["Quality_A"].mean()), 4),
-        "quality_B_mean": round(float(item_means["Quality_B"].mean()), 4),
-        "mean_difference_A_minus_B": round(float(differences.mean()), 4),
+        "n_terms": len(quality_items),
+        "n_terms_sampled": len(item_means),
+        "n_terms_excluded_all_unsure": len(item_means) - len(quality_items),
+        "quality_A_mean": (
+            round(float(quality_items["Quality_A"].mean()), 4)
+            if len(quality_items)
+            else None
+        ),
+        "quality_B_mean": (
+            round(float(quality_items["Quality_B"].mean()), 4)
+            if len(quality_items)
+            else None
+        ),
+        "mean_difference_A_minus_B": (
+            round(float(differences.mean()), 4) if len(differences) else None
+        ),
         "wilcoxon": {
             "W": statistic,
             "p_value": p_value,
@@ -543,6 +566,7 @@ def analyze_representation(
             "prefer_A": prefer_a,
             "prefer_B": prefer_b,
             "ties": ties,
+            "unsure": unsure_preferences,
             "p_value": preference_p,
             "unit_of_analysis": "term-level majority preference",
         },
@@ -553,15 +577,26 @@ def analyze_representation(
             "weighted_kappa_B": _pairwise_weighted_kappa(representation, "Quality_B"),
         },
     }
+    relevance_items = item_means.dropna(subset=["Relevance"])
     relevance_lower, relevance_upper = _bootstrap_mean_ci(
-        item_means["Relevance"].to_numpy(dtype=float),
+        relevance_items["Relevance"].to_numpy(dtype=float),
         bootstrap_iterations,
         seed,
     )
     relevance = {
-        "n_terms": len(item_means),
-        "mean": round(float(item_means["Relevance"].mean()), 4),
-        "median": round(float(item_means["Relevance"].median()), 4),
+        "n_terms": len(relevance_items),
+        "n_terms_sampled": len(item_means),
+        "n_terms_excluded_all_unsure": len(item_means) - len(relevance_items),
+        "mean": (
+            round(float(relevance_items["Relevance"].mean()), 4)
+            if len(relevance_items)
+            else None
+        ),
+        "median": (
+            round(float(relevance_items["Relevance"].median()), 4)
+            if len(relevance_items)
+            else None
+        ),
         "mean_ci_95": [relevance_lower, relevance_upper],
         "icc": _icc_2_1(_rating_matrix(representation, "Relevance")),
     }
@@ -730,9 +765,9 @@ def analyze_final_ontology(
                 bootstrap_iterations,
                 seed + 10,
             ),
-            "retained_core_support": _final_outcome(
+            "useful_presalt_distinction": _final_outcome(
                 taxonomy,
-                "Keep_in_Core (Yes/No/Unsure)",
+                "Useful_PreSalt_Distinction (Yes/No/Unsure)",
                 BINARY_CHOICES,
                 bootstrap_iterations,
                 seed + 20,
@@ -746,9 +781,9 @@ def analyze_final_ontology(
                 bootstrap_iterations,
                 seed + 30,
             ),
-            "characteristic_generality": _final_outcome(
+            "presalt_scope_support": _final_outcome(
                 defined,
-                "Characteristic_General (Yes/No/Unsure)",
+                "Broadly_True_in_PreSalt (Yes/No/Unsure)",
                 BINARY_CHOICES,
                 bootstrap_iterations,
                 seed + 40,

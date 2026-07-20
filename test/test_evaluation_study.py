@@ -20,6 +20,7 @@ if str(REPO_ROOT) not in sys.path:
 
 import src.evaluation.ablation_study as ablation
 from src.evaluation.expert_eval_analysis import (
+    _numeric_rating,
     _summarize_judgments,
     analyze_categories,
     analyze_final_ontology,
@@ -212,6 +213,10 @@ def test_sampling_and_fates() -> None:
 
 
 def test_item_level_nld_inference() -> None:
+    _expect(
+        "Representation Unsure is explicit missingness",
+        pd.isna(_numeric_rating("Unsure", "test rating")),
+    )
     frame = pd.DataFrame([
         {
             "Term": term,
@@ -285,6 +290,11 @@ def test_modular_blinding_and_analysis() -> None:
         "Visible category sheet hides condition, tier, and final fate",
         not {"Conditions", "Tier", "Final_Fate"} & set(category_visible.columns),
     )
+    _expect(
+        "Visible category sheet does not request a hidden-list replacement",
+        "Suggested_Category" not in category_visible.columns
+        and "Proposed_Category" in category_visible.columns,
+    )
 
     category_rows = []
     raw_score = {
@@ -327,11 +337,11 @@ def test_modular_blinding_and_analysis() -> None:
 
     final_frames = {
         "Taxonomy": repeated([
-            {"Row_ID": "TAX-001", "Relationship_Correct (Yes/Partial/No/Unsure)": "Yes", "Keep_in_Core (Yes/No/Unsure)": "Yes"},
-            {"Row_ID": "TAX-002", "Relationship_Correct (Yes/Partial/No/Unsure)": "Partial", "Keep_in_Core (Yes/No/Unsure)": "No"},
+            {"Row_ID": "TAX-001", "Relationship_Correct (Yes/Partial/No/Unsure)": "Yes", "Useful_PreSalt_Distinction (Yes/No/Unsure)": "Yes"},
+            {"Row_ID": "TAX-002", "Relationship_Correct (Yes/Partial/No/Unsure)": "Partial", "Useful_PreSalt_Distinction (Yes/No/Unsure)": "No"},
         ]),
         "Defined_Classes": repeated([
-            {"Row_ID": "DEF-001", "Definition_Correct (Yes/Partial/No/Unsure)": "Yes", "Characteristic_General (Yes/No/Unsure)": "Yes"},
+            {"Row_ID": "DEF-001", "Definition_Correct (Yes/Partial/No/Unsure)": "Yes", "Broadly_True_in_PreSalt (Yes/No/Unsure)": "Yes"},
         ]),
         "Relations": repeated([
             {"Row_ID": "REL-001", "Statement_Correct (Yes/Partial/No/Unsure)": "Yes", "Generally_True (Yes/No/Unsure)": "No"},
@@ -340,7 +350,7 @@ def test_modular_blinding_and_analysis() -> None:
             {"Row_ID": "IND-001", "Specific_Named_Entity (Yes/No/Unsure)": "Yes", "Type_Correct (Yes/Partial/No/Unsure)": "Yes"},
         ]),
         "Critic_Decisions": repeated([
-            {"Row_ID": "DEC-001", "Decision_Type": "DEMOTE", "Agree (Yes/Partial/No/Unsure)": "Yes", "Preferred_Treatment": "Represent as characteristic"},
+            {"Row_ID": "DEC-001", "Decision_Type": "DEMOTE", "Agree (Yes/Partial/No/Unsure)": "Yes", "Preferred_Treatment": "Keep information but not as separate concept"},
             {"Row_ID": "DEC-002", "Decision_Type": "EXCLUDE", "Agree (Yes/Partial/No/Unsure)": "Partial", "Preferred_Treatment": "Leave out"},
         ]),
     }

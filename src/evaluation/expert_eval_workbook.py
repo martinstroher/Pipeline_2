@@ -522,12 +522,12 @@ def _representation_for_expert(
         visible_rows.append({
             "Row_ID": row["Row_ID"],
             "Term": row["Term"],
-            "Relevance (1-5)": "",
+            "Relevance (1-5/Unsure)": "",
             "Definition_1": first,
             "Definition_2": second,
-            "Quality_1 (1-5)": "",
-            "Quality_2 (1-5)": "",
-            "Preference (1/2/Tie)": "",
+            "Quality_1 (1-5/Unsure)": "",
+            "Quality_2 (1-5/Unsure)": "",
+            "Preference (1/2/Tie/Unsure)": "",
             "Notes": "",
         })
         key_rows.append({
@@ -547,8 +547,11 @@ def _category_for_expert(
     seed: int,
 ) -> tuple[pd.DataFrame, pd.DataFrame]:
     visible = items[["Row_ID", "Term", "Assigned_Category", "Category_Description"]].copy()
+    visible = visible.rename(columns={
+        "Assigned_Category": "Proposed_Category",
+        "Category_Description": "Category_Definition",
+    })
     visible["Correct (Yes/Partial/No/Unsure)"] = ""
-    visible["Suggested_Category"] = ""
     visible["Notes"] = ""
     key = items.copy()
     key.insert(0, "Sheet", "Category_Correct")
@@ -566,13 +569,8 @@ def _final_frames_for_expert(
         "Row_ID": taxonomy["Row_ID"],
         "Child_Concept": taxonomy["Term"],
         "Parent_Concept": taxonomy["Parent_Term"],
-        "Question": [
-            f"Is '{child}' a type of '{parent}'?"
-            for child, parent in zip(taxonomy["Term"], taxonomy["Parent_Term"])
-        ],
         "Relationship_Correct (Yes/Partial/No/Unsure)": "",
-        "Keep_in_Core (Yes/No/Unsure)": "",
-        "Suggested_Parent": "",
+        "Useful_PreSalt_Distinction (Yes/No/Unsure)": "",
         "Notes": "",
     })
 
@@ -586,8 +584,7 @@ def _final_frames_for_expert(
             for prop, filler in zip(defined["Property"], defined["Filler"])
         ],
         "Definition_Correct (Yes/Partial/No/Unsure)": "",
-        "Characteristic_General (Yes/No/Unsure)": "",
-        "Suggested_Change": "",
+        "Broadly_True_in_PreSalt (Yes/No/Unsure)": "",
         "Notes": "",
     })
 
@@ -603,9 +600,9 @@ def _final_frames_for_expert(
                 relations["Term"], relations["Property"], relations["Filler"]
             )
         ],
-        "Evidence": relations["Evidence"],
         "Statement_Correct (Yes/Partial/No/Unsure)": "",
         "Generally_True (Yes/No/Unsure)": "",
+        "Corpus_Excerpt (context only)": relations["Evidence"],
         "Notes": "",
     })
 
@@ -614,10 +611,8 @@ def _final_frames_for_expert(
         "Row_ID": individuals["Row_ID"],
         "Named_Entity": individuals["Term"],
         "Proposed_Type": individuals["Target_Class"],
-        "Rationale": individuals["Reason"],
         "Specific_Named_Entity (Yes/No/Unsure)": "",
         "Type_Correct (Yes/Partial/No/Unsure)": "",
-        "Suggested_Type": "",
         "Notes": "",
     })
 
@@ -633,7 +628,6 @@ def _final_frames_for_expert(
         "Concept": decisions["term"],
         "Current_Category": decisions["category"],
         "Pipeline_Decision": decision_text,
-        "Rationale": decisions["reason"],
         "Agree (Yes/Partial/No/Unsure)": "",
         "Preferred_Treatment": "",
         "Notes": "",
@@ -671,27 +665,24 @@ _BORDER = Border(
 
 _INPUT_VALIDATIONS = {
     "Representation": {
-        "Relevance (1-5)": "1,2,3,4,5",
-        "Quality_1 (1-5)": "1,2,3,4,5",
-        "Quality_2 (1-5)": "1,2,3,4,5",
-        "Preference (1/2/Tie)": "1,2,Tie",
+        "Relevance (1-5/Unsure)": "1,2,3,4,5,Unsure",
+        "Quality_1 (1-5/Unsure)": "1,2,3,4,5,Unsure",
+        "Quality_2 (1-5/Unsure)": "1,2,3,4,5,Unsure",
+        "Preference (1/2/Tie/Unsure)": "1,2,Tie,Unsure",
         "Notes": None,
     },
     "Category_Correct": {
         "Correct (Yes/Partial/No/Unsure)": "Yes,Partial,No,Unsure",
-        "Suggested_Category": None,
         "Notes": None,
     },
     "Taxonomy": {
         "Relationship_Correct (Yes/Partial/No/Unsure)": "Yes,Partial,No,Unsure",
-        "Keep_in_Core (Yes/No/Unsure)": "Yes,No,Unsure",
-        "Suggested_Parent": None,
+        "Useful_PreSalt_Distinction (Yes/No/Unsure)": "Yes,No,Unsure",
         "Notes": None,
     },
     "Defined_Classes": {
         "Definition_Correct (Yes/Partial/No/Unsure)": "Yes,Partial,No,Unsure",
-        "Characteristic_General (Yes/No/Unsure)": "Yes,No,Unsure",
-        "Suggested_Change": None,
+        "Broadly_True_in_PreSalt (Yes/No/Unsure)": "Yes,No,Unsure",
         "Notes": None,
     },
     "Relations": {
@@ -702,12 +693,11 @@ _INPUT_VALIDATIONS = {
     "Individuals": {
         "Specific_Named_Entity (Yes/No/Unsure)": "Yes,No,Unsure",
         "Type_Correct (Yes/Partial/No/Unsure)": "Yes,Partial,No,Unsure",
-        "Suggested_Type": None,
         "Notes": None,
     },
     "Critic_Decisions": {
         "Agree (Yes/Partial/No/Unsure)": "Yes,Partial,No,Unsure",
-        "Preferred_Treatment": "Keep separate concept,Merge with another concept,Represent as characteristic,Represent as named example,Leave out",
+        "Preferred_Treatment": "Keep as separate concept,Keep information but not as separate concept,Leave out,Unsure",
         "Notes": None,
     },
 }
@@ -731,6 +721,8 @@ def _format_data_sheet(ws, input_validations: dict[str, str | None]) -> None:
     ws.auto_filter.ref = ws.dimensions
     ws.sheet_view.showGridLines = False
     headers = {str(cell.value): cell.column for cell in ws[1]}
+    if "Row_ID" in headers:
+        ws.column_dimensions[get_column_letter(headers["Row_ID"])].hidden = True
     for cell in ws[1]:
         cell.fill = _HEADER_FILL
         cell.font = _HEADER_FONT
@@ -739,8 +731,8 @@ def _format_data_sheet(ws, input_validations: dict[str, str | None]) -> None:
     for column_index in range(1, ws.max_column + 1):
         header = str(ws.cell(1, column_index).value or "")
         width = 15
-        if any(token in header for token in ("Definition", "Description", "Rationale", "Evidence", "Question", "Decision", "Statement")):
-            width = 55
+        if any(token in header for token in ("Definition", "Description", "Rationale", "Evidence", "Excerpt", "Question", "Decision", "Statement")):
+            width = 70
         elif any(token in header for token in ("Term", "Concept", "Category", "Parent", "Subject", "Entity", "Type")):
             width = 28
         elif header == "Notes" or header.startswith("Suggested"):

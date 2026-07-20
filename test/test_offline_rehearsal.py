@@ -91,7 +91,7 @@ def main() -> int:
         relevance_column = next(
             cell.column_letter
             for cell in representation[1]
-            if cell.value == "Relevance (1-5)"
+            if cell.value == "Relevance (1-5/Unsure)"
         )
         validations = list(representation.data_validations.dataValidation)
         assert any(
@@ -99,6 +99,25 @@ def main() -> int:
             for validation in validations
         )
         assert len(representation.conditional_formatting) > 0
+        assert representation.column_dimensions["A"].hidden is True
+
+        expected_absent = {
+            "Category_Correct": {"Suggested_Category"},
+            "Taxonomy": {"Suggested_Parent", "Question", "Keep_in_Core (Yes/No/Unsure)"},
+            "Defined_Classes": {"Suggested_Change", "Characteristic_General (Yes/No/Unsure)"},
+            "Individuals": {"Suggested_Type", "Rationale"},
+            "Critic_Decisions": {"Rationale"},
+        }
+        for sheet_name, absent_headers in expected_absent.items():
+            headers = {cell.value for cell in workbook[sheet_name][1]}
+            assert not headers & absent_headers, (sheet_name, headers & absent_headers)
+
+        assert "Useful_PreSalt_Distinction (Yes/No/Unsure)" in {
+            cell.value for cell in workbook["Taxonomy"][1]
+        }
+        assert "Broadly_True_in_PreSalt (Yes/No/Unsure)" in {
+            cell.value for cell in workbook["Defined_Classes"][1]
+        }
 
     print("=== OFFLINE REHEARSAL TEST PASSED ===")
     return 0

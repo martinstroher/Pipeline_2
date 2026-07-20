@@ -72,16 +72,28 @@ def unblind_nld(nld_df: pd.DataFrame, key_df: pd.DataFrame) -> pd.DataFrame:
         key = nld_key.loc[row_id]
         order = key["Order"]
 
-        q1 = row.get("Quality_1 (1-5)", np.nan)
-        q2 = row.get("Quality_2 (1-5)", np.nan)
-        pref = row.get("Preference (1/2/Tie)", "")
+        q1 = row.get("Quality_1 (1-5/Unsure)", np.nan)
+        q2 = row.get("Quality_2 (1-5/Unsure)", np.nan)
+        pref = row.get("Preference (1/2/Tie/Unsure)", "")
+        q1 = np.nan if str(q1).strip().lower() == "unsure" else q1
+        q2 = np.nan if str(q2).strip().lower() == "unsure" else q2
 
         if order == "A_first":
             qa, qb = q1, q2
-            pref_a = 1 if str(pref) == "1" else (-1 if str(pref) == "2" else 0)
+            pref_a = (
+                np.nan if str(pref).strip().lower() == "unsure"
+                else 1 if str(pref) == "1"
+                else -1 if str(pref) == "2"
+                else 0
+            )
         else:
             qa, qb = q2, q1
-            pref_a = 1 if str(pref) == "2" else (-1 if str(pref) == "1" else 0)
+            pref_a = (
+                np.nan if str(pref).strip().lower() == "unsure"
+                else 1 if str(pref) == "2"
+                else -1 if str(pref) == "1"
+                else 0
+            )
 
         rows.append({
             "Term": key["Term"],
@@ -148,7 +160,10 @@ def analyze_term_relevance(experts: dict) -> dict:
 
     for expert_id, data in experts.items():
         df = data["relevance"]
-        ratings = df.set_index("Term")["Relevance (1-5)"].dropna()
+        ratings = pd.to_numeric(
+            df.set_index("Term")["Relevance (1-5/Unsure)"],
+            errors="coerce",
+        ).dropna()
         expert_ratings[expert_id] = ratings
         if all_terms is None:
             all_terms = set(ratings.index)
@@ -625,7 +640,10 @@ def analyze_cross_layer(
         rel_df = data["relevance"]
         for _, row in rel_df.iterrows():
             term = row["Term"]
-            score = row.get("Relevance (1-5)", np.nan)
+            score = pd.to_numeric(
+                pd.Series([row.get("Relevance (1-5/Unsure)", np.nan)]),
+                errors="coerce",
+            ).iloc[0]
             if pd.notna(score):
                 relevance_by_term.setdefault(term, []).append(float(score))
 

@@ -113,7 +113,7 @@ After any change to a prompt, `ontology_config.yaml`, or `studies/expert_eval.ya
 ```powershell
 python test/test_ontology_config_parity.py    # 26 checks; must show "=== PARITY PASSED ==="
 python test/test_prompt_refactor_parity.py    # active prompts resolve without drift or missing placeholders
-python test/diff_instructions_sheet.py        # 63 rows; byte-equal to baseline
+python test/diff_instructions_sheet.py        # 65 rows; byte-equal to baseline
 python test/regression_t1.py                  # deterministic 6d→7→7b regression
 ```
 

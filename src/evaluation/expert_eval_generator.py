@@ -103,7 +103,7 @@ def build_term_relevance_sheet(terms: list[str]) -> pd.DataFrame:
     for term in sorted(terms):
         rows.append({
             "Term": term,
-            "Relevance (1-5)": "",
+            "Relevance (1-5/Unsure)": "",
             "Notes": "",
         })
     return pd.DataFrame(rows)
@@ -153,9 +153,9 @@ def build_nld_quality_sheet(
             "Term": term,
             "Definition_1": d1,
             "Definition_2": d2,
-            "Quality_1 (1-5)": "",
-            "Quality_2 (1-5)": "",
-            "Preference (1/2/Tie)": "",
+            "Quality_1 (1-5/Unsure)": "",
+            "Quality_2 (1-5/Unsure)": "",
+            "Preference (1/2/Tie/Unsure)": "",
             "Notes": "",
         })
 
@@ -251,7 +251,6 @@ def build_category_sheet(
                 "Assigned_Category": category,
                 "Category_Description": cat_desc,
                 "Correct (Yes/No/Partial)": "",
-                "Suggested_Category": "",
                 "Notes": "",
             })
 
@@ -369,7 +368,6 @@ def build_taxonomy_sheet(
             "Parent_Term": parent,
             "Question": f"Is '{term}' a type of '{parent}'?",
             "Correct (Yes/No/Partial)": "",
-            "Suggested_Parent": "",
             "Notes": "",
         })
 
@@ -488,7 +486,7 @@ def _format_workbook(wb, relevance_df, nld_df, cat_df, tax_df):
     n_rel = len(relevance_df)
     _style_header_row(ws, 3)
     _set_column_widths(ws, {"A": 35, "B": 16, "C": 40})
-    _add_data_validation(ws, "B", "1,2,3,4,5", n_rel)
+    _add_data_validation(ws, "B", "1,2,3,4,5,Unsure", n_rel)
     _highlight_input_cells(ws, ["B", "C"], n_rel)
     _freeze_and_filter(ws)
     for row in range(2, n_rel + 2):
@@ -498,14 +496,14 @@ def _format_workbook(wb, relevance_df, nld_df, cat_df, tax_df):
     # --- NLD Quality ---
     ws = wb["NLD_Quality"]
     n_nld = len(nld_df)
-    _style_header_row(ws, 8)
+    _style_header_row(ws, 7)
     _set_column_widths(ws, {
         "A": 12, "B": 30, "C": 65, "D": 65,
         "E": 16, "F": 16, "G": 18, "H": 35,
     })
-    _add_data_validation(ws, "E", "1,2,3,4,5", n_nld)
-    _add_data_validation(ws, "F", "1,2,3,4,5", n_nld)
-    _add_data_validation(ws, "G", "1,2,Tie", n_nld)
+    _add_data_validation(ws, "E", "1,2,3,4,5,Unsure", n_nld)
+    _add_data_validation(ws, "F", "1,2,3,4,5,Unsure", n_nld)
+    _add_data_validation(ws, "G", "1,2,Tie,Unsure", n_nld)
     _highlight_input_cells(ws, ["E", "F", "G", "H"], n_nld)
     _freeze_and_filter(ws)
     # Wrap definition text
@@ -522,13 +520,13 @@ def _format_workbook(wb, relevance_df, nld_df, cat_df, tax_df):
     _style_header_row(ws, 8)
     _set_column_widths(ws, {
         "A": 12, "B": 30, "C": 14, "D": 30,
-        "E": 50, "F": 18, "G": 30, "H": 35,
+        "E": 50, "F": 18, "G": 35,
     })
     _add_data_validation(ws, "F", "Yes,No,Partial", n_cat)
-    _highlight_input_cells(ws, ["F", "G", "H"], n_cat)
+    _highlight_input_cells(ws, ["F", "G"], n_cat)
     _freeze_and_filter(ws)
     for row in range(2, n_cat + 2):
-        for col in range(1, 9):
+        for col in range(1, 8):
             cell = ws.cell(row=row, column=col)
             cell.alignment = _WRAP_ALIGN
             cell.border = _THIN_BORDER
@@ -537,16 +535,16 @@ def _format_workbook(wb, relevance_df, nld_df, cat_df, tax_df):
     if "Taxonomy_Correct" in wb.sheetnames:
         ws = wb["Taxonomy_Correct"]
         n_tax = len(tax_df)
-        _style_header_row(ws, 7)
+        _style_header_row(ws, 6)
         _set_column_widths(ws, {
             "A": 12, "B": 30, "C": 30, "D": 50,
-            "E": 20, "F": 30, "G": 35,
+            "E": 20, "F": 35,
         })
         _add_data_validation(ws, "E", "Yes,No,Partial", n_tax)
-        _highlight_input_cells(ws, ["E", "F", "G"], n_tax)
+        _highlight_input_cells(ws, ["E", "F"], n_tax)
         _freeze_and_filter(ws)
         for row in range(2, n_tax + 2):
-            for col in range(1, 8):
+            for col in range(1, 7):
                 cell = ws.cell(row=row, column=col)
                 cell.alignment = _WRAP_ALIGN
                 cell.border = _THIN_BORDER

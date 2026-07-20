@@ -529,10 +529,10 @@ def _fill_representation_sheet(
             preference = "Tie"
         else:
             preference = "1" if quality_first > quality_second else "2"
-        sheet.cell(row_index, headers["Relevance (1-5)"], relevance)
-        sheet.cell(row_index, headers["Quality_1 (1-5)"], quality_first)
-        sheet.cell(row_index, headers["Quality_2 (1-5)"], quality_second)
-        sheet.cell(row_index, headers["Preference (1/2/Tie)"], preference)
+        sheet.cell(row_index, headers["Relevance (1-5/Unsure)"], relevance)
+        sheet.cell(row_index, headers["Quality_1 (1-5/Unsure)"], quality_first)
+        sheet.cell(row_index, headers["Quality_2 (1-5/Unsure)"], quality_second)
+        sheet.cell(row_index, headers["Preference (1/2/Tie/Unsure)"], preference)
         sheet.cell(row_index, headers["Notes"], f"[{PROVENANCE}; {expert_id}]")
 
 
@@ -562,8 +562,6 @@ def _fill_category_sheet(
             base_level = min(base_level, 1)
         verdict = _verdict(base_level, expert_id, row_id, "category", seed)
         sheet.cell(row_index, headers["Correct (Yes/Partial/No/Unsure)"], verdict)
-        if verdict in {"Partial", "No"} and assigned != expected:
-            sheet.cell(row_index, headers["Suggested_Category"], expected)
         sheet.cell(row_index, headers["Notes"], f"[{PROVENANCE}; A-anchored pseudo-oracle]")
 
 
@@ -586,9 +584,7 @@ def _fill_final_sheets(
         relationship = _verdict(1 if intermediate else 2, expert_id, row_id, "taxonomy", seed)
         keep = _verdict(0 if intermediate else 2, expert_id, row_id, "taxonomy-core", seed, partial=False)
         sheet.cell(row_index, headers["Relationship_Correct (Yes/Partial/No/Unsure)"], relationship)
-        sheet.cell(row_index, headers["Keep_in_Core (Yes/No/Unsure)"], keep)
-        if relationship in {"Partial", "No"}:
-            sheet.cell(row_index, headers["Suggested_Parent"], str(item.get("Category", "")))
+        sheet.cell(row_index, headers["Useful_PreSalt_Distinction (Yes/No/Unsure)"], keep)
         sheet.cell(row_index, headers["Notes"], f"[{PROVENANCE}]")
 
     sheet = workbook["Defined_Classes"]
@@ -601,9 +597,7 @@ def _fill_final_sheets(
         definition = _verdict(confidence_level, expert_id, row_id, "definition", seed)
         general = _verdict(2, expert_id, row_id, "definition-general", seed, partial=False)
         sheet.cell(row_index, headers["Definition_Correct (Yes/Partial/No/Unsure)"], definition)
-        sheet.cell(row_index, headers["Characteristic_General (Yes/No/Unsure)"], general)
-        if definition in {"Partial", "No"}:
-            sheet.cell(row_index, headers["Suggested_Change"], "Review genus or characteristic")
+        sheet.cell(row_index, headers["Broadly_True_in_PreSalt (Yes/No/Unsure)"], general)
         sheet.cell(row_index, headers["Notes"], f"[{PROVENANCE}]")
 
     sheet = workbook["Relations"]
@@ -639,8 +633,6 @@ def _fill_final_sheets(
         type_verdict = _verdict(type_level, expert_id, row_id, "individual-type", seed)
         sheet.cell(row_index, headers["Specific_Named_Entity (Yes/No/Unsure)"], named)
         sheet.cell(row_index, headers["Type_Correct (Yes/Partial/No/Unsure)"], type_verdict)
-        if type_verdict in {"Partial", "No"}:
-            sheet.cell(row_index, headers["Suggested_Type"], str(item.get("Original_Category", "")))
         sheet.cell(row_index, headers["Notes"], f"[{PROVENANCE}]")
 
     sheet = workbook["Critic_Decisions"]
@@ -654,13 +646,16 @@ def _fill_final_sheets(
         level = 2 if confidence >= 0.9 and not needs_review else 1
         agree = _verdict(level, expert_id, row_id, "critic", seed)
         sheet.cell(row_index, headers["Agree (Yes/Partial/No/Unsure)"], agree)
-        if agree in {"Partial", "No"}:
-            treatment = (
-                "Keep separate concept"
-                if str(item.get("Decision_Type")) == "EXCLUDE"
-                else "Represent as characteristic"
-            )
-            sheet.cell(row_index, headers["Preferred_Treatment"], treatment)
+        decision_type = str(item.get("Decision_Type"))
+        if agree == "Unsure":
+            treatment = "Unsure"
+        elif agree == "Yes" and decision_type == "EXCLUDE":
+            treatment = "Leave out"
+        elif agree == "Yes" and decision_type == "DEMOTE":
+            treatment = "Keep information but not as separate concept"
+        else:
+            treatment = "Keep as separate concept"
+        sheet.cell(row_index, headers["Preferred_Treatment"], treatment)
         sheet.cell(row_index, headers["Notes"], f"[{PROVENANCE}; confidence-derived]")
 
 
@@ -751,11 +746,30 @@ def _verify_outputs(
         workbook = load_workbook(path, read_only=True, data_only=True)
         if workbook.sheetnames[0] != "REHEARSAL_ONLY":
             raise AssertionError(f"Workbook lacks leading warning sheet: {path}")
+        forbidden_headers = {
+            "Suggested_Category",
+            "Suggested_Parent",
+            "Suggested_Type",
+            "Suggested_Change",
+        }
+        for sheet_name in (
+            "Category_Correct",
+            "Taxonomy",
+            "Defined_Classes",
+            "Individuals",
+        ):
+            headers = {cell.value for cell in next(workbook[sheet_name].iter_rows(max_row=1))}
+            if headers & forbidden_headers:
+                raise AssertionError(
+                    f"{sheet_name} asks for a hidden-vocabulary replacement: "
+                    f"{sorted(headers & forbidden_headers)}"
+                )
         if Path(path).parent.name != "expert_workbooks":
             raise AssertionError(f"Distributable workbook is not isolated: {path}")
     if Path(key_path).parent.name != "private":
         raise AssertionError("Blinding key is not isolated in the private directory")
     checks.append("All workbooks and key are visibly marked as synthetic mock data")
+    checks.append("No expert task requests a category, parent, type, or correction from an unseen list")
     checks.append("Distributable workbooks and private blinding key are separated")
 
     if not (output_dir / "analysis" / "layer2" / "layer2_results.json").exists():
@@ -816,9 +830,9 @@ def _write_findings_report(
 
     final_outcomes = [
         ("Taxonomy relationship", final["taxonomy"]["relationship_correctness"]),
-        ("Taxonomy core support", final["taxonomy"]["retained_core_support"]),
+        ("Useful Pre-Salt distinction", final["taxonomy"]["useful_presalt_distinction"]),
         ("Defined-class correctness", final["defined_classes"]["definition_correctness"]),
-        ("Defined characteristic generality", final["defined_classes"]["characteristic_generality"]),
+        ("Broadly true in Pre-Salt", final["defined_classes"]["presalt_scope_support"]),
         ("Relation statement", final["relations"]["statement_correctness"]),
         ("Relation general scope", final["relations"]["general_scope_support"]),
         ("Named entity", final["individuals"]["named_entity_correctness"]),
