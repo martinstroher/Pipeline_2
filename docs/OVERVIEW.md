@@ -146,6 +146,8 @@ All four conditions use the same 407 terms. A/B/C use the production classificat
 
 Before paid execution, `python -m src.evaluation.offline_rehearsal --overwrite` exercises the complete workflow with deterministic synthetic surrogates and mock ratings. It writes only to `output/ablation_rehearsal/`, performs no Azure calls, verifies deterministic reruns, and labels every artifact as unsuitable for scientific inference. Real distributable workbooks are written under `expert_workbooks/`; the unblinding key is isolated under `private/`, and Layer 2 verifies all source hashes before analysis.
 
+The five-persona geologist-role usability pilot and the proposed vNext redesign are documented in [expert_evaluation_usability_pilot.md](expert_evaluation_usability_pilot.md). The pilot is a pre-study usability artifact, not expert evidence.
+
 ---
 
 ## What the output looks like
