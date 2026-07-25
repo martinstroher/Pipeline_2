@@ -328,7 +328,7 @@ examples:
   filter_sibling_specialisation_example: '"dolomitization" and "early dolomitization" — keep BOTH; the second is a temporal specialisation.'
 
   # -------------------------------------------------------------------------
-  # OntoClean rule prompts (under studies/prompts/rule_ontoclean_*.txt).
+  # Legacy OntoClean rule prompts are archived under evaluation_study/prompts/archive/.
   # These are cross-domain methodology prompts that cite domain-specific
   # IS-A examples to anchor the abstract OntoClean criteria. The defaults
   # are Pre-Salt examples; rewrite them with examples from your domain

@@ -31,10 +31,16 @@ from openpyxl.formatting.rule import CellIsRule
 from openpyxl.utils import get_column_letter
 from openpyxl.worksheet.datavalidation import DataValidation
 
-from src.evaluation.layer1_analysis import validate_paired_results
+from evaluation_study.layer1_analysis import validate_paired_results
+from evaluation_study.paths import (
+    ABLATION_OUTPUT,
+    APPROVED_ONTOLOGY_DIR,
+    FILTERED_TERMS,
+    STUDY_CONFIG,
+)
+from evaluation_study.study_config import get_study_config
 from src.utils.csv_io import read_csv, write_csv
 from src.utils.ontology_config import get_config
-from src.utils.study_config import get_study_config
 
 
 CONDITIONS = ("A", "B", "C", "D")
@@ -826,11 +832,11 @@ def generate_modular_evaluation(
     """Generate three modular workbooks, one key, and a sampling manifest."""
     if n_experts < 1:
         raise ValueError("n_experts must be positive")
-    ablation_dir = output_dir or os.environ.get("ABLATION_OUTPUT_DIR", "output/ablation")
+    ablation_dir = output_dir or os.environ.get("ABLATION_OUTPUT_DIR", str(ABLATION_OUTPUT))
     workbook_dir = os.path.join(ablation_dir, "expert_workbooks")
     private_dir = os.path.join(ablation_dir, "private")
-    ontology_dir = ontology_dir or os.environ.get("EXPERT_ONTOLOGY_DIR", "output/refined")
-    terms_path = os.environ.get("FILTERED_TERMS_OUTPUT", "output/extract_filtered.csv")
+    ontology_dir = ontology_dir or os.environ.get("EXPERT_ONTOLOGY_DIR", str(APPROVED_ONTOLOGY_DIR))
+    terms_path = os.environ.get("FILTERED_TERMS_OUTPUT", str(FILTERED_TERMS))
     expected_terms = int(os.environ.get("ABLATION_EXPECTED_TERM_COUNT", 407))
     strict_populations = os.environ.get("EXPERT_STRICT_APPROVED_POPULATIONS", "true").lower() == "true"
     os.makedirs(ablation_dir, exist_ok=True)
@@ -928,7 +934,7 @@ def generate_modular_evaluation(
         "demotions": os.path.join(ontology_dir, "validate_demotions.csv"),
         "class_fates": os.path.join(ontology_dir, "validate_class_fates.csv"),
         "ontology_config": str(get_config()._source_path),
-        "study_config": os.environ.get("STUDY_CONFIG_PATH", "studies/expert_eval.yaml"),
+        "study_config": os.environ.get("STUDY_CONFIG_PATH", str(STUDY_CONFIG)),
     }
     manifest = {
         "study": "PreSaltOntoLearn modular expert evaluation",

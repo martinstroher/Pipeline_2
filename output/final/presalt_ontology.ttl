@@ -1,0 +1,1932 @@
+@prefix bfo: <http://purl.obolibrary.org/obo/> .
+@prefix georeservoir: <https://www.inf.ufrgs.br/bdi/ontologies/> .
+@prefix owl: <http://www.w3.org/2002/07/owl#> .
+@prefix presalt: <https://w3id.org/presalt-onto#> .
+@prefix rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#> .
+@prefix rdfs: <http://www.w3.org/2000/01/rdf-schema#> .
+
+presalt:AccommodationSpace a owl:Class ;
+    rdfs:label "Accommodation Space"@en ;
+    rdfs:comment "Accommodation space is a depositional space that is available for sediment accumulation due to the combined effects of subsidence, tectonic deformation, and relative lake-level or base-level change. In the Brazilian Pre-Salt, it varies from structural highs to basin lows and is generated at regional and local scales by thermal subsidence and fault activity, thereby controlling the preservation and stacking of syn-rift and carbonate sequences."@en ;
+    rdfs:subClassOf bfo:BFO_0000029 .
+
+presalt:AlagoasStage a owl:NamedIndividual,
+        georeservoir:GEOCORE_0000005 ;
+    rdfs:label "Alagoas Stage"@en ;
+    rdfs:comment "[critic CONVERT_TO_INSTANCE] Named regional stage; denotes one unique Lower Cretaceous interval, so convert it to an instance of Geological Time Interval (step 1)."@en .
+
+presalt:Anhydrite a owl:Class ;
+    rdfs:label "Anhydrite"@en ;
+    rdfs:comment "Anhydrite is an evaporite mineral that consists of anhydrous calcium sulfate and commonly forms dense, brittle basal layers of the Ariri Formation above the Barra Velha carbonates. In the Brazilian Pre-Salt, this layer marks the transition from lacustrine limestones to overlying evaporites and generates a strong positive seismic reflector because it has higher density and seismic velocity than halite, contributing to the regional sealing succession."@en ;
+    rdfs:subClassOf georeservoir:GEOCORE_0000006 .
+
+presalt:Aptian a owl:NamedIndividual,
+        georeservoir:GEOCORE_0000003 ;
+    rdfs:label "Aptian"@en ;
+    rdfs:comment "[critic CONVERT_TO_INSTANCE] Aptian is a single named geochronologic age/time span, so it should be modeled as an instance, not a subclass (step 1)."@en .
+
+presalt:Aquifer a owl:Class ;
+    rdfs:label "Aquifer"@en ;
+    rdfs:comment "Aquifer is a subsurface hydrogeologic unit that stores and transmits groundwater through permeable or fractured rocks, including confined systems beneath the pre-salt succession and regional flow paths in fractured crystalline basement. In the Brazilian Pre-Salt, aquifers can recharge lacustrine systems and provide regional pressure support to reservoirs during production, but they may also drive water influx, water coning, and early water breakthrough."@en ;
+    rdfs:subClassOf georeservoir:GEORES_0000001 ;
+    owl:equivalentClass [ a owl:Class ;
+            owl:intersectionOf ( georeservoir:GEORES_0000001 [ a owl:Restriction ;
+                        owl:onProperty bfo:RO_0000091 ;
+                        owl:someValuesFrom presalt:Groundwaterstorageandtransmissiondisposition ] ) ] .
+
+presalt:Aragonite a owl:Class ;
+    rdfs:label "Aragonite"@en ;
+    rdfs:comment "Aragonite is a metastable calcium carbonate mineral that commonly constitutes the original mineralogy of shells and some lacustrine carbonate components in pre-salt reservoirs and is readily transformed by dissolution or neomorphism to calcite. In Brazilian pre-salt carbonates, the diagenetic fate of aragonitic bivalves, gastropods, and possible spherulitic constituents strongly influences moldic porosity, preservation of interparticle porosity, and reservoir permeability."@en ;
+    rdfs:subClassOf [ a owl:Restriction ;
+            owl:onProperty bfo:BFO_0000056 ;
+            owl:someValuesFrom presalt:Dissolution ],
+        [ a owl:Restriction ;
+            owl:onProperty bfo:RO_0001001 ;
+            owl:someValuesFrom presalt:Calcite ],
+        presalt:CarbonateMineral .
+
+presalt:AririFormation a owl:NamedIndividual,
+        georeservoir:GEORES_0000004 ;
+    rdfs:label "Ariri Formation"@en ;
+    rdfs:comment "[critic CONVERT_TO_INSTANCE] Proper-noun named formation; denotes one stratigraphic unit, so it should be an instance of Formation (step 1)."@en .
+
+presalt:AtafonaFormation a owl:NamedIndividual,
+        georeservoir:GEORES_0000004 ;
+    rdfs:label "Atafona Formation"@en ;
+    rdfs:comment "[critic CONVERT_TO_INSTANCE] proper-noun named formation within Lagoa Feia Group; step 1 says named formations should be modeled as instances"@en .
+
+presalt:AtapuField a owl:NamedIndividual,
+        presalt:Field ;
+    rdfs:label "Atapu Field"@en ;
+    rdfs:comment "[critic CONVERT_TO_INSTANCE] proper-noun named oil field; it denotes one field only, so use instance typing, not subclassing (step 1)"@en .
+
+presalt:BZiosField a owl:NamedIndividual,
+        presalt:Field ;
+    rdfs:label "Búzios Field"@en ;
+    rdfs:comment "[critic CONVERT_TO_INSTANCE] proper-noun named oil field; it denotes one field only, so use instance typing, not subclassing (step 1)"@en .
+
+presalt:BarraVelhaFormation a owl:NamedIndividual,
+        georeservoir:GEORES_0000003 ;
+    rdfs:label "Barra Velha Formation"@en ;
+    rdfs:comment "[critic CONVERT_TO_INSTANCE] Proper-noun named formation; it denotes one specific lithostratigraphic unit rather than a repeatable class (step 1)."@en .
+
+presalt:Barremian a owl:NamedIndividual,
+        georeservoir:GEOCORE_0000003 ;
+    rdfs:label "Barremian"@en ;
+    rdfs:comment "[critic CONVERT_TO_INSTANCE] Barremian is explicitly a named chronostratigraphic stage/geochronologic age, i.e. one interval only, so make it an instance (step 1)."@en .
+
+presalt:Basalt a owl:Class ;
+    rdfs:label "Basalt"@en ;
+    rdfs:comment "Basalt is a mafic volcanic igneous rock that commonly occurs in the Brazilian pre-salt as micro- to macro-crystalline, commonly tholeiitic lava-flow successions forming part of the syn-rift basement beneath the carbonate section. It is typically composed mainly of feldspar and pyroxene, including augite, and may also occur as clasts reworked into overlying conglomerates and carbonate grainstones during uplift and erosion."@en ;
+    rdfs:subClassOf presalt:VolcanicRock .
+
+presalt:BasementHigh a owl:Class ;
+    rdfs:label "Basement High"@en ;
+    rdfs:comment "Basement high is a fault-bounded structural high that forms a topographic elevation of the basement above adjacent basement lows. In the Brazilian pre-salt, such highs commonly control accommodation and depositional architecture by focusing onlap and aggradation of lacustrine carbonate platforms, and they are typically associated with thinner or locally eroded pre-salt intervals relative to neighboring lows."@en ;
+    rdfs:subClassOf presalt:StructuralHigh ;
+    owl:equivalentClass [ a owl:Class ;
+            owl:intersectionOf ( presalt:StructuralHigh [ a owl:Restriction ;
+                        owl:onProperty bfo:BFO_0000176 ;
+                        owl:someValuesFrom presalt:Basement ] ) ] .
+
+presalt:Berriasian a owl:NamedIndividual,
+        georeservoir:GEOCORE_0000003 ;
+    rdfs:label "Berriasian"@en ;
+    rdfs:comment "[critic CONVERT_TO_INSTANCE] NLD names Berriasian as the earliest Cretaceous age/stage, i.e. one named interval only; convert to an instance (step 1)."@en .
+
+presalt:Boundstone a owl:Class ;
+    rdfs:label "Boundstone"@en ;
+    rdfs:comment "Boundstone is a carbonate facies that consists of original components bound together during deposition, commonly expressed in the Brazilian Pre-Salt as fine-grained domal to layered constructions with concentric internal lamination. In the Barra Velha Formation, it typically resembles stromatolitic or microbial buildups formed in shallow-water settings and may be cemented by euhedral dolomite, with porosity commonly generated by fabric-selective matrix dissolution."@en ;
+    rdfs:subClassOf georeservoir:GEORES_0000032 .
+
+presalt:BrazilianPreSalt a bfo:BFO_0000029,
+        owl:NamedIndividual ;
+    rdfs:label "Brazilian Pre-Salt"@en ;
+    rdfs:comment "[critic CONVERT_TO_INSTANCE] NLD and location evidence describe one regional petroleum/stratigraphic domain in Santos/Campos basins, so convert to an instance (step 1)."@en .
+
+presalt:BurialDiagenesis a owl:Class ;
+    rdfs:label "Burial Diagenesis"@en ;
+    rdfs:comment "Burial diagenesis is a post-depositional diagenetic process that alters carbonate sediments and rocks during progressive burial under increasing temperature, pressure, and evolving pore-fluid chemistry. In Brazilian pre-salt reservoirs, it commonly includes dissolution, cementation, recrystallization, dolomitization, and fracture filling during continued loading, and its interaction with deep or fault-related fluids can strongly modify porosity, permeability, and reservoir quality."@en ;
+    rdfs:subClassOf presalt:Diagenesis .
+
+presalt:CabiNasFormation a owl:NamedIndividual,
+        georeservoir:GEORES_0000003 ;
+    rdfs:label "Cabiúnas Formation"@en ;
+    rdfs:comment "[critic CONVERT_TO_INSTANCE] proper-noun named formation; the NLD says it is a volcanic lithostratigraphic unit, so it should be an instance (step 1)"@en .
+
+presalt:CaboFrioHigh a owl:NamedIndividual,
+        georeservoir:GEOCORE_0000004 ;
+    rdfs:label "Cabo Frio High"@en ;
+    rdfs:comment "[critic CONVERT_TO_INSTANCE] proper-noun named tectonic element; Cabo Frio High denotes one specific basement structural high (step 1)."@en .
+
+presalt:Calcilutite a owl:Class ;
+    rdfs:label "Calcilutite"@en ;
+    rdfs:comment "Calcilutite is a fine-grained clastic or hybrid carbonate rock that is composed predominantly of carbonate mud- to silt-sized material, with ortho- or allochemical grains and less than 50% siliciclastic content. In the Brazilian Pre-Salt, it commonly occurs as laminated, peloidal to microbial, strongly recrystallized lithofacies and is typically mineralized by calcite or magnesian calcite with variable dolomite and quartz introduced by dolomitization and silicification."@en ;
+    rdfs:subClassOf [ a owl:Restriction ;
+            owl:onProperty georeservoir:GEOCORE_0000017 ;
+            owl:someValuesFrom presalt:Calcite ],
+        georeservoir:GEORES_0000032 .
+
+presalt:Calcimudstone a owl:Class ;
+    rdfs:label "Calcimudstone"@en ;
+    rdfs:comment "Calcimudstone is a fine-grained carbonate rock that consists predominantly of clay-grade calcite smaller than 0.004 mm. In the Brazilian Pre-Salt, it commonly occurs as dark micritic, massive to laminated laminae or beds, locally containing trace silt-size calcite, quartz, feldspar, and white mica and interlayered with calcisiltite and hybrid facies."@en ;
+    rdfs:subClassOf [ a owl:Restriction ;
+            owl:onProperty georeservoir:GEOCORE_0000017 ;
+            owl:someValuesFrom presalt:Calcite ],
+        georeservoir:GEORES_0000032 .
+
+presalt:CamboriFormation a owl:NamedIndividual,
+        georeservoir:GEORES_0000004 ;
+    rdfs:label "Camboriú Formation"@en ;
+    rdfs:comment "[critic CONVERT_TO_INSTANCE] Proper-noun named formation; denotes one stratigraphic unit, so it should be an instance of Formation (step 1)."@en .
+
+presalt:CamburiGroup a owl:NamedIndividual,
+        georeservoir:GEORES_0000003 ;
+    rdfs:label "Camburi Group"@en ;
+    rdfs:comment "[critic CONVERT_TO_INSTANCE] Proper-noun named lithostratigraphic group above the Ariri evaporites; this is one formal unit, so step 1 => instance."@en .
+
+presalt:CamposBasin a owl:NamedIndividual,
+        georeservoir:GEORES_0000039 ;
+    rdfs:label "Campos Basin"@en ;
+    rdfs:comment "[critic CONVERT_TO_INSTANCE] Proper-noun named basin; step 1 says this should be modeled as an instance of Basin."@en .
+
+presalt:CarbonateMound a owl:Class ;
+    rdfs:label "Carbonate Mound"@en ;
+    rdfs:comment "Carbonate mound is a carbonate buildup that forms a nearly conical, positive-relief body in Brazilian Pre-Salt lacustrine successions, commonly interpreted as analogous to hydrothermal travertine or sublacustrine spring mounds. Seismically, it typically shows ambiguous margins and low-amplitude internal reflectors, and it is commonly associated with faults and fractures that contribute to excellent reservoir quality and may channel silica- and uranium-rich hydrothermal fluids."@en ;
+    rdfs:subClassOf presalt:CarbonateBuildUp .
+
+presalt:ChemicalCompaction a owl:Class ;
+    rdfs:label "Chemical Compaction"@en ;
+    rdfs:comment "Chemical compaction is a diagenetic compaction process that reduces pore space by pressure-solution of carbonate material at grain contacts and along stylolitic seams, followed by redistribution and cementation of the dissolved constituents. In Brazilian Pre-Salt lacustrine carbonates, it is mainly a mesodiagenetic process associated with stylolites and pore-filling calcite cements, which commonly diminishes primary porosity and permeability."@en ;
+    rdfs:subClassOf [ a owl:Restriction ;
+            owl:onProperty bfo:BFO_0000117 ;
+            owl:someValuesFrom presalt:Cementation ],
+        presalt:Compaction .
+
+presalt:Claystone a owl:Class ;
+    rdfs:label "Claystone"@en ;
+    rdfs:comment "Claystone is a fine-grained sedimentary rock that is composed predominantly of clay-sized particles and, in the Brazilian Pre-Salt, commonly corresponds to stevensitic Mg-claystone within lacustrine carbonate successions. It typically occurs as laminated to massive, locally spherulite-rich facies and may also be reworked as intraclasts or as a clay matrix in hybrid carbonate rocks. In Pre-Salt reservoirs, its pore system and reservoir quality are commonly modified by dolomitization, silicification, and matrix dissolution."@en ;
+    rdfs:subClassOf georeservoir:GEORES_0000032 .
+
+presalt:Clinoform a owl:Class ;
+    rdfs:label "Clinoform"@en ;
+    rdfs:comment "Clinoform is a depositional stratal geometry that forms the inclined, basinward-dipping part of a prograding margin between shallow topsets and deeper bottomsets. In the Brazilian Pre-Salt, clinoforms are commonly identified on seismic data as sigmoid, concave-up, or exponential reflectors that prograde from carbonate-platform or tilted-block margins into adjacent lacustrine depressions, recording phases of progradation, aggradation, and local onlap."@en ;
+    rdfs:subClassOf [ a owl:Restriction ;
+            owl:onProperty bfo:BFO_0000197 ;
+            owl:someValuesFrom bfo:BFO_0000004 ],
+        georeservoir:GEORES_0000023 .
+
+presalt:Conglomerate a owl:Class ;
+    rdfs:label "Conglomerate"@en ;
+    rdfs:comment "Conglomerate is a coarse-grained clastic sedimentary rock that contains rounded to subrounded clasts larger than 2 mm within a finer matrix or cement. In the Brazilian Pre-Salt, conglomerates commonly record proximal synrift to sag deposition related to footwall uplift and erosion, forming massive or upward-fining beds in fluvial to alluvial-fan settings and including basement, basalt, limestone, or silica clasts."@en ;
+    rdfs:subClassOf georeservoir:GEORES_0000032 .
+
+presalt:CoqueirosFormation a owl:NamedIndividual,
+        georeservoir:GEORES_0000002 ;
+    rdfs:label "Coqueiros Formation"@en ;
+    rdfs:comment "[critic CONVERT_TO_INSTANCE] proper-noun named formation; it denotes one formal unit, so model it as an instance, not a subclass (step 1)"@en .
+
+presalt:Cretaceous a owl:NamedIndividual,
+        georeservoir:GEOCORE_0000005 ;
+    rdfs:label "Cretaceous"@en ;
+    rdfs:comment "[critic CONVERT_TO_INSTANCE] Named geologic period; denotes one unique interval in Earth history, so model as an instance of Geological Time Interval (step 1)."@en .
+
+presalt:CrystallineBasement a owl:Class ;
+    rdfs:label "Crystalline Basement"@en ;
+    rdfs:comment "Crystalline basement is a pre-sedimentary bedrock unit that consists of consolidated igneous and metamorphic rocks underlying the pre-salt succession, typically Precambrian granites, gneisses, and related metasediments in the Santos and Campos basins. In the Brazilian Pre-Salt, it commonly forms the rift footwall and a fractured host rock for fluid flow and diagenesis, locally showing brecciation and veins filled by quartz, pyrite, and Fe-rich dolomite-ankerite."@en ;
+    rdfs:subClassOf presalt:Basement .
+
+presalt:Cyclothem a owl:Class ;
+    rdfs:label "Cyclothem"@en ;
+    rdfs:comment "Cyclothem is a meter-scale stratigraphic succession that records a repeated lacustrine shallowing-upward evaporitic cycle from flooding-phase laminated carbonate muds to spherulitic and shrub-like calcite facies, commonly capped by thin grainstones of reworked shrub, spherulite, and intraclast debris. In the Brazilian Pre-Salt, especially in the Barra Velha and equivalent units, cyclothems are typically about 0.75–5 m thick and reflect alternations between flooding, evaporation, and changes in pH, alkalinity, and Mg-silicate precipitation in shallow alkaline lakes."@en ;
+    rdfs:subClassOf georeservoir:GEORES_0000002 .
+
+presalt:Dolomudstone a owl:Class ;
+    rdfs:label "Dolomudstone"@en ;
+    rdfs:comment "Dolomudstone is a mud-supported dolomitic carbonate rock that is composed mainly of very fine dolomite crystals with variable mud content and, in some cases, interlayered fine calcite particles arranged in irregular discontinuous laminations. In the Brazilian Pre-Salt, laminated dolomudstone commonly occurs as thin beds and generally acts as a non-reservoir because its porosity is very low and dominated by tiny intercrystalline and interparticle pores. Where intense fracturing is present, however, it may locally develop significant fracture-related porosity and permeability."@en ;
+    rdfs:subClassOf [ a owl:Restriction ;
+            owl:onProperty georeservoir:GEOCORE_0000017 ;
+            owl:someValuesFrom presalt:Mud ],
+        [ a owl:Restriction ;
+            owl:onProperty georeservoir:GEOCORE_0000017 ;
+            owl:someValuesFrom presalt:Dolomite ],
+        [ a owl:Restriction ;
+            owl:onProperty bfo:RO_0000086 ;
+            owl:someValuesFrom presalt:Porosity ],
+        georeservoir:GEORES_0000032 .
+
+presalt:Downlap a owl:Class ;
+    rdfs:label "Downlap"@en ;
+    rdfs:comment "Downlap is a seismic reflector termination that occurs where inclined or progradational strata terminate downdip against a lower-lying surface. In the Brazilian Pre-Salt, it is used in seismic stratigraphic interpretation to identify progradational stacking patterns, define stratigraphic boundaries, and infer changes in accommodation and depositional architecture; in tectonically rotated settings, original downlap may locally appear as apparent onlap."@en ;
+    rdfs:subClassOf [ a owl:Restriction ;
+            owl:onProperty bfo:BFO_0000197 ;
+            owl:someValuesFrom bfo:BFO_0000004 ],
+        georeservoir:GEORES_0000023 .
+
+presalt:DriftSuperSequence a owl:Class ;
+    rdfs:label "Drift Super-Sequence"@en ;
+    rdfs:comment "Drift super-sequence is a tectonostratigraphic super-sequence that records the passive-margin stage of basin evolution after the post-rift evaporitic interval, marked by Atlantic opening, thermal subsidence, and fully marine sedimentation. In the Brazilian Pre-Salt of the Santos Basin, it is represented mainly by shallow-marine platform carbonates of the Guarujá Formation and deeper-water sediments, including siliciclastics, of the Itanhaém Formation. This succession reflects the transition from restricted lacustrine and evaporitic systems to open-marine deposition, locally accompanied by platform drowning."@en ;
+    rdfs:subClassOf presalt:TectonostratigraphicSupersequence .
+
+presalt:EarlyAptian a owl:NamedIndividual,
+        georeservoir:GEOCORE_0000005 ;
+    rdfs:label "Early Aptian"@en ;
+    rdfs:comment "[critic CONVERT_TO_INSTANCE] Named subinterval of the Aptian; a geological time period should be modeled as one instance (step 1)."@en .
+
+presalt:EarlyCretaceous a owl:NamedIndividual,
+        georeservoir:GEOCORE_0000005 ;
+    rdfs:label "Early Cretaceous"@en ;
+    rdfs:comment "[critic CONVERT_TO_INSTANCE] Named unique geologic interval; NLD/relation say it is the earlier part of the Cretaceous, so model it as an instance (step 1)."@en .
+
+presalt:EarlyCretaceousGeologicAge a owl:NamedIndividual,
+        georeservoir:GEOCORE_0000003 ;
+    rdfs:label "Early Cretaceous Geologic Age"@en ;
+    rdfs:comment "[critic CONVERT_TO_INSTANCE] Early Cretaceous denotes one named subdivision of the Cretaceous, so it is an instance rather than a subclass (step 1)."@en .
+
+presalt:EarlyDiagenesis a owl:Class ;
+    rdfs:label "Early Diagenesis"@en ;
+    rdfs:comment "Early diagenesis is a diagenetic stage that modifies sediments during or immediately after deposition at the water-sediment interface or under very shallow burial, before deeper burial alteration begins. In Brazilian Pre-Salt lacustrine carbonates, it commonly involves dissolution of primary Mg-clays and some carbonate fabrics, recrystallization of shrubs and spherulites, and precipitation of early calcite, dolomite, and silica cements. These processes may generate vuggy and moldic porosity, but they also commonly coat or fill pores and reduce pore size and connectivity."@en ;
+    rdfs:subClassOf presalt:Diagenesis .
+
+presalt:EffectivePorosity a owl:Class ;
+    rdfs:label "Effective Porosity"@en ;
+    rdfs:comment "Effective porosity is a petrophysical property that quantifies the interconnected portion of a rock's pore volume available for fluid storage and flow, excluding isolated pores and non-contributing bound water. In Brazilian Pre-Salt carbonates, it is commonly estimated from NMR logs and interpreted together with total porosity, free-fluid content, permeability, and fracture intensity to assess reservoir quality and production behavior."@en ;
+    rdfs:subClassOf [ a owl:Restriction ;
+            owl:onProperty bfo:BFO_0000197 ;
+            owl:someValuesFrom bfo:BFO_0000004 ],
+        presalt:Porosity .
+
+presalt:Eoaptian a owl:NamedIndividual,
+        georeservoir:GEOCORE_0000005 ;
+    rdfs:label "Eoaptian"@en ;
+    rdfs:comment "[critic CONVERT_TO_INSTANCE] Named Early Cretaceous interval (~126–123 Ma); geological time periods denote one interval only (step 1)."@en .
+
+presalt:Erosion a owl:Class ;
+    rdfs:label "Erosion"@en ;
+    rdfs:comment "Erosion is a geological surface process that removes, truncates, and reworks exposed rock or sediment by physical and chemical action. In the Brazilian Pre-Salt, it commonly affected basement highs and exposed lacustrine carbonate deposits during synrift to sag exposure or low lake-level episodes, producing erosion surfaces with truncated reflectors and generating reworked sediment from the breakdown of shrub and spherulitic facies."@en ;
+    rdfs:subClassOf georeservoir:GEOCORE_0000002 .
+
+presalt:EspRitoSantoBasin a owl:NamedIndividual,
+        georeservoir:GEORES_0000039 ;
+    rdfs:label "Espírito Santo Basin"@en ;
+    rdfs:comment "[critic CONVERT_TO_INSTANCE] Proper-noun named basin; step 1 says this should be modeled as an instance of Basin."@en .
+
+presalt:Evaporite a owl:Class ;
+    rdfs:label "Evaporite"@en ;
+    rdfs:comment "Evaporite is a chemical sedimentary rock that forms by the precipitation of soluble minerals from highly evaporated brines in strongly evaporative lacustrine or shallow-marine settings. In the Brazilian Pre-Salt, Aptian evaporites of the Ariri and Retiro formations consist mainly of halite and anhydrite, with locally sylvite and carnallite, and they form the thick regional stratigraphic seal over the carbonate reservoirs."@en ;
+    rdfs:subClassOf georeservoir:GEORES_0000032 .
+
+presalt:FaultReactivation a owl:Class ;
+    rdfs:label "Fault Reactivation"@en ;
+    rdfs:comment "Fault reactivation is a tectonic process that renews displacement on a pre-existing fault during a later deformation phase, reusing inherited fault architecture and sometimes producing inversion or related secondary fault sets. In the Brazilian pre-salt, it is recognized by the continuity and colinearity of early and late syn-rift faults and can generate extensional folding or increased vertical displacement, thereby controlling accommodation, depocenter distribution, Barra Velha facies and reservoir quality, salt movement, and hydrocarbon migration."@en ;
+    rdfs:subClassOf [ a owl:Restriction ;
+            owl:onProperty bfo:BFO_0000057 ;
+            owl:someValuesFrom presalt:Fault ],
+        georeservoir:GEOCORE_0000002 .
+
+presalt:FaultSystem a owl:Class ;
+    rdfs:label "Fault System"@en ;
+    rdfs:comment "Fault system is a structural assemblage that groups faults with shared geometry, displacement, orientation, kinematic relationships, and relative age, and that collectively controls deformation and basin architecture. In the Santos Basin pre-salt, fault systems are primarily distinguished by the age of the growth strata and syn-rift sequences they influence, and they can be hierarchized into main systems and sub-systems that govern half-graben development, accommodation space, and subsidence through successive rift stages."@en ;
+    rdfs:subClassOf [ a owl:Restriction ;
+            owl:onProperty bfo:BFO_0000178 ;
+            owl:someValuesFrom presalt:Fault ],
+        georeservoir:GEOCORE_0000004 .
+
+presalt:Floatstone a owl:Class ;
+    rdfs:label "Floatstone"@en ;
+    rdfs:comment "Floatstone is a matrix-supported carbonate rock that contains granule- to pebble-size clasts floating within a finer-grained matrix. In the Brazilian Pre-Salt, especially in the Barra Velha Formation, it commonly corresponds to matrix-supported calcirudite with angular fragments of microbialite, tufa, shrubstone, chert, and other carbonate lithologies in a dark sand-silty matrix, typically indicating reworked or debris-flow deposition."@en ;
+    rdfs:subClassOf presalt:CarbonateRock .
+
+presalt:FlorianPolisHigh a owl:NamedIndividual,
+        georeservoir:GEOCORE_0000004 ;
+    rdfs:label "Florianópolis High"@en ;
+    rdfs:comment "[critic CONVERT_TO_INSTANCE] Proper-noun named structural high; NLD describes one unique basin-boundary feature, so convert to an instance (step 1)."@en .
+
+presalt:Footwall a owl:Class ;
+    rdfs:label "Footwall"@en ;
+    rdfs:comment "Footwall is the fault-bounded rock block that lies below an inclined fault plane. In the Brazilian pre-salt rift setting, uplift of the footwall along normal faults commonly generates structural highs, promotes erosion and coarse-clastic input, and influences lake-level retraction, facies distribution, and reservoir quality."@en ;
+    rdfs:subClassOf presalt:FaultBlock .
+
+presalt:FracturePorosity a owl:Class ;
+    rdfs:label "Fracture Porosity"@en ;
+    rdfs:comment "Fracture porosity is a non-matrix porosity type that consists of void space within natural open fractures and microfractures cutting the carbonate rock. In Brazilian Pre-Salt reservoirs, it may result from primary or diagenetic fracturing, is commonly concentrated in fault-related fractured zones, and mainly contributes to reservoir connectivity and permeability rather than matrix storage."@en ;
+    rdfs:subClassOf [ a owl:Restriction ;
+            owl:onProperty bfo:BFO_0000197 ;
+            owl:someValuesFrom presalt:CarbonateRock ],
+        presalt:Porosity .
+
+presalt:FradeGroup a owl:NamedIndividual,
+        georeservoir:GEORES_0000003 ;
+    rdfs:label "Frade Group"@en ;
+    rdfs:comment "[critic CONVERT_TO_INSTANCE] Proper-noun named lithostratigraphic group; even if used locally, it denotes one formal unit, so step 1 => instance."@en .
+
+presalt:GuaratibaGroup a owl:NamedIndividual,
+        georeservoir:GEORES_0000003 ;
+    rdfs:label "Guaratiba Group"@en ;
+    rdfs:comment "[critic CONVERT_TO_INSTANCE] Proper-noun named lithostratigraphic group of the Santos Basin; it denotes one formal unit, so step 1 => instance."@en .
+
+presalt:GuarujFormation a owl:NamedIndividual,
+        georeservoir:GEORES_0000002 ;
+    rdfs:label "Guarujá Formation"@en ;
+    rdfs:comment "[critic CONVERT_TO_INSTANCE] proper-noun named formation; it denotes one formal unit, so model it as an instance, not a subclass (step 1)"@en .
+
+presalt:HalfGraben a owl:Class ;
+    rdfs:label "Half-Graben"@en ;
+    rdfs:comment "Half-graben is an extensional fault-bounded structural depression that develops by subsidence of a crustal block along a dominant normal fault, creating an asymmetric, commonly wedge-shaped basin. In the Brazilian Pre-Salt, half-grabens are syn-rift compartments commonly bounded by planar or listric faults and associated with adjacent horsts, where they control accommodation space, stratigraphic thickening, and the geometry of rift deposits seen in seismic data."@en ;
+    rdfs:subClassOf presalt:Graben .
+
+presalt:Halite a owl:Class ;
+    rdfs:label "Halite"@en ;
+    rdfs:comment "Halite is an evaporite mineral that consists of sodium chloride and commonly forms the dominant salt component of the Ariri Formation above the Brazilian Pre-Salt carbonates. In the Santos Basin, it is more ductile and plastic than anhydrite, so it flows during salt deformation to form thick salt bodies and diapirs. This halite-rich evaporite succession provides the regional seal over the Barra Velha reservoirs."@en ;
+    rdfs:subClassOf georeservoir:GEOCORE_0000006 .
+
+presalt:Halokinesis a owl:Class ;
+    rdfs:label "Halokinesis"@en ;
+    rdfs:comment "Halokinesis is a salt-tectonic deformation process that involves the flow and redistribution of evaporite layers under differential loading, generating structures such as diapirs, canopies, and salt windows. In the Santos Basin pre-salt system, it is a major control on basin restructuring and the structural styles of petroleum systems, influencing trap geometry, seal configuration, and hydrocarbon migration pathways through or around the salt section."@en ;
+    rdfs:subClassOf georeservoir:GEOCORE_0000002 .
+
+presalt:HangingWall a owl:Class ;
+    rdfs:label "Hanging Wall"@en ;
+    rdfs:comment "Hanging wall is the block of rock above a fault surface that, in extensional pre-salt settings, commonly subsides relative to the footwall along normal faults. In the Brazilian Pre-Salt, the hanging wall commonly hosts growth wedges, syn-rift thickening, and hanging-wall folds generated by fault displacement variations, segment linkage, or later tectonic inversion."@en ;
+    rdfs:subClassOf presalt:FaultBlock .
+
+presalt:Hauterivian a owl:NamedIndividual,
+        georeservoir:GEOCORE_0000003 ;
+    rdfs:label "Hauterivian"@en ;
+    rdfs:comment "[critic CONVERT_TO_INSTANCE] Hauterivian names one specific Early Cretaceous age used to date a unique interval, so convert it to an instance (step 1)."@en .
+
+presalt:Horst a owl:Class ;
+    rdfs:label "Horst"@en ;
+    rdfs:comment "Horst is a fault-bounded structural high that remains relatively uplifted or less subsided than adjacent grabens or half-grabens during extensional deformation. In the Brazilian Pre-Salt, horsts commonly occur as elongated basement highs, locally asymmetric or S-shaped, flanked by half-grabens and grabens and controlled by planar and listric normal faults. These highs help define the rift structural architecture and compartmentalize nearby depocenters and reservoirs."@en ;
+    rdfs:subClassOf presalt:StructuralHigh .
+
+presalt:HydrothermalVent a owl:Class ;
+    rdfs:label "Hydrothermal Vent"@en ;
+    rdfs:comment "Hydrothermal vent is a pipe-like geological complex that forms by the fracturing, transport, and eruption of deep-sourced hydrothermal fluids and sediments, commonly in association with intrusive or volcanic activity. In the Brazilian Pre-Salt, these vents can strongly influence lacustrine carbonate systems by modifying water alkalinity and mineral supply, promoting travertine and shrub/spherulite development, and locally enhancing dissolution, vuggy porosity, and reservoir fluid flow."@en ;
+    rdfs:subClassOf georeservoir:GEORES_0000001 .
+
+presalt:IntercrystallinePorosity a owl:Class ;
+    rdfs:label "Intercrystalline Porosity"@en ;
+    rdfs:comment "Intercrystalline porosity is a pore system that consists of void spaces between adjacent mineral crystals, commonly produced or enlarged by dolomitization, recrystallization, and dissolution. In Brazilian pre-salt carbonates, it commonly develops among dolomite crystals and spherulites, and it can be a major control on reservoir quality where interparticle pores have been reduced by cementation or compaction."@en ;
+    rdfs:subClassOf presalt:PoreSystem .
+
+presalt:IntraAlagoasUnconformity a owl:NamedIndividual,
+        georeservoir:GEOCORE_0000011 ;
+    rdfs:label "Intra-Alagoas Unconformity"@en ;
+    rdfs:comment "[critic CONVERT_TO_INSTANCE] Step 1: proper-name horizon; NLD describes the Intra-Alagoas/base-sag surface in the Santos Basin, i.e. a named boundary instance."@en .
+
+presalt:IntrusiveIgneousRock a owl:Class ;
+    rdfs:label "Intrusive Igneous Rock"@en ;
+    rdfs:comment "Intrusive igneous rock is an igneous rock that forms when magma is emplaced within pre-existing strata and crystallizes below the surface. In the Brazilian Pre-Salt, especially in the Mero/Libra area, these bodies are mainly Santonian/Campanian alkaline intrusions that may cut surrounding rocks or occur concordant with sedimentary layering, including near the top of the Barra Velha Formation. They are critical to reservoir characterization because they reduce effective reservoir volume, may act as flow barriers or fractured high-permeability intervals, and can induce hydrothermal alteration that commonly tightens adjacent carbonates."@en ;
+    rdfs:subClassOf presalt:IgneousRock .
+
+presalt:ItabapoanaFormation a owl:NamedIndividual,
+        georeservoir:GEORES_0000003 ;
+    rdfs:label "Itabapoana Formation"@en ;
+    rdfs:comment "[critic CONVERT_TO_INSTANCE] proper-noun named formation; the NLD says it is a lithostratigraphic unit of the Lagoa Feia Group, so it is an instance (step 1)"@en .
+
+presalt:ItamambucaGroup a owl:NamedIndividual,
+        georeservoir:GEORES_0000002 ;
+    rdfs:label "Itamambuca Group"@en ;
+    rdfs:comment "[critic CONVERT_TO_INSTANCE] Proper-noun named stratigraphic group in the Santos Basin; it denotes one uppermost unit, so step 1 => instance."@en .
+
+presalt:ItanhaMFormation a owl:NamedIndividual,
+        georeservoir:GEORES_0000003 ;
+    rdfs:label "Itanhaém Formation"@en ;
+    rdfs:comment "[critic CONVERT_TO_INSTANCE] proper-noun named formation; the NLD says it is a lithostratigraphic unit, so treat it as an instance of that class (step 1)"@en .
+
+presalt:ItapemaFormation a owl:NamedIndividual,
+        georeservoir:GEORES_0000004 ;
+    rdfs:label "Itapema Formation"@en ;
+    rdfs:comment "[critic CONVERT_TO_INSTANCE] Proper-noun named formation; denotes one stratigraphic unit, so it should be an instance of Formation (step 1)."@en .
+
+presalt:Karst a owl:Class ;
+    rdfs:label "Karst"@en ;
+    rdfs:comment "Karst is a dissolution-generated geological system that develops in soluble carbonate rocks through the percolation of meteoric or endogenous aqueous fluids, producing cavities, enlarged fractures, and other non-matrix voids. In Brazilian Pre-Salt carbonates, karst is commonly controlled by faults and fracture networks and may form stratigraphically discordant high-permeability zones, although intense karstification can also generate collapse breccia and sediment infill that degrade reservoir quality."@en ;
+    rdfs:subClassOf [ a owl:Restriction ;
+            owl:onProperty bfo:BFO_0000178 ;
+            owl:someValuesFrom presalt:Fracture ],
+        georeservoir:GEOCORE_0000004 .
+
+presalt:Kerolite a owl:Class ;
+    rdfs:label "Kerolite"@en ;
+    rdfs:comment "Kerolite is a magnesium-rich clay mineral that occurs as a principal authigenic Mg-clay in Aptian pre-salt lacustrine carbonate facies of the Santos Basin. In the Barra Velha reservoir succession, it is common in Mg-claystones, intraclastic grainstones, fascicular calcite crusts, and laminites, and its abundance generally increases upward into Units 2 and 1, reaching its highest proportions in Unit 1."@en ;
+    rdfs:subClassOf [ a owl:Restriction ;
+            owl:onProperty bfo:BFO_0000171 ;
+            owl:someValuesFrom presalt:FascicularCalciteCrust ],
+        [ a owl:Restriction ;
+            owl:onProperty bfo:BFO_0000171 ;
+            owl:someValuesFrom presalt:Laminite ],
+        presalt:ClayMineral .
+
+presalt:KwanzaBasin a owl:NamedIndividual,
+        georeservoir:GEORES_0000039 ;
+    rdfs:label "Kwanza Basin"@en ;
+    rdfs:comment "[critic CONVERT_TO_INSTANCE] Proper-noun named basin; step 1 says this should be modeled as an instance of Basin."@en .
+
+presalt:LacustrineCarbonatePlatform a owl:Class ;
+    rdfs:label "Lacustrine Carbonate Platform"@en ;
+    rdfs:comment "Lacustrine carbonate platform is a carbonate depositional system that develops in lake settings on broad structural highs and accumulates shallow-water carbonate sediments during sag-stage basin evolution. In the Brazilian Pre-Salt, it commonly forms large seismically mappable bodies composed of microbialites and bioclastic limestones, including shrubby boundstones and spherulite-intraclast grainstones that constitute key reservoir facies, while muddier wackestones and packstones tend to increase toward platform margins."@en ;
+    rdfs:subClassOf presalt:CarbonatePlatform ;
+    owl:equivalentClass [ a owl:Class ;
+            owl:intersectionOf ( presalt:CarbonatePlatform [ a owl:Restriction ;
+                        owl:onProperty bfo:BFO_0000171 ;
+                        owl:someValuesFrom presalt:LacustrineSystem ] ) ] .
+
+presalt:LagoaFeiaGroup a owl:NamedIndividual,
+        georeservoir:GEORES_0000003 ;
+    rdfs:label "Lagoa Feia Group"@en ;
+    rdfs:comment "[critic CONVERT_TO_INSTANCE] Lagoa Feia Group is a named group in the Campos Basin, so it denotes one specific lithostratigraphic unit (step 1)."@en .
+
+presalt:LakeMargin a owl:Class ;
+    rdfs:label "Lake Margin"@en ;
+    rdfs:comment "Lake margin is the boundary zone of a lacustrine system that marks the transition between the open lake and adjacent shallow-water or exposed areas, and whose position migrates with lake-level changes. In the Brazilian Pre-Salt, distance to the lake margin is a key control on water depth, hydrodynamic energy, facies distribution, and reservoir heterogeneity, and its migration can be inferred from seismic onlap patterns."@en ;
+    rdfs:subClassOf [ a owl:Restriction ;
+            owl:onProperty bfo:BFO_0000176 ;
+            owl:someValuesFrom presalt:LacustrineSystem ],
+        georeservoir:GEORES_0000021 .
+
+presalt:LateAptian a owl:NamedIndividual,
+        georeservoir:GEOCORE_0000005 ;
+    rdfs:label "Late Aptian"@en ;
+    rdfs:comment "[critic CONVERT_TO_INSTANCE] Named subdivision of the Aptian; denotes one unique interval, so it should be an instance rather than a subclass (step 1)."@en .
+
+presalt:LateJurassic a owl:NamedIndividual,
+        georeservoir:GEOCORE_0000005 ;
+    rdfs:label "Late Jurassic"@en ;
+    rdfs:comment "[critic CONVERT_TO_INSTANCE] Named subdivision of the Jurassic; denotes one unique interval and should be an instance, not a subclass (step 1)."@en .
+
+presalt:LowerBarraVelhaFormation a owl:NamedIndividual,
+        georeservoir:GEORES_0000003 ;
+    rdfs:label "Lower Barra Velha Formation"@en ;
+    rdfs:comment "[critic CONVERT_TO_INSTANCE] This is a named lower subdivision of the Barra Velha Formation, so it denotes one specific unit rather than a subclass (step 1)."@en .
+
+presalt:LowerCretaceous a owl:NamedIndividual,
+        georeservoir:GEORES_0000002 ;
+    rdfs:label "Lower Cretaceous"@en ;
+    rdfs:comment "[critic CONVERT_TO_INSTANCE] Named chronostratigraphic unit/series; there is one Lower Cretaceous, so it should be an instance, not a subclass (step 1)."@en .
+
+presalt:LulaField a owl:NamedIndividual,
+        presalt:Field ;
+    rdfs:label "Lula Field"@en ;
+    rdfs:comment "[critic CONVERT_TO_INSTANCE] proper-noun named hydrocarbon field; step 1 converts named geological individuals to instances"@en .
+
+presalt:MacabuFormation a owl:NamedIndividual,
+        georeservoir:GEORES_0000004 ;
+    rdfs:label "Macabu Formation"@en ;
+    rdfs:comment "[critic CONVERT_TO_INSTANCE] Proper-noun named formation; denotes one stratigraphic unit, so it should be an instance of Formation (step 1)."@en .
+
+presalt:Magmatism a owl:Class ;
+    rdfs:label "Magmatism"@en ;
+    rdfs:comment "Magmatism is a geological process that involves the generation, ascent, emplacement, and possible eruption of magma within and above the crust. In the Brazilian Pre-Salt, it includes intrusive and extrusive events from rift to drift stages that are commonly linked to tectonic controls and may accompany hydrothermal alteration, although their thermal influence on carbonate reservoir diagenesis can be locally limited and is not always the main controlling factor."@en ;
+    rdfs:subClassOf georeservoir:GEOCORE_0000002 .
+
+presalt:MechanicalCompaction a owl:Class ;
+    rdfs:label "Mechanical Compaction"@en ;
+    rdfs:comment "Mechanical compaction is a diagenetic process that reduces sediment volume and primary porosity by physically rearranging, tightening, and slightly deforming grains and laminae under burial stress, without substantial pressure-solution or other chemical mass transfer. In Brazilian pre-salt lacustrine carbonates, it is typically recognized by tight grain packing, crinkled argillaceous laminae, concave-convex to long grain contacts, and minor grain deformation, and it commonly postdates some early dolomite cements."@en ;
+    rdfs:subClassOf presalt:Compaction .
+
+presalt:MeroField a owl:NamedIndividual,
+        presalt:Field ;
+    rdfs:label "Mero Field"@en ;
+    rdfs:comment "[critic CONVERT_TO_INSTANCE] proper-noun named oil field; it denotes one field only, so use instance typing, not subclassing (step 1)"@en .
+
+presalt:MgRichClay a owl:Class ;
+    rdfs:label "Mg-Rich Clay"@en ;
+    rdfs:comment "Mg-rich clay is a lacustrine evaporitic sedimentary facies that is composed of magnesium-rich clay minerals, commonly including stevensite, precipitated in shallow saline to alkaline lake environments. In the Brazilian Pre-Salt, especially in the Barra Velha Formation, it commonly occurs around paleo-high flanks in moderate lake bathymetry, and its subsequent dissolution can create porosity and improve reservoir quality."@en ;
+    rdfs:subClassOf presalt:Lithofacies .
+
+presalt:Micrite a owl:Class ;
+    rdfs:label "Micrite"@en ;
+    rdfs:comment "Micrite is a fine-grained carbonate facies that consists predominantly of microcrystalline carbonate mud deposited as pelagic background sediment in the deeper, calm, and undisturbed parts of Pre-Salt lacustrine systems. In the Barra Velha Formation of the Santos Basin, it commonly occurs as laminated or massive micrite, with laminated varieties showing regular light-dark layering, and its reservoir space is typically dominated by low-angle fractures rather than abundant primary porosity."@en ;
+    rdfs:subClassOf presalt:Lithofacies .
+
+presalt:Micropore a owl:Class ;
+    rdfs:label "Micropore"@en ;
+    rdfs:comment "Micropore is a submicron reservoir pore that, in Brazilian pre-salt carbonates, typically has a diameter of about 0.125 to 0.5 µm. It commonly occurs as dissolution-related intraparticle porosity within calcitic shrubs or as residual pore space between insoluble infillings in karst-modified cavities, and it is often associated with more intensely cemented, restricted pore systems."@en ;
+    rdfs:subClassOf [ a owl:Restriction ;
+            owl:onProperty georeservoir:GEOCORE_0000013 ;
+            owl:someValuesFrom presalt:Dissolution ],
+        presalt:Pore .
+
+presalt:Microporosity a owl:Class ;
+    rdfs:label "Microporosity"@en ;
+    rdfs:comment "Microporosity is a porosity class that consists of micrometer-scale pores and pore throats, commonly generated in Brazilian pre-salt lacustrine carbonates by diagenetic cementation, replacement, or dissolution within shrubs, spherulites, and calcite crusts. In the pre-salt reservoirs of the Santos and Campos basins, microporosity commonly dominates the pore-size distribution, tends to retain high irreducible water saturation, and has little positive influence on permeability even where total porosity is appreciable."@en ;
+    rdfs:subClassOf [ a owl:Restriction ;
+            owl:onProperty bfo:BFO_0000197 ;
+            owl:someValuesFrom bfo:BFO_0000004 ],
+        presalt:Porosity .
+
+presalt:Microquartz a owl:Class ;
+    rdfs:label "Microquartz"@en ;
+    rdfs:comment "Microquartz is a diagenetic silica phase that consists of quartz crystals smaller than 20 μm and commonly fills inter-aggregate, interparticle, and vugular pores or replaces carbonate fabric in pre-salt carbonates. In the Santos Basin pre-salt, it is the most frequent silica phase associated with pervasive silicification and is generally interpreted as a late eogenetic cement, commonly occurring with chalcedony and megaquartz."@en ;
+    rdfs:subClassOf [ a owl:Restriction ;
+            owl:onProperty bfo:BFO_0000171 ;
+            owl:someValuesFrom presalt:PreSaltCarbonate ],
+        [ a owl:Restriction ;
+            owl:onProperty bfo:BFO_0000171 ;
+            owl:someValuesFrom presalt:InterparticlePore ],
+        [ a owl:Restriction ;
+            owl:onProperty georeservoir:GEOCORE_0000017 ;
+            owl:someValuesFrom presalt:Quartz ],
+        presalt:Quartz .
+
+presalt:MoldicPorosity a owl:Class ;
+    rdfs:label "Moldic Porosity"@en ;
+    rdfs:comment "Moldic porosity is a secondary porosity type that comprises voids formed by dissolution of primary or diagenetic constituents, preserving the external shape of the removed grains or bioclasts. In Brazilian Pre-Salt lacustrine carbonates, it is common in bioclastic grainstones and rudstones, where it may provide good total porosity but typically low permeability unless the molds are enlarged and connected into vuggy pores or occur with interparticle porosity."@en ;
+    rdfs:subClassOf presalt:SecondaryPorosity .
+
+presalt:MuddySpherulitestone a owl:Class ;
+    rdfs:label "Muddy Spherulitestone"@en ;
+    rdfs:comment "Muddy spherulitestone is an in situ spherulitic carbonate facies that contains about 70–90% spherulites and mud, with rounded, well- to moderately sorted spherulite grains embedded in a muddy matrix or arranged in centimetric spherulite-rich layers interlaminated with mud. It commonly occurs as coarse- to fine-grained, loosely to densely packed frameworks in Mg-silicate or carbonate mud matrices, and densely packed layers may show interdigitated grain contacts and deformation of the spherulites."@en ;
+    rdfs:subClassOf [ a owl:Restriction ;
+            owl:onProperty bfo:BFO_0000178 ;
+            owl:someValuesFrom presalt:Mud ],
+        [ a owl:Restriction ;
+            owl:onProperty bfo:BFO_0000178 ;
+            owl:someValuesFrom presalt:Spherulite ],
+        presalt:InSituFacies .
+
+presalt:NamibeBasin a owl:NamedIndividual,
+        georeservoir:GEORES_0000039 ;
+    rdfs:label "Namibe Basin"@en ;
+    rdfs:comment "[critic CONVERT_TO_INSTANCE] Proper-noun named basin; NLD describes one specific marginal sedimentary basin, so model it as an instance (step 1)."@en .
+
+presalt:Neobarremian a owl:NamedIndividual,
+        georeservoir:GEOCORE_0000005 ;
+    rdfs:label "Neobarremian"@en ;
+    rdfs:comment "[critic CONVERT_TO_INSTANCE] Named late-Barremian interval; geological time periods denote one interval only (step 1)."@en .
+
+presalt:OilWaterContact a owl:Class ;
+    rdfs:label "Oil-Water Contact"@en ;
+    rdfs:comment "Oil-water contact is a reservoir fluid boundary that marks the depth at which the oil-saturated interval passes into the underlying water-saturated interval. In Brazilian pre-salt carbonate reservoirs, it is commonly estimated from a significant resistivity-log contrast, calibrated with porosity logs and pressure data, and spatial irregularities in its depth may indicate perched water effects or reservoir compartmentalization."@en ;
+    rdfs:subClassOf [ a owl:Restriction ;
+            owl:onProperty bfo:BFO_0000171 ;
+            owl:someValuesFrom presalt:HydrocarbonReservoir ],
+        georeservoir:GEOCORE_0000011 .
+
+presalt:Oncoid a owl:Class ;
+    rdfs:label "Oncoid"@en ;
+    rdfs:comment "Oncoid is a coated carbonate grain that consists of a nucleus surrounded by irregular to concentric microbial laminae produced by cyanobacterial accretion, commonly while the particle is intermittently rolled in very shallow lacustrine water. In the Brazilian Pre-Salt, oncoids occur as dominant allochems in oncoidal grainstones, rudstones, and packstones/floatstones, where they are typically spherical to semi-spherical and may preserve or develop intraparticle dissolution porosity."@en ;
+    rdfs:subClassOf presalt:CoatedGrain .
+
+presalt:Onlap a owl:Class ;
+    rdfs:label "Onlap"@en ;
+    rdfs:comment "Onlap is a seismic-stratigraphic termination pattern that occurs where younger strata terminate progressively upslope against an inclined or older surface. In the Brazilian Pre-Salt, onlap is used to interpret lake-margin migration and relative lake-level change, and it commonly marks the draping or infill of basement highs, build-ups, fault-related slopes, and other relief created during rift and sag phases."@en ;
+    rdfs:subClassOf [ a owl:Restriction ;
+            owl:onProperty bfo:BFO_0000197 ;
+            owl:someValuesFrom bfo:BFO_0000004 ],
+        georeservoir:GEORES_0000023 .
+
+presalt:Ooid a owl:Class ;
+    rdfs:label "Ooid"@en ;
+    rdfs:comment "Ooid is a coated grain that consists of a nucleus enclosed by a thin, commonly concentric cortex formed by repeated accretion, typically producing a sand-sized particle. In the Brazilian Pre-Salt lacustrine carbonates, ooids are commonly coarse-sand-sized and may occur as superficial or polycomposite forms, with many interpreted as originally composed of Mg-clays such as stevensite and later replaced by microcrystalline calcite or other diagenetic minerals."@en ;
+    rdfs:subClassOf presalt:CoatedGrain .
+
+presalt:Ostracod a owl:Class ;
+    rdfs:label "Ostracod"@en ;
+    rdfs:comment "Ostracod is a small aquatic crustacean that commonly inhabits marine and non-marine waters and, in pre-salt lacustrine systems, can persist in relatively deep, saline, or otherwise environmentally stressed conditions where mollusks may be absent. In the Brazilian Pre-Salt, ostracods commonly occur in wackestones, packstones, and grainstones, where they help indicate low-energy deeper-water or stressed lacustrine settings and are a key basis for non-marine biostratigraphy."@en ;
+    rdfs:subClassOf georeservoir:GEORES_0000018 .
+
+presalt:OuterHigh a owl:NamedIndividual,
+        georeservoir:GEOCORE_0000004 ;
+    rdfs:label "Outer High"@en ;
+    rdfs:comment "[critic CONVERT_TO_INSTANCE] Step 1: 'Outer High' names one Santos Basin structural feature, with named culminations, so it is an individual not a subclass."@en .
+
+presalt:Paleohigh a owl:Class ;
+    rdfs:label "Paleohigh"@en ;
+    rdfs:comment "Paleohigh is a paleo-topographic high that remained relatively elevated during deposition, producing shallower bathymetry than adjacent flanks and basin lows. In the Brazilian Pre-Salt, especially in the Barra Velha Formation, paleohighs are reconstructed from seismic horizons and lithology-controlled paleobathymetry and commonly localize shrubstone-dominated facies with fringes of spherulitestone and locally reworked deposits."@en ;
+    rdfs:subClassOf [ a owl:Restriction ;
+            owl:onProperty bfo:RO_0000086 ;
+            owl:someValuesFrom presalt:Bathymetry ],
+        bfo:BFO_0000029 .
+
+presalt:PassiveMarginBasin a owl:Class ;
+    rdfs:label "Passive-Margin Basin"@en ;
+    rdfs:comment "Passive-margin basin is a sedimentary basin that develops along a continental margin after rifting and continental breakup, with post-rift thermal subsidence controlling its drift-stage sedimentation. In the Brazilian pre-salt province, basins such as Santos and Campos evolved into passive-margin basins after the Early Cretaceous opening of the South Atlantic, accumulating Albian shallow-marine platform carbonates followed by deeper-water sediments."@en ;
+    rdfs:subClassOf [ a owl:Restriction ;
+            owl:onProperty bfo:BFO_0000171 ;
+            owl:someValuesFrom presalt:ContinentalMargin ],
+        presalt:SedimentaryBasin .
+
+presalt:Peloid a owl:Class ;
+    rdfs:label "Peloid"@en ;
+    rdfs:comment "Peloid is a carbonate grain that is typically silt- to fine-sand-sized, irregular, and internally massive or structureless, commonly representing a micritized very fine to fine intraclast in pre-salt lacustrine carbonates. In the Brazilian Pre-Salt, peloids are major constituents of peloidal grainstones, packstones, and siltites, and commonly occur with Mg-clay matrices in spherulstones and shrubstones, where they may be engulfed or replaced by calcite aggregates."@en ;
+    rdfs:subClassOf presalt:CarbonateGrain .
+
+presalt:PelotasBasin a owl:NamedIndividual,
+        georeservoir:GEORES_0000039 ;
+    rdfs:label "Pelotas Basin"@en ;
+    rdfs:comment "[critic CONVERT_TO_INSTANCE] Proper-noun named basin; step 1 says this should be modeled as an instance of Basin."@en .
+
+presalt:Permeability a owl:Class ;
+    rdfs:label "Permeability"@en ;
+    rdfs:comment "Permeability is a petrophysical property that quantifies a reservoir rock’s ability to transmit fluids through its interconnected pore system. In Brazilian Pre-Salt carbonate reservoirs, it is often highly heterogeneous because flow may occur through both the rock matrix and high-permeability features such as fractures, vugs, and caves. As a result, permeability is a key parameter for estimating flow capacity and production potential, and it can be strongly underestimated if thin highly permeable layers are not resolved."@en ;
+    rdfs:subClassOf [ a owl:Restriction ;
+            owl:onProperty bfo:BFO_0000197 ;
+            owl:someValuesFrom presalt:ReservoirRock ],
+        presalt:PetrophysicalProperty .
+
+presalt:PetroleumSystem a owl:Class ;
+    rdfs:label "Petroleum System"@en ;
+    rdfs:comment "Petroleum system is a geologic system that comprises the genetically related source rocks, migration pathways, reservoirs, seals, traps, and timing conditions necessary for hydrocarbons to be generated, migrate, accumulate, and be preserved. In the Brazilian pre-salt, this system is strongly controlled by basement configuration, with source rocks concentrated in structural lows, carbonate reservoirs preferentially developed over positive topography, and major faults acting as conduits for hydrocarbons and mantle-derived CO2."@en ;
+    rdfs:subClassOf [ a owl:Restriction ;
+            owl:onProperty bfo:BFO_0000178 ;
+            owl:someValuesFrom presalt:SourceRock ],
+        [ a owl:Restriction ;
+            owl:onProperty bfo:BFO_0000178 ;
+            owl:someValuesFrom presalt:Seal ],
+        bfo:BFO_0000027 .
+
+presalt:PiArrasFormation a owl:NamedIndividual,
+        georeservoir:GEORES_0000004 ;
+    rdfs:label "Piçarras Formation"@en ;
+    rdfs:comment "[critic CONVERT_TO_INSTANCE] Proper-noun named formation; denotes one stratigraphic unit, so it should be an instance of Formation (step 1)."@en .
+
+presalt:PoreConnectivity a owl:Class ;
+    rdfs:label "Pore Connectivity"@en ;
+    rdfs:comment "Pore connectivity is a petrophysical property that expresses the degree to which pores in a rock are interconnected to form continuous pathways for fluid flow. In Brazilian pre-salt carbonates, it is a key control on permeability because much of the connected network may reside in pores below CT-scan resolution, whereas dolomitization and silicification can generate closed or isolated pores that reduce connectivity."@en ;
+    rdfs:subClassOf [ a owl:Restriction ;
+            owl:onProperty bfo:BFO_0000197 ;
+            owl:someValuesFrom bfo:BFO_0000004 ],
+        presalt:PetrophysicalProperty .
+
+presalt:PoreThroat a owl:Class ;
+    rdfs:label "Pore Throat"@en ;
+    rdfs:comment "Pore throat is a constricted opening in a porous rock that connects adjacent pore bodies and strongly controls capillary entry, fluid flow, and permeability. In Brazilian Pre-Salt lacustrine carbonates, pore throat size is commonly quantified by mercury injection capillary pressure (MICP) and classified as micro when less than 0.5 µm, meso between 0.5 and 5 µm, and macro when greater than 5 µm. Larger pore throats generally indicate better reservoir quality because they allow easier fluid movement through the pore network."@en ;
+    rdfs:subClassOf presalt:Pore .
+
+presalt:PostRiftPhase a owl:Class ;
+    rdfs:label "Post-Rift Phase"@en ;
+    rdfs:comment "Post-rift phase is a tectonostratigraphic stage that succeeds active rifting and is dominated by basinwide thermal subsidence, producing broadly tabular strata that drape earlier rift relief. In the Brazilian pre-salt, it corresponds mainly to the Aptian sag interval, marked by deposition of Barra Velha microbialitic and other lacustrine carbonates in a shallow alkaline endorheic system, followed by the evaporites of the Ariri Formation during the transition from continental to more marine conditions."@en ;
+    rdfs:subClassOf presalt:TectonostratigraphicStage .
+
+presalt:PostRiftSupersequence a owl:Class ;
+    rdfs:label "Post-Rift Supersequence"@en ;
+    rdfs:comment "Post-rift supersequence is a tectonostratigraphic supersequence that records basin filling after the rift phase under dominant thermal subsidence, commonly as a sag-stage, aggradational succession that progressively heals residual relief on rift-related structures. In the Brazilian Pre-Salt of the Campos Basin, it overlies the regional Pre-Alagoas unconformity, includes the upper Lagoa Feia Group, is subdivided into Post-Rift I and Post-Rift II, and is capped by subaerial exposure and erosion preceding evaporite deposition."@en ;
+    rdfs:subClassOf presalt:TectonostratigraphicSupersequence .
+
+presalt:PreAlagoasUnconformity a owl:NamedIndividual,
+        georeservoir:GEOCORE_0000011 ;
+    rdfs:label "Pre-Alagoas Unconformity"@en ;
+    rdfs:comment "[critic CONVERT_TO_INSTANCE] Step 1: proper-name regional horizon; parent NLD cites Pre-Alagoas as an example of an unconformity, so this is a named boundary instance."@en .
+
+presalt:PreSaltOntoLearn a owl:Ontology ;
+    rdfs:label "PreSaltOntoLearn: Pre-Salt Petroleum Geology Ontology" ;
+    rdfs:comment "A RAG-augmented LLM-generated ontology for Brazilian Pre-Salt petroleum geology. Generated by the PreSaltOntoLearn pipeline." ;
+    owl:imports bfo:bfo.owl ;
+    owl:versionInfo "0.1.0" .
+
+presalt:PreSaltReservoir a owl:Class ;
+    rdfs:label "Pre-Salt Reservoir"@en ;
+    rdfs:comment "Pre-salt reservoir is a hydrocarbon reservoir that is hosted in Aptian syn-rift to sag lacustrine carbonate rocks beneath the regional evaporite seal of the Ariri Formation in the Brazilian pre-salt province. It is typically composed of heterogeneous carbonate facies such as coquinas, microbialites, and associated bioclastic, intraclastic, and laminated carbonates of intervals like the Itapema and Barra Velha formations, with reservoir architecture and quality strongly controlled by tectonics and diagenesis."@en ;
+    rdfs:subClassOf [ a owl:Restriction ;
+            owl:onProperty bfo:BFO_0000178 ;
+            owl:someValuesFrom presalt:Coquina ],
+        [ a owl:Restriction ;
+            owl:onProperty bfo:BFO_0000178 ;
+            owl:someValuesFrom presalt:Microbialite ],
+        [ a owl:Restriction ;
+            owl:onProperty bfo:BFO_0000171 ;
+            owl:someValuesFrom presalt:LacustrineCarbonate ],
+        presalt:CarbonateReservoir .
+
+presalt:PrimaryPorosity a owl:Class ;
+    rdfs:label "Primary Porosity"@en ;
+    rdfs:comment "Primary porosity is a porosity type that originates during deposition and early fabric formation of the carbonate, before secondary processes such as dissolution or fracturing create new pore space. In Brazilian Pre-Salt lacustrine carbonates, it commonly includes interparticle or interclast pore space and may also occur within clasts or growth frameworks. Its preservation is mainly controlled by the interplay of early cementation and compaction, and it can later be partly occluded by cements such as dolomite or silica."@en ;
+    rdfs:subClassOf [ a owl:Restriction ;
+            owl:onProperty bfo:BFO_0000197 ;
+            owl:someValuesFrom bfo:BFO_0000004 ],
+        presalt:Porosity .
+
+presalt:Pyrite a owl:Class ;
+    rdfs:label "Pyrite"@en ;
+    rdfs:comment "Pyrite is an iron sulfide mineral that occurs as a common diagenetic product in Brazilian Pre-Salt rocks, forming cubic to micro- or macrocrystalline aggregates that fill fractures and veins or replace grains, matrix, and carbonate phases. In these carbonate reservoirs it is commonly associated with silica and dolomite, may develop in organic- and clay-rich rocks through thermochemical sulfate reduction, and fracture-filling pyrite can indicate remobilization during diagenesis."@en ;
+    rdfs:subClassOf [ a owl:Restriction ;
+            owl:onProperty georeservoir:GEOCORE_0000013 ;
+            owl:someValuesFrom presalt:Diagenesis ],
+        georeservoir:GEOCORE_0000006 .
+
+presalt:RegionalSeal a owl:Class ;
+    rdfs:label "Regional Seal"@en ;
+    rdfs:comment "Regional seal is a basin-scale sealing unit that laterally extends over reservoir rocks and prevents the upward migration and leakage of hydrocarbons. In the Brazilian Pre-Salt, the regional seal is formed mainly by the evaporites of the Ariri Formation, especially halite and anhydrite, which overlie the Barra Velha and related reservoirs and provide an effective seal despite large thickness variations."@en ;
+    rdfs:subClassOf presalt:Seal ;
+    owl:equivalentClass [ a owl:Class ;
+            owl:intersectionOf ( presalt:Seal [ a owl:Restriction ;
+                        owl:onProperty bfo:RO_0000087 ;
+                        owl:someValuesFrom presalt:Regionalsealrole ] ) ] .
+
+presalt:ReservoirArchitecture a owl:Class ;
+    rdfs:label "Reservoir Architecture"@en ;
+    rdfs:comment "Reservoir architecture is a geological framework that describes the three-dimensional arrangement and connectivity of reservoir facies, stratigraphic surfaces, faults, and nonmatrix permeability features that control compartmentalization and fluid flow. In the Brazilian Pre-Salt, it is commonly analyzed at the scale of third-order sequences and is strongly influenced by depocenter geometry, facies distribution, fault juxtaposition against salt, and excess-permeability elements such as vugs, caves, fractures, and fault damage zones."@en ;
+    rdfs:subClassOf [ a owl:Restriction ;
+            owl:onProperty bfo:BFO_0000178 ;
+            owl:someValuesFrom presalt:ReservoirFacies ],
+        [ a owl:Restriction ;
+            owl:onProperty bfo:BFO_0000178 ;
+            owl:someValuesFrom presalt:Fault ],
+        georeservoir:GEOCORE_0000004 .
+
+presalt:ReservoirHeterogeneity a owl:Class ;
+    rdfs:label "Reservoir Heterogeneity"@en ;
+    rdfs:comment "Reservoir heterogeneity is a reservoir characteristic that consists of spatial variations in facies and petrophysical properties, especially porosity and permeability, which create vertical and lateral contrasts in fluid flow behavior. In Brazilian pre-salt carbonates, it is mainly generated by depositional cyclicity and facies stacking, structural features such as faults, and diagenetic modification including dissolution, silicification, and dolomitization. These contrasts can produce flow barriers or baffles, reduce hydrocarbon displacement efficiency, and locally compartmentalize pressure and fluids."@en ;
+    rdfs:subClassOf [ a owl:Restriction ;
+            owl:onProperty bfo:BFO_0000197 ;
+            owl:someValuesFrom bfo:BFO_0000004 ],
+        bfo:BFO_0000019 .
+
+presalt:RetiroFormation a owl:NamedIndividual,
+        georeservoir:GEORES_0000004 ;
+    rdfs:label "Retiro Formation"@en ;
+    rdfs:comment "[critic CONVERT_TO_INSTANCE] proper-noun named formation; it denotes one specific geological unit, so step 1 converts it to an instance"@en .
+
+presalt:ReworkedCarbonate a owl:Class ;
+    rdfs:label "Reworked Carbonate"@en ;
+    rdfs:comment "Reworked carbonate is a lacustrine carbonate lithofacies that is composed mainly of transported and redeposited clasts of calcitic spherulites and/or calcitic shrubs, typically occurring as grainstone- to rudstone-like calciarenites and calcirudites. In the Brazilian Pre-Salt Barra Velha Formation, it commonly contains grains from fine sand to pebble size, shows moderate sorting and massive to cross-stratified textures, and may include peloids, ostracod bioclasts, Mg-rich clays, and minor detrital siliciclastics. Where siliciclastic content exceeds about 10%, it is distinguished as reworked carbonate with siliciclastic content (RC-si), and the facies commonly forms relatively high-quality reservoir intervals due to open-framework and locally enhanced secondary porosity."@en ;
+    rdfs:subClassOf [ a owl:Restriction ;
+            owl:onProperty bfo:BFO_0000178 ;
+            owl:someValuesFrom presalt:Spherulite ],
+        [ a owl:Restriction ;
+            owl:onProperty bfo:BFO_0000178 ;
+            owl:someValuesFrom presalt:Shrub ],
+        presalt:ReworkFacies .
+
+presalt:RibeiraBelt a owl:NamedIndividual,
+        georeservoir:GEOCORE_0000004 ;
+    rdfs:label "Ribeira Belt"@en ;
+    rdfs:comment "[critic CONVERT_TO_INSTANCE] Proper-noun named orogenic belt; NLD describes one unique regional belt, so convert to an instance (step 1)."@en .
+
+presalt:RiftBasin a owl:Class ;
+    rdfs:label "Rift Basin"@en ;
+    rdfs:comment "Rift basin is a sedimentary basin that forms by lithospheric extension and fault-controlled subsidence during continental or marine rifting. In the Brazilian Pre-Salt, it records the early basin stage linked to Gondwana breakup and typically comprises pre-rift, syn-rift, and post-rift successions, with syn-rift growth strata generated by active normal faulting and post-rift tabular strata deposited during thermal subsidence."@en ;
+    rdfs:subClassOf presalt:SedimentaryBasin .
+
+presalt:RiftSuperSequence a owl:Class ;
+    rdfs:label "Rift Super-Sequence"@en ;
+    rdfs:comment "Rift super-sequence is a tectono-stratigraphic super-sequence that groups the syn-rift deposits accumulated during active extensional faulting and fault-controlled lacustrine basin development in the Brazilian Pre-Salt. In the Santos Basin, it is mainly represented by the Camboriú, Piçarras, and Itapema formations, comprising basalts, continental siliciclastics, lacustrine coquinas, organic-rich shales, and locally talc-stevensite ooid-bearing intervals, with some interpretations also including the basal wedge of the Barra Velha Formation."@en ;
+    rdfs:subClassOf [ a owl:Restriction ;
+            owl:hasValue presalt:PreSalt ;
+            owl:onProperty bfo:BFO_0000176 ],
+        presalt:TectonostratigraphicSupersequence .
+
+presalt:Rudstone a owl:Class ;
+    rdfs:label "Rudstone"@en ;
+    rdfs:comment "Rudstone is a sedimentary carbonate rock that is grain-supported and contains more than 10% grains or clasts larger than 2 mm. In Brazilian Pre-Salt reservoirs, it commonly occurs as a reworked lacustrine facies composed of bioclasts, intraclasts, spherulites, shrub fragments, or silicified carbonate pebbles and cobbles, typically in poorly sorted massive to inversely graded beds with erosive bases. Its reservoir quality is highly heterogeneous and depends on the dominant pore system, including interparticle, moldic, intraparticle, and vugular porosity."@en ;
+    rdfs:subClassOf presalt:CarbonateRock .
+
+presalt:SOPauloPlateau a owl:NamedIndividual,
+        georeservoir:GEOCORE_0000004 ;
+    rdfs:label "São Paulo Plateau"@en ;
+    rdfs:comment "[critic CONVERT_TO_INSTANCE] Step 1: 'São Paulo Plateau' is a named regional feature that includes Outer High, so it is a single geological structure, not a kind."@en .
+
+presalt:SagBasin a owl:Class ;
+    rdfs:label "Sag Basin"@en ;
+    rdfs:comment "Sag basin is a post-rift sedimentary basin that develops as a broad, laterally continuous regional depression mainly through thermal subsidence after active rifting has waned. In the Brazilian Pre-Salt, it corresponds to the Aptian transitional section, when reduced tectonic activity allowed deposition of the Barra Velha non-marine to shallow-water carbonates and the overlying Ariri evaporite seal before full drift-stage conditions were established."@en ;
+    rdfs:subClassOf presalt:SedimentaryBasin .
+
+presalt:SagPhase a owl:Class ;
+    rdfs:label "Sag Phase"@en ;
+    rdfs:comment "Sag phase is a tectonostratigraphic stage that follows the main rift phase and is marked by the development of a broad, laterally continuous regional depression generated predominantly by thermal subsidence. In the Brazilian Pre-Salt, it corresponds to a transitional continental to shallow-marine, increasingly saline interval that controlled accommodation and facies distribution in the Barra Velha system and culminated in evaporite deposition, although local fault reactivation could persist during this supposedly quiescent period."@en ;
+    rdfs:subClassOf [ a owl:Restriction ;
+            owl:onProperty bfo:BFO_0000062 ;
+            owl:someValuesFrom presalt:RiftPhase ],
+        presalt:TectonostratigraphicStage .
+
+presalt:SaltLayer a owl:Class ;
+    rdfs:label "Salt Layer"@en ;
+    rdfs:comment "Salt layer is an evaporite stratigraphic unit that overlies the Brazilian Pre-Salt carbonate succession and provides an efficient regional seal to the underlying reservoirs. In the Santos Basin, it corresponds chiefly to the Aptian Ariri Formation and may range from hundreds of meters to more than 1 km thick, locally reaching about 2000-2500 m where restricted marine circulation and hot, arid conditions favored massive salt deposition."@en ;
+    rdfs:subClassOf georeservoir:GEORES_0000003 .
+
+presalt:Sandstone a owl:Class ;
+    rdfs:label "Sandstone"@en ;
+    rdfs:comment "Sandstone is a siliciclastic sedimentary rock that is composed predominantly of sand-sized grains and, in presalt successions, commonly ranges from coarse to fine grained with current laminations. In the presalt rift-to-sag setting it is typically interpreted as a fluvial to alluvial-fan deposit in more landward basin areas, and where mixed with mollusk shells it can record episodic coarse siliciclastic input into lacustrine margin or fan-delta environments."@en ;
+    rdfs:subClassOf georeservoir:GEORES_0000032 .
+
+presalt:SantosBasin a owl:NamedIndividual,
+        georeservoir:GEORES_0000039 ;
+    rdfs:label "Santos Basin"@en ;
+    rdfs:comment "[critic CONVERT_TO_INSTANCE] Proper-noun named basin; step 1 says this should be modeled as an instance of Basin."@en .
+
+presalt:SantosOuterHigh a owl:NamedIndividual,
+        georeservoir:GEOCORE_0000004 ;
+    rdfs:label "Santos Outer High"@en ;
+    rdfs:comment "[critic CONVERT_TO_INSTANCE] Proper-noun named regional high in the Santos Basin; NLD and relations describe one specific structure, not a reusable kind (step 1)."@en .
+
+presalt:SapinhoField a owl:NamedIndividual,
+        presalt:Field ;
+    rdfs:label "Sapinhoá Field"@en ;
+    rdfs:comment "[critic CONVERT_TO_INSTANCE] proper-noun named oil field; it denotes one field only, so use instance typing, not subclassing (step 1)"@en .
+
+presalt:SeismicFacies a owl:Class ;
+    rdfs:label "Seismic Facies"@en ;
+    rdfs:comment "Seismic facies is a seismostratigraphic unit that comprises a group of reflectors with characteristic amplitude, continuity, geometry, and frequency patterns that distinguish it from adjacent seismic units and can be related to architectural elements, depositional systems, or sedimentary environments. In Brazilian Pre-Salt carbonates, seismic facies are defined by integrating seismic attributes with well information and are mapped as patterns such as tabular, mound, bank, fill, or parallel to infer reservoir boundaries, compartmentalization, and relative reservoir quality."@en ;
+    rdfs:subClassOf georeservoir:GEORES_0000002 .
+
+presalt:SequenceBoundary a owl:Class ;
+    rdfs:label "Sequence Boundary"@en ;
+    rdfs:comment "Sequence boundary is a stratigraphic surface that bounds adjacent depositional sequences by marking a break in sedimentation expressed as erosion, nondeposition, or truncation. In the Brazilian Pre-Salt, it commonly corresponds to internal or regional unconformities separating stratigraphic units, recognizable in seismic data by angular truncations and, in some core-scale cycles, by clay-enriched horizons."@en ;
+    rdfs:subClassOf presalt:Unconformity .
+
+presalt:Shale a owl:Class ;
+    rdfs:label "Shale"@en ;
+    rdfs:comment "Shale is a fine-grained sedimentary rock that is composed predominantly of compacted clay-sized particles and commonly displays high gamma-ray values and very low permeability. In the Brazilian Pre-Salt, shale commonly occurs as clay-rich or organic-rich intervals associated with the deeper parts of the Barra Velha Formation, where it behaves as a non-reservoir facies and local seal that restricts fluid flow and can trap CO2. In petrophysical analysis, shale is also used as a high-gamma-ray end member for evaluating shale distribution in mixed lithologies."@en ;
+    rdfs:subClassOf georeservoir:GEORES_0000032 .
+
+presalt:Shrubstone a owl:Class ;
+    rdfs:label "Shrubstone"@en ;
+    rdfs:comment "Shrubstone is an in-situ lacustrine carbonate facies that consists predominantly of shrub frameworks, typically more than 90% fan-shaped, dendriform, or arborescent aggregates of fibrous-radial calcite crystals. In the Brazilian Pre-Salt, these shrubs commonly coalesce into crustal or domal layers and may include subordinate spherulites or mud, while preserving inter-aggregate and vugular porosity, microfractures, and local silicification."@en ;
+    rdfs:subClassOf presalt:InSituFacies .
+
+presalt:SilicaCement a owl:Class ;
+    rdfs:label "Silica Cement"@en ;
+    rdfs:comment "Silica cement is a diagenetic cement that precipitates as silica minerals, mainly chalcedony and micro- to macrocrystalline quartz, lining and filling interparticle pores, vugs, and fractures in Pre-Salt carbonate reservoirs. In the Brazilian Pre-Salt, it commonly occurs as pore-lining fringes or later pore-filling/drusy quartz, locally after earlier replacement phases, and may either partly preserve excess permeability or occlude pore space depending on its timing and abundance."@en ;
+    rdfs:subClassOf [ a owl:Restriction ;
+            owl:onProperty georeservoir:GEOCORE_0000017 ;
+            owl:someValuesFrom presalt:Quartz ],
+        [ a owl:Restriction ;
+            owl:onProperty bfo:BFO_0000171 ;
+            owl:someValuesFrom presalt:InterparticlePore ],
+        [ a owl:Restriction ;
+            owl:onProperty georeservoir:GEOCORE_0000017 ;
+            owl:someValuesFrom presalt:Chalcedony ],
+        presalt:Silica ;
+    owl:equivalentClass [ a owl:Class ;
+            owl:intersectionOf ( presalt:Silica [ a owl:Restriction ;
+                        owl:onProperty georeservoir:GEOCORE_0000013 ;
+                        owl:someValuesFrom presalt:Cementation ] ) ] .
+
+presalt:Siltstone a owl:Class ;
+    rdfs:label "Siltstone"@en ;
+    rdfs:comment "Siltstone is a siliciclastic sedimentary rock that is composed predominantly of silt-sized particles, with a higher proportion of silt and less clay than mudstone. In the Brazilian pre-salt Barra Velha succession, it commonly occurs as massive or incipiently plane-parallel laminated microfacies, ranging from coarse to fine silt and locally containing trace very fine to fine sand. Its main constituents are typically K-feldspar, monocrystalline quartz, white mica, and clay minerals."@en ;
+    rdfs:subClassOf [ a owl:Restriction ;
+            owl:onProperty georeservoir:GEOCORE_0000017 ;
+            owl:someValuesFrom presalt:ClayMineral ],
+        [ a owl:Restriction ;
+            owl:onProperty georeservoir:GEOCORE_0000017 ;
+            owl:someValuesFrom presalt:Quartz ],
+        georeservoir:GEORES_0000032 .
+
+presalt:Slope a owl:Class ;
+    rdfs:label "Slope"@en ;
+    rdfs:comment "Slope is an inclined margin surface that connects a structural or depositional high to an adjacent lower area in a lacustrine carbonate system. In the Brazilian Pre-Salt, slopes are commonly imaged on seismic data as clinoforms and inclined reflectors along tilted fault blocks, ranging from low-angle dip slopes to steeper scarp slopes, and they may localize channels, collapse scars, and mass-transport deposits."@en ;
+    rdfs:subClassOf georeservoir:GEORES_0000021 .
+
+presalt:Spherulitestone a owl:Class ;
+    rdfs:label "Spherulitestone"@en ;
+    rdfs:comment "Spherulitestone is an autochthonous lacustrine carbonate rock that is composed predominantly of spherical to subspherical spherulites made of fibro-radial calcite aggregates, commonly around a micritic nucleus. In the Brazilian pre-salt, it typically contains more than 90% spherulites, shows grainstone-like packing despite being in situ, and may occur in laminated, massive, shrubby, or muddy variants as spherulite size and mud content change."@en ;
+    rdfs:subClassOf [ a owl:Restriction ;
+            owl:onProperty georeservoir:GEOCORE_0000017 ;
+            owl:someValuesFrom presalt:Calcite ],
+        [ a owl:Restriction ;
+            owl:onProperty bfo:BFO_0000178 ;
+            owl:someValuesFrom presalt:Spherulite ],
+        presalt:CarbonateRock .
+
+presalt:SpheruliticCarbonate a owl:Class ;
+    rdfs:label "Spherulitic Carbonate"@en ;
+    rdfs:comment "Spherulitic carbonate is a carbonate rock or facies that is dominated by spherical to elliptical carbonate spherulites, typically 0.1-5 mm in diameter, composed of fibroradial calcite around a micritic, microsparitic, or siliciclastic nucleus and commonly embedded in a clay-rich or organic-rich muddy matrix. In the Brazilian Pre-Salt, it occurs as spherulitestones, packstones, or grainstones, may form in situ or be reworked, and is commonly linked to biologically influenced precipitation in low-energy lacustrine settings. Dissolution of spherulite nuclei can generate moldic porosity that affects reservoir quality."@en ;
+    rdfs:subClassOf [ a owl:Restriction ;
+            owl:onProperty georeservoir:GEOCORE_0000017 ;
+            owl:someValuesFrom presalt:Calcite ],
+        [ a owl:Restriction ;
+            owl:onProperty bfo:BFO_0000178 ;
+            owl:someValuesFrom presalt:Spherulite ],
+        presalt:CarbonateRock .
+
+presalt:Spherulitite a owl:Class ;
+    rdfs:label "Spherulitite"@en ;
+    rdfs:comment "Spherulitite is a carbonate rock that consists predominantly of spherulites, which are spherical to sub-spherical fibro-radial calcite aggregates. In the Brazilian Pre-Salt, especially the Barra Velha Formation, it commonly occurs as spherulitic grainstone, packstone, or wackestone, and its spherulites typically show radial extinction and may be dolomitized, recrystallized, or locally silicified."@en ;
+    rdfs:subClassOf [ a owl:Restriction ;
+            owl:onProperty bfo:BFO_0000178 ;
+            owl:someValuesFrom presalt:Spherulite ],
+        presalt:CarbonateRock .
+
+presalt:Stevensite a owl:Class ;
+    rdfs:label "Stevensite"@en ;
+    rdfs:comment "Stevensite is an aluminum-poor Ca-Mg smectitic clay mineral that precipitates from highly alkaline lacustrine waters, typically at pH greater than about 9, in pre-salt sag deposits. In Brazilian Pre-Salt carbonate systems, it commonly forms laminated clay-rich facies and may occur with calcitic spherulites or dolomite rhombs in low-energy, relatively deeper lake settings. It is commonly compacted and later partially dissolved or replaced by calcite or dolomite during diagenesis."@en ;
+    rdfs:subClassOf [ a owl:Restriction ;
+            owl:onProperty bfo:BFO_0000056 ;
+            owl:someValuesFrom presalt:Compaction ],
+        [ a owl:Restriction ;
+            owl:onProperty bfo:BFO_0000056 ;
+            owl:someValuesFrom presalt:Diagenesis ],
+        presalt:ClayMineral .
+
+presalt:StratigraphicGroup a owl:Class ;
+    rdfs:label "Stratigraphic Group"@en ;
+    rdfs:comment "Stratigraphic Group is a Lithostratigraphic Unit that groups multiple related formations into a named higher-rank unit within a stratigraphic succession."@en ;
+    rdfs:subClassOf georeservoir:GEORES_0000003 .
+
+presalt:Stromatolite a owl:Class ;
+    rdfs:label "Stromatolite"@en ;
+    rdfs:comment "Stromatolite is an organo-sedimentary carbonate structure that forms through microbial trapping and binding of sediment together with in situ carbonate precipitation, producing characteristic lamination. In the Brazilian pre-salt, it typically occurs as rare columnar, laterally linked domal, or stratiform facies in shallow lacustrine settings, commonly enclosing ooid-intraclastic grainstone and locally preserving moderate intercrystalline, intraelement, and fracture porosity."@en ;
+    rdfs:subClassOf [ a owl:Restriction ;
+            owl:onProperty bfo:BFO_0000178 ;
+            owl:someValuesFrom presalt:Lamination ],
+        georeservoir:GEOCORE_0000004 .
+
+presalt:Stylolite a owl:Class ;
+    rdfs:label "Stylolite"@en ;
+    rdfs:comment "Stylolite is a pressure-solution seam that forms by localized dissolution during compaction and concentrates insoluble or less soluble minerals along an irregular surface in carbonate rocks. In Brazilian pre-salt reservoirs, stylolites commonly occur in bioclastic rudstones, hybrid facies, cherts, and chert-dolostone contacts, where they are enriched in illite and other residual minerals, may truncate earlier cements, and can be associated with symmetric porosity enhancement."@en ;
+    rdfs:subClassOf georeservoir:GEOCORE_0000004 .
+
+presalt:SubaerialExposure a owl:Class ;
+    rdfs:label "Subaerial Exposure"@en ;
+    rdfs:comment "Subaerial exposure is a geologic condition that places previously submerged carbonate sediments or rocks above the water surface and in contact with the atmosphere due to lake-level fall, desiccation, or uplift. In the Brazilian pre-salt, especially in littoral to shoreline settings of the Barra Velha Formation, it is commonly associated with weathering and pedogenetic alteration, dolomite-enriched exposure profiles, and local erosion or disaggregation of limestones that can contribute to reworked grainstone deposits."@en ;
+    rdfs:subClassOf [ a owl:Restriction ;
+            owl:onProperty bfo:BFO_0000057 ;
+            owl:someValuesFrom presalt:CarbonateRock ],
+        georeservoir:GEOCORE_0000002 .
+
+presalt:SururuField a owl:NamedIndividual,
+        presalt:Field ;
+    rdfs:label "Sururu Field"@en ;
+    rdfs:comment "[critic CONVERT_TO_INSTANCE] proper-noun named hydrocarbon field; step 1 converts named geological individuals to instances"@en .
+
+presalt:SynRiftPhase a owl:Class ;
+    rdfs:label "Syn-Rift Phase"@en ;
+    rdfs:comment "Syn-rift phase is a tectono-stratigraphic stage that corresponds to active continental rifting, during which lithospheric stretching, normal faulting, and block rotation form grabens and half-grabens that govern deposition before continental breakup. In the Brazilian pre-salt, it is commonly subdivided into distinct rift phases and includes magmatic activity as well as the accumulation of volcanic rocks, organic-rich fluvial-lacustrine sediments, and early carbonate deposits such as those of the Camboriú, Piçarras, and Itapema formations."@en ;
+    rdfs:subClassOf presalt:TectonostratigraphicStage .
+
+presalt:Talc a owl:Class ;
+    rdfs:label "Talc"@en ;
+    rdfs:comment "Talc is a magnesium-rich phyllosilicate mineral that precipitates in the Brazilian pre-salt under highly alkaline lacustrine conditions, commonly as hydrated talc formed from Mg-rich silica gel at about pH 9 to 10. In the Barra Velha Formation it is characterized by low crystallinity and a defective turbostratic structure, and its late diagenetic transformation releases silica and magnesium that favor the precipitation of silica and dolomite."@en ;
+    rdfs:subClassOf presalt:PhyllosilicateMineral .
+
+presalt:Thrombolite a owl:Class ;
+    rdfs:label "Thrombolite"@en ;
+    rdfs:comment "Thrombolite is a microbialite that exhibits a clotted, commonly cryptocrystalline internal fabric instead of the well-defined lamination typical of stromatolites. In the Aptian Brazilian pre-salt, thrombolites are rare in situ microbial carbonates and are classified by their structure alongside stromatolites, dendrolites, and leiolites."@en ;
+    rdfs:subClassOf presalt:Microbialite .
+
+presalt:TransferZone a owl:Class ;
+    rdfs:label "Transfer Zone"@en ;
+    rdfs:comment "Transfer zone is a structural accommodation zone that laterally transfers displacement between adjacent rift fault segments or depocentres. In the Brazilian Pre-Salt, it commonly appears as an oblique, relatively elevated structural high between surrounding lows, where lower accommodation contrasts with adjacent depocentres and strongly influences palaeorelief, sediment thickness, and the distribution and quality of syn-rift lacustrine carbonate reservoirs."@en ;
+    rdfs:subClassOf presalt:AccommodationZone .
+
+presalt:TupiField a bfo:BFO_0000029,
+        owl:NamedIndividual ;
+    rdfs:label "Tupi Field"@en ;
+    rdfs:comment "[critic CONVERT_TO_INSTANCE] Proper-noun named petroleum field; it denotes one specific field and should be modeled as an instance of site (step 1)."@en .
+
+presalt:UpperAptian a owl:NamedIndividual,
+        georeservoir:GEOCORE_0000005 ;
+    rdfs:label "Upper Aptian"@en ;
+    rdfs:comment "[critic CONVERT_TO_INSTANCE] Named Upper Aptian denotes one chronostratigraphic/time subdivision, not a reusable stratigraphic-unit class; convert per step1."@en .
+
+presalt:UpperBarraVelhaFormation a owl:NamedIndividual,
+        georeservoir:GEORES_0000003 ;
+    rdfs:label "Upper Barra Velha Formation"@en ;
+    rdfs:comment "[critic CONVERT_TO_INSTANCE] Proper-noun named unit; NLD says it is the upper unit of Barra Velha Formation, so step 1 treats it as one instance."@en .
+
+presalt:Valanginian a owl:NamedIndividual,
+        georeservoir:GEOCORE_0000003 ;
+    rdfs:label "Valanginian"@en ;
+    rdfs:comment "[critic CONVERT_TO_INSTANCE] Valanginian is a single named Early Cretaceous age marking one interval, so it belongs as an instance rather than a subclass (step 1)."@en .
+
+presalt:VuggyPorosity a owl:Class ;
+    rdfs:label "Vuggy Porosity"@en ;
+    rdfs:comment "Vuggy porosity is a carbonate pore type that consists of dissolution-related cavities larger than the particles composing the rock. In Brazilian Pre-Salt reservoirs, it commonly occurs across multiple observation scales and may dominate facies such as calcirudites and shrubstones, but because many vugs are partially isolated, it can contribute significant porosity while providing little permeability, especially in silicified intervals."@en ;
+    rdfs:subClassOf presalt:SecondaryPorosity .
+
+presalt:Wackestone a owl:Class ;
+    rdfs:label "Wackestone"@en ;
+    rdfs:comment "Wackestone is a mud-supported carbonate rock facies that contains more than 10% grains within a muddy matrix, commonly including ostracod bioclasts and reworked fragments of shrubs, peloids, and spherulites. In the Brazilian Pre-Salt, it is typically fine-grained, matrix-supported, and massive or plane-parallel laminated, and it commonly records low-energy lacustrine deposition below storm-wave base or the return to more normal conditions after stressful or storm events."@en ;
+    rdfs:subClassOf presalt:CarbonateRock .
+
+presalt:Weathering a owl:Class ;
+    rdfs:label "Weathering"@en ;
+    rdfs:comment "Weathering is a near-surface alteration process that modifies exposed carbonate rocks through chemical, physical, and biogenic reactions during subaerial exposure, commonly obliterating the original rock texture. In the Brazilian pre-salt, it is expressed as weathering profiles or paleosol-like intervals developed on exposed shallow-lake or structural-high deposits, typically showing fine-grained granular fabric, possible root marks, common dolomitization and silicification, and locally sharp contacts with the underlying unweathered rock."@en ;
+    rdfs:subClassOf [ a owl:Restriction ;
+            owl:onProperty bfo:BFO_0000057 ;
+            owl:someValuesFrom presalt:CarbonateRock ],
+        georeservoir:GEOCORE_0000002 .
+
+bfo:BFO_0000008 a owl:Class ;
+    rdfs:label "temporal region"@en ;
+    rdfs:subClassOf bfo:BFO_0000003 .
+
+bfo:BFO_0000030 a owl:Class ;
+    rdfs:label "object"@en ;
+    rdfs:subClassOf bfo:BFO_0000040 .
+
+bfo:BFO_0000038 a owl:Class ;
+    rdfs:label "one-dimensional temporal region"@en ;
+    rdfs:subClassOf bfo:BFO_0000008 .
+
+bfo:BFO_0000062 a owl:ObjectProperty ;
+    rdfs:label "preceded by"@en .
+
+bfo:BFO_0000140 a owl:Class ;
+    rdfs:label "continuant fiat boundary"@en ;
+    rdfs:subClassOf bfo:BFO_0000141 .
+
+bfo:BFO_0000146 a owl:Class ;
+    rdfs:label "fiat surface"@en ;
+    rdfs:subClassOf bfo:BFO_0000140 .
+
+bfo:RO_0001001 a owl:ObjectProperty ;
+    rdfs:label "derives into"@en .
+
+presalt:AccommodationZone a owl:Class ;
+    rdfs:label "Accommodation Zone"@en ;
+    rdfs:comment "Accommodation zone is a zone of distributed deformation that accommodates strain between poorly connected, overlapping, or unsuccessfully linked rift fault segments, commonly expressed by opposing dip domains and increasing bed dips. In the Brazilian Pre-Salt syn-rift, accommodation zones function as intrabasin transfer or bypass areas that segment structural domains and influence depocentre continuity, facies distribution, and reservoir quality in lacustrine carbonates."@en ;
+    rdfs:subClassOf georeservoir:GEOCORE_0000004 .
+
+presalt:Bathymetry a owl:Class ;
+    rdfs:label "Bathymetry"@en ;
+    rdfs:comment "Bathymetry is a measure of subaqueous topography that quantifies water depth below lake level across a depositional surface. In the Brazilian Pre-Salt lacustrine carbonates, bathymetry is commonly represented as positive depth values and is a key control on wave energy, wave base, carbonate growth rates, mud precipitation, and the distribution of facies in stratigraphic forward models."@en ;
+    rdfs:subClassOf [ a owl:Restriction ;
+            owl:onProperty bfo:BFO_0000197 ;
+            owl:someValuesFrom bfo:BFO_0000004 ],
+        georeservoir:GEORES_0000022 .
+
+presalt:Bioclast a owl:Class ;
+    rdfs:label "Bioclast"@en ;
+    rdfs:comment "Bioclast is a sedimentary carbonate grain that consists of whole or fragmented skeletal remains of organisms, commonly bivalves, ostracods, and gastropods in Brazilian Pre-Salt lacustrine carbonates. In bioclastic grainstones, rudstones, and coquinas, bioclasts commonly occur as reworked or abraded shell material and may be micritized, recrystallized, dolomitized, or silicified, influencing interparticle and intraparticle porosity."@en ;
+    rdfs:subClassOf presalt:CarbonateGrain ;
+    owl:equivalentClass [ a owl:Class ;
+            owl:intersectionOf ( presalt:CarbonateGrain [ a owl:Restriction ;
+                        owl:onProperty bfo:RO_0001000 ;
+                        owl:someValuesFrom georeservoir:GEORES_0000018 ] ) ] .
+
+presalt:Breccia a owl:Class ;
+    rdfs:label "Breccia"@en ;
+    rdfs:comment "Breccia is a fragmented rock that is composed of angular intraclasts generated by in situ cracking, faulting, collapse, or resedimentation. In Brazilian pre-salt carbonates, it occurs as clast-supported or matrix-supported varieties, is distinguished from conglomerate by its intraclast-only composition, and may contain interclast vugs that create excess permeability."@en ;
+    rdfs:subClassOf [ a owl:Restriction ;
+            owl:onProperty georeservoir:GEOCORE_0000017 ;
+            owl:someValuesFrom presalt:Intraclast ],
+        georeservoir:GEOCORE_0000008 .
+
+presalt:Calcarenite a owl:Class ;
+    rdfs:label "Calcarenite"@en ;
+    rdfs:comment "Calcarenite is a clastic carbonate rock that is composed predominantly of sand-sized carbonate grains or intraclasts, typically representing reworked carbonate sediment and, in hybrid varieties, containing less than 50% siliciclastic material. In the Brazilian Pre-Salt, it commonly consists of ooids and intra- or extra-clasts of limestone or dolostone, with subordinate silica or chert and minor silicate grains, and may occur as laminated resedimented beds with interparticle and intraparticle porosity."@en ;
+    rdfs:subClassOf [ a owl:Restriction ;
+            owl:onProperty bfo:BFO_0000178 ;
+            owl:someValuesFrom presalt:Intraclast ],
+        georeservoir:GEORES_0000032 .
+
+presalt:Calcirudite a owl:Class ;
+    rdfs:label "Calcirudite"@en ;
+    rdfs:comment "Calcirudite is a coarse-grained clastic carbonate rock that is composed mainly of granule- to pebble-sized intra- or extra-clasts, chiefly fragments of limestone and dolostone, in reworked or hybrid carbonate successions. In the Brazilian Pre-Salt, it commonly occurs as a massive, poorly sorted ruditic facies dominated by carbonate intraclasts, and it may be either clast-supported or matrix-supported with minor chert, silica, silicate grains, or ooidal-peloidal components."@en ;
+    rdfs:subClassOf [ a owl:Restriction ;
+            owl:onProperty bfo:RO_0001000 ;
+            owl:someValuesFrom presalt:Limestone ],
+        [ a owl:Restriction ;
+            owl:onProperty bfo:BFO_0000178 ;
+            owl:someValuesFrom presalt:Intraclast ],
+        [ a owl:Restriction ;
+            owl:onProperty bfo:RO_0001000 ;
+            owl:someValuesFrom presalt:Dolostone ],
+        georeservoir:GEORES_0000032 .
+
+presalt:CarbonateBuildUp a owl:Class ;
+    rdfs:label "Carbonate Build-Up"@en ;
+    rdfs:comment "Carbonate build-up is a carbonate depositional body that forms localized positive relief by aggradational, in-place growth, commonly near fault-controlled structural highs in the Barra Velha interval and often associated with hydrothermal influence. In Brazilian Pre-Salt seismic data, it is typically expressed by chaotic to low-amplitude internal reflectors, intermediate to high acoustic impedance, and geometries onlapped and later overlain by evaporites. These bodies are commonly inferred to contain shrubby and spherulitic carbonates and to have among the highest porosity and permeability of the reservoir facies."@en ;
+    rdfs:subClassOf [ a owl:Restriction ;
+            owl:onProperty bfo:RO_0000086 ;
+            owl:someValuesFrom presalt:Porosity ],
+        georeservoir:GEORES_0000015 .
+
+presalt:CarbonateReservoir a owl:Class ;
+    rdfs:label "Carbonate Reservoir"@en ;
+    rdfs:comment "Carbonate reservoir is a hydrocarbon reservoir that is hosted in carbonate rocks and whose porosity and permeability are controlled by highly heterogeneous depositional facies, diagenetic alteration, and structural compartmentalization. In the Brazilian Pre-Salt, these reservoirs are commonly lacustrine Aptian carbonates in which secondary dissolution porosity is often critical to reservoir quality, while facies variation, cementation, faults, and hydrothermal influences can create abrupt vertical and lateral permeability contrasts."@en ;
+    rdfs:subClassOf [ a owl:Restriction ;
+            owl:onProperty bfo:RO_0000086 ;
+            owl:someValuesFrom presalt:Porosity ],
+        presalt:HydrocarbonReservoir ;
+    owl:equivalentClass [ a owl:Class ;
+            owl:intersectionOf ( presalt:HydrocarbonReservoir [ a owl:Restriction ;
+                        owl:onProperty bfo:BFO_0000171 ;
+                        owl:someValuesFrom presalt:CarbonateRock ] ) ] .
+
+presalt:Chalcedony a owl:Class ;
+    rdfs:label "Chalcedony"@en ;
+    rdfs:comment "Chalcedony is a microcrystalline silica phase that forms fibrous-radial, spherulitic, and botryoidal aggregates as syndepositional to diagenetic cement in pre-salt lacustrine carbonates. In the Brazilian Pre-Salt it commonly occurs in chert and silicified intervals, lining or partly filling pores, fractures, and vugs, and may locally replace the host rock, thereby affecting reservoir quality and permeability."@en ;
+    rdfs:subClassOf [ a owl:Restriction ;
+            owl:onProperty bfo:BFO_0000171 ;
+            owl:someValuesFrom presalt:Chert ],
+        [ a owl:Restriction ;
+            owl:onProperty bfo:BFO_0000171 ;
+            owl:someValuesFrom presalt:Vug ],
+        presalt:Silica .
+
+presalt:Chert a owl:Class ;
+    rdfs:label "Chert"@en ;
+    rdfs:comment "Chert is a silica-rich rock that is composed mainly of microcrystalline quartz and, in pre-salt lacustrine successions, forms by syndepositional to early diagenetic silica precipitation associated with microbial growth or by replacive silicification. It commonly occurs as microbial boundstones on topographic highs, as thin beds in micritic sag-platform intervals, and as a major reservoir facies in isolated buildups where chalcedony and quartz cements coexist with residual vuggy porosity and fractures."@en ;
+    rdfs:subClassOf georeservoir:GEORES_0000032 .
+
+presalt:ContinentalMargin a owl:Class ;
+    rdfs:label "Continental Margin"@en ;
+    rdfs:comment "Continental margin is a tectonostratigraphic transition zone that links continental crust to the adjacent oceanic basin and organizes the structural and stratigraphic framework of offshore basins. In the Brazilian Pre-Salt, the architecture and relative position of the continental margin strongly influence rift-to-sag evolution, fault displacement, salt thickness and mobilization, and consequently reservoir distribution, compartmentalization, and fluid migration."@en ;
+    rdfs:subClassOf georeservoir:GEOCORE_0000004 .
+
+presalt:Coquina a owl:Class ;
+    rdfs:label "Coquina"@en ;
+    rdfs:comment "Coquina is a bioclastic carbonate rock that consists of accumulations of biological hard parts, commonly shell-rich and bioclast-enriched, and in the Brazilian pre-salt typically shows packstone, grainstone, or rudstone textures. In the Itapema Formation of the Santos Basin, it is commonly dominated by reworked bivalve shells with subordinate gastropods and ostracods, and it forms an important reservoir facies where moldic, vuggy, and intergranular porosity may be well developed."@en ;
+    rdfs:subClassOf [ a owl:Restriction ;
+            owl:onProperty bfo:BFO_0000178 ;
+            owl:someValuesFrom presalt:Bioclast ],
+        georeservoir:GEORES_0000032 .
+
+presalt:Dolostone a owl:Class ;
+    rdfs:label "Dolostone"@en ;
+    rdfs:comment "Dolostone is a carbonate sedimentary rock that is composed predominantly of dolomite, commonly occurring in the Brazilian Pre-Salt as dolomite rhombs and blocky dolomite aggregates within matrices of Mg-clays, organic matter, and detrital clasts. In Pre-Salt reservoirs, it commonly forms a subordinate diagenetic facies associated with pervasive dolomitization and silicification, may be interlaminated with or host chert, and can develop intercrystalline and vugular porosity that supports high reservoir quality."@en ;
+    rdfs:subClassOf [ a owl:Restriction ;
+            owl:onProperty georeservoir:GEOCORE_0000017 ;
+            owl:someValuesFrom presalt:Dolomite ],
+        presalt:CarbonateRock .
+
+presalt:FascicularCalciteCrust a owl:Class ;
+    rdfs:label "Fascicular Calcite Crust"@en ;
+    rdfs:comment "Fascicular calcite crust is a lacustrine carbonate crust that consists of shrub-like, vertically to near-vertically growing fascicular-optic to radial-fibrous non-magnesian calcite aggregates encrusting the water-sediment interface. In the Brazilian Pre-Salt, it commonly forms laminated to palisade crusts interbedded with Mg-silicates, siliciclastic mud, or peloidal laminae and constitutes one of the main reservoir facies of the sag section. Its fibrous crystalline fabric is interpreted mainly as an abiotic chemical precipitate, although it is commonly modified by recrystallization, dolomitization, and silicification."@en ;
+    rdfs:subClassOf [ a owl:Restriction ;
+            owl:onProperty bfo:BFO_0000056 ;
+            owl:someValuesFrom presalt:Recrystallization ],
+        [ a owl:Restriction ;
+            owl:onProperty georeservoir:GEOCORE_0000017 ;
+            owl:someValuesFrom presalt:Calcite ],
+        [ a owl:Restriction ;
+            owl:onProperty bfo:BFO_0000056 ;
+            owl:someValuesFrom presalt:Silicification ],
+        [ a owl:Restriction ;
+            owl:onProperty bfo:BFO_0000056 ;
+            owl:someValuesFrom presalt:Dolomitization ],
+        georeservoir:GEORES_0000032 .
+
+presalt:Fracture a owl:Class ;
+    rdfs:label "Fracture"@en ;
+    rdfs:comment "Fracture is a planar rock discontinuity that forms by brittle deformation and creates non-matrix porosity and potential fluid-flow pathways in carbonate reservoirs. In the Brazilian Pre-Salt, fractures are commonly related to tectonic and gravitational processes and are especially developed in silica-rich intervals where rheological contrast promotes brittle failure; they may remain open, be partially cemented, or be filled by minerals such as silica, dolomite, or barite."@en ;
+    rdfs:subClassOf georeservoir:GEOCORE_0000004 .
+
+presalt:Graben a owl:Class ;
+    rdfs:label "Graben"@en ;
+    rdfs:comment "Graben is a rift-related structural low that is bounded by normal faults and forms a subsiding depocenter between adjacent uplifted blocks. In the Brazilian Pre-Salt, grabens developed during the opening of the South Atlantic, commonly trapped thicker lacustrine sediment accumulations including organic-rich shales, and occur adjacent to horsts that favored carbonate reservoir development."@en ;
+    rdfs:subClassOf [ a owl:Restriction ;
+            owl:onProperty bfo:BFO_0000178 ;
+            owl:someValuesFrom presalt:NormalFault ],
+        presalt:StructuralLow .
+
+presalt:Groundwaterstorageandtransmissiondisposition a owl:Class ;
+    rdfs:label "GroundwaterStorageAndTransmissionDisposition"@en ;
+    rdfs:comment "A disposition that is borne by a body of rock and is realized when the rock stores and transmits groundwater through permeable or fractured rock."@en ;
+    rdfs:subClassOf bfo:BFO_0000016 .
+
+presalt:Hydrocarbongenerationdisposition a owl:Class ;
+    rdfs:label "HydrocarbonGenerationDisposition"@en ;
+    rdfs:comment "A disposition that is borne by a sedimentary rock containing sufficient organic matter and realized in hydrocarbon generation during burial and thermal maturation."@en ;
+    rdfs:subClassOf bfo:BFO_0000016 .
+
+presalt:Hydrocarbonreservoirdisposition a owl:Class ;
+    rdfs:label "HydrocarbonReservoirDisposition"@en ;
+    rdfs:comment "A disposition that is borne by a sedimentary rock with sufficient porosity and permeability to store hydrocarbons and allow their flow through a subsurface reservoir."@en ;
+    rdfs:subClassOf bfo:BFO_0000016 .
+
+presalt:Hydrocarbonreservoirrole a owl:Class ;
+    rdfs:label "HydrocarbonReservoirRole"@en ;
+    rdfs:comment "A role that is borne by a subsurface body of rock that contains and transmits accumulated hydrocarbons because it has sufficient porosity, permeability, and trapping conditions."@en ;
+    rdfs:subClassOf [ a owl:Restriction ;
+            owl:onProperty bfo:BFO_0000054 ;
+            owl:someValuesFrom bfo:BFO_0000015 ],
+        bfo:BFO_0000023 .
+
+presalt:HydrothermalAlteration a owl:Class ;
+    rdfs:label "Hydrothermal Alteration"@en ;
+    rdfs:comment "Hydrothermal alteration is a diagenetic process that modifies pre-existing carbonate rocks through the circulation of hot fluids, producing physicochemical changes and characteristic hydrothermal mineral precipitates. In Brazilian Pre-Salt reservoirs, it is commonly linked to fault-controlled fluid flow and is recognized by minerals such as macrocrystalline calcite, saddle dolomite, barite, celestine, and fluorite, locally also promoting dissolution and karstic porosity."@en ;
+    rdfs:subClassOf [ a owl:Restriction ;
+            owl:onProperty bfo:BFO_0000057 ;
+            owl:someValuesFrom presalt:CarbonateRock ],
+        presalt:DiageneticProcess ;
+    owl:equivalentClass [ a owl:Class ;
+            owl:intersectionOf ( presalt:DiageneticProcess [ a owl:Restriction ;
+                        owl:onProperty bfo:BFO_0000057 ;
+                        owl:someValuesFrom presalt:HydrothermalFluid ] ) ] .
+
+presalt:HydrothermalFluid a owl:Class ;
+    rdfs:label "Hydrothermal Fluid"@en ;
+    rdfs:comment "Hydrothermal fluid is a hot aqueous fluid that circulates through the crust at elevated temperatures and pressures, redistributing heat and mass and altering preexisting rocks. In Brazilian pre-salt carbonates, it commonly migrates along faults and fractures, may mix with lake water, precipitates minerals such as macrocrystalline calcite, saddle dolomite, barite, celestine, fluorite, and quartz, and can promote dissolution, hydraulic brecciation, and hypogenic karst porosity."@en ;
+    rdfs:subClassOf [ a owl:Restriction ;
+            owl:onProperty bfo:BFO_0000056 ;
+            owl:someValuesFrom presalt:HydrothermalAlteration ],
+        georeservoir:GEOCORE_0000009 .
+
+presalt:Lamination a owl:Class ;
+    rdfs:label "Lamination"@en ;
+    rdfs:comment "Lamination is a primary sedimentary structure that consists of very thin, millimeter- to centimeter-scale layers in carbonate rock, typically arranged parallel to subparallel to bedding and varying from planar to wavy. In the Brazilian Pre-Salt, laminations are commonly horizontal to sub-horizontal, may be regular, irregular, continuous, discontinuous, or crenulated, and reflect fine-scale depositional variation in alkaline to saline lacustrine settings."@en ;
+    rdfs:subClassOf georeservoir:GEOCORE_0000004 .
+
+presalt:Limestone a owl:Class ;
+    rdfs:label "Limestone"@en ;
+    rdfs:comment "Limestone is a sedimentary carbonate rock that consists predominantly of calcium carbonate, commonly as calcite, formed by chemical, microbial, or bioclastic accumulation and lithification. In the Brazilian Pre-Salt, especially in the Barra Velha Formation, limestones commonly include shrub- and spherulite-rich facies, as well as bioclastic and locally silicified varieties, whose textures reflect depositional setting and diagenetic overprint."@en ;
+    rdfs:subClassOf [ a owl:Restriction ;
+            owl:onProperty georeservoir:GEOCORE_0000017 ;
+            owl:someValuesFrom presalt:Calcite ],
+        georeservoir:GEORES_0000032 .
+
+presalt:NormalFault a owl:Class ;
+    rdfs:label "Normal Fault"@en ;
+    rdfs:comment "Normal fault is a tectonic fault that forms under extensional stress and is characterized by downward displacement of the hanging wall relative to the footwall. In the Brazilian Pre-Salt rift setting, normal faults commonly bound and compartmentalize crustal blocks, may display planar to curved geometries with significant dip and displacement, and can remain active during salt deposition, offsetting the base salt and influencing uplift, erosion, and reservoir architecture."@en ;
+    rdfs:subClassOf presalt:Fault .
+
+presalt:OrganicMatter a owl:Class ;
+    rdfs:label "Organic Matter"@en ;
+    rdfs:comment "Organic matter is a sedimentary organic component that consists of preserved biological material and microbial extracellular polymeric substances incorporated into pre-salt lacustrine carbonates. In the Brazilian Pre-Salt, it commonly occurs as remnants in laminites and dark bands associated with microcrystalline calcite, dolomite, and microbial fabrics, and it may both concentrate trace elements in biofilms and later generate CO2 and organic acids during maturation."@en ;
+    rdfs:subClassOf [ a owl:Restriction ;
+            owl:onProperty bfo:BFO_0000171 ;
+            owl:someValuesFrom presalt:Laminite ],
+        georeservoir:GEOCORE_0000006 .
+
+presalt:PreSalt a owl:NamedIndividual,
+        georeservoir:GEORES_0000002 ;
+    rdfs:label "Pre-Salt"@en ;
+    rdfs:comment "Pre-salt is a stratigraphic interval that comprises the sedimentary and locally volcanic succession deposited during the rift to sag stages beneath the regional Aptian evaporite seal in the Brazilian margin basins. In the Santos and Campos basins, the term commonly denotes the lacustrine carbonate reservoir succession, including coquinas and microbialites of units such as the Itapema and Barra Velha equivalents, which hosts giant hydrocarbon accumulations beneath thick salt."@en .
+
+presalt:PreSaltCarbonate a owl:Class ;
+    rdfs:label "Pre-Salt Carbonate"@en ;
+    rdfs:comment "Pre-salt carbonate is a lacustrine carbonate rock that was deposited in the Lower Cretaceous pre-evaporitic interval beneath the South Atlantic salt, forming the main reservoir facies of the Brazilian Pre-Salt. It is typically composed of limestone, dolomite, and silica with frequent magnesian clays such as stevensite, and occurs in highly variable facies including bioclastic grainstones and rudstones, fascicular calcite crusts, spherulitic deposits, and reworked intraclastic carbonates. Its reservoir quality is commonly highly heterogeneous because of strong facies variability and complex diagenetic overprinting, including dolomitization and silicification."@en ;
+    rdfs:subClassOf [ a owl:Restriction ;
+            owl:onProperty georeservoir:GEOCORE_0000017 ;
+            owl:someValuesFrom presalt:Silica ],
+        [ a owl:Restriction ;
+            owl:onProperty georeservoir:GEOCORE_0000017 ;
+            owl:someValuesFrom presalt:Dolomite ],
+        presalt:CarbonateRock .
+
+presalt:Regionalsealrole a owl:Class ;
+    rdfs:label "RegionalSealRole"@en ;
+    rdfs:comment "A role that is borne by a basin-scale body of rock that laterally extends over reservoir rocks and prevents upward migration and leakage of hydrocarbons."@en ;
+    rdfs:subClassOf [ a owl:Restriction ;
+            owl:onProperty bfo:BFO_0000054 ;
+            owl:someValuesFrom bfo:BFO_0000015 ],
+        bfo:BFO_0000023 .
+
+presalt:ReservoirFacies a owl:Class ;
+    rdfs:label "Reservoir Facies"@en ;
+    rdfs:comment "Reservoir facies is a depositional or diagenetic facies that has pore-system architecture and petrophysical properties favorable for hydrocarbon storage and flow. In the Brazilian Pre-Salt, the best reservoir facies commonly include stromatolites, grainstones, and shrub- or spherulite-rich facies, where connected primary porosity may be further enhanced by dissolution and fractures. Distinguishing reservoir facies from tighter muddy, bench-interior, or profundal facies is fundamental for predicting porosity-permeability distribution and production behavior."@en ;
+    rdfs:subClassOf georeservoir:GEORES_0000028 ;
+    owl:equivalentClass [ a owl:Class ;
+            owl:intersectionOf ( georeservoir:GEORES_0000028 [ a owl:Restriction ;
+                        owl:onProperty bfo:RO_0000087 ;
+                        owl:someValuesFrom presalt:Reservoirfaciesrole ] ) ] .
+
+presalt:ReservoirRock a owl:Class ;
+    rdfs:label "Reservoir Rock"@en ;
+    rdfs:comment "Reservoir rock is a sedimentary rock or rock facies that has sufficient porosity and permeability to store hydrocarbons and allow their flow through the subsurface reservoir. In the Brazilian Pre-Salt, reservoir rocks are chiefly lacustrine carbonates of the Itapema and Barra Velha formations, especially bioclastic limestones or coquinas and shrub-dominated facies, whose quality is highly heterogeneous and strongly controlled by depositional texture and diagenetic processes such as dissolution, neomorphism, silicification, dolomitization, and mineral replacement."@en ;
+    rdfs:subClassOf [ a owl:Restriction ;
+            owl:onProperty bfo:RO_0000086 ;
+            owl:someValuesFrom presalt:Porosity ],
+        georeservoir:GEORES_0000032 ;
+    owl:equivalentClass [ a owl:Class ;
+            owl:intersectionOf ( georeservoir:GEORES_0000032 [ a owl:Restriction ;
+                        owl:onProperty bfo:RO_0000091 ;
+                        owl:someValuesFrom presalt:Hydrocarbonreservoirdisposition ] ) ] .
+
+presalt:Reservoirfaciesrole a owl:Class ;
+    rdfs:label "ReservoirFaciesRole"@en ;
+    rdfs:comment "A role that is borne by a facies with pore-system architecture and petrophysical properties favorable for hydrocarbon storage and flow."@en ;
+    rdfs:subClassOf [ a owl:Restriction ;
+            owl:onProperty bfo:BFO_0000054 ;
+            owl:someValuesFrom bfo:BFO_0000015 ],
+        bfo:BFO_0000023 .
+
+presalt:ReworkFacies a owl:Class ;
+    rdfs:label "Rework Facies"@en ;
+    rdfs:comment "Rework facies is a carbonate sedimentary facies that is dominated by grains and intraclasts eroded from previously formed carbonate deposits and redeposited by transport. In the Brazilian Pre-Salt, especially in the Barra Velha Formation, it commonly consists of reworked fragments of spherulites, crystal shrubs, and hybrid forms, ranging from calcarenites to calcirudites and often showing laminations, massive textures, or low-angle cross-stratification. These facies may also contain mud, clay, peloids, ostracod bioclasts, and locally siliciclastic detritus, and they are important because some intervals develop significant interparticle porosity."@en ;
+    rdfs:subClassOf [ a owl:Restriction ;
+            owl:onProperty bfo:BFO_0000178 ;
+            owl:someValuesFrom presalt:Intraclast ],
+        presalt:DepositionalFacies .
+
+presalt:RiftPhase a owl:Class ;
+    rdfs:label "Rift Phase"@en ;
+    rdfs:comment "Rift phase is a tectonostratigraphic stage that corresponds to active extensional deformation, fault-controlled subsidence, and associated volcanism and sedimentation during the initial opening of a basin. In the Brazilian Pre-Salt, it begins in the Hauterivian with basaltic volcanism over the basement and evolves into graben- and half-graben-controlled fluvial-lacustrine deposition. This phase includes the accumulation of siliciclastics, organic-rich shales, coquinas, and early bioclastic carbonates in units such as the Camboriu or Cabiunas, Picarras, and Itapema formations, before the post-rift microbialite and evaporite succession."@en ;
+    rdfs:subClassOf presalt:TectonostratigraphicStage .
+
+presalt:Sealrole a owl:Class ;
+    rdfs:label "SealRole"@en ;
+    rdfs:comment "A role that is borne by a body of rock that prevents or strongly retards the migration of hydrocarbons or other subsurface fluids, allowing their accumulation in a reservoir."@en ;
+    rdfs:subClassOf [ a owl:Restriction ;
+            owl:onProperty bfo:BFO_0000054 ;
+            owl:someValuesFrom bfo:BFO_0000015 ],
+        bfo:BFO_0000023 .
+
+presalt:Silicification a owl:Class ;
+    rdfs:label "Silicification"@en ;
+    rdfs:comment "Silicification is a diagenetic process that replaces carbonate and Mg-rich clay constituents of reservoir rocks with silica through concurrent dissolution of calcium carbonate and precipitation of silica. In the Brazilian Pre-Salt, it can occur from syndepositional to burial stages and commonly appears as microcrystalline silica, chalcedony, quartz cement, pore-filling silica, or siliceous bands, increasing mineralogical heterogeneity and commonly reducing porosity and permeability."@en ;
+    rdfs:subClassOf [ a owl:Restriction ;
+            owl:onProperty bfo:BFO_0000057 ;
+            owl:someValuesFrom presalt:Silica ],
+        [ a owl:Restriction ;
+            owl:onProperty bfo:BFO_0000057 ;
+            owl:someValuesFrom presalt:MgClay ],
+        presalt:Replacement .
+
+presalt:SourceRock a owl:Class ;
+    rdfs:label "Source Rock"@en ;
+    rdfs:comment "Source rock is a sedimentary rock that contains sufficient organic matter to generate hydrocarbons during burial and thermal maturation. In the Brazilian pre-salt, this term refers chiefly to the Barremian–Aptian lacustrine organic-rich shales of the Itapema Formation, deposited in fresh-to-brackish settings and commonly characterized by TOC of about 2–6% and type I kerogen, which charge the Itapema and Barra Velha carbonate reservoirs."@en ;
+    rdfs:subClassOf [ a owl:Restriction ;
+            owl:onProperty bfo:BFO_0000178 ;
+            owl:someValuesFrom presalt:OrganicMatter ],
+        georeservoir:GEORES_0000032 ;
+    owl:equivalentClass [ a owl:Class ;
+            owl:intersectionOf ( georeservoir:GEORES_0000032 [ a owl:Restriction ;
+                        owl:onProperty bfo:RO_0000091 ;
+                        owl:someValuesFrom presalt:Hydrocarbongenerationdisposition ] ) ] .
+
+presalt:StratigraphicSurface a owl:Class ;
+    rdfs:label "Stratigraphic Surface"@en ;
+    rdfs:comment "Stratigraphic Surface is a Geological Boundary that forms a time-significant surface within a rock succession or between adjacent stratigraphic units."@en ;
+    rdfs:subClassOf georeservoir:GEOCORE_0000011 .
+
+presalt:StructuralDomain a owl:Class ;
+    rdfs:label "Structural Domain"@en ;
+    rdfs:comment "Structural domain is a structural subdivision of a basin that is distinguished from adjacent areas by a coherent fault pattern, geometry, and deformation style. In the Brazilian pre-salt, structural domains commonly include horsts, grabens, half-grabens, or deep and shallow faulted sectors, and they control depocenter distribution, accommodation-zone development, sedimentary facies, reservoir quality, and fluid connectivity."@en ;
+    rdfs:subClassOf bfo:BFO_0000029 .
+
+presalt:StructuralLow a owl:Class ;
+    rdfs:label "Structural Low"@en ;
+    rdfs:comment "Structural low is a structural domain that lies at a relatively lower elevation than adjacent structural highs because of fault-controlled basin architecture and differential subsidence. In Brazilian Pre-Salt settings, structural lows are mapped on basement or stratigraphic horizons as fault-bounded depressions that create accommodation and commonly favor the accumulation of fine-grained carbonate muds, Mg-rich clays, and laminite deposits."@en ;
+    rdfs:subClassOf presalt:StructuralDomain .
+
+presalt:Unconformity a owl:Class ;
+    rdfs:label "Unconformity"@en ;
+    rdfs:comment "Unconformity is a stratigraphic surface that represents a hiatus caused by nondeposition, erosion, or deformation between older and younger rock successions. In the Brazilian Pre-Salt, unconformities are key seismic and well-correlated horizons, such as the Pre-Alagoas, Intra-Alagoas, and base-salt surfaces, that bound major tectono-stratigraphic units. Their expression commonly varies from erosional or angular truncation over palaeohighs to near-conformable geometry in palaeodepressions."@en ;
+    rdfs:subClassOf presalt:StratigraphicSurface .
+
+presalt:VolcanicRock a owl:Class ;
+    rdfs:label "Volcanic Rock"@en ;
+    rdfs:comment "Volcanic rock is an igneous rock that forms by the cooling and solidification of magma or lava at or near the Earth’s surface. In the Brazilian Pre-Salt, it commonly occurs as altered volcanic fragments or volcanic-related sediments reworked with lacustrine carbonates, locally contributing clasts within packstones, calcirudites, and mixed reworked deposits."@en ;
+    rdfs:subClassOf presalt:IgneousRock .
+
+presalt:Vug a owl:Class ;
+    rdfs:label "Vug"@en ;
+    rdfs:comment "Vug is a secondary pore that is non-fabric-selective and generated or enlarged by dissolution in carbonate rock. In Brazilian Pre-Salt carbonates, vugs are typically mostly open cavity-like voids, commonly centimeter scale and isolated at core scale, but they may touch or connect along natural fractures or, less commonly, bedding planes, especially in silicified and fractured intervals."@en ;
+    rdfs:subClassOf [ a owl:Restriction ;
+            owl:onProperty georeservoir:GEOCORE_0000013 ;
+            owl:someValuesFrom presalt:Dissolution ],
+        [ a owl:Restriction ;
+            owl:onProperty bfo:BFO_0000171 ;
+            owl:someValuesFrom presalt:CarbonateRock ],
+        presalt:Pore .
+
+georeservoir:GEOCORE_0000009 a owl:Class ;
+    rdfs:label "earth fluid"@en ;
+    rdfs:subClassOf georeservoir:GEOCORE_0000006 .
+
+georeservoir:GEOCORE_0000010 a owl:Class ;
+    rdfs:label "unconsolidated earth material"@en ;
+    rdfs:subClassOf georeservoir:GEOCORE_0000006 .
+
+georeservoir:GEORES_0000006 a owl:Class ;
+    rdfs:label "architectural element"@en ;
+    rdfs:subClassOf georeservoir:GEORES_0000001 .
+
+georeservoir:GEORES_0000015 a owl:Class ;
+    rdfs:label "mound unit"@en ;
+    rdfs:subClassOf georeservoir:GEORES_0000006 .
+
+georeservoir:GEORES_0000022 a owl:Class ;
+    rdfs:label "dimension"@en ;
+    rdfs:subClassOf bfo:BFO_0000019 .
+
+georeservoir:GEORES_0000031 a owl:Class ;
+    rdfs:label "sediment"@en ;
+    rdfs:subClassOf georeservoir:GEOCORE_0000010 .
+
+bfo:BFO_0000001 a owl:Class ;
+    rdfs:label "entity"@en .
+
+presalt:Basement a owl:Class ;
+    rdfs:label "Basement"@en ;
+    rdfs:comment "Basement is a pre-sedimentary crustal substrate that forms the structural foundation beneath the overlying sedimentary succession. In the Brazilian pre-salt, the top of the basement is the seismic horizon that bounds the acoustic basement and is commonly organized into horsts, grabens, and half-grabens, where inherited basement composition and fabric strongly control rift faulting and the accommodation of overlying carbonates."@en ;
+    rdfs:subClassOf georeservoir:GEORES_0000001 .
+
+presalt:CarbonatePlatform a owl:Class ;
+    rdfs:label "Carbonate Platform"@en ;
+    rdfs:comment "Carbonate platform is a broad, shallow-water depositional system that accumulates carbonate sediments on a structural or topographic high and develops a relatively flat platform top bounded by marginal and slope deposits. In the Brazilian Pre-Salt, it commonly formed in lacustrine settings over basement highs or volcanic pedestals, where aggradation, local progradation, fault-controlled paleotopography, and lake-level oscillations governed facies distribution and reservoir architecture."@en ;
+    rdfs:subClassOf georeservoir:GEORES_0000020 .
+
+presalt:CoatedGrain a owl:Class ;
+    rdfs:label "Coated Grain"@en ;
+    rdfs:comment "Coated Grain is a geological object that is a discrete particle with a nucleus enclosed by one or more accreted coats or a cortex."@en ;
+    rdfs:subClassOf georeservoir:GEOCORE_0000001 .
+
+presalt:DepositionalFacies a owl:Class ;
+    rdfs:label "Depositional Facies"@en ;
+    rdfs:comment "Depositional facies is a sedimentary facies that records the original depositional conditions of a rock through its primary composition, texture, and fabric. In the Brazilian Pre-Salt carbonates, depositional facies include in-situ shrub- and spherulite-rich deposits as well as reworked carbonate facies ranging from mudstones to intraclastic grainstones and rudstones. They are distinguished from diagenetic facies, which may derive from similar original deposits but now display different fabrics because of post-depositional alteration."@en ;
+    rdfs:subClassOf georeservoir:GEORES_0000029 .
+
+presalt:FaultBlock a owl:Class ;
+    rdfs:label "Fault Block"@en ;
+    rdfs:comment "Fault block is a structural block of crust or older strata that is bounded and displaced by faults, commonly becoming tilted in extensional settings. In the Brazilian Pre-Salt, tilted fault blocks of volcanic or sedimentary basement form crests, dip slopes, and escarpment slopes onto which the Barra Velha Formation onlaps, thereby controlling stratigraphic thickness and the distribution of grainstone and associated lacustrine facies."@en ;
+    rdfs:subClassOf georeservoir:GEORES_0000001 .
+
+presalt:IgneousRock a owl:Class ;
+    rdfs:label "Igneous Rock"@en ;
+    rdfs:comment "Igneous rock is a rock type that forms by the cooling and solidification of magma or lava. In the Brazilian Pre-Salt, it occurs as Barremian–Aptian extrusive tholeiitic basalts and Santonian–Campanian alkaline intrusive bodies, commonly sills or saucer-shaped bodies, which may cut or follow the stratigraphy, show high seismic velocities, and strongly influence reservoir volume, flow behavior, pressure support, and associated diagenetic alteration."@en ;
+    rdfs:subClassOf georeservoir:GEOCORE_0000008 .
+
+presalt:InSituFacies a owl:Class ;
+    rdfs:label "In Situ Facies"@en ;
+    rdfs:comment "In situ facies is a carbonate facies that forms essentially in place by the precipitation of calcite shrubs and/or spherulites within muddy sediment, rather than by grain transport and reworking. In the Brazilian pre-salt, it is composed of microcrystalline calcite and clay-rich mud mixed with fascicular calcite shrubs and calcite spherulites, and it is commonly classified by the dominant component, such as shrubby or spherulitic facies, in relatively low-energy lacustrine zones."@en ;
+    rdfs:subClassOf [ a owl:Restriction ;
+            owl:onProperty bfo:BFO_0000178 ;
+            owl:someValuesFrom presalt:Spherulite ],
+        [ a owl:Restriction ;
+            owl:onProperty bfo:BFO_0000178 ;
+            owl:someValuesFrom presalt:Shrub ],
+        presalt:DepositionalFacies .
+
+presalt:InterparticlePore a owl:Class ;
+    rdfs:label "Interparticle Pore"@en ;
+    rdfs:comment "Interparticle pore is a pore space that occurs between adjacent grains, intraclasts, or other particles in a carbonate rock. In the Brazilian Pre-Salt, it is especially common in reworked facies such as calcirudites and calcarenites, where dissolution may enlarge it and bedding may organize it into stratified, concordant porosity. When these pores remain open and connected they commonly support high permeability, but they may also be partially or completely occluded by silica, dolomite, or anhydrite cement."@en ;
+    rdfs:subClassOf [ a owl:Restriction ;
+            owl:onProperty bfo:BFO_0000171 ;
+            owl:someValuesFrom presalt:Calcirudite ],
+        [ a owl:Restriction ;
+            owl:onProperty bfo:BFO_0000171 ;
+            owl:someValuesFrom presalt:CarbonateRock ],
+        [ a owl:Restriction ;
+            owl:onProperty bfo:BFO_0000171 ;
+            owl:someValuesFrom presalt:Calcarenite ],
+        presalt:Pore .
+
+presalt:LacustrineSystem a owl:Class ;
+    rdfs:label "Lacustrine System"@en ;
+    rdfs:comment "Lacustrine system is a depositional system that develops within a lake basin and controls the sedimentary, chemical, and ecological processes that generate lake deposits. In the Brazilian Pre-Salt, it refers to the vast Aptian alkaline, stratified to meromictic lake system that occupied much of the South Atlantic rift depression, hosted carbonate accumulation, and preceded the deposition of the overlying evaporites."@en ;
+    rdfs:subClassOf georeservoir:GEORES_0000020 .
+
+presalt:Laminite a owl:Class ;
+    rdfs:label "Laminite"@en ;
+    rdfs:comment "Laminite is a fine-laminated lacustrine carbonate rock that consists of thin parallel laminae and, in the Brazilian Pre-Salt, commonly derives from originally laminated clay-rich, probably stevensitic, deposits replaced by calcite or dolomite. It is typically composed mainly of calcite and dolomite, may preserve organic matter and minor siliciclastic grains between laminae, and can be variably affected by dolomitization, silicification, and dissolution porosity during diagenesis."@en ;
+    rdfs:subClassOf [ a owl:Restriction ;
+            owl:onProperty georeservoir:GEOCORE_0000017 ;
+            owl:someValuesFrom presalt:Dolomite ],
+        [ a owl:Restriction ;
+            owl:onProperty georeservoir:GEOCORE_0000017 ;
+            owl:someValuesFrom presalt:Calcite ],
+        presalt:LacustrineCarbonate .
+
+presalt:Lithofacies a owl:Class ;
+    rdfs:label "Lithofacies"@en ;
+    rdfs:comment "Lithofacies is a sedimentary facies unit that is defined by the distinctive lithologic and petrographic characteristics of a rock body. In the Brazilian Pre-Salt Barra Velha carbonates, lithofacies are commonly used to distinguish in-situ or autochthonous facies, such as shrubstone, spherulitic facies, and mudstone, from reworked or allochthonous facies, such as calcarenite and calcirudite, to relate depositional texture and reworking to reservoir quality."@en ;
+    rdfs:subClassOf georeservoir:GEORES_0000029 .
+
+presalt:Microbialite a owl:Class ;
+    rdfs:label "Microbialite"@en ;
+    rdfs:comment "Microbialite is an organosedimentary carbonate deposit that is produced, induced, or influenced by benthic microbial communities. In the Brazilian Pre-Salt, especially the Barra Velha Formation, it commonly occurs as autochthonous porous tabular, irregular, or lenticular bodies with massive texture, relic lamination, and local subvertical branching, and is typically composed of carbonate clots and peloids fringed by fibrous or mosaic calcite."@en ;
+    rdfs:subClassOf presalt:CarbonateRock .
+
+presalt:Mud a owl:Class ;
+    rdfs:label "Mud"@en ;
+    rdfs:comment "Mud is a fine-grained sediment that occurs in Brazilian Pre-Salt carbonates as matrix between grains and as laminated or massive beds, and is composed of variable proportions of clay minerals, calcite, dolomite, and silica. In the Barra Velha Formation, it commonly forms millimetric to centimetric plane-parallel to slightly wavy laminae, with microcrystalline calcite in lighter layers and dolomite, organic matter, Mg-clays, and locally silica in darker layers. Clay-rich and carbonate-mud components may also be partially replaced by microcrystalline dolomite and silica."@en ;
+    rdfs:subClassOf [ a owl:Restriction ;
+            owl:onProperty georeservoir:GEOCORE_0000017 ;
+            owl:someValuesFrom presalt:Silica ],
+        [ a owl:Restriction ;
+            owl:onProperty georeservoir:GEOCORE_0000017 ;
+            owl:someValuesFrom presalt:Dolomite ],
+        [ a owl:Restriction ;
+            owl:onProperty georeservoir:GEOCORE_0000017 ;
+            owl:someValuesFrom presalt:ClayMineral ],
+        [ a owl:Restriction ;
+            owl:onProperty georeservoir:GEOCORE_0000017 ;
+            owl:someValuesFrom presalt:Calcite ],
+        georeservoir:GEORES_0000031 .
+
+presalt:PhyllosilicateMineral a owl:Class ;
+    rdfs:label "Phyllosilicate Mineral"@en ;
+    rdfs:comment "Phyllosilicate Mineral is a mineral that has a sheet-silicate crystal structure."@en ;
+    rdfs:subClassOf georeservoir:GEOCORE_0000006 .
+
+presalt:PoreSystem a owl:Class ;
+    rdfs:label "Pore System"@en ;
+    rdfs:comment "Pore system is a network of void spaces in a rock that includes the types, sizes, distribution, geometry, and connectivity of pores and pore conduits that control fluid storage and flow. In Brazilian pre-salt carbonates, it is typically multiscale and highly heterogeneous, reflecting both depositional fabric and diagenetic modification such as compaction, cementation, dissolution, and fracturing. It may comprise pore types such as growth-framework, intercrystalline, interparticle, vuggy, and fracture-related pores, locally forming laterally and vertically connected enlarged pore bodies."@en ;
+    rdfs:subClassOf georeservoir:GEOCORE_0000004 .
+
+presalt:Recrystallization a owl:Class ;
+    rdfs:label "Recrystallization"@en ;
+    rdfs:comment "Recrystallization is a diagenetic process that reorganizes pre-existing carbonate minerals into new crystals, commonly coarser calcite, thereby modifying the matrix, cement, or bioclast fabric of the rock. In Brazilian Pre-Salt carbonates, it commonly affects shells, micritic matrix, and calcite cements, and may either create intercrystalline or intraelement porosity or, when intense, obliterate the original depositional fabric and alter reservoir quality."@en ;
+    rdfs:subClassOf [ a owl:Restriction ;
+            owl:onProperty bfo:BFO_0000057 ;
+            owl:someValuesFrom presalt:Calcite ],
+        presalt:DiageneticProcess .
+
+presalt:SecondaryPorosity a owl:Class ;
+    rdfs:label "Secondary Porosity"@en ;
+    rdfs:comment "Secondary porosity is a reservoir pore system that forms after deposition and lithification through diagenetic alteration of the rock, especially by dissolution of Mg-clays, carbonate grains, and cements, and by fracturing. In Brazilian pre-salt carbonates, it commonly includes matrix dissolution, intraparticle, moldic, vugular, intercrystalline, intracrystalline, enlarged fenestral, and fracture porosity, and it may constitute the dominant share of total porosity in productive intervals."@en ;
+    rdfs:subClassOf presalt:PoreSystem .
+
+presalt:Shrub a owl:Class ;
+    rdfs:label "Shrub"@en ;
+    rdfs:comment "Shrub is a calcitic crystal crust that consists of fan-shaped fascicular-optic aggregates of fibrous to very coarse bladed calcite growing perpendicular to, and away from, the substrate. In the Barra Velha pre-salt carbonates, shrubs commonly occur as parallel horizontal layers or low domes, typically with growth axes 0.15–6.5 mm long, and may trap fine detrital grains or develop into composite crusts up to 20 mm through multiple growth phases."@en ;
+    rdfs:subClassOf [ a owl:Restriction ;
+            owl:onProperty georeservoir:GEOCORE_0000017 ;
+            owl:someValuesFrom presalt:Calcite ],
+        georeservoir:GEOCORE_0000001 .
+
+georeservoir:GEORES_0000018 a owl:Class ;
+    rdfs:label "fossil"@en ;
+    rdfs:subClassOf georeservoir:GEOCORE_0000001 .
+
+georeservoir:GEORES_0000020 a owl:Class ;
+    rdfs:label "depositional system"@en ;
+    rdfs:subClassOf bfo:BFO_0000027 .
+
+georeservoir:GEORES_0000021 a owl:Class ;
+    rdfs:label "sedimentary environment"@en ;
+    rdfs:subClassOf bfo:BFO_0000027 .
+
+georeservoir:GEORES_0000029 a owl:Class ;
+    rdfs:label "Sedimentary Facies"@en ;
+    rdfs:comment "Sedimentary facies is a mappable body of sediment or sedimentary rock that is distinguished by a characteristic combination of lithology, texture, sedimentary structures, and vertical or lateral association, reflecting a specific depositional environment or process. In the Brazilian Pre-Salt, sedimentary facies are identified by integrating core, thin-section, well-log, and seismic data to reconstruct lacustrine settings such as profundal, slope, bench interior, and bench margin, and to distinguish in-situ from reworked carbonate deposits."@en ;
+    rdfs:subClassOf georeservoir:GEORES_0000028 .
+
+bfo:BFO_0000002 a owl:Class ;
+    rdfs:label "continuant"@en ;
+    rdfs:subClassOf bfo:BFO_0000001 ;
+    owl:disjointWith bfo:BFO_0000003 .
+
+bfo:BFO_0000003 a owl:Class ;
+    rdfs:label "occurrent"@en ;
+    rdfs:subClassOf bfo:BFO_0000001 .
+
+bfo:BFO_0000016 a owl:Class ;
+    rdfs:label "disposition"@en ;
+    rdfs:subClassOf bfo:BFO_0000017 .
+
+bfo:BFO_0000017 a owl:Class ;
+    rdfs:label "realizable entity"@en ;
+    rdfs:subClassOf bfo:BFO_0000020 .
+
+bfo:BFO_0000020 a owl:Class ;
+    rdfs:label "specifically dependent continuant"@en ;
+    rdfs:subClassOf bfo:BFO_0000002 ;
+    owl:disjointWith bfo:BFO_0000031 .
+
+bfo:BFO_0000027 a owl:Class ;
+    rdfs:label "object aggregate"@en ;
+    rdfs:subClassOf bfo:BFO_0000040 .
+
+bfo:BFO_0000040 a owl:Class ;
+    rdfs:label "material entity"@en ;
+    rdfs:subClassOf bfo:BFO_0000004 ;
+    owl:disjointWith bfo:BFO_0000141 .
+
+bfo:BFO_0000141 a owl:Class ;
+    rdfs:label "immaterial entity"@en ;
+    rdfs:subClassOf bfo:BFO_0000004 .
+
+bfo:BFO_0000176 a owl:ObjectProperty ;
+    rdfs:label "continuant part of"@en .
+
+bfo:RO_0000091 a owl:ObjectProperty ;
+    rdfs:label "has disposition"@en .
+
+presalt:CarbonateMineral a owl:Class ;
+    rdfs:label "Carbonate Mineral"@en ;
+    rdfs:comment "Carbonate Mineral is a mineral that is composed principally of carbonate anions combined with one or more cations."@en ;
+    rdfs:subClassOf georeservoir:GEOCORE_0000006 .
+
+presalt:Compaction a owl:Class ;
+    rdfs:label "Compaction"@en ;
+    rdfs:comment "Compaction is a diagenetic process that reduces the volume and pore space of sediment or rock under burial stress by mechanically rearranging and deforming grains and laminae. In Brazilian Pre-Salt carbonates it is commonly weak and mainly mechanical, recognized by crinkled argillaceous laminae wrapped around nodules, tight grain packing, concave-convex to long grain contacts, slight grain deformation, and rarer sutured contacts, especially in laminated argillaceous limestones and grainier facies."@en ;
+    rdfs:subClassOf presalt:DiageneticProcess .
+
+presalt:Dolomitization a owl:Class ;
+    rdfs:label "Dolomitization"@en ;
+    rdfs:comment "Dolomitization is a diagenetic replacement process that transforms carbonate and Mg-clay constituents into dolomite, typically during early diagenesis in Brazilian pre-salt lacustrine carbonates. In these reservoirs, it commonly generates intercrystalline porosity and helps connect moldic and vugular pores, improving porosity and permeability, although pervasive dolomitization in some sag facies can reduce pore-throat size."@en ;
+    rdfs:subClassOf [ a owl:Restriction ;
+            owl:onProperty bfo:BFO_0000057 ;
+            owl:someValuesFrom presalt:Dolomite ],
+        [ a owl:Restriction ;
+            owl:onProperty bfo:BFO_0000057 ;
+            owl:someValuesFrom presalt:MgClay ],
+        presalt:Replacement .
+
+presalt:HydrocarbonReservoir a owl:Class ;
+    rdfs:label "Hydrocarbon Reservoir"@en ;
+    rdfs:comment "Hydrocarbon reservoir is a subsurface rock body that contains and transmits accumulated hydrocarbons because it has sufficient porosity, permeability, and trapping conditions. In the Brazilian Pre-Salt, these reservoirs are commonly lacustrine carbonate bodies whose quality and connectivity are strongly controlled by depositional facies, diagenetic alteration, fractures, vugs, and compartmentalization."@en ;
+    rdfs:subClassOf [ a owl:Restriction ;
+            owl:onProperty bfo:RO_0000086 ;
+            owl:someValuesFrom presalt:Porosity ],
+        georeservoir:GEORES_0000001 ;
+    owl:equivalentClass [ a owl:Class ;
+            owl:intersectionOf ( georeservoir:GEORES_0000001 [ a owl:Restriction ;
+                        owl:onProperty bfo:RO_0000087 ;
+                        owl:someValuesFrom presalt:Hydrocarbonreservoirrole ] ) ] .
+
+presalt:PetrophysicalProperty a owl:Class ;
+    rdfs:label "Petrophysical Property"@en ;
+    rdfs:comment "Petrophysical Property is a quality that quantifies or characterizes a physical attribute of rock or reservoir relevant to fluid storage, fluid flow, or geophysical response."@en ;
+    rdfs:subClassOf [ a owl:Restriction ;
+            owl:onProperty bfo:BFO_0000197 ;
+            owl:someValuesFrom bfo:BFO_0000004 ],
+        bfo:BFO_0000019 .
+
+presalt:Replacement a owl:Class ;
+    rdfs:label "Replacement"@en ;
+    rdfs:comment "Replacement is a diagenetic process that substitutes a pre-existing mineral or sedimentary component with a new mineral in situ, commonly through coupled dissolution and precipitation and often with preservation of the original texture or morphology. In the Brazilian Pre-Salt lacustrine carbonates, replacement commonly affects spherulites, stevensitic clays, fine grains, and growth-framework elements by silica, dolomite, or calcite, and it can create microporosity or vugular porosity while strongly modifying reservoir quality."@en ;
+    rdfs:subClassOf [ a owl:Restriction ;
+            owl:onProperty bfo:BFO_0000117 ;
+            owl:someValuesFrom presalt:Dissolution ],
+        presalt:DiageneticProcess .
+
+presalt:Seal a owl:Class ;
+    rdfs:label "Seal"@en ;
+    rdfs:comment "Seal is a low-permeability geological unit that prevents or strongly retards the migration of hydrocarbons and other subsurface fluids, allowing their accumulation in a reservoir. In the Brazilian Pre-Salt, the regional seal is commonly provided by the Ariri Formation evaporites, mainly halite and anhydrite, although low-permeability micritic intervals and the integrity of faults through the salt can also control local sealing and leakage behavior."@en ;
+    rdfs:subClassOf georeservoir:GEORES_0000001 ;
+    owl:equivalentClass [ a owl:Class ;
+            owl:intersectionOf ( georeservoir:GEORES_0000001 [ a owl:Restriction ;
+                        owl:onProperty bfo:RO_0000087 ;
+                        owl:someValuesFrom presalt:Sealrole ] ) ] .
+
+presalt:SedimentaryBasin a owl:Class ;
+    rdfs:label "Sedimentary Basin"@en ;
+    rdfs:comment "Sedimentary Basin is a basin that accumulates a fill of sediments within accommodation space generated by tectonic, thermal, or related subsidence."@en ;
+    rdfs:subClassOf georeservoir:GEORES_0000039 .
+
+presalt:StructuralHigh a owl:Class ;
+    rdfs:label "Structural High"@en ;
+    rdfs:comment "Structural high is a positive structural relief element that stands above adjacent structural lows because of fault-controlled uplift, reduced subsidence, or both. In the Brazilian pre-salt, structural highs commonly correspond to horsts or faulted borders of grabens and half-grabens, persist through syn-rift evolution, and often favor the deposition and trapping of Barra Velha carbonate reservoirs."@en ;
+    rdfs:subClassOf georeservoir:GEOCORE_0000004 .
+
+presalt:TectonostratigraphicSupersequence a owl:Class ;
+    rdfs:label "Tectonostratigraphic Supersequence"@en ;
+    rdfs:comment "Tectonostratigraphic Supersequence is a Stratigraphic Unit that groups large-scale strata deposited during a distinct tectonic stage of basin evolution."@en ;
+    rdfs:subClassOf georeservoir:GEORES_0000002 .
+
+georeservoir:GEOCORE_0000008 a owl:Class ;
+    rdfs:label "amount of rock"@en ;
+    rdfs:subClassOf georeservoir:GEOCORE_0000006 .
+
+georeservoir:GEORES_0000023 a owl:Class ;
+    rdfs:label "geometry"@en ;
+    rdfs:subClassOf bfo:BFO_0000019 .
+
+georeservoir:GEORES_0000028 a owl:Class ;
+    rdfs:label "facies"@en ;
+    rdfs:subClassOf bfo:BFO_0000031 .
+
+bfo:BFO_0000023 a owl:Class ;
+    rdfs:label "role"@en ;
+    rdfs:subClassOf bfo:BFO_0000017 .
+
+bfo:BFO_0000031 a owl:Class ;
+    rdfs:label "generically dependent continuant"@en ;
+    rdfs:subClassOf bfo:BFO_0000002 .
+
+bfo:BFO_0000054 a owl:ObjectProperty ;
+    rdfs:label "has realization"@en .
+
+bfo:RO_0000087 a owl:ObjectProperty ;
+    rdfs:label "has role"@en .
+
+presalt:Cementation a owl:Class ;
+    rdfs:label "Cementation"@en ;
+    rdfs:comment "Cementation is a diagenetic process that precipitates minerals within pores and between grains, binding the carbonate framework and modifying reservoir properties. In the Brazilian pre-salt, common cements include calcite, dolomite, quartz, chalcedony, silica, and barite, typically filling intergranular or growth-framework pores and reducing porosity. In some cases, however, rim-like siliceous cementation can increase resistance to compaction and help preserve pore space."@en ;
+    rdfs:subClassOf presalt:DiageneticProcess .
+
+presalt:ClayMineral a owl:Class ;
+    rdfs:label "Clay Mineral"@en ;
+    rdfs:comment "Clay mineral is a fine-grained phyllosilicate mineral that constitutes the mud fraction of Brazilian Pre-Salt lacustrine carbonates and is commonly dominated by Mg-rich species such as kerolite, mixed-layer kerolite/Mg-smectite, Mg-smectite, and sepiolite. In the Barra Velha and related Aptian reservoirs, these minerals occur dispersed between siliciclastic grains or in very thin laminae, with minor illite, illite-smectite, kaolinite, and chlorite also present."@en ;
+    rdfs:subClassOf [ a owl:Restriction ;
+            owl:onProperty bfo:BFO_0000171 ;
+            owl:someValuesFrom presalt:LacustrineCarbonate ],
+        presalt:PhyllosilicateMineral .
+
+presalt:Diagenesis a owl:Class ;
+    rdfs:label "Diagenesis"@en ;
+    rdfs:comment "Diagenesis is a post-depositional alteration process that modifies carbonate sediments and rocks through dissolution, cementation, recrystallization, dolomitization, compaction, and mineral replacement. In Brazilian pre-salt lacustrine carbonates, it is the main control on pore-size distribution, connectivity, porosity, and permeability, with processes such as Mg-clay and carbonate dissolution generating vuggy and moldic porosity, while calcite, dolomite, silica cements, and chemical compaction commonly occlude or locally preserve reservoir pore space."@en ;
+    rdfs:subClassOf [ a owl:Restriction ;
+            owl:onProperty bfo:BFO_0000117 ;
+            owl:someValuesFrom presalt:Dolomitization ],
+        [ a owl:Restriction ;
+            owl:onProperty bfo:BFO_0000117 ;
+            owl:someValuesFrom presalt:Cementation ],
+        [ a owl:Restriction ;
+            owl:onProperty bfo:BFO_0000117 ;
+            owl:someValuesFrom presalt:Recrystallization ],
+        [ a owl:Restriction ;
+            owl:onProperty bfo:BFO_0000117 ;
+            owl:someValuesFrom presalt:Dissolution ],
+        georeservoir:GEOCORE_0000002 .
+
+presalt:Fault a owl:Class ;
+    rdfs:label "Fault"@en ;
+    rdfs:comment "Fault is a structural discontinuity that accommodates relative displacement of rock volumes along a fracture surface or fault zone. In Brazilian Pre-Salt carbonate reservoirs, faults are commonly classified by length, orientation, and syn- or post-depositional age, and their fault-core and damage-zone architecture strongly controls fracture density, karstification, non-matrix porosity, and reservoir heterogeneity."@en ;
+    rdfs:subClassOf georeservoir:GEOCORE_0000004 .
+
+presalt:Intraclast a owl:Class ;
+    rdfs:label "Intraclast"@en ;
+    rdfs:comment "Intraclast is a carbonate clast that consists of a reworked fragment of semi-lithified to lithified carbonate sediment formed within the same depositional system. In the Brazilian pre-salt, intraclasts commonly derive from spherulitic, shrub, laminated, fascicular, or microcrystalline lacustrine carbonates and occur as angular to well-rounded grains ranging from sand to pebble size in intraclastic grainstones and rudstones."@en ;
+    rdfs:subClassOf presalt:CarbonateGrain .
+
+presalt:LacustrineCarbonate a owl:Class ;
+    rdfs:label "Lacustrine Carbonate"@en ;
+    rdfs:comment "Lacustrine carbonate is a carbonate sedimentary rock that forms in lake environments under strong local controls such as tectonics, climate, hydrology, sediment input, temperature, and water chemistry. In the Brazilian Pre-Salt, these rocks commonly include autochthonous facies with shrubs, spherulites, and microcrystalline calcite, as well as reworked facies made of their fragments mixed with clay, and they are major reservoir constituents."@en ;
+    rdfs:subClassOf presalt:CarbonateRock .
+
+presalt:MgClay a owl:Class ;
+    rdfs:label "Mg-Clay"@en ;
+    rdfs:comment "Mg-clay is a magnesium-rich clay mineral assemblage that forms part of the matrix of Brazilian pre-salt carbonate facies, commonly in association with calcite spherulites and dolomite. In the Santos Basin it consists mainly of Mg-smectitic clays, with rare sepiolite, and its dissolution or replacement by calcite can generate secondary porosity even though Mg-clay-rich facies are initially of low reservoir quality."@en ;
+    rdfs:subClassOf georeservoir:GEOCORE_0000006 .
+
+presalt:Pore a owl:Class ;
+    rdfs:label "Pore"@en ;
+    rdfs:comment "Pore is a site that is a void within rock that can store fluids and, when connected to other voids, contribute to fluid flow."@en ;
+    rdfs:subClassOf bfo:BFO_0000029 .
+
+presalt:Quartz a owl:Class ;
+    rdfs:label "Quartz"@en ;
+    rdfs:comment "Quartz is a silica mineral that consists of crystalline SiO2 and, in Brazilian Pre-Salt carbonate reservoirs, commonly occurs as detrital grains or as diagenetic microcrystalline, prismatic, botryoidal, or macrocrystalline phases that replace carbonate minerals and grains or fill fractures and breccia matrices. It acts as a silica cement sourced internally from hybrid lithologies or externally from basement and arkosic units, and it can strongly modify reservoir quality by occluding or locally preserving pore space during replacement and fracture-related diagenesis."@en ;
+    rdfs:subClassOf [ a owl:Restriction ;
+            owl:onProperty bfo:BFO_0000171 ;
+            owl:someValuesFrom presalt:Breccia ],
+        [ a owl:Restriction ;
+            owl:onProperty bfo:BFO_0000056 ;
+            owl:someValuesFrom presalt:Replacement ],
+        presalt:Silica .
+
+presalt:TectonostratigraphicStage a owl:Class ;
+    rdfs:label "Tectonostratigraphic Stage"@en ;
+    rdfs:comment "Tectonostratigraphic Stage is a Geological Time Interval that is distinguished by a characteristic tectonic regime and associated stratigraphic development during basin evolution."@en ;
+    rdfs:subClassOf georeservoir:GEOCORE_0000005 .
+
+georeservoir:GEOCORE_0000011 a owl:Class ;
+    rdfs:label "geological boundary"@en ;
+    rdfs:subClassOf bfo:BFO_0000146 .
+
+georeservoir:GEOCORE_0000013 a owl:ObjectProperty ;
+    rdfs:label "generated by"@en .
+
+bfo:BFO_0000015 a owl:Class ;
+    rdfs:label "process"@en ;
+    rdfs:subClassOf bfo:BFO_0000003 .
+
+bfo:BFO_0000019 a owl:Class ;
+    rdfs:label "quality"@en ;
+    rdfs:subClassOf bfo:BFO_0000020 ;
+    owl:disjointWith bfo:BFO_0000017 .
+
+bfo:RO_0001000 a owl:ObjectProperty ;
+    rdfs:label "derives from"@en .
+
+presalt:CarbonateGrain a owl:Class ;
+    rdfs:label "Carbonate Grain"@en ;
+    rdfs:comment "Carbonate Grain is a geological object that is a discrete particle composed predominantly of carbonate material and occurring as a constituent of sediment or sedimentary rock."@en ;
+    rdfs:subClassOf georeservoir:GEOCORE_0000001 .
+
+georeservoir:GEOCORE_0000001 a owl:Class ;
+    rdfs:label "geological object"@en ;
+    rdfs:subClassOf bfo:BFO_0000030 .
+
+bfo:BFO_0000117 a owl:ObjectProperty ;
+    rdfs:label "has occurrent part"@en .
+
+bfo:RO_0000086 a owl:ObjectProperty ;
+    rdfs:label "has quality"@en .
+
+presalt:Dissolution a owl:Class ;
+    rdfs:label "Dissolution"@en ;
+    rdfs:comment "Dissolution is a diagenetic process that removes soluble carbonate and Mg-clay components from pre-salt lacustrine rocks, generating secondary porosity and modifying the original depositional fabric. In the Brazilian Pre-Salt, it commonly affects Mg-claystones with spherulites, laminites, shrubs, and grainstones, producing vuggy, intragranular, and inter-framework pores, often more intensely in structural highs and thereby exerting a major control on reservoir quality."@en ;
+    rdfs:subClassOf [ a owl:Restriction ;
+            owl:onProperty bfo:BFO_0000057 ;
+            owl:someValuesFrom presalt:MgClay ],
+        presalt:DiageneticProcess .
+
+presalt:Dolomite a owl:Class ;
+    rdfs:label "Dolomite"@en ;
+    rdfs:comment "Dolomite is a carbonate mineral that consists of calcium magnesium carbonate and commonly forms in Brazilian Pre-Salt lacustrine carbonates as a primary precipitate, a replacive diagenetic phase, or a pore-filling cement. In the Barra Velha and analogous pre-salt successions, it commonly occurs as rhombohedral, microcrystalline, lamellar, or saddle crystals, replacing calcite or Mg-clay and locally cementing pores, vugs, and fractures."@en ;
+    rdfs:subClassOf [ a owl:Restriction ;
+            owl:onProperty bfo:RO_0001000 ;
+            owl:someValuesFrom presalt:MgClay ],
+        [ a owl:Restriction ;
+            owl:onProperty bfo:BFO_0000171 ;
+            owl:someValuesFrom presalt:LacustrineCarbonate ],
+        [ a owl:Restriction ;
+            owl:onProperty bfo:RO_0001000 ;
+            owl:someValuesFrom presalt:Calcite ],
+        presalt:CarbonateMineral .
+
+presalt:Field a owl:Class ;
+    rdfs:label "Field"@en ;
+    rdfs:comment "[critic CONVERT_TO_INSTANCE minted target class]"@en ;
+    rdfs:subClassOf bfo:BFO_0000029 .
+
+presalt:Spherulite a owl:Class ;
+    rdfs:label "Spherulite"@en ;
+    rdfs:comment "Spherulite is a carbonate grain that consists of a spherical to sub-spherical aggregate of radiating fibro-radial calcite crystals, typically showing radial extinction in thin section. In the Barra Velha Formation, spherulites commonly range from about 0.1 to 4 mm in diameter, may contain nuclei of micrite, clay minerals, or rare ostracod fragments, and are commonly altered by dolomitization, recrystallization, or local silicification."@en ;
+    rdfs:subClassOf [ a owl:Restriction ;
+            owl:onProperty georeservoir:GEOCORE_0000017 ;
+            owl:someValuesFrom presalt:Calcite ],
+        presalt:CarbonateGrain .
+
+georeservoir:GEOCORE_0000003 a owl:Class ;
+    rdfs:label "geological age"@en ;
+    rdfs:subClassOf bfo:BFO_0000019 .
+
+presalt:DiageneticProcess a owl:Class ;
+    rdfs:label "Diagenetic Process"@en ;
+    rdfs:comment "Diagenetic process is a geological alteration process that modifies a sediment or rock during and after deposition through fluid-mediated dissolution, cementation, recrystallization, replacement, or related mineral transformations. In Brazilian Pre-Salt carbonates, it commonly includes dissolution of Mg-clays and carbonate fabrics, calcite, dolomite, or silica cementation, dolomitization, and silicification, which strongly control secondary porosity, permeability, and overall reservoir quality."@en ;
+    rdfs:subClassOf georeservoir:GEOCORE_0000002 .
+
+presalt:Silica a owl:Class ;
+    rdfs:label "Silica"@en ;
+    rdfs:comment "Silica is a silicon dioxide mineral phase that in the Brazilian Pre-Salt carbonates occurs as early replacive layers or bodies, pore-lining chalcedony cement, and late pore-filling quartz cement. In these reservoirs it commonly appears as microcrystalline silica, spherulitic chalcedony, and macrocrystalline quartz, and silicified intervals are commonly associated with nonmatrix features and locally with excess permeability."@en ;
+    rdfs:subClassOf georeservoir:GEOCORE_0000006 .
+
+georeservoir:GEORES_0000004 a owl:Class ;
+    rdfs:label "formation"@en ;
+    rdfs:subClassOf georeservoir:GEORES_0000003 .
+
+georeservoir:GEORES_0000039 a owl:Class ;
+    rdfs:label "basin"@en ;
+    rdfs:subClassOf bfo:BFO_0000029 .
+
+bfo:BFO_0000029 a owl:Class ;
+    rdfs:label "site"@en ;
+    rdfs:subClassOf bfo:BFO_0000141 .
+
+georeservoir:GEOCORE_0000002 a owl:Class ;
+    rdfs:label "geological process"@en ;
+    rdfs:subClassOf bfo:BFO_0000015 .
+
+georeservoir:GEORES_0000002 a owl:Class ;
+    rdfs:label "stratigraphic unit"@en ;
+    rdfs:subClassOf georeservoir:GEORES_0000001 .
+
+presalt:Porosity a owl:Class ;
+    rdfs:label "Porosity"@en ;
+    rdfs:comment "Porosity is a petrophysical property that quantifies the volume fraction of void space in a rock available to contain fluids. In Brazilian pre-salt carbonate reservoirs, it occurs as pore systems such as vuggy, moldic, interparticle, intraparticle, intercrystalline, and microfracture porosity, and it is strongly controlled by depositional texture and diagenetic processes such as dissolution, cementation, and silicification."@en ;
+    rdfs:subClassOf [ a owl:Restriction ;
+            owl:onProperty bfo:BFO_0000197 ;
+            owl:someValuesFrom bfo:BFO_0000004 ],
+        presalt:PetrophysicalProperty .
+
+georeservoir:GEOCORE_0000005 a owl:Class ;
+    rdfs:label "geological time interval"@en ;
+    rdfs:subClassOf bfo:BFO_0000038 .
+
+bfo:BFO_0000056 a owl:ObjectProperty ;
+    rdfs:label "participates in"@en .
+
+bfo:BFO_0000057 a owl:ObjectProperty ;
+    rdfs:label "has participant"@en .
+
+georeservoir:GEOCORE_0000006 a owl:Class ;
+    rdfs:label "earth material"@en ;
+    rdfs:subClassOf bfo:BFO_0000040 .
+
+georeservoir:GEORES_0000001 a owl:Class ;
+    rdfs:label "body of rock"@en ;
+    rdfs:subClassOf georeservoir:GEOCORE_0000001 .
+
+bfo:BFO_0000004 a owl:Class ;
+    rdfs:label "independent continuant"@en ;
+    rdfs:subClassOf bfo:BFO_0000002 ;
+    owl:disjointWith bfo:BFO_0000020,
+        bfo:BFO_0000031 .
+
+bfo:BFO_0000197 a owl:ObjectProperty ;
+    rdfs:label "inheres in"@en .
+
+presalt:Calcite a owl:Class ;
+    rdfs:label "Calcite"@en ;
+    rdfs:comment "Calcite is a carbonate mineral that is the crystalline calcium carbonate phase commonly present in Pre-Salt lacustrine carbonates as fascicular, spherulitic, blocky, or microcrystalline forms. In Brazilian Pre-Salt reservoirs, it occurs both as primary precipitates and as diagenetic cement or replacement, filling interparticle, intraparticle, vugular, and fracture porosity and locally replacing grains, peloids, and ooid envelopes."@en ;
+    rdfs:subClassOf presalt:CarbonateMineral .
+
+georeservoir:GEORES_0000003 a owl:Class ;
+    rdfs:label "lithostratigraphic unit"@en ;
+    rdfs:subClassOf georeservoir:GEORES_0000001 .
+
+presalt:CarbonateRock a owl:Class ;
+    rdfs:label "Carbonate Rock"@en ;
+    rdfs:comment "Carbonate rock is a sedimentary rock that is composed predominantly of carbonate minerals and occurs as either particulate depositional fabric or biologically constructed fabric. In the Brazilian Pre-Salt, carbonate rocks are highly reactive and heterogeneous because syngenetic and diagenetic processes such as cementation, dissolution, dolomitization, and silicification can strongly modify their texture, mineralogy, and pore network, making them major reservoir rocks."@en ;
+    rdfs:subClassOf [ a owl:Restriction ;
+            owl:onProperty bfo:BFO_0000056 ;
+            owl:someValuesFrom presalt:Dissolution ],
+        [ a owl:Restriction ;
+            owl:onProperty bfo:BFO_0000056 ;
+            owl:someValuesFrom presalt:Cementation ],
+        [ a owl:Restriction ;
+            owl:onProperty bfo:BFO_0000056 ;
+            owl:someValuesFrom presalt:Dolomitization ],
+        georeservoir:GEORES_0000032 .
+
+georeservoir:GEOCORE_0000004 a owl:Class ;
+    rdfs:label "geological structure"@en ;
+    rdfs:subClassOf bfo:BFO_0000031 .
+
+bfo:BFO_0000171 a owl:ObjectProperty ;
+    rdfs:label "located in"@en .
+
+georeservoir:GEORES_0000032 a owl:Class ;
+    rdfs:label "sedimentary rock"@en ;
+    rdfs:subClassOf georeservoir:GEOCORE_0000008 .
+
+bfo:BFO_0000178 a owl:ObjectProperty ;
+    rdfs:label "has continuant part"@en .
+
+georeservoir:GEOCORE_0000017 a owl:ObjectProperty ;
+    rdfs:label "constituted by"@en .
+

@@ -18,8 +18,9 @@ from sklearn.metrics import cohen_kappa_score
 
 from src.utils.csv_io import read_csv, write_csv
 from src.utils.ontology_config import get_config
+from evaluation_study.paths import ABLATION_OUTPUT
 
-OUTPUT_DIR = os.environ.get("ABLATION_OUTPUT_DIR", "output/ablation")
+OUTPUT_DIR = os.environ.get("ABLATION_OUTPUT_DIR", str(ABLATION_OUTPUT))
 ANALYSIS_DIR = os.path.join(OUTPUT_DIR, "analysis")
 REQUIRED_CONDITIONS = ("A", "B", "C", "D")
 

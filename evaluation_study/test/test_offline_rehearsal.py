@@ -1,7 +1,7 @@
 """End-to-end regression for the strictly offline evaluation rehearsal.
 
 Run:
-    python test/test_offline_rehearsal.py
+    python evaluation_study/test/test_offline_rehearsal.py
 """
 
 from __future__ import annotations
@@ -13,11 +13,11 @@ from pathlib import Path
 
 from openpyxl import load_workbook
 
-REPO_ROOT = Path(__file__).resolve().parent.parent
+REPO_ROOT = Path(__file__).resolve().parents[2]
 if str(REPO_ROOT) not in sys.path:
     sys.path.insert(0, str(REPO_ROOT))
 
-from src.evaluation.offline_rehearsal import (  # noqa: E402
+from evaluation_study.offline_rehearsal import (  # noqa: E402
     PROVENANCE,
     _genericise_definition,
     _sha256_file,

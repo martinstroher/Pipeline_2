@@ -1,6 +1,6 @@
 # Ontology Critic — Failure-Mode Analysis and Design Direction
 
-> Working notes captured during the June 2026 critic redesign. Two passes: a forensic audit of `iteracao_2.ttl` and `iteracao_1.ttl` against OntoClean failure patterns, then a brainstorm that converged on a single-pass critic-agent design.
+> Working notes captured during the June 2026 critic redesign. The historical `iteracao_1.ttl` and `iteracao_2.ttl` snapshots discussed below were removed after approval of `output/final/presalt_ontology.ttl`; this document preserves their forensic conclusions only.
 
 ---
 
@@ -36,7 +36,7 @@ That's ~70–90 classes that should be filtered or re-expressed. The remaining ~
 
 ### What the deleted critic actually was
 
-The iter1 ontology was produced by the legacy ~2000 LOC validator (`src/validate/` engine with `rules.yaml`, deleted in commit `5768d56` on Jun 7). That validator had structural disjointness rules and per-edge OntoClean-style prompts (the `rule_ontoclean_{rigidity,identity,unity,dependence}.txt` files still sit dormant in `studies/prompts/`).
+The iter1 ontology was produced by the legacy ~2000 LOC validator (`src/validate/` engine with `rules.yaml`, deleted in commit `5768d56` on Jun 7). That validator had structural disjointness rules and per-edge OntoClean-style prompts; archived copies now live under `evaluation_study/prompts/archive/`.
 
 The simplified critic that replaced it (commit `6950cc2`, Jun 7) just defaults to KEEP. That's the regression. The current `domains/presalt/prompts/critic.txt` is the weakened version.
 

@@ -64,25 +64,6 @@
 
 ---
 
-## Configuration — `domains/<name>/domain_profile.yaml`
-
-**`domains/presalt/domain_profile.yaml` is the second source of truth**, this time for **domain-specific text** — expert personas, expert workbook instructions, calibration examples, and Likert anchors. Loaded by `src/utils/domain_profile.py` (same frozen dataclass + `lru_cache` singleton pattern as `ontology_config.py`).
-
-- **Never hardcode** personas, expert-evaluation Likert-anchor labels, calibration examples, or any other domain-specific narrative text in Python. They belong in `domain_profile.yaml`.
-- **`personas:`** is keyed by prompt filename without `.txt`. Each prompt that says "You are <<persona>>" requires an entry; `prompt_loader._interpolate()` raises `KeyError` if missing (fail fast).
-- **`evaluation_workbook.instruction_rows:`** is a list of `[section, details]` pairs rendered verbatim as Sheet 1 of the expert workbook by `expert_eval_generator.build_instructions_sheet()`. 49 rows in the Pre-Salt profile.
-- **Adding a new prompt** requires: (1) a new entry under `personas:` keyed by the prompt filename, (2) re-running `python test/diff_prompts.py` and refreshing `test/fixtures/prompts_baseline.json` if the change is intentional.
-- **Changing the expert workbook instructions** requires: (1) editing `evaluation_workbook.instruction_rows:` in the YAML, (2) re-running `python test/diff_instructions_sheet.py` and refreshing `test/fixtures/instructions_baseline.json` if the change is intentional.
-- **Retargeting to a new domain**: copy `domains/presalt/` to `domains/<your_domain>/`, edit the YAML, set `DOMAIN_PROFILE_PATH=domains/<your_domain>/domain_profile.yaml`. The Python code does not change.
-
-### Env overrides
-- `DOMAIN_PROFILE_PATH` — default `domains/presalt/domain_profile.yaml`; point at a different profile to retarget the pipeline
-
-### Profile discipline
-- After ANY edit to `domain_profile.yaml` or `src/utils/domain_profile.py`, run both `python test/diff_prompts.py` (must stay 22 prompts byte-equal) and `python test/diff_instructions_sheet.py` (must stay 49 rows byte-equal). If the diff fails because the change is *intentional*, regenerate the baselines via `python test/snapshot_prompts.py` and `python test/snapshot_instructions_sheet.py` and commit the new fixtures alongside the change.
-
----
-
 ## Code Conventions
 
 ### CSV I/O
@@ -120,10 +101,10 @@
 
 ### Imports
 - Always absolute imports from `src/` (e.g., `from src.utils import log`). Never relative imports.
-- `src/utils/` for shared infrastructure, `src/modules/` for pipeline steps, `src/evaluation/` for analysis.
+- `src/utils/` for shared infrastructure, `src/modules/` for pipeline steps, `src/evaluation/` for pipeline-internal audits. Thesis-study code belongs under `evaluation_study/`.
 
 ### Logging
-- Use `from src.utils import log` — never `print()` in modules (only `print()` in ablation_study.py for progress, which predates the logger).
+- Use `from src.utils import log` — never `print()` in production modules.
 - Levels: `log.banner(step, title)` for step headers, `log.info()` for status, `log.success()` for completions, `log.warn()` for recoverable issues, `log.error()` for failures, `log.detail()` for verbose info.
 
 ### Progress Bars
@@ -142,33 +123,6 @@
 - Taxonomy outputs must pass cycle detection before being written. Cyclic terms are re-parented to category root.
 - Class vs. individual distinction: named entities (fields, basins, formations, time periods) → `rdf:type`; generic types/kinds → `rdfs:subClassOf`.
 - Waterfall priority: GeoReservoir → GeoCore → BFO → NOT_CLASSIFIED. Always classify at the most specific level.
-
----
-
-## Ablation Study Rules
-
-- All 4 conditions (A/B/C/D) MUST use the **same term set** for fair comparison.
-- Condition C must send `{"term": ..., "nld": ""}` (field present but empty string — not omitted).
-- Condition D uses `{"term": ..., "context": ...}` (not `"nld"`), and the categorizer prompt switches to a raw-RAG variant via `is_raw_rag=True`.
-- Checkpoint files: `output/ablation/nld_{A|B|C|D}.csv` and `cat_{A|B|C|D}.csv`.
-- Merged output: `output/ablation/ablation_merged.csv` with a `Condition` column.
-
----
-
-## Evaluation Rules
-
-### Expert Evaluation (Layer 2)
-- **5 sheets** per workbook: Instructions, Term_Relevance, NLD_Quality, Category_Correct, Taxonomy_Correct.
-- **200 terms**, seed `42` for all randomised operations (sampling, shuffling, blinding).
-- Blinding: experts never see condition labels. Blinding key is a separate CSV (`Row_ID → Condition/Term`).
-- Stratified category evaluation by ontology tier: GeoReservoir → full binary validation with description; GeoCore/BFO → simplified 3-way.
-- Taxonomy: ~80 parent-child IS-A pairs stratified by category.
-
-### Statistical Tests (Layer 2 Analysis)
-- Friedman omnibus test gates all post-hoc pairwise comparisons. Only run Wilcoxon signed-rank if Friedman is significant.
-- ICC(2,1) for inter-rater reliability on continuous scales.
-- Fleiss' kappa for multi-rater agreement on categorical judgments.
-- Always report effect sizes alongside p-values.
 
 ---
 

@@ -33,7 +33,6 @@ import yaml
 from src.utils.ontology_config import get_config
 
 _REPO_ROOT = Path(__file__).resolve().parents[2]
-_STUDIES_PROMPTS_DIR = _REPO_ROOT / "studies" / "prompts"
 _SEPARATOR = "[PROMPT_TEMPLATE]"
 _BLOCK_MARKER = re.compile(r"<<([a-zA-Z_][a-zA-Z0-9_]*)>>")
 
@@ -42,10 +41,9 @@ def _prompt_roots() -> list[Path]:
     """Active prompt-search roots, in priority order.
 
     1. <active-domain>/prompts/   — production pipeline prompts (per-domain)
-    2. studies/prompts/           — cross-domain study prompts (ablation, etc.)
     """
     domain_dir = get_config()._source_path.parent
-    return [domain_dir / "prompts", _STUDIES_PROMPTS_DIR]
+    return [domain_dir / "prompts"]
 
 
 def prompt_files() -> list[tuple[str, Path]]:
@@ -138,8 +136,8 @@ def _load_blocks_for_active_domain() -> dict[str, str]:
 def load_prompt(filename: str) -> tuple[str, str]:
     """Load system instruction and prompt template from a prompt file.
 
-    Resolves the file across the active prompt roots (active domain first,
-    then ``studies/prompts/``), substitutes ``<<key>>`` markers from the
+    Resolves the file from the active domain prompt root and substitutes
+    ``<<key>>`` markers from the
     active domain's ``prompt_blocks.yaml``, and returns the system part
     and template part separately. Runtime ``{placeholders}`` are not
     touched — callers inject those via ``str.format``.

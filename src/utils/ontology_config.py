@@ -9,8 +9,7 @@ overrides at load time so a single .env tweak changes pipeline behaviour.
 Key accessors (consumer → call):
   - taxonomy_builder.UPPER_IRIS              → get_config().upper_iris()
   - relation_validator._CATEGORY_TO_METATYPES → get_config().category_to_metatypes()
-  - expert_eval_generator.{GEORESERVOIR,GEOCORE}_CATEGORIES → get_config().categories_for("georeservoir"/"geocore")
-  - category_assigner / ablation_study definitions → get_config().llm_definitions_block("georeservoir"/...)
+    - category_assigner definitions → get_config().llm_definitions_block("georeservoir"/...)
   - owl_exporter namespaces / disjoint pairs / OWL file list → get_config().{project_namespace,bfo_disjoint_pairs,owl_file_paths}()
   - ontology_verifier prefixes → get_config().verifier_prefixes()
 

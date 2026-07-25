@@ -3,8 +3,9 @@
 # =========================================================================
 # Single source of truth for upper-ontology scope, namespaces, and per-class
 # metadata. Every consumer (taxonomy_builder, relation_validator,
-# owl_exporter, ontology_verifier, expert_eval_generator, term_categorizer,
-# ablation_study) reads from this file via src/utils/ontology_config.py.
+# owl_exporter, ontology_verifier, and term_categorizer read this file via
+# src/utils/ontology_config.py. The standalone evaluation study reads it as a
+# frozen pipeline input.
 #
 # To add a class to the pipeline's scope: append an entry under the right
 # ontology's `classes:` list. To change a namespace or import IRI: edit the

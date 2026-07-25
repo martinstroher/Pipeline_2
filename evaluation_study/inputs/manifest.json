@@ -1,0 +1,22 @@
+{
+  "frozen_from_run": "output/refined/production_validate_balanced_high_20260712T230038Z.log",
+  "source_commit": "4455759",
+  "policy": "balanced-core",
+  "model": "gpt-5.4",
+  "reasoning_effort": "high",
+  "approved_ontology_sha256": "5b1c950609b5a8b2cd2e2ade78877f769f950c891eb26b84bba166956bd195bb",
+  "approved_ontology_path": "output/final/presalt_ontology.ttl",
+  "generation_function": "src.modules.emit.owl_exporter.run_owl_export",
+  "files": {
+    "approved_run/classify_categories.csv": "2a8cc23922a64e7b461c23da4fee029f3f9d05bd827d05ec65acca98731d81c8",
+    "approved_run/validate_class_fates.csv": "a8178a69ef30371bdad7b966a8987c37b374a7340a8c6f3d9dd378d4ebb4d3e7",
+    "approved_run/validate_defined_classes.csv": "d65fee0a29e8510f6b3d9c3603d64574dc555d2d882493f599198778e264ad45",
+    "approved_run/validate_demotions.csv": "526561ae2a9e2c08d01f808f2039fae31ef6a2184277908f9e6ed2c528e262c1",
+    "approved_run/validate_instances.csv": "aeccd90da42b1b6819666513ccf145669f0f6c474f43d1b801ee734baf118523",
+    "approved_run/validate_relations.csv": "3317f07a8dd2000ff5599790709cbc5980dbe7bcb8ff0a018cf38078519f755e",
+    "approved_run/validate_taxonomy.csv": "032cc676ecff60622f45b1435fe807af77d85a2ee7946c1d0d8b89eef6320f9c",
+    "frozen_a/classify_categories.csv": "d988dc9cda4590f601e9f564c0ecf16f3debbb7da4fa7805bef2db97abba7a83",
+    "frozen_a/define_nld.csv": "7fb497c2b63c3293a95ac4bb69028bc1f656cc5c89e26da9e8a1277626374deb",
+    "frozen_a/extract_filtered.csv": "9c73f318fda05ba1ac2f59539a5a129e41f32234dfdbd5f8f88e16b40e16e86b"
+  }
+}

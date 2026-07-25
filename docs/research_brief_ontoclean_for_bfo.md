@@ -90,11 +90,11 @@ Specifically we'd like the agent to opine on:
 ## 7. Inputs the agent can rely on
 
 - The current critic prompt (weak): [domains/presalt/prompts/critic.txt](../domains/presalt/prompts/critic.txt)
-- The dormant OntoClean v1 prompts (June 5 build, Pre-Salt examples hardcoded): `studies/prompts/rule_ontoclean_{rigidity,identity,unity,dependence}.txt`
+- The dormant OntoClean v1 prompts (June 5 build, Pre-Salt examples hardcoded) are archived under `evaluation_study/prompts/archive/`.
 - The full architecture: [docs/CONTEXT.md](CONTEXT.md)
 - Pipeline + evaluation summary: [docs/OVERVIEW.md](OVERVIEW.md)
 - Ablation/evaluation strategy: [docs/thesis_evaluation_strategy.md](thesis_evaluation_strategy.md)
-- Two snapshots for reference: `iteracao_1.ttl` (288 classes, good), `iteracao_2.ttl` (352 classes, bloated).
+- Historical comparison: `iteracao_1.ttl` had 288 classes and `iteracao_2.ttl` had 352; both snapshots were removed after the final approved artifact was archived.
 
 ## 8. What we want back
 

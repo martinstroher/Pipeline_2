@@ -30,7 +30,13 @@ load_dotenv()
 
 from src.modules.define.nld_generator import generate_nld
 from src.utils.llm_client import get_client, generate as llm_generate, parse_json_array
-from src.utils.prompt_loader import load_prompt
+from evaluation_study.paths import (
+    ABLATION_OUTPUT,
+    FILTERED_TERMS,
+    FROZEN_A_CATEGORIES,
+    FROZEN_A_NLD,
+)
+from evaluation_study.prompt_loader import load_prompt
 from src.utils.ontology_config import get_config
 
 
@@ -46,7 +52,7 @@ CONDITION_LABELS = {
     "D": "Raw RAG (no NLD)",
 }
 
-OUTPUT_DIR = os.environ.get("ABLATION_OUTPUT_DIR", "output/ablation")
+OUTPUT_DIR = os.environ.get("ABLATION_OUTPUT_DIR", str(ABLATION_OUTPUT))
 SLEEP_SECONDS = float(os.environ.get("NLD_SLEEP_SECONDS", 0))
 ABLATION_WORKERS = 3
 EXPECTED_REASONING_EFFORT = "high"
@@ -232,7 +238,7 @@ def run_condition_a(terms: list[str]) -> pd.DataFrame:
     """Materialize frozen production A without regenerating or rewriting it."""
     source = os.environ.get(
         "ABLATION_FROZEN_A_NLD",
-        os.environ.get("CONSOLIDATED_LLM_RESULTS_WITH_NLDS", "output/define_nld.csv"),
+        os.environ.get("CONSOLIDATED_LLM_RESULTS_WITH_NLDS", str(FROZEN_A_NLD)),
     )
     df = _copy_frozen_artifact(source, _nld_path("A"))
     _validate_term_set(df, terms, "Condition A NLD")
@@ -356,7 +362,7 @@ def run_categorization(
     if condition == "A":
         source = os.environ.get(
             "ABLATION_FROZEN_A_CATEGORY",
-            os.environ.get("CATEGORIZED_LLM_TERMS", "output/classify_categories.csv"),
+            os.environ.get("CATEGORIZED_LLM_TERMS", str(FROZEN_A_CATEGORIES)),
         )
         df = _copy_frozen_artifact(source, cat_csv)
         _validate_category_output(df, nld_df["Term"].astype(str).tolist(), "Condition A")
@@ -458,7 +464,7 @@ def run_ablation(conditions: list[str] | None = None):
     os.makedirs(OUTPUT_DIR, exist_ok=True)
 
     # Load terms (Steps 1-3 output)
-    terms_file = os.environ.get("FILTERED_TERMS_OUTPUT", "output/extract_filtered.csv")
+    terms_file = os.environ.get("FILTERED_TERMS_OUTPUT", str(FILTERED_TERMS))
     terms_df = read_csv(terms_file)
     if "Readable_Term" not in terms_df.columns:
         raise ValueError(f"Filtered terms file has no Readable_Term column: {terms_file}")
@@ -477,11 +483,11 @@ def run_ablation(conditions: list[str] | None = None):
     d_system, d_prompt = _build_categorizer_prompt(is_raw_rag=True)
     frozen_nld_source = os.environ.get(
         "ABLATION_FROZEN_A_NLD",
-        os.environ.get("CONSOLIDATED_LLM_RESULTS_WITH_NLDS", "output/define_nld.csv"),
+        os.environ.get("CONSOLIDATED_LLM_RESULTS_WITH_NLDS", str(FROZEN_A_NLD)),
     )
     frozen_cat_source = os.environ.get(
         "ABLATION_FROZEN_A_CATEGORY",
-        os.environ.get("CATEGORIZED_LLM_TERMS", "output/classify_categories.csv"),
+        os.environ.get("CATEGORIZED_LLM_TERMS", str(FROZEN_A_CATEGORIES)),
     )
     manifest_path = os.path.join(OUTPUT_DIR, "experiment_manifest.json")
     manifest = {

@@ -4,9 +4,14 @@
 __pycache__/
 *.pyc
 chroma_db*/
-output/
+output/*
+!output/final/
+!output/final/**
+evaluation_study/output/
 .DS_Store
 inputs/
+!evaluation_study/inputs/
+!evaluation_study/inputs/**
 .venv*/
 usage_log.csv
 .env.bak*

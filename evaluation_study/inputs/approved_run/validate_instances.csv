@@ -1,0 +1,59 @@
+﻿Term,Target_Class,Mint_Parent,Original_Category,Original_Parent,Reason
+santos basin,Basin,,Basin,passive-margin basin,Proper-noun named basin; step 1 says this should be modeled as an instance of Basin.
+campos basin,Basin,,Basin,passive-margin basin,Proper-noun named basin; step 1 says this should be modeled as an instance of Basin.
+pelotas basin,Basin,,Basin,passive-margin basin,Proper-noun named basin; step 1 says this should be modeled as an instance of Basin.
+kwanza basin,Basin,,Basin,Sedimentary Basin,Proper-noun named basin; step 1 says this should be modeled as an instance of Basin.
+espírito santo basin,Basin,,Basin,Marginal Sedimentary Basin,Proper-noun named basin; step 1 says this should be modeled as an instance of Basin.
+namibe basin,Basin,,Basin,Marginal Sedimentary Basin,"Proper-noun named basin; NLD describes one specific marginal sedimentary basin, so model it as an instance (step 1)."
+santos outer high,Geological Structure,,Body of Rock,structural high,"Proper-noun named regional high in the Santos Basin; NLD and relations describe one specific structure, not a reusable kind (step 1)."
+florianópolis high,Geological Structure,,Body of Rock,structural high,"Proper-noun named structural high; NLD describes one unique basin-boundary feature, so convert to an instance (step 1)."
+ribeira belt,Geological Structure,,Body of Rock,Body of Rock,"Proper-noun named orogenic belt; NLD describes one unique regional belt, so convert to an instance (step 1)."
+Early Cretaceous Geologic Age,Geological Age,,Geological Age,Geological Age,"Early Cretaceous denotes one named subdivision of the Cretaceous, so it is an instance rather than a subclass (step 1)."
+aptian,Geological Age,,Geological Age,Early Cretaceous Geologic Age,"Aptian is a single named geochronologic age/time span, so it should be modeled as an instance, not a subclass (step 1)."
+hauterivian,Geological Age,,Geological Age,Early Cretaceous Geologic Age,"Hauterivian names one specific Early Cretaceous age used to date a unique interval, so convert it to an instance (step 1)."
+barremian,Geological Age,,Geological Age,Early Cretaceous Geologic Age,"Barremian is explicitly a named chronostratigraphic stage/geochronologic age, i.e. one interval only, so make it an instance (step 1)."
+valanginian,Geological Age,,Geological Age,Early Cretaceous Geologic Age,"Valanginian is a single named Early Cretaceous age marking one interval, so it belongs as an instance rather than a subclass (step 1)."
+berriasian,Geological Age,,Geological Age,Early Cretaceous Geologic Age,"NLD names Berriasian as the earliest Cretaceous age/stage, i.e. one named interval only; convert to an instance (step 1)."
+barra velha formation,Lithostratigraphic Unit,,Formation,Lithostratigraphic Unit,Proper-noun named formation; it denotes one specific lithostratigraphic unit rather than a repeatable class (step 1).
+itapema formation,Formation,,Formation,Lithostratigraphic Unit,"Proper-noun named formation; denotes one stratigraphic unit, so it should be an instance of Formation (step 1)."
+ariri formation,Formation,,Formation,Stratigraphic Unit,"Proper-noun named formation; denotes one stratigraphic unit, so it should be an instance of Formation (step 1)."
+piçarras formation,Formation,,Formation,Syn-Rift Lithostratigraphic Unit,"Proper-noun named formation; denotes one stratigraphic unit, so it should be an instance of Formation (step 1)."
+camboriú formation,Formation,,Formation,Stratigraphic Unit,"Proper-noun named formation; denotes one stratigraphic unit, so it should be an instance of Formation (step 1)."
+macabu formation,Formation,,Formation,Lithostratigraphic Unit,"Proper-noun named formation; denotes one stratigraphic unit, so it should be an instance of Formation (step 1)."
+coqueiros formation,Stratigraphic Unit,,Formation,Stratigraphic Formation,"proper-noun named formation; it denotes one formal unit, so model it as an instance, not a subclass (step 1)"
+guarujá formation,Stratigraphic Unit,,Formation,Stratigraphic Formation,"proper-noun named formation; it denotes one formal unit, so model it as an instance, not a subclass (step 1)"
+itanhaém formation,Lithostratigraphic Unit,,Formation,Lithostratigraphic Unit,"proper-noun named formation; the NLD says it is a lithostratigraphic unit, so treat it as an instance of that class (step 1)"
+cabiúnas formation,Lithostratigraphic Unit,,Formation,Lithostratigraphic Unit,"proper-noun named formation; the NLD says it is a volcanic lithostratigraphic unit, so it should be an instance (step 1)"
+itabapoana formation,Lithostratigraphic Unit,,Formation,Lithostratigraphic Unit,"proper-noun named formation; the NLD says it is a lithostratigraphic unit of the Lagoa Feia Group, so it is an instance (step 1)"
+retiro formation,Formation,,Formation,Stratigraphic Formation,"proper-noun named formation; it denotes one specific geological unit, so step 1 converts it to an instance"
+atafona formation,Formation,,Formation,Syn-Rift Lithostratigraphic Unit,proper-noun named formation within Lagoa Feia Group; step 1 says named formations should be modeled as instances
+pre-alagoas unconformity,Geological Boundary,,Geological Boundary,unconformity,"Step 1: proper-name regional horizon; parent NLD cites Pre-Alagoas as an example of an unconformity, so this is a named boundary instance."
+intra-alagoas unconformity,Geological Boundary,,Geological Boundary,unconformity,"Step 1: proper-name horizon; NLD describes the Intra-Alagoas/base-sag surface in the Santos Basin, i.e. a named boundary instance."
+cabo frio high,Geological Structure,,Geological Structure,structural high,proper-noun named tectonic element; Cabo Frio High denotes one specific basement structural high (step 1).
+outer high,Geological Structure,,Geological Structure,structural high,"Step 1: 'Outer High' names one Santos Basin structural feature, with named culminations, so it is an individual not a subclass."
+são paulo plateau,Geological Structure,,Geological Structure,structural high,"Step 1: 'São Paulo Plateau' is a named regional feature that includes Outer High, so it is a single geological structure, not a kind."
+early cretaceous,Geological Time Interval,,Geological Time Interval,Geological Time Interval,"Named unique geologic interval; NLD/relation say it is the earlier part of the Cretaceous, so model it as an instance (step 1)."
+cretaceous,Geological Time Interval,,Geological Time Interval,Geological Time Interval,"Named geologic period; denotes one unique interval in Earth history, so model as an instance of Geological Time Interval (step 1)."
+late aptian,Geological Time Interval,,Geological Time Interval,Chronostratigraphic Interval,"Named subdivision of the Aptian; denotes one unique interval, so it should be an instance rather than a subclass (step 1)."
+late jurassic,Geological Time Interval,,Geological Time Interval,Geological Time Interval,"Named subdivision of the Jurassic; denotes one unique interval and should be an instance, not a subclass (step 1)."
+alagoas stage,Geological Time Interval,,Geological Time Interval,Geological Time Interval,"Named regional stage; denotes one unique Lower Cretaceous interval, so convert it to an instance of Geological Time Interval (step 1)."
+eoaptian,Geological Time Interval,,Geological Time Interval,Chronostratigraphic Interval,Named Early Cretaceous interval (~126–123 Ma); geological time periods denote one interval only (step 1).
+neobarremian,Geological Time Interval,,Geological Time Interval,Chronostratigraphic Interval,Named late-Barremian interval; geological time periods denote one interval only (step 1).
+early aptian,Geological Time Interval,,Geological Time Interval,Geological Time Interval,Named subinterval of the Aptian; a geological time period should be modeled as one instance (step 1).
+lagoa feia group,Lithostratigraphic Unit,,Lithostratigraphic Unit,Stratigraphic Group,"Lagoa Feia Group is a named group in the Campos Basin, so it denotes one specific lithostratigraphic unit (step 1)."
+lower barra velha formation,Lithostratigraphic Unit,,Lithostratigraphic Unit,Lithostratigraphic Unit,"This is a named lower subdivision of the Barra Velha Formation, so it denotes one specific unit rather than a subclass (step 1)."
+upper barra velha formation,Lithostratigraphic Unit,,Lithostratigraphic Unit,Lithostratigraphic Unit,"Proper-noun named unit; NLD says it is the upper unit of Barra Velha Formation, so step 1 treats it as one instance."
+guaratiba group,Lithostratigraphic Unit,,Lithostratigraphic Unit,Lithostratigraphic Group,"Proper-noun named lithostratigraphic group of the Santos Basin; it denotes one formal unit, so step 1 => instance."
+camburi group,Lithostratigraphic Unit,,Lithostratigraphic Unit,Lithostratigraphic Group,"Proper-noun named lithostratigraphic group above the Ariri evaporites; this is one formal unit, so step 1 => instance."
+itamambuca group,Stratigraphic Unit,,Lithostratigraphic Unit,Stratigraphic Group,"Proper-noun named stratigraphic group in the Santos Basin; it denotes one uppermost unit, so step 1 => instance."
+frade group,Lithostratigraphic Unit,,Lithostratigraphic Unit,Lithostratigraphic Group,"Proper-noun named lithostratigraphic group; even if used locally, it denotes one formal unit, so step 1 => instance."
+lower cretaceous,Stratigraphic Unit,,Stratigraphic Unit,Stratigraphic Unit,"Named chronostratigraphic unit/series; there is one Lower Cretaceous, so it should be an instance, not a subclass (step 1)."
+brazilian pre-salt,site,,Stratigraphic Unit,Stratigraphic Unit,"NLD and location evidence describe one regional petroleum/stratigraphic domain in Santos/Campos basins, so convert to an instance (step 1)."
+upper aptian,Geological Time Interval,,Stratigraphic Unit,Stratigraphic Unit,"Named Upper Aptian denotes one chronostratigraphic/time subdivision, not a reusable stratigraphic-unit class; convert per step1."
+tupi field,site,,site,Field,Proper-noun named petroleum field; it denotes one specific field and should be modeled as an instance of site (step 1).
+búzios field,Field,site,site,Field,"proper-noun named oil field; it denotes one field only, so use instance typing, not subclassing (step 1)"
+mero field,Field,site,site,Field,"proper-noun named oil field; it denotes one field only, so use instance typing, not subclassing (step 1)"
+sapinhoá field,Field,site,site,Field,"proper-noun named oil field; it denotes one field only, so use instance typing, not subclassing (step 1)"
+atapu field,Field,site,site,Field,"proper-noun named oil field; it denotes one field only, so use instance typing, not subclassing (step 1)"
+lula field,Field,site,site,Field,proper-noun named hydrocarbon field; step 1 converts named geological individuals to instances
+sururu field,Field,site,site,Field,proper-noun named hydrocarbon field; step 1 converts named geological individuals to instances

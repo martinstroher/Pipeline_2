@@ -50,13 +50,17 @@ def main() -> int:
     from src.utils.relation_validator import _CATEGORY_TO_METATYPES as LEGACY_CAT_META
     _assert_eq("_CATEGORY_TO_METATYPES dict equality", LEGACY_CAT_META, cfg.category_to_metatypes())
 
-    # ── GEORESERVOIR_CATEGORIES / GEOCORE_CATEGORIES parity ──
-    from src.evaluation.expert_eval_generator import (
-        GEORESERVOIR_CATEGORIES as LEGACY_GERES,
-        GEOCORE_CATEGORIES as LEGACY_GCORE,
+    # ── Categorizer category sets are available directly from config ──
+    _assert_eq(
+        "GEORESERVOIR_CATEGORIES non-empty",
+        True,
+        bool(cfg.categories_for("georeservoir")),
     )
-    _assert_eq("GEORESERVOIR_CATEGORIES set equality", LEGACY_GERES, cfg.categories_for("georeservoir"))
-    _assert_eq("GEOCORE_CATEGORIES set equality", LEGACY_GCORE, cfg.categories_for("geocore"))
+    _assert_eq(
+        "GEOCORE_CATEGORIES non-empty",
+        True,
+        bool(cfg.categories_for("geocore")),
+    )
 
     # ── OWL file list parity ──
     # Class-source OWL files (excludes property-only ontologies like ro-core.owl).

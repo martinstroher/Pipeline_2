@@ -111,7 +111,7 @@ def _check_stop(stop: str | None, step: str) -> bool:
 
 
 def _dispatch_subcommand(args, parser) -> bool:
-    """Run a one-shot subcommand (--ablation, --analysis, --taxonomy, ...) and
+    """Run a one-shot production subcommand (--taxonomy, --validate, ...) and
     return True if one fired. Returns False so the caller runs the standard
     pipeline.
     """
@@ -119,39 +119,6 @@ def _dispatch_subcommand(args, parser) -> bool:
         parser.error("--validate-relations requires --validate")
     if args.validate_emit and not args.validate:
         parser.error("--validate-emit requires --validate")
-
-    if args.ablation:
-        from src.evaluation.ablation_study import run_ablation
-        from src.evaluation.layer1_analysis import run_layer1_analysis
-        from src.evaluation.expert_eval_generator import generate_expert_evaluation
-        conds = [c.strip().upper() for c in args.conditions.split(",")]
-        run_ablation(conditions=conds)
-        if set(conds) == {"A", "B", "C", "D"}:
-            run_layer1_analysis()
-            generate_expert_evaluation()
-        else:
-            log.info(
-                "Partial ablation complete. Layer 1 and expert workbooks require "
-                "all four conditions and were not generated."
-            )
-        return True
-
-    if args.analysis:
-        from src.evaluation.layer1_analysis import run_layer1_analysis
-        run_layer1_analysis()
-        return True
-
-    if args.expert_eval:
-        from src.evaluation.expert_eval_generator import generate_expert_evaluation
-        generate_expert_evaluation()
-        return True
-
-    if args.layer2_analysis:
-        from src.evaluation.expert_eval_analyzer import run_layer2_analysis
-        if not args.layer2_key:
-            parser.error("--layer2-key is required with --layer2-analysis")
-        run_layer2_analysis(args.layer2_analysis, args.layer2_key)
-        return True
 
     if args.taxonomy:
         from src.modules.construct.taxonomy_builder import run_taxonomy_builder
@@ -195,11 +162,6 @@ def _dispatch_subcommand(args, parser) -> bool:
         run_relation_extraction(args.relations)
         return True
 
-    if args.relation_analysis:
-        from src.evaluation.relation_analysis import run_relation_analysis
-        run_relation_analysis(args.relation_analysis)
-        return True
-
     return False
 
 
@@ -207,44 +169,10 @@ def _build_parser() -> argparse.ArgumentParser:
     """Build the CLI parser. Kept separate so main() stays focused on flow."""
     parser = argparse.ArgumentParser(description="PreSaltOntoLearn Pipeline")
     parser.add_argument(
-        "--ablation",
-        action="store_true",
-        help="Run 4-condition ablation study instead of standard pipeline",
-    )
-    parser.add_argument(
-        "--conditions",
-        type=str,
-        default="A,B,C,D",
-        help="Comma-separated ablation conditions (default: A,B,C,D)",
-    )
-    parser.add_argument(
-        "--analysis",
-        action="store_true",
-        help="Run Layer 1 statistical analysis on ablation results",
-    )
-    parser.add_argument(
-        "--expert-eval",
-        action="store_true",
-        help="Generate expert evaluation spreadsheet from ablation results",
-    )
-    parser.add_argument(
-        "--layer2-analysis",
-        nargs="+",
-        default=None,
-        metavar="WORKBOOK",
-        help="Run Layer 2 analysis on three completed expert workbooks; use the separate private/blinding_key_42.csv with --layer2-key",
-    )
-    parser.add_argument(
-        "--layer2-key",
-        type=str,
-        default=None,
-        help="Path to blinding key CSV (required with --layer2-analysis)",
-    )
-    parser.add_argument(
         "--taxonomy",
         type=str,
         default=None,
-        help="Build taxonomy from a categorized CSV (e.g., output/ablation/cat_A.csv)",
+        help="Build taxonomy from a categorized CSV",
     )
     parser.add_argument(
         "--validate",
@@ -269,7 +197,7 @@ def _build_parser() -> argparse.ArgumentParser:
         "--owl",
         type=str,
         default=None,
-        help="Export OWL from taxonomy CSV (e.g., output/ablation/construct_taxonomy_A.csv)",
+        help="Export OWL from a taxonomy CSV",
     )
     parser.add_argument(
         "--verify",
@@ -282,14 +210,6 @@ def _build_parser() -> argparse.ArgumentParser:
         type=str,
         default=None,
         help="Extract relations from categorized CSV (e.g., output/classify_categories.csv)",
-    )
-    parser.add_argument(
-        "--relation-analysis",
-        type=str,
-        default=None,
-        nargs="?",
-        const="output/construct_relations.csv",
-        help="Run descriptive stats + precision sample on construct_relations.csv",
     )
     parser.add_argument(
         "--skip-relations",

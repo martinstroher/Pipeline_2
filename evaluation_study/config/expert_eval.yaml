@@ -1,7 +1,7 @@
 # Expert-Evaluation Study Configuration — PreSaltOntoLearn
 #
 # Instructions sheet rendered as the first tab of the expert-evaluation
-# workbook produced by src/evaluation/expert_eval_generator.py. Each entry
+# workbook produced by evaluation_study/expert_eval_generator.py. Each entry
 # is a [Section, Details] pair shown verbatim.
 #
 # The workbook contains one instructions sheet, one representation sheet,

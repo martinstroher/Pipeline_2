@@ -1,12 +1,12 @@
 """Study Configuration Loader — single source of truth for study-level
 text (currently the expert-evaluation workbook instructions sheet).
 
-Reads `studies/expert_eval.yaml` (or path from env var `STUDY_CONFIG_PATH`)
+Reads `evaluation_study/config/expert_eval.yaml` (or `STUDY_CONFIG_PATH`)
 and exposes typed accessors. Mirrors the `ontology_config.py` pattern
 (frozen dataclass + lru_cache singleton).
 
 Env vars:
-  STUDY_CONFIG_PATH — config file path (default: studies/expert_eval.yaml)
+    STUDY_CONFIG_PATH — optional path to another study configuration
 """
 from __future__ import annotations
 
@@ -17,7 +17,9 @@ from pathlib import Path
 
 import yaml
 
-_DEFAULT_PATH = Path("studies") / "expert_eval.yaml"
+from evaluation_study.paths import STUDY_CONFIG
+
+_DEFAULT_PATH = STUDY_CONFIG
 
 
 @dataclass(frozen=True)

@@ -749,8 +749,8 @@ The ablation analysis compares:
 
 | File | Description |
 |---|---|
-| `output/ablation/rel_A.csv` | Relations from condition A (RAG+NLD) |
-| `output/ablation/rel_B.csv` | Relations from condition B (no-RAG NLD) |
+| `evaluation_study/output/ablation/rel_A.csv` | Study-only relations from condition A (RAG+NLD) |
+| `evaluation_study/output/ablation/rel_B.csv` | Study-only relations from condition B (no-RAG NLD) |
 
 ---
 

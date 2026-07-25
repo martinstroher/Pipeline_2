@@ -25,10 +25,17 @@ import pandas as pd
 from openpyxl import load_workbook
 from openpyxl.styles import Alignment, Font, PatternFill
 
-import src.evaluation.layer1_analysis as layer1
-from src.evaluation.expert_eval_analysis import run_modular_analysis
-from src.evaluation.expert_eval_generator import generate_expert_evaluation
-from src.evaluation.expert_eval_workbook import StudyInputs, build_final_fates
+import evaluation_study.layer1_analysis as layer1
+from evaluation_study.expert_eval_analysis import run_modular_analysis
+from evaluation_study.expert_eval_generator import generate_expert_evaluation
+from evaluation_study.expert_eval_workbook import StudyInputs, build_final_fates
+from evaluation_study.paths import (
+    APPROVED_ONTOLOGY_DIR,
+    FILTERED_TERMS,
+    FROZEN_A_CATEGORIES,
+    FROZEN_A_NLD,
+    REHEARSAL_OUTPUT,
+)
 from src.utils.csv_io import read_csv, write_csv
 from src.utils.ontology_config import get_config
 
@@ -38,11 +45,11 @@ WARNING = (
     "SYNTHETIC OFFLINE REHEARSAL ONLY. No Azure model and no human expert "
     "produced these results. Do not use them as thesis evidence."
 )
-DEFAULT_OUTPUT_DIR = "output/ablation_rehearsal"
-DEFAULT_ONTOLOGY_DIR = "output/refined"
-DEFAULT_TERMS_PATH = "output/extract_filtered.csv"
-DEFAULT_A_NLD_PATH = "output/define_nld.csv"
-DEFAULT_A_CATEGORY_PATH = "output/classify_categories.csv"
+DEFAULT_OUTPUT_DIR = str(REHEARSAL_OUTPUT)
+DEFAULT_ONTOLOGY_DIR = str(APPROVED_ONTOLOGY_DIR)
+DEFAULT_TERMS_PATH = str(FILTERED_TERMS)
+DEFAULT_A_NLD_PATH = str(FROZEN_A_NLD)
+DEFAULT_A_CATEGORY_PATH = str(FROZEN_A_CATEGORIES)
 EXPECTED_TERM_COUNT = 407
 SEED = 42
 CONDITIONS = ("A", "B", "C", "D")
@@ -949,7 +956,7 @@ def _write_findings_report(
         "",
         "- GO: schemas, manifests, term pairing, workbook generation, stable row IDs, category propagation, mock completion, unblinding, bootstrap CIs, omnibus gates, and separate final-task analyses all execute offline.",
         "- NO-GO for interpretation: do not quote any rehearsal result as evidence for RAG, NLDs, structuring, or ontology quality.",
-        "- Before Azure: archive or remove this rehearsal directory, run paid B/C/D in `output/ablation/`, inspect ten random rows per condition, and verify the production manifest before analysis.",
+        "- Before Azure: archive or remove this rehearsal directory, run paid B/C/D in `evaluation_study/output/ablation/`, inspect ten random rows per condition, and verify the production manifest before analysis.",
     ]
     report_path = output_dir / "OFFLINE_REHEARSAL_FINDINGS.md"
     report_path.write_text("\n".join(lines) + "\n", encoding="utf-8")

@@ -1,6 +1,6 @@
 """Public entry point for modular Layer 2 expert analysis.
 
-The executable path delegates to ``src.evaluation.expert_eval_analysis``.
+The executable path delegates to ``evaluation_study.expert_eval_analysis``.
 Legacy analysis helpers remain available for historical workbook compatibility.
 
 Statistical tests:
@@ -20,7 +20,9 @@ from src.utils.csv_io import read_csv
 from scipy import stats
 from sklearn.metrics import cohen_kappa_score
 
-OUTPUT_DIR = os.environ.get("ABLATION_OUTPUT_DIR", "output/ablation")
+from evaluation_study.paths import ABLATION_OUTPUT
+
+OUTPUT_DIR = os.environ.get("ABLATION_OUTPUT_DIR", str(ABLATION_OUTPUT))
 ANALYSIS_DIR = os.path.join(OUTPUT_DIR, "analysis")
 
 
@@ -685,7 +687,7 @@ def run_layer2_analysis(
     """
     if output_dir is None:
         output_dir = ANALYSIS_DIR
-    from src.evaluation.expert_eval_analysis import run_modular_analysis
+    from evaluation_study.expert_eval_analysis import run_modular_analysis
 
     return run_modular_analysis(
         workbook_paths=workbook_paths,

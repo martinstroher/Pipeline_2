@@ -9,7 +9,7 @@ Produces two outputs:
 Usage:
   python pipeline.py --relation-analysis [construct_relations.csv]
   # or directly:
-  python -m src.evaluation.relation_analysis output/construct_relations.csv
+    python -m evaluation_study.cli relation-analysis evaluation_study/inputs/approved_run/validate_relations.csv
 """
 
 import os

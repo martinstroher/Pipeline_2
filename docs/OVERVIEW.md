@@ -122,37 +122,15 @@ Not every term is a "type of thing" (OWL class). Some terms are **named entities
 
 ---
 
-## Evaluation framework
+## Evaluation Study
 
-The pipeline's design choices are validated by an **ablation study** — running the same term set through four variations:
-
-| Condition | What it does | What comparison shows |
-|-----------|-------------|-----------------------|
-| **A — Full** | Frozen production RAG context + Aristotelian NLD + classification; copied without regeneration | experimental anchor |
-| **B — NoRAG** | NLD generated from LLM knowledge only (no retrieval) | A vs B → RAG contribution |
-| **C — NoNLD** | Classification from the bare term string only | A vs C → NLD contribution |
-| **D — RawRAG** | The exact stored Condition-A passages as context (no new retrieval and no structured NLD) | A vs D → structuring benefit |
-
-This directly replicates the core comparison from Lopes Junior (2024): the thesis showed NLD > definiendum for upper-ontology classification. We replicate this on a new domain and a new architecture (RAG-augmented LLM instead of a supervised classifier trained on OBO Foundry).
-
-All four conditions use the same 407 terms. A/B/C use the production classification prompt; D changes only the input representation from `nld` to `context`. Conditions run sequentially with three workers inside each condition, and a manifest locks the term set, prompts, ontology configuration, model settings, frozen inputs, and output hashes.
-
-### Two evaluation layers
-
-- **Layer 1 — Automated sensitivity:** Exact and ontology-tier agreement, Cohen's kappa, independent RAG/NLD/structuring sensitivity flags, category and tier confusion matrices, global Cochran's Q, gated Holm-corrected McNemar tests, Holm-corrected Stuart-Maxwell tier tests, and descriptive `NOT_CLASSIFIED`/context-use rates. These results show whether representations change assignments; they do not establish which assignment is correct.
-- **Layer 2A — Representation experts:** A seeded sample of 100/407 terms is proportional to Condition-A ontology tier and corpus-frequency band. Three geologists receive the same items in independently shuffled workbooks. They rate relevance once, compare blinded A/B definitions, and judge every unique A/B/C/D term-category proposal without seeing a definition, condition, tier, or downstream critic fate. Every rating permits explicit `Unsure`.
-- **Layer 2B — Final ontology experts:** The same workbooks independently evaluate 40/185 class links, all 13 constructed definitions, 25/125 general relations, 15/58 named entities, and 40/116 exclusion or demotion decisions. Questions use geological language and separate relationship correctness from usefulness for understanding/comparing Pre-Salt systems, overall definition correctness from whether its feature is defining, and relation correctness from general scope. Critic rows show both the decision and resulting treatment. Experts judge only the proposal shown; they are never asked to select a category, parent, or type from an unseen vocabulary. Optional Notes preserve qualitative explanations for Partial or No judgments.
-- **Analysis:** Expert ratings are averaged per sampled item before Wilcoxon or Friedman inference. NLD results include rank-biserial effect size and a preference sign test. Category post-hoc A-vs-B/C/D tests run only after a significant Friedman test and use Holm correction. ICC, weighted agreement, Fleiss' kappa, and item-clustered bootstrap confidence intervals are reported. Taxonomy, definitions, relations, named entities, and critic decisions remain separate outcomes; no composite ontology score is produced.
-
-Before paid execution, `python -m src.evaluation.offline_rehearsal --overwrite` exercises the complete workflow with deterministic synthetic surrogates and mock ratings. It writes only to `output/ablation_rehearsal/`, performs no Azure calls, verifies deterministic reruns, and labels every artifact as unsuitable for scientific inference. Real distributable workbooks are written under `expert_workbooks/`; the unblinding key is isolated under `private/`, and Layer 2 verifies all source hashes before analysis.
-
-The five-persona geologist-role usability pilot and the proposed vNext redesign are documented in [expert_evaluation_usability_pilot.md](expert_evaluation_usability_pilot.md). The pilot is a pre-study usability artifact, not expert evidence.
+The thesis ablation, statistics, expert workbooks, offline rehearsal, and usability-pilot methods are isolated from the production pipeline under [`evaluation_study/`](../evaluation_study/README.md). The study reads frozen pipeline artifacts but writes only to `evaluation_study/output/`.
 
 ---
 
 ## What the output looks like
 
-The final file `output/6d_taxonomy_reclassified.ttl` (OWL Turtle format) contains:
+The approved file `output/final/presalt_ontology.ttl` (OWL Turtle format) contains:
 
 ```turtle
 # Example excerpt
@@ -192,9 +170,8 @@ The pipeline architecture is domain-agnostic. The Pre-Salt-specific knowledge li
 | `domains/<name>/prompts/` | 14 production prompts (term extraction, NLD generation, categorization, taxonomy, focused validate critics, relations, CQ scoring …) |
 | `domains/<name>/resources/` | Reference OWL files for the upper ontologies (loaded by `owl_exporter.py` for the upper backbone) |
 | `domains/<name>/competency_questions.txt` | CQs used by Step 5b (mandatory) |
-| `studies/expert_eval.yaml` | Cross-domain workbook prose: 66 instruction-sheet rows for the eight modular sheets. Edit only if evaluation anchors or calibration examples differ. |
 
-No Python code needs to change to retarget. Point the loader at the new YAML via `ONTOLOGY_CONFIG_PATH=domains/<name>/ontology_config.yaml`; the prompt loader picks up `domains/<name>/prompts/` from the same parent folder automatically. The expert workbook generator (`src/evaluation/expert_eval_generator.py`) reads `instructions_sheet.rows` from `studies/expert_eval.yaml` and renders Sheet 1 from it verbatim.
+No production Python code needs to change to retarget. Point the loader at the new YAML via `ONTOLOGY_CONFIG_PATH=domains/<name>/ontology_config.yaml`; the prompt loader picks up `domains/<name>/prompts/` from the same parent folder automatically.
 
 For a new domain you will also need to:
 - Provide your own scientific PDFs in `inputs/`

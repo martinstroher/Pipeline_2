@@ -33,14 +33,14 @@ domains/<your_domain>/
 
 Two more artifacts sit outside the domain because they describe cross-domain studies:
 
-- `studies/prompts/ablation_categorization_rag.txt` — Condition-D raw-context prompt; A/B/C use the active domain's production categorizer
-- `studies/expert_eval.yaml` — expert-evaluation workbook instructions sheet
+- `evaluation_study/prompts/ablation_categorization_rag.txt` — standalone Condition-D raw-context prompt
+- `evaluation_study/config/expert_eval.yaml` — standalone expert-workbook instructions
 
 ## Activation
 
 ```powershell
 $env:ONTOLOGY_CONFIG_PATH = "domains/your_domain/ontology_config.yaml"
-# Optional: $env:STUDY_CONFIG_PATH = "studies/your_eval.yaml"
+# Study configuration is documented separately in evaluation_study/README.md.
 ```
 
 `ontology_config.py` derives the prompt root from the directory containing the
@@ -77,7 +77,6 @@ call time.
 | `critic_relations.txt` | `{category}`, `{relations_json}`, `{relations_menu_json}`, `{previously_minted_json}`, `{taxonomy_context_json}`, `{taxonomy_decisions_json}` |
 | `cq_scoring.txt` | `{batch_size}`, `{terms_json}` |
 | `cq_synonym_triage.txt` | `{clusters_json}` |
-| `ablation_categorization_rag.txt` (studies/) | `{categories_block}`, `{json_batch}` |
 
 `{categories_block}` is rendered by `OntologyConfig.categorization_block()` from
 the `waterfall:` list in `ontology_config.yaml` — one `### <DisplayName> Categories:`
@@ -108,12 +107,11 @@ See `.github/copilot-instructions.md` for the field-by-field spec. Key rules:
 
 ## Validation gates
 
-After any change to a prompt, `ontology_config.yaml`, or `studies/expert_eval.yaml`:
+After any change to a production prompt or `ontology_config.yaml`:
 
 ```powershell
 python test/test_ontology_config_parity.py    # 26 checks; must show "=== PARITY PASSED ==="
 python test/test_prompt_refactor_parity.py    # active prompts resolve without drift or missing placeholders
-python test/diff_instructions_sheet.py        # 66 rows; byte-equal to baseline
 python test/regression_t1.py                  # deterministic 6d→7→7b regression
 ```
 

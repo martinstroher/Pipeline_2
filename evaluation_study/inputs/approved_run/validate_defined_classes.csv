@@ -1,0 +1,14 @@
+﻿Bearer,Genus,Property,Property_IRI,Filler,Definition_Type,Definition_Rationale
+reservoir facies,Facies,has_role,http://purl.obolibrary.org/obo/RO_0000087,ReservoirFaciesRole,bearer_realizable,KEEP_AS_BEARER realizable carry
+hydrocarbon reservoir,Body of Rock,has_role,http://purl.obolibrary.org/obo/RO_0000087,HydrocarbonReservoirRole,bearer_realizable,KEEP_AS_BEARER realizable carry
+seal,Body of Rock,has_role,http://purl.obolibrary.org/obo/RO_0000087,SealRole,bearer_realizable,KEEP_AS_BEARER realizable carry
+regional seal,seal,has_role,http://purl.obolibrary.org/obo/RO_0000087,RegionalSealRole,bearer_realizable,KEEP_AS_BEARER realizable carry
+aquifer,Body of Rock,has_disposition,http://purl.obolibrary.org/obo/RO_0000091,GroundwaterStorageAndTransmissionDisposition,bearer_realizable,KEEP_AS_BEARER realizable carry
+source rock,Sedimentary Rock,has_disposition,http://purl.obolibrary.org/obo/RO_0000091,HydrocarbonGenerationDisposition,bearer_realizable,KEEP_AS_BEARER realizable carry
+reservoir rock,Sedimentary Rock,has_disposition,http://purl.obolibrary.org/obo/RO_0000091,HydrocarbonReservoirDisposition,bearer_realizable,KEEP_AS_BEARER realizable carry
+lacustrine carbonate platform,carbonate platform,located_in,http://purl.obolibrary.org/obo/BFO_0000171,lacustrine system,cross_axis,captures the central Pre-Salt cross-axis system while preserving a named endpoint for specific time and lithology relations
+carbonate reservoir,hydrocarbon reservoir,located_in,http://purl.obolibrary.org/obo/BFO_0000171,carbonate rock,cross_axis,captures the central lithology-defined reservoir kind used across the pre-salt corpus
+basement high,structural high,continuant_part_of,http://purl.obolibrary.org/obo/BFO_0000176,basement,cross_axis,captures the recurrent pre-salt concept of a structural high that is part of basement using existing core classes and an already evidenced relation
+bioclast,Carbonate Grain,derives_from,http://purl.obolibrary.org/obo/RO_0001000,Fossil,cross_axis,"captures the central reservoir concept of a carbonate grain of skeletal/fossil origin, reused in composition, texture, and porosity descriptions"
+hydrothermal alteration,diagenetic process,has_participant,http://purl.obolibrary.org/obo/BFO_0000057,hydrothermal fluid,cross_axis,captures the central thermally driven fluid-participation criterion that distinguishes hydrothermal alteration from generic diagenetic processes
+silica cement,silica,generated_by,https://www.inf.ufrgs.br/bdi/ontologies/GEOCORE_0000013,cementation,cross_axis,captures the authigenic pore-filling silica subset that is reused in reservoir-quality modeling and is not supplied by generic silica alone

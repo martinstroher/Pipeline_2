@@ -1,0 +1,4 @@
+# Frozen study inputs and the approved Turtle artifact are byte-preserved receipts.
+# Do not normalize source whitespace; their manifests record exact SHA-256 hashes.
+evaluation_study/inputs/**/*.csv -text whitespace=-trailing-space
+output/final/*.ttl -text whitespace=-trailing-space

@@ -1,0 +1,28 @@
+{
+  "artifact": "presalt_ontology.ttl",
+  "status": "APPROVED",
+  "source_run": "production_validate_balanced_high_20260712T230038Z",
+  "source_commit": "4455759",
+  "policy": "balanced-core",
+  "model": "gpt-5.4",
+  "reasoning_effort": "high",
+  "sha256": "5b1c950609b5a8b2cd2e2ade78877f769f950c891eb26b84bba166956bd195bb",
+  "triples": 1819,
+  "classes": 249,
+  "named_individuals": 59,
+  "restrictions": 141,
+  "equivalent_class_axioms": 13,
+  "syntax": "PASS",
+  "structure": "PASS",
+  "reasoner": "NOT_RUN",
+  "oops": "NOT_RUN",
+  "generation_function": "src.modules.emit.owl_exporter.run_owl_export",
+  "frozen_handoff": "evaluation_study/inputs/approved_run",
+  "regeneration": {
+    "graph_isomorphic": true,
+    "triples": 1819,
+    "classes": 249,
+    "named_individuals": 59,
+    "note": "Turtle byte hashes vary because blank-node identifiers are serialization-dependent."
+  }
+}

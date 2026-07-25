@@ -1,7 +1,7 @@
 """Focused regression checks for the thesis evaluation study.
 
 Run:
-    python test/test_evaluation_study.py
+    python evaluation_study/test/test_evaluation_study.py
 """
 
 from __future__ import annotations
@@ -14,26 +14,26 @@ from pathlib import Path
 
 import pandas as pd
 
-REPO_ROOT = Path(__file__).resolve().parent.parent
+REPO_ROOT = Path(__file__).resolve().parents[2]
 if str(REPO_ROOT) not in sys.path:
     sys.path.insert(0, str(REPO_ROOT))
 
-import src.evaluation.ablation_study as ablation
-from src.evaluation.expert_eval_analysis import (
+import evaluation_study.ablation_study as ablation
+from evaluation_study.expert_eval_analysis import (
     _numeric_rating,
     _summarize_judgments,
     analyze_categories,
     analyze_final_ontology,
     analyze_representation,
 )
-from src.evaluation.expert_eval_workbook import (
+from evaluation_study.expert_eval_workbook import (
     StudyInputs,
     _category_for_expert,
     _representation_for_expert,
     build_final_fates,
     select_representation_terms,
 )
-from src.evaluation.layer1_analysis import (
+from evaluation_study.layer1_analysis import (
     agreement_matrix,
     cochrans_q_test,
     mcnemar_posthoc,
@@ -41,7 +41,7 @@ from src.evaluation.layer1_analysis import (
     stuart_maxwell_tests,
     validate_paired_results,
 )
-from src.evaluation.relation_analysis import generate_precision_sample
+from evaluation_study.relation_analysis import generate_precision_sample
 from src.utils.csv_io import read_csv, write_csv
 from src.utils.ontology_config import get_config
 from src.utils.prompt_loader import load_prompt

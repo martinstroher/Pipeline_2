@@ -5,9 +5,9 @@ import json
 import sys
 from pathlib import Path
 
-sys.path.insert(0, str(Path(__file__).resolve().parent.parent))
+sys.path.insert(0, str(Path(__file__).resolve().parents[2]))
 
-from src.evaluation.expert_eval_generator import build_instructions_sheet
+from evaluation_study.expert_eval_generator import build_instructions_sheet
 
 fixture_path = Path(__file__).parent / "fixtures" / "instructions_baseline.json"
 baseline = json.loads(fixture_path.read_text(encoding="utf-8"))
