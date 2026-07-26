@@ -562,6 +562,7 @@ def generate_expert_evaluation(
     output_dir: str | None = None,
     n_experts: int = 3,
     ontology_dir: str | None = None,
+    terms_path: str | None = None,
 ) -> tuple[list[str], str]:
     """Generate modular expert workbooks and the separate blinding key.
 
@@ -571,6 +572,7 @@ def generate_expert_evaluation(
         output_dir: Output directory (default: evaluation_study/output/ablation/).
         n_experts: Number of independently randomized workbooks.
         ontology_dir: Directory containing the approved validate artifacts.
+        terms_path: Frozen filtered-term input for the standalone study.
 
     Returns:
         (workbook_paths, key_path)
@@ -583,6 +585,7 @@ def generate_expert_evaluation(
         output_dir=output_dir,
         n_experts=n_experts,
         ontology_dir=ontology_dir,
+        terms_path=terms_path,
     )
 
 
@@ -598,7 +601,12 @@ if __name__ == "__main__":
     parser = argparse.ArgumentParser(description="Generate expert evaluation spreadsheet")
     parser.add_argument("--n-terms", type=int, default=100, help="Number of representation terms to sample")
     parser.add_argument("--seed", type=int, default=42, help="Random seed")
-    parser.add_argument("--n-experts", type=int, default=3, help="Number of independently blinded workbooks")
+    parser.add_argument(
+        "--n-experts",
+        type=int,
+        default=3,
+        help="Number of workbooks (default: 3; all contain the same sampled items)",
+    )
     parser.add_argument("--ontology-dir", default=None, help="Directory containing approved validate artifacts")
     args = parser.parse_args()
     generate_expert_evaluation(

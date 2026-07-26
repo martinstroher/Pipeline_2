@@ -19,7 +19,6 @@ import json
 import math
 import os
 import random
-import re
 from dataclasses import dataclass
 from datetime import datetime, timezone
 from pathlib import Path
@@ -35,10 +34,11 @@ from evaluation_study.layer1_analysis import validate_paired_results
 from evaluation_study.paths import (
     ABLATION_OUTPUT,
     APPROVED_ONTOLOGY_DIR,
+    DISPLAY_TEXT_CONFIG,
     FILTERED_TERMS,
     STUDY_CONFIG,
 )
-from evaluation_study.study_config import get_study_config
+from evaluation_study.study_config import display_label, get_display_registry, get_study_config
 from src.utils.csv_io import read_csv, write_csv
 from src.utils.ontology_config import get_config
 
@@ -57,7 +57,7 @@ FINAL_SAMPLE_SIZES = {
 APPROVED_POPULATIONS = {
     "Taxonomy": 185,
     "Defined_Classes": 13,
-    "Relations": 125,
+    "Relations": 280,
     "Individuals": 58,
     "Critic_Decisions": 116,
 }
@@ -355,13 +355,116 @@ def _category_descriptions() -> dict[str, str]:
             if ":" in line:
                 label, description = line.split(":", 1)
                 descriptions[label.strip()] = description.strip()
+    for category, entry in get_display_registry().categories.items():
+        if entry.definition:
+            matching = next(
+                (label for label in descriptions if label.casefold() == category),
+                category,
+            )
+            descriptions[matching] = entry.definition
     return descriptions
+
+
+def build_term_glosses(nld: pd.DataFrame) -> dict[str, str]:
+    """Return shared context only for terms found ambiguous in the pilot."""
+    _require_columns(nld, {"Term", "NLD"}, "NLD gloss source")
+    registry = get_display_registry()
+    nld_lookup = _lookup_by_term(nld, "NLD", "NLD gloss source")
+    glosses: dict[str, str] = {}
+    for key in registry.ambiguous_terms:
+        if key in registry.term_glosses:
+            glosses[key] = registry.term_glosses[key]
+            continue
+        text = str(nld_lookup.get(key, "")).strip()
+        if not text:
+            continue
+        sentence_end = next(
+            (index + 1 for index, character in enumerate(text) if character in ".!?"),
+            len(text),
+        )
+        glosses[key] = text[:sentence_end].strip()
+    return glosses
+
+
+def build_category_guide() -> pd.DataFrame:
+    """Build the visible category reference from formal config plus display text."""
+    descriptions = _category_descriptions()
+    tiers = _category_to_tier()
+    registry = get_display_registry()
+    rows = []
+    for formal_label, definition in sorted(
+        descriptions.items(),
+        key=lambda item: display_label(item[0], "category").casefold(),
+    ):
+        entry = registry.categories.get(formal_label.casefold())
+        rows.append({
+            "Category": display_label(formal_label, "category"),
+            "Meaning": definition,
+            "Positive_Example": entry.example if entry else "",
+            "Not_This": entry.counterexample if entry else "",
+            "Source": entry.source if entry and entry.source else tiers.get(formal_label, ""),
+        })
+    return pd.DataFrame(rows)
+
+
+def build_practice_sheet() -> pd.DataFrame:
+    """Provide fixed calibration examples with immediate explanatory feedback."""
+    return pd.DataFrame([
+        {
+            "Task": "Category specificity",
+            "Example": "Grainstone proposed as Sedimentary Rock",
+            "Response": "Yes",
+            "Why": "Grainstone is a sedimentary rock; a process category would be wrong.",
+        },
+        {
+            "Task": "Named time interval",
+            "Example": "Aptian proposed as one named geological age",
+            "Response": "Yes",
+            "Why": "Aptian denotes one formally defined interval, not a reusable kind of interval.",
+        },
+        {
+            "Task": "Context-specific relation",
+            "Example": "A composition reported only in one named field",
+            "Response": "Context-specific",
+            "Why": "Local evidence does not establish a relation for every instance of the concept.",
+        },
+        {
+            "Task": "Defined class",
+            "Example": "A reservoir rock is a sedimentary rock that can store and transmit hydrocarbons",
+            "Response": "Correct",
+            "Why": "The base kind and distinguishing capacity jointly identify the concept.",
+        },
+        {
+            "Task": "Core-scope decision",
+            "Example": "Keep a paper-specific measurement value as a separate core concept",
+            "Response": "Reject",
+            "Why": "Measurement values belong in data or extensions, not the reusable core vocabulary.",
+        },
+    ])
+
+
+def build_timing_sheet() -> pd.DataFrame:
+    """Collect actual completion time by module during the human pilot."""
+    modules = [
+        "Practice and category guide",
+        "Representation",
+        "Category Correct and Taxonomy",
+        "Defined Classes, Relations, Individuals, and Critic Decisions",
+    ]
+    return pd.DataFrame({
+        "Row_ID": [f"TIME-{index:02d}" for index in range(1, len(modules) + 1)],
+        "Session": [1, 1, 2, 3],
+        "Module": modules,
+        "Minutes": ["", "", "", ""],
+        "Comments": ["", "", "", ""],
+    })
 
 
 def build_category_items(
     sample: pd.DataFrame,
     categories: dict[str, pd.DataFrame],
     final_fates: dict[str, str],
+    term_glosses: dict[str, str] | None = None,
 ) -> pd.DataFrame:
     """Deduplicate identical term/category assignments across A/B/C/D."""
     sampled_terms = {_normalise(term): term for term in sample["Readable_Term"]}
@@ -376,12 +479,14 @@ def build_category_items(
 
     descriptions = _category_descriptions()
     tiers = _category_to_tier()
+    term_glosses = term_glosses or {}
     rows = []
     ordered = sorted(assignments.items(), key=lambda item: (sampled_terms[item[0][0]].casefold(), item[0][1]))
     for index, ((term_key, category), conditions) in enumerate(ordered, 1):
         rows.append({
             "Row_ID": f"CAT-{index:04d}",
             "Term": sampled_terms[term_key],
+            "Term_Gloss": term_glosses.get(term_key, ""),
             "Assigned_Category": category,
             "Category_Description": descriptions.get(category, ""),
             "Conditions": ",".join(sorted(conditions)),
@@ -420,7 +525,6 @@ def select_final_ontology_items(
     defined = inputs.defined_classes.copy()
     relations = inputs.relations[
         (inputs.relations["Validation_Status"].astype(str).str.upper() == "ACCEPTED")
-        & (inputs.relations["Relation_Scope"].astype(str).str.lower() == "generic")
     ].copy()
     individuals = inputs.individuals.copy()
     decisions = inputs.class_fates[
@@ -445,7 +549,8 @@ def select_final_ontology_items(
     decisions["Resulting_Treatment"] = [
         (
             f"No longer a separate class; represented as {base_class} "
-            f"with {_humanise_label(property_name)} {_humanise_label(filler)}."
+            f"with {display_label(property_name, 'property')} "
+            f"{display_label(filler, 'category').lower()}."
             if decision_type == "DEMOTE"
             else "Not included as a separate concept in the final ontology."
         )
@@ -466,7 +571,7 @@ def select_final_ontology_items(
     required_columns = {
         "Taxonomy": {"Term", "Parent_Term", "Category", "Is_Intermediate"},
         "Defined_Classes": {"Bearer", "Genus", "Property", "Filler"},
-        "Relations": {"Term", "Property", "Filler", "Evidence"},
+        "Relations": {"Term", "Property", "Filler", "Evidence", "Relation_Scope"},
         "Individuals": {"Term", "Target_Class", "Reason"},
         "Critic_Decisions": {
             "term", "category", "action", "reason", "Decision_Type",
@@ -495,7 +600,7 @@ def select_final_ontology_items(
         "Relations": _proportional_sample(
             relations,
             FINAL_SAMPLE_SIZES["Relations"],
-            ["Property"],
+            ["Relation_Scope"],
             seed + 400,
         ),
         "Individuals": _proportional_sample(
@@ -529,9 +634,46 @@ def select_final_ontology_items(
     return samples
 
 
-def _humanise_label(value: object) -> str:
-    text = str(value).replace("_", " ").strip()
-    return re.sub(r"(?<=[a-z0-9])(?=[A-Z])", " ", text)
+def _lower_initial(value: object) -> str:
+    text = str(value).strip()
+    return text[:1].lower() + text[1:] if text else text
+
+
+def _defined_class_sentence(
+    bearer: object,
+    genus: object,
+    property_name: object,
+    filler: object,
+) -> str:
+    subject = _lower_initial(display_label(bearer, "category"))
+    base_kind = display_label(genus, "category").lower()
+    feature = display_label(bearer, "defined_class")
+    if str(bearer).casefold() not in get_display_registry().defined_class_features:
+        feature = (
+            f"{display_label(property_name, 'property')} "
+            f"{display_label(filler, 'category').lower()}"
+        )
+    article = "an" if base_kind[:1] in "aeiou" else "a"
+    subject_article = "An" if subject[:1] in "aeiou" else "A"
+    return f"{subject_article} {subject} is {article} {base_kind} that {feature}."
+
+
+def _relation_statement(
+    subject: object,
+    property_name: object,
+    filler: object,
+    scope: object,
+) -> str:
+    prefix = {
+        "generic": "Generally, ",
+        "corpus_context": "In some reported Pre-Salt contexts, ",
+        "individual_fact": "For this named entity, ",
+    }.get(str(scope).strip().casefold(), "In the proposed model, ")
+    return (
+        f"{prefix}{_lower_initial(subject)} "
+        f"{display_label(property_name, 'property')} "
+        f"{display_label(filler, 'category').lower()}."
+    )
 
 
 def _shuffle(frame: pd.DataFrame, seed: int) -> pd.DataFrame:
@@ -580,12 +722,18 @@ def _category_for_expert(
     expert_id: str,
     seed: int,
 ) -> tuple[pd.DataFrame, pd.DataFrame]:
-    visible = items[["Row_ID", "Term", "Assigned_Category", "Category_Description"]].copy()
+    visible = items[
+        ["Row_ID", "Term", "Assigned_Category", "Category_Description"]
+    ].copy()
+    visible.insert(2, "Term_Gloss", items.get("Term_Gloss", ""))
     visible = visible.rename(columns={
         "Assigned_Category": "Proposed_Category",
         "Category_Description": "Category_Definition",
     })
     unclassified = visible["Proposed_Category"] == "NOT_CLASSIFIED"
+    visible["Proposed_Category"] = visible["Proposed_Category"].map(
+        lambda value: display_label(value, "category")
+    )
     visible.loc[unclassified, "Proposed_Category"] = "Leave unclassified"
     visible.loc[unclassified, "Category_Definition"] = (
         "The system proposes leaving this term without an ontology category. "
@@ -604,12 +752,17 @@ def _final_frames_for_expert(
     samples: dict[str, pd.DataFrame],
     expert_id: str,
     seed: int,
+    term_glosses: dict[str, str] | None = None,
 ) -> tuple[dict[str, pd.DataFrame], list[pd.DataFrame]]:
+    term_glosses = term_glosses or {}
     taxonomy = samples["Taxonomy"]
     taxonomy_visible = pd.DataFrame({
         "Row_ID": taxonomy["Row_ID"],
         "Child_Concept": taxonomy["Term"],
-        "Parent_Concept": taxonomy["Parent_Term"],
+        "Term_Gloss": taxonomy["Term"].map(lambda value: term_glosses.get(_normalise(value), "")),
+        "Parent_Concept": taxonomy["Parent_Term"].map(
+            lambda value: display_label(value, "category")
+        ),
         "Relationship_Correct (Yes/Partial/No/Unsure)": "",
         "Useful_PreSalt_Distinction (Yes/No/Unsure)": "",
         "Notes": "",
@@ -619,30 +772,39 @@ def _final_frames_for_expert(
     defined_visible = pd.DataFrame({
         "Row_ID": defined["Row_ID"],
         "Concept": defined["Bearer"],
-        "Proposed_Base_Kind": defined["Genus"],
-        "Proposed_Distinguishing_Feature": [
-            f"{_humanise_label(prop)} {_humanise_label(filler)}"
-            for prop, filler in zip(defined["Property"], defined["Filler"])
+        "Term_Gloss": defined["Bearer"].map(
+            lambda value: term_glosses.get(_normalise(value), "")
+        ),
+        "Proposed_Definition": [
+            _defined_class_sentence(bearer, genus, prop, filler)
+            for bearer, genus, prop, filler in zip(
+                defined["Bearer"],
+                defined["Genus"],
+                defined["Property"],
+                defined["Filler"],
+            )
         ],
-        "Overall_Definition_Correct (Yes/Partial/No/Unsure)": "",
-        "Feature_Is_Defining_in_PreSalt (Yes/No/Unsure)": "",
+        "Definition_Verdict (Correct/Partly correct/Incorrect/Unsure)": "",
+        "Issue_Reason (select for Partly/Incorrect)": "",
         "Notes": "",
     })
 
     relations = samples["Relations"]
     relation_visible = pd.DataFrame({
         "Row_ID": relations["Row_ID"],
-        "Subject": relations["Term"],
-        "Relationship": relations["Property"].map(_humanise_label),
-        "Related_Concept": relations["Filler"],
-        "Statement": [
-            f"'{subject}' {_humanise_label(prop)} '{_humanise_label(filler)}'."
-            for subject, prop, filler in zip(
-                relations["Term"], relations["Property"], relations["Filler"]
+        "Term_Gloss": relations["Term"].map(
+            lambda value: term_glosses.get(_normalise(value), "")
+        ),
+        "Relation_Statement": [
+            _relation_statement(subject, prop, filler, scope)
+            for subject, prop, filler, scope in zip(
+                relations["Term"],
+                relations["Property"],
+                relations["Filler"],
+                relations["Relation_Scope"],
             )
         ],
-        "Statement_Correct (Yes/Partial/No/Unsure)": "",
-        "Generally_True (Yes/No/Unsure)": "",
+        "Relation_Verdict": "",
         "Corpus_Excerpt (context only)": relations["Evidence"],
         "Notes": "",
     })
@@ -651,7 +813,12 @@ def _final_frames_for_expert(
     individual_visible = pd.DataFrame({
         "Row_ID": individuals["Row_ID"],
         "Named_Entity": individuals["Term"],
-        "Proposed_Type": individuals["Target_Class"],
+        "Term_Gloss": individuals["Term"].map(
+            lambda value: term_glosses.get(_normalise(value), "")
+        ),
+        "Proposed_Type": individuals["Target_Class"].map(
+            lambda value: display_label(value, "category")
+        ),
         "Specific_Named_Entity (Yes/No/Unsure)": "",
         "Type_Correct (Yes/Partial/No/Unsure)": "",
         "Notes": "",
@@ -659,19 +826,24 @@ def _final_frames_for_expert(
 
     decisions = samples["Critic_Decisions"]
     decision_text = decisions["action"].map({
-        "DEMOTE_TO_PROPERTY": "Represent as a characteristic or relation, not a separate core concept",
-        "DROP_AS_OVER_SPECIFIC": "Leave out as a separate core concept because it is too specialized",
-        "DROP_AS_REDUNDANT": "Leave out as a separate core concept because it is redundant",
-        "DROP_AS_MIXIN": "Leave out as a separate core concept because it mixes organizing criteria",
+        "DEMOTE_TO_PROPERTY": "Represent as a characteristic or relation",
+        "DROP_AS_OVER_SPECIFIC": "Exclude as a separate concept",
+        "DROP_AS_REDUNDANT": "Exclude as a separate concept",
+        "DROP_AS_MIXIN": "Exclude as a separate concept",
     }).fillna(decisions["action"].astype(str))
     decision_visible = pd.DataFrame({
         "Row_ID": decisions["Row_ID"],
         "Concept": decisions["term"],
-        "Current_Category": decisions["category"],
+        "Term_Gloss": decisions["term"].map(
+            lambda value: term_glosses.get(_normalise(value), "")
+        ),
+        "Current_Category": decisions["category"].map(
+            lambda value: display_label(value, "category")
+        ),
         "Critic_Decision": decision_text,
         "Resulting_Treatment": decisions["Resulting_Treatment"],
-        "Decision_Appropriate (Yes/Partial/No/Unsure)": "",
-        "Preferred_Treatment": "",
+        "Decision_Acceptability (Accept/Accept with concern/Reject/Unsure)": "",
+        "Preferred_Treatment (for Concern/Reject)": "",
         "Notes": "",
     })
 
@@ -723,13 +895,12 @@ _INPUT_VALIDATIONS = {
         "Notes": None,
     },
     "Defined_Classes": {
-        "Overall_Definition_Correct (Yes/Partial/No/Unsure)": "Yes,Partial,No,Unsure",
-        "Feature_Is_Defining_in_PreSalt (Yes/No/Unsure)": "Yes,No,Unsure",
+        "Definition_Verdict (Correct/Partly correct/Incorrect/Unsure)": "Correct,Partly correct,Incorrect,Unsure",
+        "Issue_Reason (select for Partly/Incorrect)": "Base kind is wrong,Feature is not defining,Too broad,Too narrow,Wording unclear,Other,Unsure",
         "Notes": None,
     },
     "Relations": {
-        "Statement_Correct (Yes/Partial/No/Unsure)": "Yes,Partial,No,Unsure",
-        "Generally_True (Yes/No/Unsure)": "Yes,No,Unsure",
+        "Relation_Verdict": "Generally true,Context-specific,Partly wrong,Incorrect,Unsure",
         "Notes": None,
     },
     "Individuals": {
@@ -738,10 +909,19 @@ _INPUT_VALIDATIONS = {
         "Notes": None,
     },
     "Critic_Decisions": {
-        "Decision_Appropriate (Yes/Partial/No/Unsure)": "Yes,Partial,No,Unsure",
-        "Preferred_Treatment": "Keep as separate concept,Keep information but not as separate concept,Leave out,Unsure",
+        "Decision_Acceptability (Accept/Accept with concern/Reject/Unsure)": "Accept,Accept with concern,Reject,Unsure",
+        "Preferred_Treatment (for Concern/Reject)": "Keep as separate concept,Keep information but not as separate concept,Leave out,Unsure",
         "Notes": None,
     },
+    "Timing": {
+        "Minutes": None,
+        "Comments": None,
+    },
+}
+
+_OPTIONAL_INPUTS = {
+    ("Defined_Classes", "Issue_Reason (select for Partly/Incorrect)"),
+    ("Critic_Decisions", "Preferred_Treatment (for Concern/Reject)"),
 }
 
 
@@ -758,7 +938,11 @@ def _format_instructions(ws) -> None:
             row[0].font = Font(bold=True, color="1F4E78", size=12)
 
 
-def _format_data_sheet(ws, input_validations: dict[str, str | None]) -> None:
+def _format_data_sheet(
+    ws,
+    input_validations: dict[str, str | None],
+    sheet_name: str,
+) -> None:
     ws.freeze_panes = "A2"
     ws.auto_filter.ref = ws.dimensions
     ws.sheet_view.showGridLines = False
@@ -791,20 +975,22 @@ def _format_data_sheet(ws, input_validations: dict[str, str | None]) -> None:
         for row_index in range(2, ws.max_row + 1):
             ws.cell(row_index, column_index).fill = _INPUT_FILL
         if options:
+            optional = (sheet_name, header) in _OPTIONAL_INPUTS
             validation = DataValidation(
                 type="list",
                 formula1=f'"{options}"',
-                allow_blank=False,
+                allow_blank=optional,
                 showErrorMessage=True,
                 errorTitle="Response required",
                 error="Select one of the listed responses before submitting the workbook.",
             )
             validation.add(f"{column_letter}2:{column_letter}{ws.max_row}")
             ws.add_data_validation(validation)
-            ws.conditional_formatting.add(
-                f"{column_letter}2:{column_letter}{ws.max_row}",
-                CellIsRule(operator="equal", formula=['""'], fill=_MISSING_FILL),
-            )
+            if not optional:
+                ws.conditional_formatting.add(
+                    f"{column_letter}2:{column_letter}{ws.max_row}",
+                    CellIsRule(operator="equal", formula=['""'], fill=_MISSING_FILL),
+                )
 
 
 def _write_workbook(
@@ -818,8 +1004,12 @@ def _write_workbook(
             frame.to_excel(writer, sheet_name=sheet_name, index=False)
         workbook = writer.book
         _format_instructions(workbook["Instructions"])
-        for sheet_name, validations in _INPUT_VALIDATIONS.items():
-            _format_data_sheet(workbook[sheet_name], validations)
+        for sheet_name in frames:
+            _format_data_sheet(
+                workbook[sheet_name],
+                _INPUT_VALIDATIONS.get(sheet_name, {}),
+                sheet_name,
+            )
 
 
 def generate_modular_evaluation(
@@ -828,15 +1018,16 @@ def generate_modular_evaluation(
     output_dir: str | None = None,
     n_experts: int = DEFAULT_EXPERTS,
     ontology_dir: str | None = None,
+    terms_path: str | None = None,
 ) -> tuple[list[str], str]:
-    """Generate three modular workbooks, one key, and a sampling manifest."""
+    """Generate modular workbooks with identical sampled items and one key."""
     if n_experts < 1:
         raise ValueError("n_experts must be positive")
     ablation_dir = output_dir or os.environ.get("ABLATION_OUTPUT_DIR", str(ABLATION_OUTPUT))
     workbook_dir = os.path.join(ablation_dir, "expert_workbooks")
     private_dir = os.path.join(ablation_dir, "private")
     ontology_dir = ontology_dir or os.environ.get("EXPERT_ONTOLOGY_DIR", str(APPROVED_ONTOLOGY_DIR))
-    terms_path = os.environ.get("FILTERED_TERMS_OUTPUT", str(FILTERED_TERMS))
+    terms_path = terms_path or os.environ.get("EXPERT_TERMS_PATH", str(FILTERED_TERMS))
     expected_terms = int(os.environ.get("ABLATION_EXPECTED_TERM_COUNT", 407))
     strict_populations = os.environ.get("EXPERT_STRICT_APPROVED_POPULATIONS", "true").lower() == "true"
     os.makedirs(ablation_dir, exist_ok=True)
@@ -868,7 +1059,13 @@ def generate_modular_evaluation(
             f"missing={sorted(expected_fates - sampled_fates)}"
         )
     representation_items = build_representation_items(term_sample, inputs, final_fates)
-    category_items = build_category_items(term_sample, inputs.categories, final_fates)
+    term_glosses = build_term_glosses(inputs.nld["A"])
+    category_items = build_category_items(
+        term_sample,
+        inputs.categories,
+        final_fates,
+        term_glosses=term_glosses,
+    )
     final_samples = select_final_ontology_items(
         inputs,
         seed=seed,
@@ -879,6 +1076,9 @@ def generate_modular_evaluation(
         get_study_config().instruction_rows,
         columns=["Section", "Details"],
     )
+    category_guide = build_category_guide()
+    practice = build_practice_sheet()
+    timing = build_timing_sheet()
     workbook_paths = []
     key_parts = []
     for expert_number in range(1, n_experts + 1):
@@ -898,11 +1098,15 @@ def generate_modular_evaluation(
             final_samples,
             expert_id,
             expert_seed + 200,
+            term_glosses=term_glosses,
         )
         frames = {
+            "Practice": practice,
+            "Category_Guide": category_guide,
             "Representation": representation,
             "Category_Correct": category,
             **final_frames,
+            "Timing": timing,
         }
         workbook_path = os.path.join(
             workbook_dir,
@@ -935,6 +1139,10 @@ def generate_modular_evaluation(
         "class_fates": os.path.join(ontology_dir, "validate_class_fates.csv"),
         "ontology_config": str(get_config()._source_path),
         "study_config": os.environ.get("STUDY_CONFIG_PATH", str(STUDY_CONFIG)),
+        "display_text_config": os.environ.get(
+            "DISPLAY_TEXT_CONFIG_PATH",
+            str(DISPLAY_TEXT_CONFIG),
+        ),
     }
     manifest = {
         "study": "PreSaltOntoLearn modular expert evaluation",

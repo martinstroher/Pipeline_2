@@ -421,7 +421,11 @@ def _run_layer1(output_dir: Path) -> dict:
 
 
 def _rating(base: float, expert: str, row_id: str, dimension: str, seed: int) -> int:
-    expert_bias = {"expert_1": -0.10, "expert_2": 0.10, "expert_3": 0.0}[expert]
+    expert_number = int(expert.rsplit("_", 1)[-1])
+    expert_bias = {1: -0.10, 2: 0.10, 3: 0.0}.get(
+        expert_number,
+        ((expert_number % 5) - 2) * 0.04,
+    )
     noise = (_unit(seed, expert, row_id, dimension) - 0.5) * 1.4
     return int(np.clip(round(base + expert_bias + noise), 1, 5))
 
@@ -434,7 +438,11 @@ def _verdict(
     seed: int,
     partial: bool = True,
 ) -> str:
-    unsure_probability = {"expert_1": 0.02, "expert_2": 0.04, "expert_3": 0.08}[expert]
+    expert_number = int(expert.rsplit("_", 1)[-1])
+    unsure_probability = {1: 0.02, 2: 0.04, 3: 0.08}.get(
+        expert_number,
+        0.02 + (expert_number % 5) * 0.01,
+    )
     if _unit(seed, expert, row_id, dimension, "unsure") < unsure_probability:
         return "Unsure"
     level = base_level
@@ -602,9 +610,29 @@ def _fill_final_sheets(
         item = hidden.loc[row_id]
         confidence_level = 2 if str(item.get("Definition_Type", "")) == "bearer_realizable" else 1
         definition = _verdict(confidence_level, expert_id, row_id, "definition", seed)
-        general = _verdict(2, expert_id, row_id, "definition-general", seed, partial=False)
-        sheet.cell(row_index, headers["Overall_Definition_Correct (Yes/Partial/No/Unsure)"], definition)
-        sheet.cell(row_index, headers["Feature_Is_Defining_in_PreSalt (Yes/No/Unsure)"], general)
+        definition = {
+            "Yes": "Correct",
+            "Partial": "Partly correct",
+            "No": "Incorrect",
+            "Unsure": "Unsure",
+        }[definition]
+        sheet.cell(
+            row_index,
+            headers["Definition_Verdict (Correct/Partly correct/Incorrect/Unsure)"],
+            definition,
+        )
+        if definition == "Partly correct":
+            sheet.cell(
+                row_index,
+                headers["Issue_Reason (select for Partly/Incorrect)"],
+                "Feature is not defining",
+            )
+        elif definition == "Incorrect":
+            sheet.cell(
+                row_index,
+                headers["Issue_Reason (select for Partly/Incorrect)"],
+                "Base kind is wrong",
+            )
         sheet.cell(row_index, headers["Notes"], f"[{PROVENANCE}]")
 
     sheet = workbook["Relations"]
@@ -625,8 +653,17 @@ def _fill_final_sheets(
             seed,
             partial=False,
         )
-        sheet.cell(row_index, headers["Statement_Correct (Yes/Partial/No/Unsure)"], statement)
-        sheet.cell(row_index, headers["Generally_True (Yes/No/Unsure)"], scope)
+        if "Unsure" in {statement, scope}:
+            verdict = "Unsure"
+        elif statement == "No":
+            verdict = "Incorrect"
+        elif statement == "Partial":
+            verdict = "Partly wrong"
+        elif scope == "No":
+            verdict = "Context-specific"
+        else:
+            verdict = "Generally true"
+        sheet.cell(row_index, headers["Relation_Verdict"], verdict)
         sheet.cell(row_index, headers["Notes"], f"[{PROVENANCE}; confidence-derived]")
 
     sheet = workbook["Individuals"]
@@ -652,17 +689,33 @@ def _fill_final_sheets(
         needs_review = str(item.get("needs_review", "False")).lower() == "true"
         level = 2 if confidence >= 0.9 and not needs_review else 1
         agree = _verdict(level, expert_id, row_id, "critic", seed)
-        sheet.cell(row_index, headers["Decision_Appropriate (Yes/Partial/No/Unsure)"], agree)
+        acceptability = {
+            "Yes": "Accept",
+            "Partial": "Accept with concern",
+            "No": "Reject",
+            "Unsure": "Unsure",
+        }[agree]
+        sheet.cell(
+            row_index,
+            headers["Decision_Acceptability (Accept/Accept with concern/Reject/Unsure)"],
+            acceptability,
+        )
         decision_type = str(item.get("Decision_Type"))
-        if agree == "Unsure":
-            treatment = "Unsure"
-        elif agree == "Yes" and decision_type == "EXCLUDE":
-            treatment = "Leave out"
-        elif agree == "Yes" and decision_type == "DEMOTE":
-            treatment = "Keep information but not as separate concept"
-        else:
+        if acceptability == "Reject":
             treatment = "Keep as separate concept"
-        sheet.cell(row_index, headers["Preferred_Treatment"], treatment)
+        elif acceptability == "Accept with concern":
+            treatment = (
+                "Leave out"
+                if decision_type == "EXCLUDE"
+                else "Keep information but not as separate concept"
+            )
+        else:
+            treatment = ""
+        sheet.cell(
+            row_index,
+            headers["Preferred_Treatment (for Concern/Reject)"],
+            treatment,
+        )
         sheet.cell(row_index, headers["Notes"], f"[{PROVENANCE}; confidence-derived]")
 
 
@@ -701,6 +754,13 @@ def _fill_mock_workbooks(
             seed,
         )
         _fill_final_sheets(workbook, key, expert_id, seed)
+        timing = workbook["Timing"]
+        timing_headers = {cell.value: cell.column for cell in timing[1]}
+        for row_index in range(2, timing.max_row + 1):
+            row_id = str(timing.cell(row_index, timing_headers["Row_ID"]).value)
+            minutes = 35 + int(_unit(seed, expert_id, row_id, "timing") * 31)
+            timing.cell(row_index, timing_headers["Minutes"], minutes)
+            timing.cell(row_index, timing_headers["Comments"], f"[{PROVENANCE}]")
         workbook.save(workbook_path)
     return key_path
 
@@ -838,10 +898,8 @@ def _write_findings_report(
     final_outcomes = [
         ("Taxonomy relationship", final["taxonomy"]["relationship_correctness"]),
         ("Useful Pre-Salt distinction", final["taxonomy"]["useful_presalt_distinction"]),
-        ("Overall defined-class correctness", final["defined_classes"]["overall_definition_correctness"]),
-        ("Feature is defining in Pre-Salt", final["defined_classes"]["defining_feature_support"]),
-        ("Relation statement", final["relations"]["statement_correctness"]),
-        ("Relation general scope", final["relations"]["general_scope_support"]),
+        ("Defined-class verdict", final["defined_classes"]["definition_verdict"]),
+        ("Relation verdict", final["relations"]["relation_verdict"]),
         ("Named entity", final["individuals"]["named_entity_correctness"]),
         ("Individual type", final["individuals"]["type_correctness"]),
     ]
@@ -930,10 +988,10 @@ def _write_findings_report(
         "",
         "### Mock final-ontology outcomes",
         "",
-        "| Outcome | Items | Mean score | Yes proportion | Yes 95% CI | Unsure rate | Kappa | Prevalence warning |",
+        "| Outcome | Items | Mean score | Positive proportion | Positive 95% CI | Unsure rate | Kappa | Prevalence warning |",
         "|---|---:|---:|---:|---|---:|---:|---|",
         *[
-            f"| {name} | {summary['n_items']} | {_format_number(summary['mean_score'])} | {_format_number(summary['proportion_yes'])} | {summary['proportion_yes_ci_95']} | {_format_number(summary['unsure_rate'])} | {_format_number(summary['fleiss_kappa']['kappa'])} | {summary['fleiss_kappa']['prevalence_warning']} |"
+            f"| {name} | {summary['n_items']} | {_format_number(summary['mean_score'])} | {_format_number(summary['proportion_positive'])} | {summary['proportion_positive_ci_95']} | {_format_number(summary['unsure_rate'])} | {_format_number(summary['fleiss_kappa']['kappa'])} | {summary['fleiss_kappa']['prevalence_warning']} |"
             for name, summary in final_outcomes
         ],
         "",
@@ -945,7 +1003,7 @@ def _write_findings_report(
         "4. **Mock final-ontology judgments use critic confidence.** They cannot independently validate critic decisions, relation scope, or retained-core quality.",
         "5. **Significance is easy to manufacture with 407 paired rows.** Real reporting must emphasize agreement rates, confusion patterns, and effect sizes rather than treating small p-values as accuracy evidence.",
         "6. **Context_Used remains descriptive.** The eight A rows with `Context_Used=False` are too few for a credible causal subgroup claim.",
-        "7. **A real pilot is still required.** Have one geologist complete a small subset before distributing all three workbooks; check wording, fatigue, completion time, and use of Partial versus Unsure.",
+        "7. **A real pilot is still required.** Have the three planned geology specialties complete a small subset before final-study distribution; check wording, fatigue, completion time, and use of Partial versus Unsure.",
         "8. **Sparse post-hoc contrasts need explicit review.** A pairwise result can be significant when only a handful of terms have nonzero score differences; report `n_nonzero_pairs`, its fraction, and the mean difference together.",
         "9. **Kappa is prevalence-sensitive.** Report rating marginals and raw agreement alongside kappa, especially when Yes or Partial dominates.",
         "10. **Stuart-Maxwell may have reduced effective degrees of freedom.** This is valid when a tier has no discordant transitions; report the covariance rank and rank-deficiency flag rather than forcing `levels-1` degrees of freedom.",
@@ -970,6 +1028,7 @@ def run_offline_rehearsal(
     a_nld_path: str = DEFAULT_A_NLD_PATH,
     a_category_path: str = DEFAULT_A_CATEGORY_PATH,
     seed: int = SEED,
+    n_experts: int = 3,
     overwrite: bool = False,
     bootstrap_iterations: int = 5000,
 ) -> dict:
@@ -1002,8 +1061,9 @@ def run_offline_rehearsal(
         n_terms=100,
         seed=seed,
         output_dir=str(rehearsal_dir),
-        n_experts=3,
+        n_experts=n_experts,
         ontology_dir=ontology_dir,
+        terms_path=terms_path,
     )
     _fill_mock_workbooks(workbook_paths, key_path, reference, seed)
     layer2_dir = rehearsal_dir / "analysis" / "layer2"
@@ -1060,6 +1120,7 @@ def run_offline_rehearsal(
         "started_utc": started.isoformat(),
         "completed_utc": completed.isoformat(),
         "seed": seed,
+        "mock_expert_count": n_experts,
         "bootstrap_iterations": bootstrap_iterations,
         "term_count": len(terms),
         "term_set_sha256": _sha256_text(
@@ -1116,6 +1177,7 @@ def main() -> int:
     parser.add_argument("--a-nld", default=DEFAULT_A_NLD_PATH)
     parser.add_argument("--a-categories", default=DEFAULT_A_CATEGORY_PATH)
     parser.add_argument("--seed", type=int, default=SEED)
+    parser.add_argument("--experts", type=int, default=3)
     parser.add_argument("--bootstrap-iterations", type=int, default=5000)
     parser.add_argument("--overwrite", action="store_true")
     args = parser.parse_args()
@@ -1126,6 +1188,7 @@ def main() -> int:
         a_nld_path=args.a_nld,
         a_category_path=args.a_categories,
         seed=args.seed,
+        n_experts=args.experts,
         overwrite=args.overwrite,
         bootstrap_iterations=args.bootstrap_iterations,
     )

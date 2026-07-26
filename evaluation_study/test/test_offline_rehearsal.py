@@ -67,6 +67,7 @@ def main() -> int:
         )
         assert first_analysis["analysis_design"]["source_hashes_validated"] is True
         assert second_analysis["analysis_design"]["source_hashes_validated"] is True
+        assert first_analysis["completion_time"]["overall_mean_minutes"] > 0
         first_analysis["analysis_design"].pop("source_manifest")
         second_analysis["analysis_design"].pop("source_manifest")
         assert first_analysis == second_analysis
@@ -101,10 +102,41 @@ def main() -> int:
         assert len(representation.conditional_formatting) > 0
         assert representation.column_dimensions["A"].hidden is True
 
+        response_sheets = (
+            "Representation",
+            "Category_Correct",
+            "Taxonomy",
+            "Defined_Classes",
+            "Relations",
+            "Individuals",
+            "Critic_Decisions",
+        )
+        row_ids_by_workbook = []
+        for path in workbooks:
+            candidate = load_workbook(path, read_only=True)
+            row_ids_by_workbook.append({
+                sheet_name: {
+                    str(row[0])
+                    for row in candidate[sheet_name].iter_rows(
+                        min_row=2,
+                        values_only=True,
+                    )
+                }
+                for sheet_name in response_sheets
+            })
+        assert row_ids_by_workbook[0] == row_ids_by_workbook[1]
+        assert row_ids_by_workbook[1] == row_ids_by_workbook[2]
+
+        workbook_manifest = json.loads(
+            (first / "expert_evaluation_manifest.json").read_text(encoding="utf-8")
+        )
+        assert "assignment_design" not in workbook_manifest
+
         expected_absent = {
             "Category_Correct": {"Suggested_Category"},
             "Taxonomy": {"Suggested_Parent", "Question", "Keep_in_Core (Yes/No/Unsure)"},
-            "Defined_Classes": {"Suggested_Change", "Characteristic_General (Yes/No/Unsure)"},
+            "Defined_Classes": {"Suggested_Change", "Characteristic_General (Yes/No/Unsure)", "Feature_Is_Defining_in_PreSalt (Yes/No/Unsure)"},
+            "Relations": {"Statement_Correct (Yes/Partial/No/Unsure)", "Generally_True (Yes/No/Unsure)"},
             "Individuals": {"Suggested_Type", "Rationale"},
             "Critic_Decisions": {"Rationale"},
         }
@@ -112,17 +144,34 @@ def main() -> int:
             headers = {cell.value for cell in workbook[sheet_name][1]}
             assert not headers & absent_headers, (sheet_name, headers & absent_headers)
 
+        assert "Category_Guide" in workbook.sheetnames
         assert "Useful_PreSalt_Distinction (Yes/No/Unsure)" in {
             cell.value for cell in workbook["Taxonomy"][1]
         }
-        assert "Feature_Is_Defining_in_PreSalt (Yes/No/Unsure)" in {
+        assert "Definition_Verdict (Correct/Partly correct/Incorrect/Unsure)" in {
             cell.value for cell in workbook["Defined_Classes"][1]
         }
+        assert "Relation_Verdict" in {cell.value for cell in workbook["Relations"][1]}
+        relation_sheet = workbook["Relations"]
+        relation_headers = {cell.value: cell.column for cell in relation_sheet[1]}
+        relation_statements = {
+            str(relation_sheet.cell(row, relation_headers["Relation_Statement"]).value)
+            for row in range(2, relation_sheet.max_row + 1)
+        }
+        assert any(value.startswith("Generally, ") for value in relation_statements)
+        assert any(
+            value.startswith("In some reported Pre-Salt contexts, ")
+            for value in relation_statements
+        )
+        assert any(
+            value.startswith("For this named entity, ")
+            for value in relation_statements
+        )
         critic_headers = {cell.value for cell in workbook["Critic_Decisions"][1]}
         assert {
             "Critic_Decision",
             "Resulting_Treatment",
-            "Decision_Appropriate (Yes/Partial/No/Unsure)",
+            "Decision_Acceptability (Accept/Accept with concern/Reject/Unsure)",
         }.issubset(critic_headers)
 
     print("=== OFFLINE REHEARSAL TEST PASSED ===")

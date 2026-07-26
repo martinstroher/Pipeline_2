@@ -20,7 +20,12 @@ def _build_parser() -> argparse.ArgumentParser:
 
     expert = subparsers.add_parser("expert-workbooks", help="Generate expert workbooks")
     expert.add_argument("--terms", type=int, default=100)
-    expert.add_argument("--experts", type=int, default=3)
+    expert.add_argument(
+        "--experts",
+        type=int,
+        default=3,
+        help="Number of experts (default: 3; every expert receives every sampled item)",
+    )
     expert.add_argument("--seed", type=int, default=42)
 
     layer2 = subparsers.add_parser("layer2", help="Analyze completed expert workbooks")
@@ -30,6 +35,7 @@ def _build_parser() -> argparse.ArgumentParser:
 
     rehearsal = subparsers.add_parser("rehearsal", help="Run zero-Azure synthetic rehearsal")
     rehearsal.add_argument("--overwrite", action="store_true")
+    rehearsal.add_argument("--experts", type=int, default=3)
     rehearsal.add_argument("--bootstrap-iterations", type=int, default=5000)
 
     relations = subparsers.add_parser("relation-analysis", help="Analyze relation output")
@@ -67,6 +73,7 @@ def main() -> int:
         run_offline_rehearsal(
             overwrite=args.overwrite,
             bootstrap_iterations=args.bootstrap_iterations,
+            n_experts=args.experts,
         )
     elif args.command == "relation-analysis":
         from evaluation_study.relation_analysis import run_relation_analysis

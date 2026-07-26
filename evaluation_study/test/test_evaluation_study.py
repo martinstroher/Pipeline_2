@@ -352,17 +352,18 @@ def test_modular_blinding_and_analysis() -> None:
             {"Row_ID": "TAX-002", "Relationship_Correct (Yes/Partial/No/Unsure)": "Partial", "Useful_PreSalt_Distinction (Yes/No/Unsure)": "No"},
         ]),
         "Defined_Classes": repeated([
-            {"Row_ID": "DEF-001", "Overall_Definition_Correct (Yes/Partial/No/Unsure)": "Yes", "Feature_Is_Defining_in_PreSalt (Yes/No/Unsure)": "Yes"},
+            {"Row_ID": "DEF-001", "Definition_Verdict (Correct/Partly correct/Incorrect/Unsure)": "Correct", "Issue_Reason (select for Partly/Incorrect)": ""},
         ]),
         "Relations": repeated([
-            {"Row_ID": "REL-001", "Statement_Correct (Yes/Partial/No/Unsure)": "Yes", "Generally_True (Yes/No/Unsure)": "No"},
+            {"Row_ID": "REL-001", "Relation_Scope": "generic", "Relation_Verdict": "Generally true"},
+            {"Row_ID": "REL-002", "Relation_Scope": "corpus_context", "Relation_Verdict": "Context-specific"},
         ]),
         "Individuals": repeated([
             {"Row_ID": "IND-001", "Specific_Named_Entity (Yes/No/Unsure)": "Yes", "Type_Correct (Yes/Partial/No/Unsure)": "Yes"},
         ]),
         "Critic_Decisions": repeated([
-            {"Row_ID": "DEC-001", "Decision_Type": "DEMOTE", "Decision_Appropriate (Yes/Partial/No/Unsure)": "Yes", "Preferred_Treatment": "Keep information but not as separate concept"},
-            {"Row_ID": "DEC-002", "Decision_Type": "EXCLUDE", "Decision_Appropriate (Yes/Partial/No/Unsure)": "Partial", "Preferred_Treatment": "Leave out"},
+            {"Row_ID": "DEC-001", "Decision_Type": "DEMOTE", "Decision_Acceptability (Accept/Accept with concern/Reject/Unsure)": "Accept", "Preferred_Treatment (for Concern/Reject)": ""},
+            {"Row_ID": "DEC-002", "Decision_Type": "EXCLUDE", "Decision_Acceptability (Accept/Accept with concern/Reject/Unsure)": "Accept with concern", "Preferred_Treatment (for Concern/Reject)": "Leave out"},
         ]),
     }
     final_results = analyze_final_ontology(final_frames, bootstrap_iterations=50, seed=42)
@@ -373,6 +374,11 @@ def test_modular_blinding_and_analysis() -> None:
     _expect(
         "Critic agreement is separated by decision type",
         set(final_results["critic_decisions"]) == {"DEMOTE", "EXCLUDE"},
+    )
+    _expect(
+        "Relation verdicts align with explicit generic and contextual scopes",
+        final_results["relations"]["scope_alignment"]["generic"]["alignment_rate"] == 1.0
+        and final_results["relations"]["scope_alignment"]["corpus_context"]["alignment_rate"] == 1.0,
     )
 
     unsure = pd.DataFrame([

@@ -30,9 +30,19 @@ REQUIRED_SHEETS = (
     "Relations",
     "Individuals",
     "Critic_Decisions",
+    "Timing",
 )
 CORRECTNESS_CHOICES = ("yes", "partial", "no", "unsure")
 BINARY_CHOICES = ("yes", "no", "unsure")
+DEFINITION_CHOICES = ("correct", "partly correct", "incorrect", "unsure")
+RELATION_CHOICES = (
+    "generally true",
+    "context-specific",
+    "partly wrong",
+    "incorrect",
+    "unsure",
+)
+CRITIC_CHOICES = ("accept", "accept with concern", "reject", "unsure")
 
 
 def _sha256_file(path: str | Path) -> str:
@@ -283,6 +293,55 @@ def collect_final_sheet(
     return pd.concat(frames, ignore_index=True)
 
 
+def collect_timing(
+    experts: dict[str, dict[str, pd.DataFrame]],
+) -> pd.DataFrame:
+    """Validate and combine required per-module completion times."""
+    frames = []
+    for expert_id, sheets in experts.items():
+        frame = sheets["Timing"].copy()
+        _require = {"Row_ID", "Session", "Module", "Minutes", "Comments"}
+        missing = _require - set(frame.columns)
+        if missing:
+            raise ValueError(f"{expert_id}:Timing missing columns: {sorted(missing)}")
+        minutes = pd.to_numeric(frame["Minutes"], errors="coerce")
+        if minutes.isna().any() or (minutes <= 0).any():
+            raise ValueError(
+                f"{expert_id}:Timing requires a positive minute value for every row"
+            )
+        frame["Minutes"] = minutes.astype(float)
+        frame["Expert"] = expert_id
+        frames.append(frame)
+    return pd.concat(frames, ignore_index=True)
+
+
+def analyze_timing(timing: pd.DataFrame) -> dict:
+    """Summarize actual burden by expert and workbook session."""
+    expert_totals = timing.groupby("Expert")["Minutes"].sum()
+    module_summary = timing.groupby(["Session", "Module"])["Minutes"].agg(
+        ["mean", "median", "min", "max"]
+    ).reset_index()
+    return {
+        "per_expert_total_minutes": {
+            str(expert): round(float(minutes), 2)
+            for expert, minutes in expert_totals.items()
+        },
+        "overall_mean_minutes": round(float(expert_totals.mean()), 2),
+        "overall_median_minutes": round(float(expert_totals.median()), 2),
+        "per_module": [
+            {
+                "session": int(row.Session),
+                "module": str(row.Module),
+                "mean_minutes": round(float(row.mean), 2),
+                "median_minutes": round(float(row.median), 2),
+                "min_minutes": round(float(row.min), 2),
+                "max_minutes": round(float(row.max), 2),
+            }
+            for row in module_summary.itertuples(index=False)
+        ],
+    }
+
+
 def _icc_2_1(matrix: np.ndarray) -> dict:
     """ICC(2,1): two-way random, absolute agreement, single rater."""
     if matrix.ndim != 2 or matrix.shape[0] < 2 or matrix.shape[1] < 2:
@@ -444,6 +503,8 @@ def _summarize_judgments(
     bootstrap_iterations: int,
     seed: int,
     partial: bool,
+    score_map: dict[str, float] | None = None,
+    positive_choice: str | tuple[str, ...] = "yes",
 ) -> dict:
     work = frame[[item_column, "Expert", raw_column]].copy()
     work["Raw"] = [
@@ -452,11 +513,15 @@ def _summarize_judgments(
     ]
     if work.duplicated([item_column, "Expert"]).any():
         raise ValueError(f"Duplicate expert judgments for {item_column}:{raw_column}")
-    score_map = {"yes": 1.0, "no": 0.0, "unsure": np.nan}
-    if partial:
-        score_map["partial"] = 0.5
+    if score_map is None:
+        score_map = {"yes": 1.0, "no": 0.0, "unsure": np.nan}
+        if partial:
+            score_map["partial"] = 0.5
     work["Score"] = work["Raw"].map(score_map)
-    work["Yes"] = work["Raw"].eq("yes").astype(float)
+    positive_choices = (
+        (positive_choice,) if isinstance(positive_choice, str) else positive_choice
+    )
+    work["Positive"] = work["Raw"].isin(positive_choices).astype(float)
     work["Decisive"] = ~work["Raw"].eq("unsure")
     item_rows = []
     for item, group in work.groupby(item_column):
@@ -464,13 +529,15 @@ def _summarize_judgments(
         item_rows.append({
             item_column: item,
             "Mean_Score": float(decisive["Score"].mean()) if not decisive.empty else np.nan,
-            "Yes_Proportion": float(decisive["Yes"].mean()) if not decisive.empty else np.nan,
+            "Positive_Proportion": (
+                float(decisive["Positive"].mean()) if not decisive.empty else np.nan
+            ),
             "Decisive_Ratings": int(len(decisive)),
             "Unsure_Ratings": int((~group["Decisive"]).sum()),
         })
     items = pd.DataFrame(item_rows)
     lower, upper = _bootstrap_mean_ci(
-        items["Yes_Proportion"].to_numpy(dtype=float),
+        items["Positive_Proportion"].to_numpy(dtype=float),
         bootstrap_iterations,
         seed,
     )
@@ -480,12 +547,12 @@ def _summarize_judgments(
         seed + 1,
     )
     mean_score = items["Mean_Score"].mean()
-    proportion_yes = items["Yes_Proportion"].mean()
+    proportion_positive = items["Positive_Proportion"].mean()
     distribution = work["Raw"].value_counts().reindex(allowed, fill_value=0).to_dict()
     decisive_ratings = int(work["Decisive"].sum())
     unsure_ratings = int((~work["Decisive"]).sum())
     all_unsure_items = int(items["Decisive_Ratings"].eq(0).sum())
-    return {
+    result = {
         "n_items": int(len(items)),
         "n_ratings": int(len(work)),
         "decisive_ratings": decisive_ratings,
@@ -494,14 +561,26 @@ def _summarize_judgments(
         "all_unsure_items": all_unsure_items,
         "mean_score": round(float(mean_score), 4) if pd.notna(mean_score) else None,
         "mean_score_ci_95": [score_lower, score_upper],
-        "proportion_yes": (
-            round(float(proportion_yes), 4) if pd.notna(proportion_yes) else None
+        "positive_choices": list(positive_choices),
+        "proportion_positive": (
+            round(float(proportion_positive), 4)
+            if pd.notna(proportion_positive)
+            else None
         ),
-        "proportion_yes_ci_95": [lower, upper],
-        "proportion_yes_denominator": "decisive non-Unsure ratings, aggregated by item",
+        "proportion_positive_ci_95": [lower, upper],
+        "proportion_positive_denominator": (
+            "decisive non-Unsure ratings, aggregated by item"
+        ),
         "rating_distribution": {key: int(value) for key, value in distribution.items()},
         "fleiss_kappa": _fleiss_kappa(work, item_column, "Raw", allowed),
     }
+    if positive_choices == ("yes",):
+        result.update({
+            "proportion_yes": result["proportion_positive"],
+            "proportion_yes_ci_95": result["proportion_positive_ci_95"],
+            "proportion_yes_denominator": result["proportion_positive_denominator"],
+        })
+    return result
 
 
 def analyze_representation(
@@ -732,6 +811,8 @@ def _final_outcome(
     allowed: tuple[str, ...],
     bootstrap_iterations: int,
     seed: int,
+    score_map: dict[str, float] | None = None,
+    positive_choice: str | tuple[str, ...] = "yes",
 ) -> dict:
     return _summarize_judgments(
         frame,
@@ -741,7 +822,48 @@ def _final_outcome(
         bootstrap_iterations=bootstrap_iterations,
         seed=seed,
         partial="partial" in allowed,
+        score_map=score_map,
+        positive_choice=positive_choice,
     )
+
+
+def _relation_scope_alignment(relations: pd.DataFrame) -> dict:
+    """Measure whether the expert verdict agrees with the proposed scope."""
+    required = {"Relation_Scope", "Relation_Verdict"}
+    missing = required - set(relations.columns)
+    if missing:
+        raise ValueError(f"Relations missing scope-analysis columns: {sorted(missing)}")
+    work = relations[["Relation_Scope", "Relation_Verdict"]].copy()
+    work["Scope"] = work["Relation_Scope"].astype(str).str.strip().str.casefold()
+    expected = {
+        "generic": "generally true",
+        "corpus_context": "context-specific",
+        "individual_fact": "context-specific",
+    }
+    unknown = sorted(set(work["Scope"]) - set(expected))
+    if unknown:
+        raise ValueError(f"Unknown relation scopes in expert analysis: {unknown}")
+    work["Verdict"] = [
+        _validated_choice(value, RELATION_CHOICES, "Relation scope verdict")
+        for value in work["Relation_Verdict"]
+    ]
+    work = work[work["Verdict"] != "unsure"].copy()
+    work["Aligned"] = [
+        verdict == expected[scope]
+        for scope, verdict in zip(work["Scope"], work["Verdict"])
+    ]
+    by_scope = {}
+    for scope in sorted(expected):
+        subset = work[work["Scope"] == scope]
+        by_scope[scope] = {
+            "expected_verdict": expected[scope],
+            "decisive_ratings": int(len(subset)),
+            "aligned_ratings": int(subset["Aligned"].sum()),
+            "alignment_rate": (
+                round(float(subset["Aligned"].mean()), 4) if len(subset) else None
+            ),
+        }
+    return by_scope
 
 
 def analyze_final_ontology(
@@ -774,35 +896,36 @@ def analyze_final_ontology(
             ),
         },
         "defined_classes": {
-            "overall_definition_correctness": _final_outcome(
+            "definition_verdict": _final_outcome(
                 defined,
-                "Overall_Definition_Correct (Yes/Partial/No/Unsure)",
-                CORRECTNESS_CHOICES,
+                "Definition_Verdict (Correct/Partly correct/Incorrect/Unsure)",
+                DEFINITION_CHOICES,
                 bootstrap_iterations,
                 seed + 30,
-            ),
-            "defining_feature_support": _final_outcome(
-                defined,
-                "Feature_Is_Defining_in_PreSalt (Yes/No/Unsure)",
-                BINARY_CHOICES,
-                bootstrap_iterations,
-                seed + 40,
+                score_map={
+                    "correct": 1.0,
+                    "partly correct": 0.5,
+                    "incorrect": 0.0,
+                    "unsure": np.nan,
+                },
+                positive_choice="correct",
             ),
         },
         "relations": {
-            "statement_correctness": _final_outcome(
+            "relation_verdict": _final_outcome(
                 relations,
-                "Statement_Correct (Yes/Partial/No/Unsure)",
-                CORRECTNESS_CHOICES,
+                "Relation_Verdict",
+                RELATION_CHOICES,
                 bootstrap_iterations,
                 seed + 50,
-            ),
-            "general_scope_support": _final_outcome(
-                relations,
-                "Generally_True (Yes/No/Unsure)",
-                BINARY_CHOICES,
-                bootstrap_iterations,
-                seed + 60,
+                score_map={
+                    "generally true": 1.0,
+                    "context-specific": 1.0,
+                    "partly wrong": 0.5,
+                    "incorrect": 0.0,
+                    "unsure": np.nan,
+                },
+                positive_choice=("generally true", "context-specific"),
             ),
         },
         "individuals": {
@@ -823,21 +946,59 @@ def analyze_final_ontology(
         },
         "critic_decisions": {},
     }
+    issue_reasons = (
+        defined["Issue_Reason (select for Partly/Incorrect)"]
+        .dropna()
+        .astype(str)
+        .str.strip()
+    )
+    issue_reasons = issue_reasons[issue_reasons != ""]
+    definition_verdicts = defined[
+        "Definition_Verdict (Correct/Partly correct/Incorrect/Unsure)"
+    ].astype(str).str.strip().str.casefold()
+    definition_reasons = defined[
+        "Issue_Reason (select for Partly/Incorrect)"
+    ].fillna("").astype(str).str.strip()
+    required_reason = definition_verdicts.isin({"partly correct", "incorrect"})
+    if (required_reason & definition_reasons.eq("")).any():
+        raise ValueError("Partly correct/Incorrect definitions require an issue reason")
+    if (~required_reason & definition_reasons.ne("")).any():
+        raise ValueError("Definition issue reason is only valid for Partly correct/Incorrect")
+    results["defined_classes"]["issue_reason_distribution"] = {
+        key: int(value)
+        for key, value in issue_reasons.value_counts().sort_index().to_dict().items()
+    }
+    results["relations"]["scope_alignment"] = _relation_scope_alignment(relations)
     for offset, decision_type in enumerate(sorted(decisions["Decision_Type"].dropna().unique())):
         subset = decisions[decisions["Decision_Type"] == decision_type]
         summary = _final_outcome(
             subset,
-            "Decision_Appropriate (Yes/Partial/No/Unsure)",
-            CORRECTNESS_CHOICES,
+            "Decision_Acceptability (Accept/Accept with concern/Reject/Unsure)",
+            CRITIC_CHOICES,
             bootstrap_iterations,
             seed + 90 + offset * 10,
+            score_map={
+                "accept": 1.0,
+                "accept with concern": 0.5,
+                "reject": 0.0,
+                "unsure": np.nan,
+            },
+            positive_choice="accept",
         )
         treatments = (
-            subset["Preferred_Treatment"]
-            .dropna()
+            subset["Preferred_Treatment (for Concern/Reject)"]
+            .fillna("")
             .astype(str)
             .str.strip()
         )
+        acceptability = subset[
+            "Decision_Acceptability (Accept/Accept with concern/Reject/Unsure)"
+        ].astype(str).str.strip().str.casefold()
+        treatment_required = acceptability.isin({"accept with concern", "reject"})
+        if (treatment_required & treatments.eq("")).any():
+            raise ValueError("Concern/Reject critic judgments require a preferred treatment")
+        if (~treatment_required & treatments.ne("")).any():
+            raise ValueError("Preferred treatment is only valid for Concern/Reject")
         treatments = treatments[treatments != ""]
         summary["preferred_treatment_distribution"] = {
             key: int(value)
@@ -882,12 +1043,14 @@ def run_modular_analysis(
         sheet: collect_final_sheet(experts, key, sheet)
         for sheet in ("Taxonomy", "Defined_Classes", "Relations", "Individuals", "Critic_Decisions")
     }
+    timing = collect_timing(experts)
 
     write_csv(representation, os.path.join(output_dir, "layer2_representation_unblinded.csv"))
     write_csv(categories, os.path.join(output_dir, "layer2_categories_unblinded.csv"))
     for sheet, frame in final_frames.items():
         filename = f"layer2_{sheet.lower()}_unblinded.csv"
         write_csv(frame, os.path.join(output_dir, filename))
+    write_csv(timing, os.path.join(output_dir, "layer2_timing.csv"))
 
     results = {
         "analysis_design": {
@@ -914,6 +1077,7 @@ def run_modular_analysis(
             bootstrap_iterations,
             seed + 200,
         ),
+        "completion_time": analyze_timing(timing),
     }
     results_path = os.path.join(output_dir, "layer2_results.json")
     with open(results_path, "w", encoding="utf-8") as handle:

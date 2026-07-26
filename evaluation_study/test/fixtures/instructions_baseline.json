@@ -24,6 +24,10 @@
     "Choose Unsure when you lack enough expertise, the meaning is ambiguous, or the available information conflicts. Choose Partial when you can judge the item and it is only partly correct. Representation ratings also include an explicit Unsure option."
   ],
   [
+    "SESSIONS AND TIMING",
+    "Every expert must complete every sampled item. Work may be paused between modules; record actual minutes for each module in the Timing sheet."
+  ],
+  [
     "",
     ""
   ],
@@ -100,8 +104,12 @@
     "Judge whether each term belongs in the proposed category. The same term may appear with different proposed categories; this repetition is intentional, and each proposal must be judged independently."
   ],
   [
-    "Evidence boundary",
-    "Use the term and category description only. Definitions and retrieved passages are intentionally hidden so every condition is judged under the same evidence."
+    "Category guide",
+    "Use the Category_Guide sheet for plain-language meanings and examples. Formal ontology labels are intentionally hidden from the judgment sheets."
+  ],
+  [
+    "Term gloss",
+    "When a bare term was ambiguous in the pilot, the same short neutral gloss is shown with every competing proposal. Blank gloss cells mean the term did not need clarification."
   ],
   [
     "No alternative required",
@@ -156,12 +164,12 @@
     ""
   ],
   [
-    "Overall definition",
-    "Judge whether the proposed base kind and distinguishing feature together define the intended geological concept without making it too broad, too narrow, or wrong."
+    "Task",
+    "Judge the complete plain-language definition as Correct, Partly correct, Incorrect, or Unsure."
   ],
   [
-    "Defining feature",
-    "Separately answer whether the proposed feature genuinely distinguishes this concept from its base kind across the Pre-Salt domain, rather than describing only one local occurrence or paper."
+    "Issue reason",
+    "For Partly correct or Incorrect, select the main issue: wrong base kind, non-defining feature, too broad, too narrow, unclear wording, or Other. Leave this field blank for Correct."
   ],
   [
     "",
@@ -172,12 +180,12 @@
     ""
   ],
   [
-    "Statement task",
-    "Judge whether the geological statement connecting the subject and related concept is correct."
+    "Task",
+    "Judge the explicitly scoped relation sentence with one verdict: Generally true; Context-specific; Partly wrong; Incorrect; or Unsure."
   ],
   [
-    "Scope task",
-    "Separately judge whether it is generally true for the concept, rather than true only in a particular field, formation, interval, sample, or study."
+    "Scope wording",
+    "Generally means the relation holds across the concept. In some reported Pre-Salt contexts means it is supported only in particular settings. For this named entity means it is an individual fact."
   ],
   [
     "Corpus excerpt",
@@ -196,6 +204,10 @@
     "Judge whether the item is one specific named basin, field, formation, time interval, structure, or other particular entity rather than a reusable kind."
   ],
   [
+    "Age and interval convention",
+    "A named age or stage such as Aptian is one defined time interval and is treated as a named entity. An informal descriptive interval is a reusable kind unless it denotes one explicitly bounded interval."
+  ],
+  [
     "Type task",
     "Judge whether the proposed geological type is correct. You are not shown the complete type vocabulary and do not need to select a replacement; explain in Notes only when useful."
   ],
@@ -208,12 +220,16 @@
     ""
   ],
   [
+    "TARGET CORE SCOPE",
+    "The core serves geologists and knowledge-model users comparing Brazilian Pre-Salt systems, especially the Santos and Campos basins. It includes reusable concepts needed to answer the ten project questions about geological objects, constituent materials, structures, post-depositional processes, spatial arrangement, dimensions and positions, boundaries, deposits and stratigraphic units, petrophysical properties, and geological age. Named entities remain instances. Paper-specific distinctions, local variants, measurement values, and details not needed by those questions belong in extensions rather than the core."
+  ],
+  [
     "Task",
-    "The sheet shows the critic's decision and the resulting treatment after that decision. Judge whether this treatment is appropriate for a concise Pre-Salt core vocabulary."
+    "The sheet neutrally shows the critic action and resulting treatment. Judge it as Accept, Accept with concern, Reject, or Unsure against the target core scope above."
   ],
   [
     "Exclusion",
-    "Leaving a concept out does not mean it is geologically false; it means the distinction is too narrow, redundant, mixed, or low-value for this core model."
+    "Leaving a concept out does not mean it is geologically false. It means the information is outside the stated core boundary or is represented elsewhere."
   ],
   [
     "Characteristic treatment",
@@ -221,11 +237,7 @@
   ],
   [
     "Preferred treatment",
-    "For every row, choose one complete option: keep as a separate concept; keep its information but not as a separate concept; leave it out; or Unsure."
-  ],
-  [
-    "Decision versus treatment",
-    "Decision Appropriate evaluates the critic decision and displayed after-state. Preferred Treatment records what you think should happen. If you prefer the same treatment for a different reason, explain that briefly in Notes."
+    "Select a preferred treatment only for Reject or Accept with concern: keep as a separate concept; keep its information but not as a separate concept; leave it out; or Unsure."
   ],
   [
     "",
@@ -244,12 +256,12 @@
     "Grainstone as a type of Carbonate Rock: Yes. Grainstone as a type of Geological Process: No."
   ],
   [
-    "Defined feature",
-    "A reservoir rock distinguished by its capacity to store and transmit hydrocarbons uses a defining feature: Yes. A mineral association reported only in one named field is not a defining feature of the whole concept: No."
+    "Defined class",
+    "A reservoir rock is a sedimentary rock that can store and transmit hydrocarbons: Correct. A definition based only on one named-field occurrence: Partly correct or Incorrect, depending on the error."
   ],
   [
     "Relation scope",
-    "A statement observed only in one named field should not be marked generally true for every instance of the concept."
+    "A statement supported only in one named field is Context-specific, not Generally true for every instance of the concept."
   ],
   [
     "Named entity",
@@ -261,6 +273,6 @@
   ],
   [
     "NOTES",
-    "Use Notes for concise geological reasoning, especially for Partial or No judgments. Thank you for your expertise."
+    "Use Notes for concise geological reasoning when the bounded choices do not capture an important issue. Thank you for your expertise."
   ]
 ]

@@ -21,4 +21,5 @@ PIPELINE_OUTPUT = REPO_ROOT / "output"
 APPROVED_ONTOLOGY = PIPELINE_OUTPUT / "final" / "presalt_ontology.ttl"
 
 STUDY_CONFIG = STUDY_ROOT / "config" / "expert_eval.yaml"
+DISPLAY_TEXT_CONFIG = STUDY_ROOT / "config" / "display_text.yaml"
 STUDY_PROMPTS = STUDY_ROOT / "prompts"

@@ -2,6 +2,8 @@
 
 > **Status:** AI role-play usability evidence only. Five subagents acted as Pre-Salt geology specialists. Their geological judgments are not human-expert evidence and must not be used as thesis results.
 
+> **Implementation update (2026-07-25):** The construct-validity changes recommended below are implemented and pass the zero-Azure rehearsal. Two recommendations were explicitly rejected for the study protocol: Taxonomy usefulness remains a separate judgment, and every expert receives the same sampled items. The original pilot workbooks remain NO-GO evidence; the generated vNext workbooks are ready for a small real-human pilot, not yet for the final thesis study.
+
 ## Decision
 
 **NO-GO for distributing the current full workbook unchanged.**
@@ -71,7 +73,7 @@ Keep this task. All five personas rejected leaving `oil-water contact` unclassif
 
 ### Taxonomy
 
-Keep IS-A correctness. Remove retained-edge usefulness or redesign it.
+Keep IS-A correctness. The pilot suggested removing or redesigning retained-edge usefulness, but the study protocol retains it as a separate judgment.
 
 All 52 usefulness judgments were `Yes`, so it added no discrimination. Retention usefulness is already tested more directly in Critic Decisions. If vocabulary usefulness remains a research question, use a balanced retained/rejected distinction sample rather than retained taxonomy edges only.
 
@@ -163,12 +165,7 @@ State intended users and the ten competency questions before Critic Decisions. D
 
 ### Workload
 
-Do not send all 384 rows to every expert. Use a balanced incomplete assignment:
-
-- common calibration items rated by all;
-- remaining items rated by at least two experts;
-- each expert receives roughly one-third to one-half of current rows;
-- sessions no longer than 60–90 minutes.
+The pilot proposed a balanced incomplete assignment to reduce burden. The study protocol rejects that option: every expert receives every sampled item. Completion time is recorded by module so the real-human pilot can quantify the resulting burden.
 
 ## vNext Workbook Plan
 
@@ -176,7 +173,7 @@ Do not send all 384 rows to every expert. Use a balanced incomplete assignment:
 |---|---|
 | Representation | Keep relevance and two quality scores. Consider a separate relevance first pass. Keep preference only as a secondary endpoint. |
 | Category Correct | Keep one verdict. Add neutral term glosses and geologist-facing category rules/examples. Keep `Leave unclassified`. |
-| Taxonomy | Keep relationship correctness. Remove retained-edge usefulness; add harder/negative IS-A candidates if discrimination is needed. |
+| Taxonomy | Keep relationship correctness and retained-edge usefulness as separate judgments. |
 | Defined Classes | Use one natural-language definition verdict plus bounded issue reason. Hide formal relation names in the main display. |
 | Relations | Use one quantified relation verdict distinguishing general, contextual, partly wrong, incorrect, and unsure. |
 | Individuals | Keep both questions. Explain named age/stage and informal interval conventions. |
@@ -192,14 +189,14 @@ Do not send all 384 rows to every expert. Use a balanced incomplete assignment:
 4. Define core-vocabulary users, CQs, scope, granularity, and extension policy.
 5. Neutralize critic wording while retaining after-state.
 6. Simplify Defined Classes to one verdict plus bounded issue reason.
-7. Remove Taxonomy usefulness from retained-only sampling.
+7. Retain Taxonomy usefulness as a separate protocol outcome.
 
 ### Phase 2 — Workload and sampling
 
-1. Create a balanced incomplete assignment with common calibration rows.
-2. Ensure every item receives at least two ratings; a subset receives all raters.
-3. Include balanced clear positive, partial, negative, and unsure cases.
-4. Split delivery into 60–90 minute sessions and record time by sheet.
+1. Give every expert the same sampled items.
+2. Preserve independent row order and blinded definition order per expert.
+3. Include clear positive, partial, negative, and unsure cases.
+4. Record completion time by module and allow experts to pause between modules.
 
 ### Phase 3 — Calibration
 
@@ -221,6 +218,6 @@ Do not send all 384 rows to every expert. Use a balanced incomplete assignment:
 
 ## Final Recommendation
 
-**NO-GO for the current workbook as the final human study.**
+**NO-GO for the original pilot workbook as the final human study.**
 
-**GO for implementing the vNext plan and running a small real-human pilot.** The architecture can collect useful judgments, especially for definition quality, local-versus-general relations, and critic mistakes. The next revision should separate geological expertise from ontology literacy and reduce burden rather than add questions.
+**IMPLEMENTED with protocol decisions noted above. GO for a small real-human pilot.** The next evidence gate is actual completion time and think-aloud feedback from the three planned geology specialties. Only that pilot can justify final-study distribution.
