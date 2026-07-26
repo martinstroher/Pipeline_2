@@ -17,6 +17,9 @@ The production ontology pipeline remains at repository root. This package reads 
 The study never modifies these inputs. They are frozen copies, so root pipeline
 outputs can be cleaned without breaking study reproducibility.
 
+Categorizer prompts are rendered by replacing only the explicit batch marker;
+embedded JSON examples remain literal and are covered by the offline test suite.
+
 ## Commands
 
 Run from repository root:

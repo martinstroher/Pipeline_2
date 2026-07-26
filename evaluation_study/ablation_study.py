@@ -305,6 +305,17 @@ def _build_categorizer_prompt(is_raw_rag: bool = False):
     return system_instruction, prompt_template
 
 
+def _render_categorizer_prompt(
+    prompt_template: str,
+    batch_items: list[dict],
+) -> str:
+    """Insert one batch without re-formatting embedded JSON examples."""
+    marker = "{json_batch}"
+    if prompt_template.count(marker) != 1:
+        raise ValueError("Categorizer prompt must contain exactly one {json_batch} marker")
+    return prompt_template.replace(marker, json.dumps(batch_items, indent=2))
+
+
 def _categorize_batch(
     batch_items: list[dict],
     prompt_template: str,
@@ -313,8 +324,7 @@ def _categorize_batch(
     model_temperature: float,
 ) -> list[dict]:
     """Classify a batch of terms. Returns list of result dicts."""
-    json_batch_str = json.dumps(batch_items, indent=2)
-    final_prompt = prompt_template.format(json_batch=json_batch_str)
+    final_prompt = _render_categorizer_prompt(prompt_template, batch_items)
 
     try:
         response_text = llm_generate(

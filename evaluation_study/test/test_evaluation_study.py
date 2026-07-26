@@ -118,6 +118,16 @@ def test_ablation_artifacts_and_prompts() -> None:
         "Condition D worked examples use raw context fields",
         '"context":' in raw_template and '"nld":' not in raw_template,
     )
+    rendered = ablation._render_categorizer_prompt(
+        actual_template,
+        [{"term": "sample", "nld": "sample definition"}],
+    )
+    _expect(
+        "Categorizer batch insertion preserves embedded JSON examples",
+        '"term": "sample"' in rendered
+        and '"term": "Grainstone"' in rendered
+        and "{json_batch}" not in rendered,
+    )
 
 
 def _layer1_fixture() -> pd.DataFrame:
