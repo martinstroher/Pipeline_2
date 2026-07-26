@@ -200,9 +200,7 @@ The pilot proposed a balanced incomplete assignment to reduce burden. The study 
 
 ### Phase 3 — Calibration
 
-1. Add a short practice section with feedback.
-2. Include one example each for category specificity, time individual, local relation, defined class, and critic decision.
-3. Confirm interpretation of Partial, Unsure, scope quantifiers, and core inclusion.
+The study protocol rejects a separate practice/calibration sheet. Experts use concise task instructions and the optional Category Guide at the point of need; the human pilot checks interpretation through think-aloud feedback.
 
 ### Phase 4 — Human pilot
 

@@ -474,7 +474,7 @@ def _format_workbook(wb, relevance_df, nld_df, cat_df, tax_df):
             cell.border = _THIN_BORDER
         section_text = str(row[0].value or "")
         if section_text.startswith("SHEET") or section_text in (
-            "PURPOSE", "CALIBRATION EXAMPLES", "NOTES",
+            "PURPOSE", "NOTES",
             "EXPERT EVALUATION — PreSaltOntoLearn Pipeline",
         ):
             row[0].font = _SECTION_FONT

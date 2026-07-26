@@ -88,6 +88,7 @@ def main() -> int:
 
         workbook = load_workbook(workbooks[0])
         assert workbook.sheetnames[0] == "REHEARSAL_ONLY"
+        assert "Practice" not in workbook.sheetnames
         representation = workbook["Representation"]
         relevance_column = next(
             cell.column_letter

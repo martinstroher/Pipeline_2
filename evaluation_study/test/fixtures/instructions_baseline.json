@@ -244,34 +244,6 @@
     ""
   ],
   [
-    "CALIBRATION EXAMPLES",
-    ""
-  ],
-  [
-    "Category",
-    "Grainstone proposed as Sedimentary Rock: Yes. Grainstone proposed as Geological Process: No."
-  ],
-  [
-    "Taxonomy",
-    "Grainstone as a type of Carbonate Rock: Yes. Grainstone as a type of Geological Process: No."
-  ],
-  [
-    "Defined class",
-    "A reservoir rock is a sedimentary rock that can store and transmit hydrocarbons: Correct. A definition based only on one named-field occurrence: Partly correct or Incorrect, depending on the error."
-  ],
-  [
-    "Relation scope",
-    "A statement supported only in one named field is Context-specific, not Generally true for every instance of the concept."
-  ],
-  [
-    "Named entity",
-    "Santos Basin is one named basin: Yes. Sedimentary basin is a reusable kind, not one named entity."
-  ],
-  [
-    "",
-    ""
-  ],
-  [
     "NOTES",
     "Use Notes for concise geological reasoning when the bounded choices do not capture an important issue. Thank you for your expertise."
   ]

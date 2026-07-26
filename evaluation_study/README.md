@@ -39,7 +39,6 @@ The default design generates three independently ordered workbooks. Every expert
 
 Visible sheets use plain geological language:
 
-- `Practice` provides five fixed examples with explanatory feedback.
 - `Category_Guide` translates opaque upper-ontology labels and gives examples.
 - ambiguous terms receive the same short neutral NLD gloss in every condition.
 - `Defined_Classes` shows one natural-language definition and one verdict.

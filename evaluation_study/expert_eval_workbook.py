@@ -407,56 +407,19 @@ def build_category_guide() -> pd.DataFrame:
     return pd.DataFrame(rows)
 
 
-def build_practice_sheet() -> pd.DataFrame:
-    """Provide fixed calibration examples with immediate explanatory feedback."""
-    return pd.DataFrame([
-        {
-            "Task": "Category specificity",
-            "Example": "Grainstone proposed as Sedimentary Rock",
-            "Response": "Yes",
-            "Why": "Grainstone is a sedimentary rock; a process category would be wrong.",
-        },
-        {
-            "Task": "Named time interval",
-            "Example": "Aptian proposed as one named geological age",
-            "Response": "Yes",
-            "Why": "Aptian denotes one formally defined interval, not a reusable kind of interval.",
-        },
-        {
-            "Task": "Context-specific relation",
-            "Example": "A composition reported only in one named field",
-            "Response": "Context-specific",
-            "Why": "Local evidence does not establish a relation for every instance of the concept.",
-        },
-        {
-            "Task": "Defined class",
-            "Example": "A reservoir rock is a sedimentary rock that can store and transmit hydrocarbons",
-            "Response": "Correct",
-            "Why": "The base kind and distinguishing capacity jointly identify the concept.",
-        },
-        {
-            "Task": "Core-scope decision",
-            "Example": "Keep a paper-specific measurement value as a separate core concept",
-            "Response": "Reject",
-            "Why": "Measurement values belong in data or extensions, not the reusable core vocabulary.",
-        },
-    ])
-
-
 def build_timing_sheet() -> pd.DataFrame:
     """Collect actual completion time by module during the human pilot."""
     modules = [
-        "Practice and category guide",
         "Representation",
         "Category Correct and Taxonomy",
         "Defined Classes, Relations, Individuals, and Critic Decisions",
     ]
     return pd.DataFrame({
         "Row_ID": [f"TIME-{index:02d}" for index in range(1, len(modules) + 1)],
-        "Session": [1, 1, 2, 3],
+        "Session": [1, 2, 3],
         "Module": modules,
-        "Minutes": ["", "", "", ""],
-        "Comments": ["", "", "", ""],
+        "Minutes": ["", "", ""],
+        "Comments": ["", "", ""],
     })
 
 
@@ -1077,7 +1040,6 @@ def generate_modular_evaluation(
         columns=["Section", "Details"],
     )
     category_guide = build_category_guide()
-    practice = build_practice_sheet()
     timing = build_timing_sheet()
     workbook_paths = []
     key_parts = []
@@ -1101,7 +1063,6 @@ def generate_modular_evaluation(
             term_glosses=term_glosses,
         )
         frames = {
-            "Practice": practice,
             "Category_Guide": category_guide,
             "Representation": representation,
             "Category_Correct": category,

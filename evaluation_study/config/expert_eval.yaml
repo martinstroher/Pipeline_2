@@ -6,8 +6,8 @@
 #
 # The workbook contains one instructions sheet, one representation sheet,
 # one category sheet, and five final-ontology sheets. Only the prose lives
-# here. Authors retargeting the pipeline rewrite this file to swap anchors,
-# calibration examples, and project name.
+# here. Authors retargeting the pipeline rewrite this file to swap anchors
+# and project name.
 #
 # Load order: src/utils/study_config.py reads this file and exposes
 # `get_study_config().instruction_rows` to the workbook generator.
@@ -74,12 +74,5 @@ instructions_sheet:
     - ["Exclusion", "Leaving a concept out does not mean it is geologically false. It means the information is outside the stated core boundary or is represented elsewhere."]
     - ["Characteristic treatment", "Representing a term as a characteristic or relation keeps its information without treating it as a separate type of geological thing."]
     - ["Preferred treatment", "Select a preferred treatment only for Reject or Accept with concern: keep as a separate concept; keep its information but not as a separate concept; leave it out; or Unsure."]
-    - ["", ""]
-    - ["CALIBRATION EXAMPLES", ""]
-    - ["Category", "Grainstone proposed as Sedimentary Rock: Yes. Grainstone proposed as Geological Process: No."]
-    - ["Taxonomy", "Grainstone as a type of Carbonate Rock: Yes. Grainstone as a type of Geological Process: No."]
-    - ["Defined class", "A reservoir rock is a sedimentary rock that can store and transmit hydrocarbons: Correct. A definition based only on one named-field occurrence: Partly correct or Incorrect, depending on the error."]
-    - ["Relation scope", "A statement supported only in one named field is Context-specific, not Generally true for every instance of the concept."]
-    - ["Named entity", "Santos Basin is one named basin: Yes. Sedimentary basin is a reusable kind, not one named entity."]
     - ["", ""]
     - ["NOTES", "Use Notes for concise geological reasoning when the bounded choices do not capture an important issue. Thank you for your expertise."]
