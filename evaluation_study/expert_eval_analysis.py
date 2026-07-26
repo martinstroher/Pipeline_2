@@ -20,6 +20,7 @@ from scipy import stats
 from sklearn.metrics import cohen_kappa_score
 
 from src.utils.csv_io import read_csv, write_csv
+from evaluation_study.expert_eval_workbook import DATA_HEADER_ROW
 
 
 REQUIRED_SHEETS = (
@@ -106,7 +107,11 @@ def load_completed_workbooks(workbook_paths: list[str]) -> dict[str, dict[str, p
         if missing:
             raise ValueError(f"{path} missing sheets: {missing}")
         sheets = {
-            sheet: pd.read_excel(excel, sheet_name=sheet)
+            sheet: pd.read_excel(
+                excel,
+                sheet_name=sheet,
+                header=DATA_HEADER_ROW - 1,
+            )
             for sheet in REQUIRED_SHEETS
         }
         for sheet, frame in sheets.items():

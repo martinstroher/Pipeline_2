@@ -40,7 +40,8 @@ The default design generates three independently ordered workbooks. Every expert
 Visible sheets use plain geological language:
 
 - `Category_Guide` translates opaque upper-ontology labels and gives examples.
-- ambiguous terms receive the same short neutral NLD gloss in every condition.
+- every expert-facing sheet starts with one short `What to do` banner.
+- `Term Context (only when needed)` is populated only for terms flagged as ambiguous in the usability pilot; leaving ordinary terms blank avoids injecting NLD-derived evidence into otherwise term-only judgments.
 - `Defined_Classes` shows one natural-language definition and one verdict.
 - `Relations` samples generic, corpus-context, and individual-fact rows, shows an explicit scope prefix, and asks for one verdict.
 - `Taxonomy` separately asks whether the IS-A relation is correct and whether the distinction is useful for the Pre-Salt model.

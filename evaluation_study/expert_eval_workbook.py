@@ -47,6 +47,8 @@ CONDITIONS = ("A", "B", "C", "D")
 DEFAULT_TERM_SAMPLE = 100
 DEFAULT_EXPERTS = 3
 DEFAULT_SEED = 42
+DATA_HEADER_ROW = 2
+DATA_START_ROW = DATA_HEADER_ROW + 1
 FINAL_SAMPLE_SIZES = {
     "Taxonomy": 40,
     "Defined_Classes": 13,
@@ -688,7 +690,11 @@ def _category_for_expert(
     visible = items[
         ["Row_ID", "Term", "Assigned_Category", "Category_Description"]
     ].copy()
-    visible.insert(2, "Term_Gloss", items.get("Term_Gloss", ""))
+    visible.insert(
+        2,
+        "Term_Context (only when needed)",
+        items.get("Term_Gloss", ""),
+    )
     visible = visible.rename(columns={
         "Assigned_Category": "Proposed_Category",
         "Category_Description": "Category_Definition",
@@ -722,7 +728,9 @@ def _final_frames_for_expert(
     taxonomy_visible = pd.DataFrame({
         "Row_ID": taxonomy["Row_ID"],
         "Child_Concept": taxonomy["Term"],
-        "Term_Gloss": taxonomy["Term"].map(lambda value: term_glosses.get(_normalise(value), "")),
+        "Term_Context (only when needed)": taxonomy["Term"].map(
+            lambda value: term_glosses.get(_normalise(value), "")
+        ),
         "Parent_Concept": taxonomy["Parent_Term"].map(
             lambda value: display_label(value, "category")
         ),
@@ -735,7 +743,7 @@ def _final_frames_for_expert(
     defined_visible = pd.DataFrame({
         "Row_ID": defined["Row_ID"],
         "Concept": defined["Bearer"],
-        "Term_Gloss": defined["Bearer"].map(
+        "Term_Context (only when needed)": defined["Bearer"].map(
             lambda value: term_glosses.get(_normalise(value), "")
         ),
         "Proposed_Definition": [
@@ -755,7 +763,7 @@ def _final_frames_for_expert(
     relations = samples["Relations"]
     relation_visible = pd.DataFrame({
         "Row_ID": relations["Row_ID"],
-        "Term_Gloss": relations["Term"].map(
+        "Term_Context (only when needed)": relations["Term"].map(
             lambda value: term_glosses.get(_normalise(value), "")
         ),
         "Relation_Statement": [
@@ -776,7 +784,7 @@ def _final_frames_for_expert(
     individual_visible = pd.DataFrame({
         "Row_ID": individuals["Row_ID"],
         "Named_Entity": individuals["Term"],
-        "Term_Gloss": individuals["Term"].map(
+        "Term_Context (only when needed)": individuals["Term"].map(
             lambda value: term_glosses.get(_normalise(value), "")
         ),
         "Proposed_Type": individuals["Target_Class"].map(
@@ -797,7 +805,7 @@ def _final_frames_for_expert(
     decision_visible = pd.DataFrame({
         "Row_ID": decisions["Row_ID"],
         "Concept": decisions["term"],
-        "Term_Gloss": decisions["term"].map(
+        "Term_Context (only when needed)": decisions["term"].map(
             lambda value: term_glosses.get(_normalise(value), "")
         ),
         "Current_Category": decisions["category"].map(
@@ -905,20 +913,35 @@ def _format_data_sheet(
     ws,
     input_validations: dict[str, str | None],
     sheet_name: str,
+    task_text: str,
 ) -> None:
-    ws.freeze_panes = "A2"
-    ws.auto_filter.ref = ws.dimensions
+    last_column_letter = get_column_letter(ws.max_column)
+    ws.merge_cells(start_row=1, start_column=1, end_row=1, end_column=ws.max_column)
+    ws.cell(1, 1).value = f"What to do: {task_text}"
+    ws.cell(1, 1).font = Font(bold=True, color="1F4E78")
+    ws.cell(1, 1).fill = PatternFill(
+        start_color="D9EAF7",
+        end_color="D9EAF7",
+        fill_type="solid",
+    )
+    ws.cell(1, 1).alignment = _WRAP
+    ws.cell(1, 1).border = _BORDER
+    ws.row_dimensions[1].height = 42
+    ws.freeze_panes = f"A{DATA_START_ROW}"
+    ws.auto_filter.ref = (
+        f"A{DATA_HEADER_ROW}:{last_column_letter}{ws.max_row}"
+    )
     ws.sheet_view.showGridLines = False
-    headers = {str(cell.value): cell.column for cell in ws[1]}
+    headers = {str(cell.value): cell.column for cell in ws[DATA_HEADER_ROW]}
     if "Row_ID" in headers:
         ws.column_dimensions[get_column_letter(headers["Row_ID"])].hidden = True
-    for cell in ws[1]:
+    for cell in ws[DATA_HEADER_ROW]:
         cell.fill = _HEADER_FILL
         cell.font = _HEADER_FONT
         cell.alignment = _CENTER
         cell.border = _BORDER
     for column_index in range(1, ws.max_column + 1):
-        header = str(ws.cell(1, column_index).value or "")
+        header = str(ws.cell(DATA_HEADER_ROW, column_index).value or "")
         width = 15
         if any(token in header for token in ("Definition", "Description", "Rationale", "Evidence", "Excerpt", "Question", "Decision", "Statement")):
             width = 70
@@ -927,7 +950,7 @@ def _format_data_sheet(
         elif header == "Notes" or header.startswith("Suggested"):
             width = 35
         ws.column_dimensions[get_column_letter(column_index)].width = width
-        for row_index in range(2, ws.max_row + 1):
+        for row_index in range(DATA_START_ROW, ws.max_row + 1):
             cell = ws.cell(row_index, column_index)
             cell.alignment = _WRAP
             cell.border = _BORDER
@@ -935,7 +958,7 @@ def _format_data_sheet(
     for header, options in input_validations.items():
         column_index = headers[header]
         column_letter = get_column_letter(column_index)
-        for row_index in range(2, ws.max_row + 1):
+        for row_index in range(DATA_START_ROW, ws.max_row + 1):
             ws.cell(row_index, column_index).fill = _INPUT_FILL
         if options:
             optional = (sheet_name, header) in _OPTIONAL_INPUTS
@@ -947,11 +970,13 @@ def _format_data_sheet(
                 errorTitle="Response required",
                 error="Select one of the listed responses before submitting the workbook.",
             )
-            validation.add(f"{column_letter}2:{column_letter}{ws.max_row}")
+            validation.add(
+                f"{column_letter}{DATA_START_ROW}:{column_letter}{ws.max_row}"
+            )
             ws.add_data_validation(validation)
             if not optional:
                 ws.conditional_formatting.add(
-                    f"{column_letter}2:{column_letter}{ws.max_row}",
+                    f"{column_letter}{DATA_START_ROW}:{column_letter}{ws.max_row}",
                     CellIsRule(operator="equal", formula=['""'], fill=_MISSING_FILL),
                 )
 
@@ -961,10 +986,16 @@ def _write_workbook(
     instructions: pd.DataFrame,
     frames: dict[str, pd.DataFrame],
 ) -> None:
+    sheet_instructions = get_study_config().sheet_instructions
     with pd.ExcelWriter(path, engine="openpyxl") as writer:
         instructions.to_excel(writer, sheet_name="Instructions", index=False)
         for sheet_name, frame in frames.items():
-            frame.to_excel(writer, sheet_name=sheet_name, index=False)
+            frame.to_excel(
+                writer,
+                sheet_name=sheet_name,
+                index=False,
+                startrow=DATA_HEADER_ROW - 1,
+            )
         workbook = writer.book
         _format_instructions(workbook["Instructions"])
         for sheet_name in frames:
@@ -972,6 +1003,7 @@ def _write_workbook(
                 workbook[sheet_name],
                 _INPUT_VALIDATIONS.get(sheet_name, {}),
                 sheet_name,
+                sheet_instructions[sheet_name],
             )
 
 

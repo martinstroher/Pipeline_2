@@ -27,6 +27,7 @@ _DEFAULT_PATH = STUDY_CONFIG
 @dataclass(frozen=True)
 class StudyConfig:
     instruction_rows: tuple[tuple[str, str], ...] = field(default_factory=tuple)
+    sheet_instructions: dict[str, str] = field(default_factory=dict)
 
 
 @dataclass(frozen=True)
@@ -73,7 +74,14 @@ def get_study_config() -> StudyConfig:
         raise RuntimeError(
             f"Study config '{path}' has no instructions_sheet.rows entries."
         )
-    return StudyConfig(instruction_rows=instruction_rows)
+    sheet_instructions = {
+        str(key): str(value)
+        for key, value in (data.get("sheet_instructions") or {}).items()
+    }
+    return StudyConfig(
+        instruction_rows=instruction_rows,
+        sheet_instructions=sheet_instructions,
+    )
 
 
 @lru_cache(maxsize=1)

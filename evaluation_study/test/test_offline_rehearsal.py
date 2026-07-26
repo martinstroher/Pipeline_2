@@ -23,6 +23,10 @@ from evaluation_study.offline_rehearsal import (  # noqa: E402
     _sha256_file,
     run_offline_rehearsal,
 )
+from evaluation_study.expert_eval_workbook import (  # noqa: E402
+    DATA_HEADER_ROW,
+    DATA_START_ROW,
+)
 
 
 def _run(path: Path) -> dict:
@@ -92,7 +96,7 @@ def main() -> int:
         representation = workbook["Representation"]
         relevance_column = next(
             cell.column_letter
-            for cell in representation[1]
+            for cell in representation[DATA_HEADER_ROW]
             if cell.value == "Relevance (1-5/Unsure)"
         )
         validations = list(representation.data_validations.dataValidation)
@@ -112,6 +116,14 @@ def main() -> int:
             "Individuals",
             "Critic_Decisions",
         )
+        expert_facing_sheets = (
+            "Category_Guide",
+            *response_sheets,
+            "Timing",
+        )
+        for sheet_name in expert_facing_sheets:
+            assert str(workbook[sheet_name]["A1"].value).startswith("What to do: ")
+
         row_ids_by_workbook = []
         for path in workbooks:
             candidate = load_workbook(path, read_only=True)
@@ -119,7 +131,7 @@ def main() -> int:
                 sheet_name: {
                     str(row[0])
                     for row in candidate[sheet_name].iter_rows(
-                        min_row=2,
+                        min_row=DATA_START_ROW,
                         values_only=True,
                     )
                 }
@@ -142,22 +154,44 @@ def main() -> int:
             "Critic_Decisions": {"Rationale"},
         }
         for sheet_name, absent_headers in expected_absent.items():
-            headers = {cell.value for cell in workbook[sheet_name][1]}
+            headers = {
+                cell.value for cell in workbook[sheet_name][DATA_HEADER_ROW]
+            }
             assert not headers & absent_headers, (sheet_name, headers & absent_headers)
 
         assert "Category_Guide" in workbook.sheetnames
         assert "Useful_PreSalt_Distinction (Yes/No/Unsure)" in {
-            cell.value for cell in workbook["Taxonomy"][1]
+            cell.value for cell in workbook["Taxonomy"][DATA_HEADER_ROW]
         }
         assert "Definition_Verdict (Correct/Partly correct/Incorrect/Unsure)" in {
-            cell.value for cell in workbook["Defined_Classes"][1]
+            cell.value for cell in workbook["Defined_Classes"][DATA_HEADER_ROW]
         }
-        assert "Relation_Verdict" in {cell.value for cell in workbook["Relations"][1]}
+        assert "Relation_Verdict" in {
+            cell.value for cell in workbook["Relations"][DATA_HEADER_ROW]
+        }
+        context_header = "Term_Context (only when needed)"
+        context_values = []
+        for sheet_name in response_sheets[1:]:
+            sheet = workbook[sheet_name]
+            headers = {
+                cell.value: cell.column for cell in sheet[DATA_HEADER_ROW]
+            }
+            assert context_header in headers
+            context_values.extend(
+                sheet.cell(row, headers[context_header]).value
+                for row in range(DATA_START_ROW, sheet.max_row + 1)
+            )
+        assert any(value not in (None, "") for value in context_values)
+        assert any(value in (None, "") for value in context_values)
+
         relation_sheet = workbook["Relations"]
-        relation_headers = {cell.value: cell.column for cell in relation_sheet[1]}
+        relation_headers = {
+            cell.value: cell.column
+            for cell in relation_sheet[DATA_HEADER_ROW]
+        }
         relation_statements = {
             str(relation_sheet.cell(row, relation_headers["Relation_Statement"]).value)
-            for row in range(2, relation_sheet.max_row + 1)
+            for row in range(DATA_START_ROW, relation_sheet.max_row + 1)
         }
         assert any(value.startswith("Generally, ") for value in relation_statements)
         assert any(
@@ -168,7 +202,10 @@ def main() -> int:
             value.startswith("For this named entity, ")
             for value in relation_statements
         )
-        critic_headers = {cell.value for cell in workbook["Critic_Decisions"][1]}
+        critic_headers = {
+            cell.value
+            for cell in workbook["Critic_Decisions"][DATA_HEADER_ROW]
+        }
         assert {
             "Critic_Decision",
             "Resulting_Treatment",

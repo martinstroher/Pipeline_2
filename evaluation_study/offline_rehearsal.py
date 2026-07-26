@@ -28,7 +28,12 @@ from openpyxl.styles import Alignment, Font, PatternFill
 import evaluation_study.layer1_analysis as layer1
 from evaluation_study.expert_eval_analysis import run_modular_analysis
 from evaluation_study.expert_eval_generator import generate_expert_evaluation
-from evaluation_study.expert_eval_workbook import StudyInputs, build_final_fates
+from evaluation_study.expert_eval_workbook import (
+    DATA_HEADER_ROW,
+    DATA_START_ROW,
+    StudyInputs,
+    build_final_fates,
+)
 from evaluation_study.paths import (
     APPROVED_ONTOLOGY_DIR,
     FILTERED_TERMS,
@@ -516,9 +521,9 @@ def _fill_representation_sheet(
     expert_id: str,
     seed: int,
 ) -> None:
-    headers = {cell.value: cell.column for cell in sheet[1]}
+    headers = {cell.value: cell.column for cell in sheet[DATA_HEADER_ROW]}
     key = hidden.set_index("Row_ID")
-    for row_index in range(2, sheet.max_row + 1):
+    for row_index in range(DATA_START_ROW, sheet.max_row + 1):
         row_id = str(sheet.cell(row_index, headers["Row_ID"]).value)
         item = key.loc[row_id]
         relevance = _rating(_relevance_base(item), expert_id, row_id, "relevance", seed)
@@ -559,9 +564,9 @@ def _fill_category_sheet(
     tiers: dict[str, str],
     seed: int,
 ) -> None:
-    headers = {cell.value: cell.column for cell in sheet[1]}
+    headers = {cell.value: cell.column for cell in sheet[DATA_HEADER_ROW]}
     key = hidden.set_index("Row_ID")
-    for row_index in range(2, sheet.max_row + 1):
+    for row_index in range(DATA_START_ROW, sheet.max_row + 1):
         row_id = str(sheet.cell(row_index, headers["Row_ID"]).value)
         item = key.loc[row_id]
         term = str(item["Term"])
@@ -590,9 +595,9 @@ def _fill_final_sheets(
         return key[(key["Expert_ID"] == expert_id) & (key["Sheet"] == sheet_name)].set_index("Row_ID")
 
     sheet = workbook["Taxonomy"]
-    headers = {cell.value: cell.column for cell in sheet[1]}
+    headers = {cell.value: cell.column for cell in sheet[DATA_HEADER_ROW]}
     hidden = key_for("Taxonomy")
-    for row_index in range(2, sheet.max_row + 1):
+    for row_index in range(DATA_START_ROW, sheet.max_row + 1):
         row_id = str(sheet.cell(row_index, headers["Row_ID"]).value)
         item = hidden.loc[row_id]
         intermediate = str(item.get("Is_Intermediate", "False")).lower() == "true"
@@ -603,9 +608,9 @@ def _fill_final_sheets(
         sheet.cell(row_index, headers["Notes"], f"[{PROVENANCE}]")
 
     sheet = workbook["Defined_Classes"]
-    headers = {cell.value: cell.column for cell in sheet[1]}
+    headers = {cell.value: cell.column for cell in sheet[DATA_HEADER_ROW]}
     hidden = key_for("Defined_Classes")
-    for row_index in range(2, sheet.max_row + 1):
+    for row_index in range(DATA_START_ROW, sheet.max_row + 1):
         row_id = str(sheet.cell(row_index, headers["Row_ID"]).value)
         item = hidden.loc[row_id]
         confidence_level = 2 if str(item.get("Definition_Type", "")) == "bearer_realizable" else 1
@@ -636,9 +641,9 @@ def _fill_final_sheets(
         sheet.cell(row_index, headers["Notes"], f"[{PROVENANCE}]")
 
     sheet = workbook["Relations"]
-    headers = {cell.value: cell.column for cell in sheet[1]}
+    headers = {cell.value: cell.column for cell in sheet[DATA_HEADER_ROW]}
     hidden = key_for("Relations")
-    for row_index in range(2, sheet.max_row + 1):
+    for row_index in range(DATA_START_ROW, sheet.max_row + 1):
         row_id = str(sheet.cell(row_index, headers["Row_ID"]).value)
         item = hidden.loc[row_id]
         confidence = float(item.get("Confidence", 0.8))
@@ -667,9 +672,9 @@ def _fill_final_sheets(
         sheet.cell(row_index, headers["Notes"], f"[{PROVENANCE}; confidence-derived]")
 
     sheet = workbook["Individuals"]
-    headers = {cell.value: cell.column for cell in sheet[1]}
+    headers = {cell.value: cell.column for cell in sheet[DATA_HEADER_ROW]}
     hidden = key_for("Individuals")
-    for row_index in range(2, sheet.max_row + 1):
+    for row_index in range(DATA_START_ROW, sheet.max_row + 1):
         row_id = str(sheet.cell(row_index, headers["Row_ID"]).value)
         item = hidden.loc[row_id]
         named = _verdict(2, expert_id, row_id, "individual", seed, partial=False)
@@ -680,9 +685,9 @@ def _fill_final_sheets(
         sheet.cell(row_index, headers["Notes"], f"[{PROVENANCE}]")
 
     sheet = workbook["Critic_Decisions"]
-    headers = {cell.value: cell.column for cell in sheet[1]}
+    headers = {cell.value: cell.column for cell in sheet[DATA_HEADER_ROW]}
     hidden = key_for("Critic_Decisions")
-    for row_index in range(2, sheet.max_row + 1):
+    for row_index in range(DATA_START_ROW, sheet.max_row + 1):
         row_id = str(sheet.cell(row_index, headers["Row_ID"]).value)
         item = hidden.loc[row_id]
         confidence = float(item.get("confidence", 0.8))
@@ -755,8 +760,10 @@ def _fill_mock_workbooks(
         )
         _fill_final_sheets(workbook, key, expert_id, seed)
         timing = workbook["Timing"]
-        timing_headers = {cell.value: cell.column for cell in timing[1]}
-        for row_index in range(2, timing.max_row + 1):
+        timing_headers = {
+            cell.value: cell.column for cell in timing[DATA_HEADER_ROW]
+        }
+        for row_index in range(DATA_START_ROW, timing.max_row + 1):
             row_id = str(timing.cell(row_index, timing_headers["Row_ID"]).value)
             minutes = 35 + int(_unit(seed, expert_id, row_id, "timing") * 31)
             timing.cell(row_index, timing_headers["Minutes"], minutes)
