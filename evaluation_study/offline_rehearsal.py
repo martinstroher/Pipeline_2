@@ -684,9 +684,9 @@ def _fill_final_sheets(
         sheet.cell(row_index, headers["Type_Correct (Yes/Partial/No/Unsure)"], type_verdict)
         sheet.cell(row_index, headers["Notes"], f"[{PROVENANCE}]")
 
-    sheet = workbook["Critic_Decisions"]
+    sheet = workbook["Meaning_Preservation"]
     headers = {cell.value: cell.column for cell in sheet[DATA_HEADER_ROW]}
-    hidden = key_for("Critic_Decisions")
+    hidden = key_for("Meaning_Preservation")
     for row_index in range(DATA_START_ROW, sheet.max_row + 1):
         row_id = str(sheet.cell(row_index, headers["Row_ID"]).value)
         item = hidden.loc[row_id]
@@ -694,21 +694,23 @@ def _fill_final_sheets(
         needs_review = str(item.get("needs_review", "False")).lower() == "true"
         level = 2 if confidence >= 0.9 and not needs_review else 1
         agree = _verdict(level, expert_id, row_id, "critic", seed)
-        acceptability = {
-            "Yes": "Accept",
-            "Partial": "Accept with concern",
+        preservation = {
+            "Yes": "Fully",
+            "Partial": "Mostly",
             "No": "Reject",
             "Unsure": "Unsure",
         }[agree]
+        if preservation == "Reject":
+            preservation = "No"
         sheet.cell(
             row_index,
-            headers["Decision_Acceptability (Accept/Accept with concern/Reject/Unsure)"],
-            acceptability,
+            headers["Meaning_Preserved (Fully/Mostly/No/Unsure)"],
+            preservation,
         )
         decision_type = str(item.get("Decision_Type"))
-        if acceptability == "Reject":
+        if preservation == "No":
             treatment = "Keep as separate concept"
-        elif acceptability == "Accept with concern":
+        elif preservation == "Mostly":
             treatment = (
                 "Leave out"
                 if decision_type == "EXCLUDE"
@@ -718,7 +720,7 @@ def _fill_final_sheets(
             treatment = ""
         sheet.cell(
             row_index,
-            headers["Preferred_Treatment (for Concern/Reject)"],
+            headers["Preferred_Outcome (for Mostly/No)"],
             treatment,
         )
         sheet.cell(row_index, headers["Notes"], f"[{PROVENANCE}; confidence-derived]")
@@ -911,8 +913,8 @@ def _write_findings_report(
         ("Individual type", final["individuals"]["type_correctness"]),
     ]
     final_outcomes.extend(
-        (f"Critic decision: {decision_type}", summary)
-        for decision_type, summary in final["critic_decisions"].items()
+        (f"Meaning preservation: {decision_type}", summary)
+        for decision_type, summary in final["meaning_preservation"].items()
     )
 
     lines = [
@@ -1007,7 +1009,7 @@ def _write_findings_report(
         "1. **Actual B/C/D results remain unknowable offline.** The rehearsal confirms data flow only; no simulated statistic belongs in the thesis Results chapter.",
         "2. **The B proxy leaks Condition A.** Its first sentence comes from the RAG-grounded A definition, so it cannot estimate the causal RAG contribution. It is useful only for workbook and analyzer testing.",
         "3. **The mock category oracle is A-anchored.** Apparent expert support for A is built into the rehearsal. This verifies unblinding and statistical direction, not correctness.",
-        "4. **Mock final-ontology judgments use critic confidence.** They cannot independently validate critic decisions, relation scope, or retained-core quality.",
+        "4. **Mock final-ontology judgments use critic confidence.** They cannot independently validate meaning preservation, relation scope, or retained-core quality.",
         "5. **Significance is easy to manufacture with 407 paired rows.** Real reporting must emphasize agreement rates, confusion patterns, and effect sizes rather than treating small p-values as accuracy evidence.",
         "6. **Context_Used remains descriptive.** The eight A rows with `Context_Used=False` are too few for a credible causal subgroup claim.",
         "7. **A real pilot is still required.** Have the three planned geology specialties complete a small subset before final-study distribution; check wording, fatigue, completion time, and use of Partial versus Unsure.",

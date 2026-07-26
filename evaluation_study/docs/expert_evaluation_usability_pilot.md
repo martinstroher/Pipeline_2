@@ -4,6 +4,8 @@
 
 > **Implementation update (2026-07-25):** The construct-validity changes recommended below are implemented and pass the zero-Azure rehearsal. Two recommendations were explicitly rejected for the study protocol: Taxonomy usefulness remains a separate judgment, and every expert receives the same sampled items. The original pilot workbooks remain NO-GO evidence; the generated vNext workbooks are ready for a small real-human pilot, not yet for the final thesis study.
 
+> **Meaning-preservation update (2026-07-26):** The original `Critic_Decisions` task is replaced by `Meaning_Preservation`. Geologists see a reference definition and factual before/after states, then judge whether the necessary geological meaning survives. Formal critic actions remain only in the private key. Rehearsal definitions use frozen Condition-A first sentences; real distribution requires the separately reviewed neutral-definition artifact.
+
 ## Decision
 
 **NO-GO for distributing the current full workbook unchanged.**

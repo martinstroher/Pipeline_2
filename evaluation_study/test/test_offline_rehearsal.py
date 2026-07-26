@@ -114,7 +114,7 @@ def main() -> int:
             "Defined_Classes",
             "Relations",
             "Individuals",
-            "Critic_Decisions",
+            "Meaning_Preservation",
         )
         expert_facing_sheets = (
             "Category_Guide",
@@ -151,7 +151,12 @@ def main() -> int:
             "Defined_Classes": {"Suggested_Change", "Characteristic_General (Yes/No/Unsure)", "Feature_Is_Defining_in_PreSalt (Yes/No/Unsure)"},
             "Relations": {"Statement_Correct (Yes/Partial/No/Unsure)", "Generally_True (Yes/No/Unsure)"},
             "Individuals": {"Suggested_Type", "Rationale"},
-            "Critic_Decisions": {"Rationale"},
+            "Meaning_Preservation": {
+                "Rationale",
+                "Critic_Decision",
+                "Current_Category",
+                "Decision_Acceptability (Accept/Accept with concern/Reject/Unsure)",
+            },
         }
         for sheet_name, absent_headers in expected_absent.items():
             headers = {
@@ -170,19 +175,22 @@ def main() -> int:
             cell.value for cell in workbook["Relations"][DATA_HEADER_ROW]
         }
         context_header = "Term_Context (only when needed)"
-        context_values = []
-        for sheet_name in response_sheets[1:]:
-            sheet = workbook[sheet_name]
-            headers = {
-                cell.value: cell.column for cell in sheet[DATA_HEADER_ROW]
-            }
-            assert context_header in headers
-            context_values.extend(
-                sheet.cell(row, headers[context_header]).value
-                for row in range(DATA_START_ROW, sheet.max_row + 1)
-            )
+        category_sheet = workbook["Category_Correct"]
+        category_headers = {
+            cell.value: cell.column
+            for cell in category_sheet[DATA_HEADER_ROW]
+        }
+        assert context_header in category_headers
+        context_values = [
+            category_sheet.cell(row, category_headers[context_header]).value
+            for row in range(DATA_START_ROW, category_sheet.max_row + 1)
+        ]
         assert any(value not in (None, "") for value in context_values)
         assert any(value in (None, "") for value in context_values)
+        for sheet_name in response_sheets[2:]:
+            assert context_header not in {
+                cell.value for cell in workbook[sheet_name][DATA_HEADER_ROW]
+            }
 
         relation_sheet = workbook["Relations"]
         relation_headers = {
@@ -202,15 +210,18 @@ def main() -> int:
             value.startswith("For this named entity, ")
             for value in relation_statements
         )
-        critic_headers = {
+        preservation_headers = {
             cell.value
-            for cell in workbook["Critic_Decisions"][DATA_HEADER_ROW]
+            for cell in workbook["Meaning_Preservation"][DATA_HEADER_ROW]
         }
         assert {
-            "Critic_Decision",
-            "Resulting_Treatment",
-            "Decision_Acceptability (Accept/Accept with concern/Reject/Unsure)",
-        }.issubset(critic_headers)
+            "Concept",
+            "Reference_Definition",
+            "Before",
+            "After",
+            "Meaning_Preserved (Fully/Mostly/No/Unsure)",
+            "Preferred_Outcome (for Mostly/No)",
+        }.issubset(preservation_headers)
 
     print("=== OFFLINE REHEARSAL TEST PASSED ===")
     return 0

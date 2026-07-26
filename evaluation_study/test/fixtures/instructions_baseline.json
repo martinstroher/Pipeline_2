@@ -216,7 +216,7 @@
     ""
   ],
   [
-    "SHEET: CRITIC_DECISIONS",
+    "SHEET: MEANING_PRESERVATION",
     ""
   ],
   [
@@ -225,7 +225,7 @@
   ],
   [
     "Task",
-    "The sheet neutrally shows the critic action and resulting treatment. Judge it as Accept, Accept with concern, Reject, or Unsure against the target core scope above."
+    "Compare the geological meaning before and after the treatment. Judge whether the final result preserves the distinction needed in the Pre-Salt model as Fully, Mostly, No, or Unsure. You are not evaluating OWL syntax."
   ],
   [
     "Exclusion",
@@ -236,8 +236,8 @@
     "Representing a term as a characteristic or relation keeps its information without treating it as a separate type of geological thing."
   ],
   [
-    "Preferred treatment",
-    "Select a preferred treatment only for Reject or Accept with concern: keep as a separate concept; keep its information but not as a separate concept; leave it out; or Unsure."
+    "Preferred outcome",
+    "Select a preferred outcome only for Mostly or No: keep as a separate concept; keep its information but not as a separate concept; leave it out; or Unsure."
   ],
   [
     "",

@@ -124,7 +124,7 @@ Not every term is a "type of thing" (OWL class). Some terms are **named entities
 
 ## Evaluation Study
 
-The thesis ablation, statistics, expert workbooks, offline rehearsal, and usability-pilot methods are isolated from the production pipeline under [`evaluation_study/`](../evaluation_study/README.md). The study reads frozen pipeline artifacts but writes only to `evaluation_study/output/`. Expert workbooks use reviewed geological display text, selective neutral context for ambiguous terms, a short task banner on each sheet, and simplified direct judgments. Relation rows cover generic, corpus-context, and individual-fact scopes. Every expert receives the same sampled items, including both Taxonomy correctness and usefulness questions. A timing sheet measures actual burden during the human pilot.
+The thesis ablation, statistics, expert workbooks, offline rehearsal, and usability-pilot methods are isolated from the production pipeline under [`evaluation_study/`](../evaluation_study/README.md). The study reads frozen pipeline artifacts but writes only to `evaluation_study/output/`. Expert workbooks use reviewed geological display text, selective neutral context for ambiguous terms in Category Correct, a short task banner on each sheet, and simplified direct judgments. Relation rows cover generic, corpus-context, and individual-fact scopes. Meaning Preservation presents factual before/after states for sampled exclusions and demotions without exposing formal critic jargon. Every expert receives the same sampled items, including both Taxonomy correctness and usefulness questions. A timing sheet measures actual burden during the human pilot.
 
 ---
 

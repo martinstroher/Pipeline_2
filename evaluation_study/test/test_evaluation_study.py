@@ -361,19 +361,19 @@ def test_modular_blinding_and_analysis() -> None:
         "Individuals": repeated([
             {"Row_ID": "IND-001", "Specific_Named_Entity (Yes/No/Unsure)": "Yes", "Type_Correct (Yes/Partial/No/Unsure)": "Yes"},
         ]),
-        "Critic_Decisions": repeated([
-            {"Row_ID": "DEC-001", "Decision_Type": "DEMOTE", "Decision_Acceptability (Accept/Accept with concern/Reject/Unsure)": "Accept", "Preferred_Treatment (for Concern/Reject)": ""},
-            {"Row_ID": "DEC-002", "Decision_Type": "EXCLUDE", "Decision_Acceptability (Accept/Accept with concern/Reject/Unsure)": "Accept with concern", "Preferred_Treatment (for Concern/Reject)": "Leave out"},
+        "Meaning_Preservation": repeated([
+            {"Row_ID": "DEC-001", "Decision_Type": "DEMOTE", "Meaning_Preserved (Fully/Mostly/No/Unsure)": "Fully", "Preferred_Outcome (for Mostly/No)": ""},
+            {"Row_ID": "DEC-002", "Decision_Type": "EXCLUDE", "Meaning_Preserved (Fully/Mostly/No/Unsure)": "Mostly", "Preferred_Outcome (for Mostly/No)": "Leave out"},
         ]),
     }
     final_results = analyze_final_ontology(final_frames, bootstrap_iterations=50, seed=42)
     _expect(
         "Final ontology task families remain separate",
-        set(final_results) == {"taxonomy", "defined_classes", "relations", "individuals", "critic_decisions"},
+        set(final_results) == {"taxonomy", "defined_classes", "relations", "individuals", "meaning_preservation"},
     )
     _expect(
-        "Critic agreement is separated by decision type",
-        set(final_results["critic_decisions"]) == {"DEMOTE", "EXCLUDE"},
+        "Meaning preservation is separated by treatment type",
+        set(final_results["meaning_preservation"]) == {"DEMOTE", "EXCLUDE"},
     )
     _expect(
         "Relation verdicts align with explicit generic and contextual scopes",

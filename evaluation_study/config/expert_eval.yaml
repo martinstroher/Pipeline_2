@@ -20,7 +20,7 @@ sheet_instructions:
   Defined_Classes: "Judge the complete proposed definition. If you choose Partly correct or Incorrect, select the main issue reason; otherwise leave Issue Reason blank."
   Relations: "Judge the explicitly scoped relation sentence with one verdict. The corpus excerpt is context only and may describe a local occurrence."
   Individuals: "Judge whether the term denotes one specific named entity rather than a reusable kind, then judge whether its proposed type is correct."
-  Critic_Decisions: "Using the target core scope in Instructions, judge the displayed action and resulting treatment. Select Preferred Treatment only for Reject or Accept with concern."
+  Meaning_Preservation: "Compare the geological meaning before and after the treatment. Judge whether the result preserves the distinction needed for the Pre-Salt model; you are not evaluating OWL syntax. Select Preferred Outcome only for Mostly or No."
   Timing: "After completing each evaluation module, enter the actual minutes spent. Comments are optional."
 
 instructions_sheet:
@@ -79,11 +79,11 @@ instructions_sheet:
     - ["Age and interval convention", "A named age or stage such as Aptian is one defined time interval and is treated as a named entity. An informal descriptive interval is a reusable kind unless it denotes one explicitly bounded interval."]
     - ["Type task", "Judge whether the proposed geological type is correct. You are not shown the complete type vocabulary and do not need to select a replacement; explain in Notes only when useful."]
     - ["", ""]
-    - ["SHEET: CRITIC_DECISIONS", ""]
+    - ["SHEET: MEANING_PRESERVATION", ""]
     - ["TARGET CORE SCOPE", "The core serves geologists and knowledge-model users comparing Brazilian Pre-Salt systems, especially the Santos and Campos basins. It includes reusable concepts needed to answer the ten project questions about geological objects, constituent materials, structures, post-depositional processes, spatial arrangement, dimensions and positions, boundaries, deposits and stratigraphic units, petrophysical properties, and geological age. Named entities remain instances. Paper-specific distinctions, local variants, measurement values, and details not needed by those questions belong in extensions rather than the core."]
-    - ["Task", "The sheet neutrally shows the critic action and resulting treatment. Judge it as Accept, Accept with concern, Reject, or Unsure against the target core scope above."]
+    - ["Task", "Compare the geological meaning before and after the treatment. Judge whether the final result preserves the distinction needed in the Pre-Salt model as Fully, Mostly, No, or Unsure. You are not evaluating OWL syntax."]
     - ["Exclusion", "Leaving a concept out does not mean it is geologically false. It means the information is outside the stated core boundary or is represented elsewhere."]
     - ["Characteristic treatment", "Representing a term as a characteristic or relation keeps its information without treating it as a separate type of geological thing."]
-    - ["Preferred treatment", "Select a preferred treatment only for Reject or Accept with concern: keep as a separate concept; keep its information but not as a separate concept; leave it out; or Unsure."]
+    - ["Preferred outcome", "Select a preferred outcome only for Mostly or No: keep as a separate concept; keep its information but not as a separate concept; leave it out; or Unsure."]
     - ["", ""]
     - ["NOTES", "Use Notes for concise geological reasoning when the bounded choices do not capture an important issue. Thank you for your expertise."]

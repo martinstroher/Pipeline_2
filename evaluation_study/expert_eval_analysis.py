@@ -30,7 +30,7 @@ REQUIRED_SHEETS = (
     "Defined_Classes",
     "Relations",
     "Individuals",
-    "Critic_Decisions",
+    "Meaning_Preservation",
     "Timing",
 )
 CORRECTNESS_CHOICES = ("yes", "partial", "no", "unsure")
@@ -43,7 +43,7 @@ RELATION_CHOICES = (
     "incorrect",
     "unsure",
 )
-CRITIC_CHOICES = ("accept", "accept with concern", "reject", "unsure")
+PRESERVATION_CHOICES = ("fully", "mostly", "no", "unsure")
 
 
 def _sha256_file(path: str | Path) -> str:
@@ -881,7 +881,7 @@ def analyze_final_ontology(
     defined = final_frames["Defined_Classes"]
     relations = final_frames["Relations"]
     individuals = final_frames["Individuals"]
-    decisions = final_frames["Critic_Decisions"]
+    decisions = final_frames["Meaning_Preservation"]
 
     results = {
         "taxonomy": {
@@ -949,7 +949,7 @@ def analyze_final_ontology(
                 seed + 80,
             ),
         },
-        "critic_decisions": {},
+        "meaning_preservation": {},
     }
     issue_reasons = (
         defined["Issue_Reason (select for Partly/Incorrect)"]
@@ -978,38 +978,38 @@ def analyze_final_ontology(
         subset = decisions[decisions["Decision_Type"] == decision_type]
         summary = _final_outcome(
             subset,
-            "Decision_Acceptability (Accept/Accept with concern/Reject/Unsure)",
-            CRITIC_CHOICES,
+            "Meaning_Preserved (Fully/Mostly/No/Unsure)",
+            PRESERVATION_CHOICES,
             bootstrap_iterations,
             seed + 90 + offset * 10,
             score_map={
-                "accept": 1.0,
-                "accept with concern": 0.5,
-                "reject": 0.0,
+                "fully": 1.0,
+                "mostly": 0.5,
+                "no": 0.0,
                 "unsure": np.nan,
             },
-            positive_choice="accept",
+            positive_choice="fully",
         )
         treatments = (
-            subset["Preferred_Treatment (for Concern/Reject)"]
+            subset["Preferred_Outcome (for Mostly/No)"]
             .fillna("")
             .astype(str)
             .str.strip()
         )
-        acceptability = subset[
-            "Decision_Acceptability (Accept/Accept with concern/Reject/Unsure)"
+        preservation = subset[
+            "Meaning_Preserved (Fully/Mostly/No/Unsure)"
         ].astype(str).str.strip().str.casefold()
-        treatment_required = acceptability.isin({"accept with concern", "reject"})
+        treatment_required = preservation.isin({"mostly", "no"})
         if (treatment_required & treatments.eq("")).any():
-            raise ValueError("Concern/Reject critic judgments require a preferred treatment")
+            raise ValueError("Mostly/No preservation judgments require a preferred outcome")
         if (~treatment_required & treatments.ne("")).any():
-            raise ValueError("Preferred treatment is only valid for Concern/Reject")
+            raise ValueError("Preferred outcome is only valid for Mostly/No")
         treatments = treatments[treatments != ""]
-        summary["preferred_treatment_distribution"] = {
+        summary["preferred_outcome_distribution"] = {
             key: int(value)
             for key, value in treatments.value_counts().sort_index().to_dict().items()
         }
-        results["critic_decisions"][str(decision_type)] = summary
+        results["meaning_preservation"][str(decision_type)] = summary
     return results
 
 
@@ -1046,7 +1046,7 @@ def run_modular_analysis(
     categories = unblind_categories(experts, key)
     final_frames = {
         sheet: collect_final_sheet(experts, key, sheet)
-        for sheet in ("Taxonomy", "Defined_Classes", "Relations", "Individuals", "Critic_Decisions")
+        for sheet in ("Taxonomy", "Defined_Classes", "Relations", "Individuals", "Meaning_Preservation")
     }
     timing = collect_timing(experts)
 

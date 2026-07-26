@@ -19,6 +19,7 @@ import json
 import math
 import os
 import random
+import re
 from dataclasses import dataclass
 from datetime import datetime, timezone
 from pathlib import Path
@@ -54,14 +55,14 @@ FINAL_SAMPLE_SIZES = {
     "Defined_Classes": 13,
     "Relations": 25,
     "Individuals": 15,
-    "Critic_Decisions": 40,
+    "Meaning_Preservation": 40,
 }
 APPROVED_POPULATIONS = {
     "Taxonomy": 185,
     "Defined_Classes": 13,
     "Relations": 280,
     "Individuals": 58,
-    "Critic_Decisions": 116,
+    "Meaning_Preservation": 116,
 }
 
 
@@ -380,12 +381,66 @@ def build_term_glosses(nld: pd.DataFrame) -> dict[str, str]:
         text = str(nld_lookup.get(key, "")).strip()
         if not text:
             continue
-        sentence_end = next(
-            (index + 1 for index, character in enumerate(text) if character in ".!?"),
-            len(text),
-        )
-        glosses[key] = text[:sentence_end].strip()
+        glosses[key] = _first_sentence(text)
     return glosses
+
+
+def _first_sentence(value: object) -> str:
+    text = str(value).strip()
+    sentence_end = next(
+        (index + 1 for index, character in enumerate(text) if character in ".!?"),
+        len(text),
+    )
+    return text[:sentence_end].strip()
+
+
+def _quoted_replacement(value: object) -> str:
+    match = re.search(r"'(.*?)'", str(value))
+    return match.group(1).strip() if match else ""
+
+
+def _meaning_after_state(row: pd.Series) -> str:
+    action = str(row["action"])
+    category = display_label(row["category"], "category").lower()
+    if action == "DEMOTE_TO_PROPERTY":
+        base = display_label(row["Base_Class"], "category").lower()
+        relation = display_label(row["Property"], "property")
+        filler = display_label(row["Filler"], "category").lower()
+        return (
+            f"Not kept as a separate concept. Its meaning is retained as "
+            f"{base} that {relation} {filler}."
+        )
+    if action == "DROP_AS_REDUNDANT":
+        replacement = _quoted_replacement(row.get("reason", ""))
+        if replacement:
+            return (
+                f"Not kept separately. Its meaning is covered by "
+                f"{display_label(replacement, 'category')}."
+            )
+        return (
+            f"Not kept separately because the broader {category} concept "
+            "already covers the same meaning."
+        )
+    if action == "DROP_AS_MIXIN":
+        return (
+            f"Not kept as a separate type. The broader {category} concept "
+            "remains, but this combined distinction is not a separate core concept."
+        )
+    basis = str(row.get("drop_basis", ""))
+    if basis == "NARROW_EXTENSION_DETAIL":
+        return (
+            "Not kept in the lean core. This narrower distinction is deferred "
+            "to a possible domain extension."
+        )
+    if basis == "STACKED_CONTEXT":
+        return (
+            "Not kept separately. Its combined context can be expressed using "
+            "the retained broader concepts."
+        )
+    return (
+        f"Not kept separately in the lean core. Broader {category} concepts "
+        "remain, while this detail is outside the core vocabulary."
+    )
 
 
 def build_category_guide() -> pd.DataFrame:
@@ -414,7 +469,7 @@ def build_timing_sheet() -> pd.DataFrame:
     modules = [
         "Representation",
         "Category Correct and Taxonomy",
-        "Defined Classes, Relations, Individuals, and Critic Decisions",
+        "Defined Classes, Relations, Individuals, and Meaning Preservation",
     ]
     return pd.DataFrame({
         "Row_ID": [f"TIME-{index:02d}" for index in range(1, len(modules) + 1)],
@@ -511,36 +566,32 @@ def select_final_ontology_items(
         how="left",
         validate="one_to_one",
     ).drop(columns="_term_key")
-    decisions["Resulting_Treatment"] = [
-        (
-            f"No longer a separate class; represented as {base_class} "
-            f"with {display_label(property_name, 'property')} "
-            f"{display_label(filler, 'category').lower()}."
-            if decision_type == "DEMOTE"
-            else "Not included as a separate concept in the final ontology."
+    nld_lookup = _lookup_by_term(inputs.nld["A"], "NLD", "Condition A NLD")
+    decisions["Reference_Definition"] = decisions["term"].map(
+        lambda value: _first_sentence(nld_lookup.get(_normalise(value), ""))
+    )
+    decisions["Before_State"] = decisions["category"].map(
+        lambda value: (
+            "Represented as a separate concept of the kind: "
+            f"{display_label(value, 'category')}."
         )
-        for decision_type, base_class, property_name, filler in zip(
-            decisions["Decision_Type"],
-            decisions["Base_Class"],
-            decisions["Property"],
-            decisions["Filler"],
-        )
-    ]
+    )
+    decisions["After_State"] = decisions.apply(_meaning_after_state, axis=1)
     populations = {
         "Taxonomy": taxonomy,
         "Defined_Classes": defined,
         "Relations": relations,
         "Individuals": individuals,
-        "Critic_Decisions": decisions,
+        "Meaning_Preservation": decisions,
     }
     required_columns = {
         "Taxonomy": {"Term", "Parent_Term", "Category", "Is_Intermediate"},
         "Defined_Classes": {"Bearer", "Genus", "Property", "Filler"},
         "Relations": {"Term", "Property", "Filler", "Evidence", "Relation_Scope"},
         "Individuals": {"Term", "Target_Class", "Reason"},
-        "Critic_Decisions": {
+        "Meaning_Preservation": {
             "term", "category", "action", "reason", "Decision_Type",
-            "Resulting_Treatment",
+            "Reference_Definition", "Before_State", "After_State",
         },
     }
     for name, frame in populations.items():
@@ -574,9 +625,9 @@ def select_final_ontology_items(
             ["Target_Class"],
             seed + 500,
         ),
-        "Critic_Decisions": _proportional_sample(
+        "Meaning_Preservation": _proportional_sample(
             decisions,
-            FINAL_SAMPLE_SIZES["Critic_Decisions"],
+            FINAL_SAMPLE_SIZES["Meaning_Preservation"],
             ["Decision_Type", "action"],
             seed + 600,
         ),
@@ -593,8 +644,8 @@ def select_final_ontology_items(
     samples["Individuals"] = _assign_stable_ids(
         samples["Individuals"], "IND", ["Term", "Target_Class"]
     )
-    samples["Critic_Decisions"] = _assign_stable_ids(
-        samples["Critic_Decisions"], "DEC", ["term", "action"]
+    samples["Meaning_Preservation"] = _assign_stable_ids(
+        samples["Meaning_Preservation"], "DEC", ["term", "action"]
     )
     return samples
 
@@ -721,16 +772,11 @@ def _final_frames_for_expert(
     samples: dict[str, pd.DataFrame],
     expert_id: str,
     seed: int,
-    term_glosses: dict[str, str] | None = None,
 ) -> tuple[dict[str, pd.DataFrame], list[pd.DataFrame]]:
-    term_glosses = term_glosses or {}
     taxonomy = samples["Taxonomy"]
     taxonomy_visible = pd.DataFrame({
         "Row_ID": taxonomy["Row_ID"],
         "Child_Concept": taxonomy["Term"],
-        "Term_Context (only when needed)": taxonomy["Term"].map(
-            lambda value: term_glosses.get(_normalise(value), "")
-        ),
         "Parent_Concept": taxonomy["Parent_Term"].map(
             lambda value: display_label(value, "category")
         ),
@@ -743,9 +789,6 @@ def _final_frames_for_expert(
     defined_visible = pd.DataFrame({
         "Row_ID": defined["Row_ID"],
         "Concept": defined["Bearer"],
-        "Term_Context (only when needed)": defined["Bearer"].map(
-            lambda value: term_glosses.get(_normalise(value), "")
-        ),
         "Proposed_Definition": [
             _defined_class_sentence(bearer, genus, prop, filler)
             for bearer, genus, prop, filler in zip(
@@ -763,9 +806,6 @@ def _final_frames_for_expert(
     relations = samples["Relations"]
     relation_visible = pd.DataFrame({
         "Row_ID": relations["Row_ID"],
-        "Term_Context (only when needed)": relations["Term"].map(
-            lambda value: term_glosses.get(_normalise(value), "")
-        ),
         "Relation_Statement": [
             _relation_statement(subject, prop, filler, scope)
             for subject, prop, filler, scope in zip(
@@ -784,9 +824,6 @@ def _final_frames_for_expert(
     individual_visible = pd.DataFrame({
         "Row_ID": individuals["Row_ID"],
         "Named_Entity": individuals["Term"],
-        "Term_Context (only when needed)": individuals["Term"].map(
-            lambda value: term_glosses.get(_normalise(value), "")
-        ),
         "Proposed_Type": individuals["Target_Class"].map(
             lambda value: display_label(value, "category")
         ),
@@ -795,26 +832,15 @@ def _final_frames_for_expert(
         "Notes": "",
     })
 
-    decisions = samples["Critic_Decisions"]
-    decision_text = decisions["action"].map({
-        "DEMOTE_TO_PROPERTY": "Represent as a characteristic or relation",
-        "DROP_AS_OVER_SPECIFIC": "Exclude as a separate concept",
-        "DROP_AS_REDUNDANT": "Exclude as a separate concept",
-        "DROP_AS_MIXIN": "Exclude as a separate concept",
-    }).fillna(decisions["action"].astype(str))
+    decisions = samples["Meaning_Preservation"]
     decision_visible = pd.DataFrame({
         "Row_ID": decisions["Row_ID"],
         "Concept": decisions["term"],
-        "Term_Context (only when needed)": decisions["term"].map(
-            lambda value: term_glosses.get(_normalise(value), "")
-        ),
-        "Current_Category": decisions["category"].map(
-            lambda value: display_label(value, "category")
-        ),
-        "Critic_Decision": decision_text,
-        "Resulting_Treatment": decisions["Resulting_Treatment"],
-        "Decision_Acceptability (Accept/Accept with concern/Reject/Unsure)": "",
-        "Preferred_Treatment (for Concern/Reject)": "",
+        "Reference_Definition": decisions["Reference_Definition"],
+        "Before": decisions["Before_State"],
+        "After": decisions["After_State"],
+        "Meaning_Preserved (Fully/Mostly/No/Unsure)": "",
+        "Preferred_Outcome (for Mostly/No)": "",
         "Notes": "",
     })
 
@@ -823,7 +849,7 @@ def _final_frames_for_expert(
         "Defined_Classes": _shuffle(defined_visible, seed + 20),
         "Relations": _shuffle(relation_visible, seed + 30),
         "Individuals": _shuffle(individual_visible, seed + 40),
-        "Critic_Decisions": _shuffle(decision_visible, seed + 50),
+        "Meaning_Preservation": _shuffle(decision_visible, seed + 50),
     }
     keys = []
     for sheet_name, sample in samples.items():
@@ -879,9 +905,9 @@ _INPUT_VALIDATIONS = {
         "Type_Correct (Yes/Partial/No/Unsure)": "Yes,Partial,No,Unsure",
         "Notes": None,
     },
-    "Critic_Decisions": {
-        "Decision_Acceptability (Accept/Accept with concern/Reject/Unsure)": "Accept,Accept with concern,Reject,Unsure",
-        "Preferred_Treatment (for Concern/Reject)": "Keep as separate concept,Keep information but not as separate concept,Leave out,Unsure",
+    "Meaning_Preservation": {
+        "Meaning_Preserved (Fully/Mostly/No/Unsure)": "Fully,Mostly,No,Unsure",
+        "Preferred_Outcome (for Mostly/No)": "Keep as separate concept,Keep information but not as separate concept,Leave out,Unsure",
         "Notes": None,
     },
     "Timing": {
@@ -892,7 +918,7 @@ _INPUT_VALIDATIONS = {
 
 _OPTIONAL_INPUTS = {
     ("Defined_Classes", "Issue_Reason (select for Partly/Incorrect)"),
-    ("Critic_Decisions", "Preferred_Treatment (for Concern/Reject)"),
+    ("Meaning_Preservation", "Preferred_Outcome (for Mostly/No)"),
 }
 
 
@@ -943,11 +969,11 @@ def _format_data_sheet(
     for column_index in range(1, ws.max_column + 1):
         header = str(ws.cell(DATA_HEADER_ROW, column_index).value or "")
         width = 15
-        if any(token in header for token in ("Definition", "Description", "Rationale", "Evidence", "Excerpt", "Question", "Decision", "Statement")):
+        if any(token in header for token in ("Definition", "Description", "Rationale", "Evidence", "Excerpt", "Question", "Decision", "Statement", "Before", "After")):
             width = 70
         elif any(token in header for token in ("Term", "Concept", "Category", "Parent", "Subject", "Entity", "Type")):
             width = 28
-        elif header == "Notes" or header.startswith("Suggested"):
+        elif header == "Notes" or "Outcome" in header or header.startswith("Suggested"):
             width = 35
         ws.column_dimensions[get_column_letter(column_index)].width = width
         for row_index in range(DATA_START_ROW, ws.max_row + 1):
@@ -1092,7 +1118,6 @@ def generate_modular_evaluation(
             final_samples,
             expert_id,
             expert_seed + 200,
-            term_glosses=term_glosses,
         )
         frames = {
             "Category_Guide": category_guide,
