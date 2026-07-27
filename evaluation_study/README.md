@@ -44,15 +44,17 @@ Visible sheets use plain geological language:
 
 - `Category_Guide` translates opaque upper-ontology labels and gives examples.
 - every expert-facing sheet starts with one short `What to do` banner.
-- `Category_Correct` alone includes `Term Context (only when needed)`, populated only for terms flagged as ambiguous in the usability pilot. Final-ontology sheets do not repeat this column because their displayed statements already fix the intended sense.
+- `Category_Correct` shows the same reviewed, condition-independent `Reference_Definition` for every competing proposal for a term. Real workbook generation refuses missing, pending, duplicate, or empty definitions.
 - `Defined_Classes` shows one natural-language definition and one verdict.
 - `Relations` samples generic, corpus-context, and individual-fact rows, shows an explicit scope prefix, and asks for one verdict.
 - `Taxonomy` separately asks whether the IS-A relation is correct and whether the distinction is useful for the Pre-Salt model.
 - `Meaning_Preservation` compares plain-language before/after states for sampled exclusions and demotions without exposing formal critic jargon.
+- Meaning Preservation samples only extracted source terms; LLM-created intermediate taxonomy nodes are excluded from domain-expert review.
 - Rehearsal `Reference_Definition` values are the first sentence of frozen Condition A and are preview-only. Real workbooks must replace them with the agreed reviewed neutral-definition CSV.
 - `Timing` records actual completion time by module.
 
 Formal identifiers and source metadata remain in the private key. The display text is curated in `config/display_text.yaml`; workbook generation makes no LLM call.
+Set `EXPERT_REFERENCE_DEFINITIONS` (or pass `--reference-definitions`) to the approved CSV/XLSX. Its hash is recorded in the workbook manifest. Synthetic rehearsal explicitly bypasses the approval gate and uses A-derived preview definitions.
 
 ## Layout
 

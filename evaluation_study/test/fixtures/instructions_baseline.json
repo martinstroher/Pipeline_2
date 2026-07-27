@@ -108,8 +108,8 @@
     "Use the Category_Guide sheet for plain-language meanings and examples. Formal ontology labels are intentionally hidden from the judgment sheets."
   ],
   [
-    "Term gloss",
-    "When a bare term was ambiguous in the pilot, the same short neutral gloss is shown with every competing proposal. Blank gloss cells mean the term did not need clarification."
+    "Reference definition",
+    "Every competing category for a term is judged against the same reviewed, condition-independent definition so category correctness is not confounded with definition quality."
   ],
   [
     "No alternative required",

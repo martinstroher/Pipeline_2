@@ -563,6 +563,8 @@ def generate_expert_evaluation(
     n_experts: int = 3,
     ontology_dir: str | None = None,
     terms_path: str | None = None,
+    reference_definitions_path: str | None = None,
+    require_reviewed_definitions: bool = True,
 ) -> tuple[list[str], str]:
     """Generate modular expert workbooks and the separate blinding key.
 
@@ -573,6 +575,7 @@ def generate_expert_evaluation(
         n_experts: Number of independently randomized workbooks.
         ontology_dir: Directory containing the approved validate artifacts.
         terms_path: Frozen filtered-term input for the standalone study.
+        reference_definitions_path: Approved neutral definitions for displayed terms.
 
     Returns:
         (workbook_paths, key_path)
@@ -586,6 +589,8 @@ def generate_expert_evaluation(
         n_experts=n_experts,
         ontology_dir=ontology_dir,
         terms_path=terms_path,
+        reference_definitions_path=reference_definitions_path,
+        require_reviewed_definitions=require_reviewed_definitions,
     )
 
 
@@ -608,10 +613,12 @@ if __name__ == "__main__":
         help="Number of workbooks (default: 3; all contain the same sampled items)",
     )
     parser.add_argument("--ontology-dir", default=None, help="Directory containing approved validate artifacts")
+    parser.add_argument("--reference-definitions", default=None, help="Approved neutral-definition CSV or XLSX")
     args = parser.parse_args()
     generate_expert_evaluation(
         n_terms=args.n_terms,
         seed=args.seed,
         n_experts=args.n_experts,
         ontology_dir=args.ontology_dir,
+        reference_definitions_path=args.reference_definitions,
     )

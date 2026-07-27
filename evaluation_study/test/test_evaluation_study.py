@@ -31,6 +31,7 @@ from evaluation_study.expert_eval_workbook import (
     _category_for_expert,
     _representation_for_expert,
     build_final_fates,
+    load_reviewed_reference_definitions,
     select_representation_terms,
 )
 from evaluation_study.layer1_analysis import (
@@ -253,6 +254,31 @@ def test_item_level_nld_inference() -> None:
 
 
 def test_modular_blinding_and_analysis() -> None:
+    with tempfile.TemporaryDirectory() as directory:
+        reference_path = Path(directory) / "references.csv"
+        write_csv(pd.DataFrame([
+            {"Term": "grainstone", "Reference_Definition": "A grainstone is a grain-supported carbonate sedimentary rock without a mud matrix.", "Review_Status": "APPROVED"},
+            {"Term": "rift", "Reference_Definition": "A rift is an extensional tectonic setting formed by faulting and subsidence.", "Review_Status": "PENDING"},
+        ]), reference_path)
+        references = load_reviewed_reference_definitions(
+            reference_path,
+            {"grainstone"},
+        )
+        _expect(
+            "Approved reference definitions load by normalized term",
+            references["grainstone"].startswith("A grainstone"),
+        )
+        _expect_raises(
+            "Pending reference definitions are rejected",
+            ValueError,
+            lambda: load_reviewed_reference_definitions(reference_path, {"rift"}),
+        )
+        _expect_raises(
+            "Missing reference definitions are rejected",
+            ValueError,
+            lambda: load_reviewed_reference_definitions(reference_path, {"dolomite"}),
+        )
+
     representation_items = pd.DataFrame([
         {
             "Row_ID": f"REP-{index:03d}",
@@ -288,6 +314,7 @@ def test_modular_blinding_and_analysis() -> None:
         {
             "Row_ID": "CAT-0001",
             "Term": "grainstone",
+            "Reference_Definition": "A grainstone is a grain-supported carbonate sedimentary rock without a mud matrix.",
             "Assigned_Category": "Sedimentary Rock",
             "Category_Description": "A sedimentary rock.",
             "Conditions": "A,B",

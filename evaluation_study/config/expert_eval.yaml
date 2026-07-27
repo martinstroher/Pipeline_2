@@ -15,7 +15,7 @@
 sheet_instructions:
   Category_Guide: "Optional reference: consult this sheet only when a proposed category is unfamiliar. You do not need to read or memorize the full list."
   Representation: "For each term, rate Pre-Salt relevance; rate Definition 1 and Definition 2 independently; then choose which definition is better, Tie, or Unsure."
-  Category_Correct: "Judge whether the term belongs in the proposed category. Term Context appears only when the bare term needs clarification; a blank context cell means no clarification was needed."
+  Category_Correct: "Judge whether the term belongs in the proposed category using the same reviewed Reference Definition for every proposal for that term."
   Taxonomy: "First judge whether the child is genuinely a type of the proposed parent. Then separately judge whether keeping this distinction is useful for the Pre-Salt model."
   Defined_Classes: "Judge the complete proposed definition. If you choose Partly correct or Incorrect, select the main issue reason; otherwise leave Issue Reason blank."
   Relations: "Judge the explicitly scoped relation sentence with one verdict. The corpus excerpt is context only and may describe a local occurrence."
@@ -52,7 +52,7 @@ instructions_sheet:
     - ["SHEET: CATEGORY_CORRECT", ""]
     - ["Task", "Judge whether each term belongs in the proposed category. The same term may appear with different proposed categories; this repetition is intentional, and each proposal must be judged independently."]
     - ["Category guide", "Use the Category_Guide sheet for plain-language meanings and examples. Formal ontology labels are intentionally hidden from the judgment sheets."]
-    - ["Term gloss", "When a bare term was ambiguous in the pilot, the same short neutral gloss is shown with every competing proposal. Blank gloss cells mean the term did not need clarification."]
+    - ["Reference definition", "Every competing category for a term is judged against the same reviewed, condition-independent definition so category correctness is not confounded with definition quality."]
     - ["No alternative required", "You are not shown the complete category vocabulary and are not expected to select a replacement. For Partial or No, use Notes only when a brief geological explanation would help."]
     - ["Leave unclassified", "Evaluate this proposal too. Mark Yes when the term is outside scope or not a reusable geological concept. Mark No when it is a meaningful Pre-Salt concept that should receive some category; you do not need to name that category."]
     - ["", ""]

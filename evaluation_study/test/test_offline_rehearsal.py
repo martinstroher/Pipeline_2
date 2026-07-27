@@ -174,21 +174,20 @@ def main() -> int:
         assert "Relation_Verdict" in {
             cell.value for cell in workbook["Relations"][DATA_HEADER_ROW]
         }
-        context_header = "Term_Context (only when needed)"
+        reference_header = "Reference_Definition"
         category_sheet = workbook["Category_Correct"]
         category_headers = {
             cell.value: cell.column
             for cell in category_sheet[DATA_HEADER_ROW]
         }
-        assert context_header in category_headers
-        context_values = [
-            category_sheet.cell(row, category_headers[context_header]).value
+        assert reference_header in category_headers
+        reference_values = [
+            category_sheet.cell(row, category_headers[reference_header]).value
             for row in range(DATA_START_ROW, category_sheet.max_row + 1)
         ]
-        assert any(value not in (None, "") for value in context_values)
-        assert any(value in (None, "") for value in context_values)
+        assert all(value not in (None, "") for value in reference_values)
         for sheet_name in response_sheets[2:]:
-            assert context_header not in {
+            assert "Term_Context (only when needed)" not in {
                 cell.value for cell in workbook[sheet_name][DATA_HEADER_ROW]
             }
 

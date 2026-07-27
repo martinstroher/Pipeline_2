@@ -27,6 +27,7 @@ def _build_parser() -> argparse.ArgumentParser:
         help="Number of experts (default: 3; every expert receives every sampled item)",
     )
     expert.add_argument("--seed", type=int, default=42)
+    expert.add_argument("--reference-definitions", default=None)
 
     layer2 = subparsers.add_parser("layer2", help="Analyze completed expert workbooks")
     layer2.add_argument("workbooks", nargs="+")
@@ -62,6 +63,7 @@ def main() -> int:
             n_terms=args.terms,
             seed=args.seed,
             n_experts=args.experts,
+            reference_definitions_path=args.reference_definitions,
         )
     elif args.command == "layer2":
         from evaluation_study.expert_eval_analyzer import run_layer2_analysis

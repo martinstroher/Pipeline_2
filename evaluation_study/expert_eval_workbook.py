@@ -62,7 +62,7 @@ APPROVED_POPULATIONS = {
     "Defined_Classes": 13,
     "Relations": 280,
     "Individuals": 58,
-    "Meaning_Preservation": 116,
+    "Meaning_Preservation": 103,
 }
 
 
@@ -102,6 +102,53 @@ def _read_required(path: str | Path, label: str) -> pd.DataFrame:
     if not os.path.exists(path):
         raise FileNotFoundError(f"{label} not found: {path}")
     return read_csv(path)
+
+
+def load_reviewed_reference_definitions(
+    path: str | Path,
+    required_terms: set[str],
+) -> dict[str, str]:
+    """Load one approved, condition-independent definition per required term."""
+    source = Path(path)
+    if not source.exists():
+        raise FileNotFoundError(f"Reviewed reference definitions not found: {source}")
+    frame = (
+        pd.read_excel(source, sheet_name="Review", header=2, engine="openpyxl")
+        if source.suffix.lower() == ".xlsx"
+        else read_csv(source)
+    )
+    _require_columns(
+        frame,
+        {"Term", "Reference_Definition", "Review_Status"},
+        "Reviewed reference definitions",
+    )
+    work = frame[["Term", "Reference_Definition", "Review_Status"]].copy()
+    work["_key"] = work["Term"].map(_normalise)
+    if work["_key"].duplicated().any():
+        duplicates = work.loc[work["_key"].duplicated(keep=False), "Term"].tolist()
+        raise ValueError(f"Reviewed reference definitions contain duplicates: {duplicates[:10]}")
+    required_keys = {_normalise(term) for term in required_terms}
+    available = set(work["_key"])
+    missing = sorted(required_keys - available)
+    if missing:
+        raise ValueError(f"Reviewed reference definitions missing terms: {missing[:10]}")
+    required = work[work["_key"].isin(required_keys)].copy()
+    unapproved = required[
+        required["Review_Status"].fillna("").astype(str).str.strip().str.upper() != "APPROVED"
+    ]["Term"].tolist()
+    if unapproved:
+        raise ValueError(f"Reference definitions are not APPROVED: {unapproved[:10]}")
+    empty = required[
+        required["Reference_Definition"].fillna("").astype(str).str.strip().eq("")
+    ]["Term"].tolist()
+    if empty:
+        raise ValueError(f"Approved reference definitions are empty: {empty[:10]}")
+    return dict(
+        zip(
+            required["_key"],
+            required["Reference_Definition"].astype(str).str.strip(),
+        )
+    )
 
 
 def load_study_inputs(
@@ -485,6 +532,7 @@ def build_category_items(
     categories: dict[str, pd.DataFrame],
     final_fates: dict[str, str],
     term_glosses: dict[str, str] | None = None,
+    reference_definitions: dict[str, str] | None = None,
 ) -> pd.DataFrame:
     """Deduplicate identical term/category assignments across A/B/C/D."""
     sampled_terms = {_normalise(term): term for term in sample["Readable_Term"]}
@@ -500,6 +548,7 @@ def build_category_items(
     descriptions = _category_descriptions()
     tiers = _category_to_tier()
     term_glosses = term_glosses or {}
+    reference_definitions = reference_definitions or {}
     rows = []
     ordered = sorted(assignments.items(), key=lambda item: (sampled_terms[item[0][0]].casefold(), item[0][1]))
     for index, ((term_key, category), conditions) in enumerate(ordered, 1):
@@ -507,6 +556,7 @@ def build_category_items(
             "Row_ID": f"CAT-{index:04d}",
             "Term": sampled_terms[term_key],
             "Term_Gloss": term_glosses.get(term_key, ""),
+            "Reference_Definition": reference_definitions.get(term_key, ""),
             "Assigned_Category": category,
             "Category_Description": descriptions.get(category, ""),
             "Conditions": ",".join(sorted(conditions)),
@@ -547,8 +597,10 @@ def select_final_ontology_items(
         (inputs.relations["Validation_Status"].astype(str).str.upper() == "ACCEPTED")
     ].copy()
     individuals = inputs.individuals.copy()
+    source_terms = set(inputs.terms["Readable_Term"].map(_normalise))
     decisions = inputs.class_fates[
         inputs.class_fates["action"].astype(str).str.startswith(("DROP", "DEMOTE"))
+        & inputs.class_fates["term"].map(_normalise).isin(source_terms)
     ].copy()
     decisions["Decision_Type"] = np.where(
         decisions["action"].astype(str).str.startswith("DEMOTE"),
@@ -739,13 +791,8 @@ def _category_for_expert(
     seed: int,
 ) -> tuple[pd.DataFrame, pd.DataFrame]:
     visible = items[
-        ["Row_ID", "Term", "Assigned_Category", "Category_Description"]
+        ["Row_ID", "Term", "Reference_Definition", "Assigned_Category", "Category_Description"]
     ].copy()
-    visible.insert(
-        2,
-        "Term_Context (only when needed)",
-        items.get("Term_Gloss", ""),
-    )
     visible = visible.rename(columns={
         "Assigned_Category": "Proposed_Category",
         "Category_Description": "Category_Definition",
@@ -1040,6 +1087,8 @@ def generate_modular_evaluation(
     n_experts: int = DEFAULT_EXPERTS,
     ontology_dir: str | None = None,
     terms_path: str | None = None,
+    reference_definitions_path: str | None = None,
+    require_reviewed_definitions: bool = True,
 ) -> tuple[list[str], str]:
     """Generate modular workbooks with identical sampled items and one key."""
     if n_experts < 1:
@@ -1080,17 +1129,44 @@ def generate_modular_evaluation(
             f"missing={sorted(expected_fates - sampled_fates)}"
         )
     representation_items = build_representation_items(term_sample, inputs, final_fates)
-    term_glosses = build_term_glosses(inputs.nld["A"])
-    category_items = build_category_items(
-        term_sample,
-        inputs.categories,
-        final_fates,
-        term_glosses=term_glosses,
-    )
     final_samples = select_final_ontology_items(
         inputs,
         seed=seed,
         strict_approved_populations=strict_populations,
+    )
+    reference_definitions_path = reference_definitions_path or os.environ.get(
+        "EXPERT_REFERENCE_DEFINITIONS"
+    )
+    reference_definitions: dict[str, str] = {}
+    required_reference_terms = set(term_sample["Readable_Term"].astype(str)) | set(
+        final_samples["Meaning_Preservation"]["term"].astype(str)
+    )
+    if reference_definitions_path:
+        reference_definitions = load_reviewed_reference_definitions(
+            reference_definitions_path,
+            required_reference_terms,
+        )
+    elif require_reviewed_definitions:
+        raise RuntimeError(
+            "Real expert workbooks require EXPERT_REFERENCE_DEFINITIONS pointing "
+            "to an approved CSV or XLSX covering all sampled terms."
+        )
+    else:
+        nld_lookup = _lookup_by_term(inputs.nld["A"], "NLD", "Condition A NLD")
+        reference_definitions = {
+            _normalise(term): _first_sentence(nld_lookup[_normalise(term)])
+            for term in required_reference_terms
+        }
+    category_items = build_category_items(
+        term_sample,
+        inputs.categories,
+        final_fates,
+        reference_definitions=reference_definitions,
+    )
+    final_samples["Meaning_Preservation"]["Reference_Definition"] = (
+        final_samples["Meaning_Preservation"]["term"].map(
+            lambda value: reference_definitions[_normalise(value)]
+        )
     )
 
     instructions = pd.DataFrame(
@@ -1162,6 +1238,8 @@ def generate_modular_evaluation(
             str(DISPLAY_TEXT_CONFIG),
         ),
     }
+    if reference_definitions_path:
+        source_paths["reviewed_reference_definitions"] = reference_definitions_path
     manifest = {
         "study": "PreSaltOntoLearn modular expert evaluation",
         "generated_utc": datetime.now(timezone.utc).isoformat(),
@@ -1171,6 +1249,7 @@ def generate_modular_evaluation(
         "category_rows": len(category_items),
         "final_sample_sizes": {name: len(frame) for name, frame in final_samples.items()},
         "final_fate_counts": pd.Series(final_fates).value_counts().sort_index().to_dict(),
+        "reviewed_reference_definitions": bool(reference_definitions_path),
         "source_paths": {
             name: str(Path(path).resolve())
             for name, path in source_paths.items()

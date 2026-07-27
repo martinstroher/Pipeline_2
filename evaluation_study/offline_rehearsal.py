@@ -1073,6 +1073,7 @@ def run_offline_rehearsal(
         n_experts=n_experts,
         ontology_dir=ontology_dir,
         terms_path=terms_path,
+        require_reviewed_definitions=False,
     )
     _fill_mock_workbooks(workbook_paths, key_path, reference, seed)
     layer2_dir = rehearsal_dir / "analysis" / "layer2"
