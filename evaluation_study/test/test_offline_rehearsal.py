@@ -82,7 +82,6 @@ def main() -> int:
         assert "core_appropriateness" not in first_analysis["final_ontology"]
         assert first_analysis["exploratory_cross_layer"]["status"] == "exploratory"
         assert first_analysis["consensus"]["item_table"] == "item_consensus.csv"
-        assert first_analysis["completion_time"]["overall_mean_minutes"] > 0
         first_analysis["analysis_design"].pop("source_manifest")
         second_analysis["analysis_design"].pop("source_manifest")
         assert first_analysis == second_analysis
@@ -131,7 +130,6 @@ def main() -> int:
         expert_facing_sheets = (
             "Category_Guide",
             *response_sheets,
-            "Timing",
         )
         for sheet_name in expert_facing_sheets:
             sheet = workbook[visible_sheet_name(sheet_name)]
@@ -140,8 +138,6 @@ def main() -> int:
             assert str(sheet["A3"].value).startswith("HOW TO ANSWER\n")
             if sheet_name == "Category_Guide":
                 assert "nothing to fill in" in str(sheet["A4"].value)
-            elif sheet_name == "Timing":
-                assert "Enter the minutes" in str(sheet["A4"].value)
             else:
                 assert "Yellow cells" in str(sheet["A4"].value)
             assert sheet.row_dimensions[1].height >= 30

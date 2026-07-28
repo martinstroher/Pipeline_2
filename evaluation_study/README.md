@@ -52,7 +52,6 @@ Visible sheets use plain geological language:
 - `Removed or Rewritten Terms` is generated separately as `model_changes_review.xlsx`. It contains 40 sampled exclusions and rewrites for an optional geologist/ontologist review and is not included in the main three-expert workbooks or statistics.
 - The optional review samples only extracted source terms; LLM-created intermediate taxonomy nodes are excluded.
 - Rehearsal `Reference_Definition` values are the first sentence of frozen Condition A and are preview-only. Real workbooks must replace them with the agreed reviewed neutral-definition CSV.
-- `Timing` records actual completion time by module.
 
 Formal identifiers and source metadata remain in the private key. The display text is curated in `config/display_text.yaml`; workbook generation makes no LLM call.
 Set `EXPERT_REFERENCE_DEFINITIONS` (or pass `--reference-definitions`) to the approved CSV/XLSX. Its hash is recorded in the workbook manifest. Synthetic rehearsal explicitly bypasses the approval gate and uses A-derived preview definitions.

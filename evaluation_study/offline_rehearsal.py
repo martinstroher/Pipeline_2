@@ -795,13 +795,6 @@ def _fill_mock_workbooks(
             seed,
         )
         _fill_final_sheets(workbook, key, expert_id, seed)
-        timing = workbook[visible_sheet_name("Timing")]
-        timing_headers = _visible_headers(timing, "Timing")
-        for row_index in range(DATA_START_ROW, timing.max_row + 1):
-            row_id = str(timing.cell(row_index, timing_headers["Row_ID"]).value)
-            minutes = 35 + int(_unit(seed, expert_id, row_id, "timing") * 31)
-            timing.cell(row_index, timing_headers["Minutes"], minutes)
-            timing.cell(row_index, timing_headers["Comments"], f"[{PROVENANCE}]")
         workbook.save(workbook_path)
     return key_path
 

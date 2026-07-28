@@ -46,12 +46,6 @@ sheet_instructions:
     title: "Removed or rewritten terms"
     task: "Compare the term's original meaning with how it is handled in the final model. First decide whether its geological meaning is still available. Then decide whether this treatment is suitable for the main Pre-Salt model."
     guidance: "The main model should contain the reusable concepts needed to compare Pre-Salt systems; narrow local details may stay in extensions. If meaning is only Mostly preserved or is lost, choose what should happen instead. You are judging geological content, not software or formal logic."
-  Timing:
-    title: "Time spent"
-    task: "After each group of sheets, enter the number of minutes you actually spent working on it."
-    guidance: "Use a positive whole number. You may pause between groups. Comments are optional."
-    answer_cue: "Enter the minutes in every red cell. Optional comments may be left blank."
-
 instructions_sheet:
   rows:
     - ["PreSaltOntoLearn Geological Review", ""]

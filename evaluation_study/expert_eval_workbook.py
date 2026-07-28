@@ -121,12 +121,6 @@ COLUMN_DISPLAY_NAMES = {
         "Preferred_Outcome (for Mostly/No)": "What should happen instead?",
         "Notes": "Optional notes",
     },
-    "Timing": {
-        "Session": "Work group",
-        "Module": "Work completed",
-        "Minutes": "Time spent (minutes)",
-        "Comments": "Optional comments",
-    },
 }
 FINAL_SAMPLE_SIZES = {
     "Taxonomy": 40,
@@ -781,22 +775,6 @@ def build_category_guide() -> pd.DataFrame:
     return pd.DataFrame(rows)
 
 
-def build_timing_sheet() -> pd.DataFrame:
-    """Collect actual completion time by module during the human pilot."""
-    modules = [
-        "Representation",
-        "Category Correct and Taxonomy",
-        "Definition Review, Relations, and Named Items",
-    ]
-    return pd.DataFrame({
-        "Row_ID": [f"TIME-{index:02d}" for index in range(1, len(modules) + 1)],
-        "Session": [1, 2, 3],
-        "Module": modules,
-        "Minutes": ["", "", ""],
-        "Comments": ["", "", ""],
-    })
-
-
 def build_category_items(
     sample: pd.DataFrame,
     categories: dict[str, pd.DataFrame],
@@ -1230,10 +1208,6 @@ _INPUT_VALIDATIONS = {
         "Preferred_Outcome (for Mostly/No)": "Keep as separate concept,Keep information but not as separate concept,Leave out,Unsure",
         "Notes": None,
     },
-    "Timing": {
-        "Minutes": None,
-        "Comments": None,
-    },
 }
 
 _OPTIONAL_INPUTS = {
@@ -1246,7 +1220,6 @@ _OPTIONAL_INPUTS = {
     ("Relations", "Notes"),
     ("Individuals", "Notes"),
     ("Meaning_Preservation", "Notes"),
-    ("Timing", "Comments"),
 }
 
 
@@ -1338,21 +1311,6 @@ def _format_data_sheet(
                 showErrorMessage=True,
                 errorTitle="Response required",
                 error="Select one of the listed responses before submitting the workbook.",
-            )
-            validation.add(
-                f"{column_letter}{DATA_START_ROW}:{column_letter}{ws.max_row}"
-            )
-            ws.add_data_validation(validation)
-        elif sheet_name == "Timing" and header == "Minutes":
-            validation = DataValidation(
-                type="whole",
-                operator="between",
-                formula1="1",
-                formula2="1440",
-                allow_blank=False,
-                showErrorMessage=True,
-                errorTitle="Time required",
-                error="Enter a positive whole number of minutes.",
             )
             validation.add(
                 f"{column_letter}{DATA_START_ROW}:{column_letter}{ws.max_row}"
@@ -1564,7 +1522,6 @@ def generate_modular_evaluation(
         columns=["Section", "Details"],
     )
     category_guide = build_category_guide()
-    timing = build_timing_sheet()
     workbook_paths = []
     key_parts = []
     optional_review_frame: pd.DataFrame | None = None
@@ -1597,7 +1554,6 @@ def generate_modular_evaluation(
                 for name, frame in final_frames.items()
                 if name != "Meaning_Preservation"
             },
-            "Timing": timing,
         }
         workbook_path = os.path.join(
             workbook_dir,

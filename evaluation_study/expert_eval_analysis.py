@@ -33,7 +33,6 @@ REQUIRED_SHEETS = (
     "Defined_Classes",
     "Relations",
     "Individuals",
-    "Timing",
 )
 OPTIONAL_SHEETS = ("Meaning_Preservation",)
 CORRECTNESS_CHOICES = ("yes", "partial", "no", "unsure")
@@ -325,55 +324,6 @@ def collect_final_sheet(
         joined["Expert"] = expert_id
         frames.append(joined)
     return pd.concat(frames, ignore_index=True)
-
-
-def collect_timing(
-    experts: dict[str, dict[str, pd.DataFrame]],
-) -> pd.DataFrame:
-    """Validate and combine required per-module completion times."""
-    frames = []
-    for expert_id, sheets in experts.items():
-        frame = sheets["Timing"].copy()
-        _require = {"Row_ID", "Session", "Module", "Minutes", "Comments"}
-        missing = _require - set(frame.columns)
-        if missing:
-            raise ValueError(f"{expert_id}:Timing missing columns: {sorted(missing)}")
-        minutes = pd.to_numeric(frame["Minutes"], errors="coerce")
-        if minutes.isna().any() or (minutes <= 0).any():
-            raise ValueError(
-                f"{expert_id}:Timing requires a positive minute value for every row"
-            )
-        frame["Minutes"] = minutes.astype(float)
-        frame["Expert"] = expert_id
-        frames.append(frame)
-    return pd.concat(frames, ignore_index=True)
-
-
-def analyze_timing(timing: pd.DataFrame) -> dict:
-    """Summarize actual burden by expert and workbook session."""
-    expert_totals = timing.groupby("Expert")["Minutes"].sum()
-    module_summary = timing.groupby(["Session", "Module"])["Minutes"].agg(
-        ["mean", "median", "min", "max"]
-    ).reset_index()
-    return {
-        "per_expert_total_minutes": {
-            str(expert): round(float(minutes), 2)
-            for expert, minutes in expert_totals.items()
-        },
-        "overall_mean_minutes": round(float(expert_totals.mean()), 2),
-        "overall_median_minutes": round(float(expert_totals.median()), 2),
-        "per_module": [
-            {
-                "session": int(row.Session),
-                "module": str(row.Module),
-                "mean_minutes": round(float(row.mean), 2),
-                "median_minutes": round(float(row.median), 2),
-                "min_minutes": round(float(row.min), 2),
-                "max_minutes": round(float(row.max), 2),
-            }
-            for row in module_summary.itertuples(index=False)
-        ],
-    }
 
 
 def _icc_2_1(matrix: np.ndarray) -> dict:
@@ -1575,14 +1525,11 @@ def run_modular_analysis(
         sheet: collect_final_sheet(experts, key, sheet)
         for sheet in final_sheet_names
     }
-    timing = collect_timing(experts)
-
     write_csv(representation, os.path.join(output_dir, "layer2_representation_unblinded.csv"))
     write_csv(categories, os.path.join(output_dir, "layer2_categories_unblinded.csv"))
     for sheet, frame in final_frames.items():
         filename = f"layer2_{sheet.lower()}_unblinded.csv"
         write_csv(frame, os.path.join(output_dir, filename))
-    write_csv(timing, os.path.join(output_dir, "layer2_timing.csv"))
 
     representation_results = analyze_representation(
         representation,
@@ -1642,7 +1589,6 @@ def run_modular_analysis(
             "summary": consensus_summary.to_dict("records"),
             "item_table": "item_consensus.csv",
         },
-        "completion_time": analyze_timing(timing),
     }
     results_path = os.path.join(output_dir, "layer2_results.json")
     with open(results_path, "w", encoding="utf-8") as handle:
