@@ -21,8 +21,14 @@ def main() -> int:
     assert display_label("quality", "category") == "Dependent property"
     assert display_label("has_disposition", "property") == "has the capacity to"
     assert display_label("GeologicalProcess", "category") == "Geological Process"
+    assert display_label("Geological Age", "category") == (
+        "Age quality of a geological object"
+    )
+    assert display_label("Geological Time Interval", "category") == (
+        "Named or bounded geological time interval"
+    )
     assert display_label("source rock", "defined_class") == (
-        "has the capacity to generate hydrocarbons"
+        "A source rock is a sedimentary rock that has the capacity to generate hydrocarbons."
     )
     assert "mound" in registry.ambiguous_terms
     assert registry.term_glosses["reservoir"].startswith("A subsurface rock body")

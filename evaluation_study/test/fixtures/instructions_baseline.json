@@ -104,6 +104,10 @@
     "Judge whether each term belongs in the proposed category. The same term may appear with different proposed categories; this repetition is intentional, and each proposal must be judged independently."
   ],
   [
+    "Sample",
+    "This sheet emphasizes terms for which the systems proposed different categories so the study can compare them directly. It is not a prevalence estimate for all extracted terms."
+  ],
+  [
     "Category guide",
     "Use the Category_Guide sheet for plain-language meanings and examples. Formal ontology labels are intentionally hidden from the judgment sheets."
   ],
@@ -224,8 +228,12 @@
     "The core serves geologists and knowledge-model users comparing Brazilian Pre-Salt systems, especially the Santos and Campos basins. It includes reusable concepts needed to answer the ten project questions about geological objects, constituent materials, structures, post-depositional processes, spatial arrangement, dimensions and positions, boundaries, deposits and stratigraphic units, petrophysical properties, and geological age. Named entities remain instances. Paper-specific distinctions, local variants, measurement values, and details not needed by those questions belong in extensions rather than the core."
   ],
   [
-    "Task",
-    "Compare the geological meaning before and after the treatment. Judge whether the final result preserves the distinction needed in the Pre-Salt model as Fully, Mostly, No, or Unsure. You are not evaluating OWL syntax."
+    "Meaning preservation",
+    "Compare the geological meaning before and after the treatment. Judge semantic retention as Fully, Mostly, No, or Unsure, independent of whether the concept belongs in the lean core."
+  ],
+  [
+    "Core appropriateness",
+    "Separately judge whether the treatment is appropriate for the stated lean-core scope: Yes, With concern, No, or Unsure. A treatment can fit the core policy even when it does not fully preserve meaning."
   ],
   [
     "Exclusion",
@@ -237,7 +245,7 @@
   ],
   [
     "Preferred outcome",
-    "Select a preferred outcome only for Mostly or No: keep as a separate concept; keep its information but not as a separate concept; leave it out; or Unsure."
+    "Select a preferred outcome only when Meaning Preserved is Mostly or No: keep as a separate concept; keep its information but not as a separate concept; leave it out; or Unsure."
   ],
   [
     "",

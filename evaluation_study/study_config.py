@@ -43,7 +43,7 @@ class DisplayEntry:
 class DisplayRegistry:
     categories: dict[str, DisplayEntry] = field(default_factory=dict)
     properties: dict[str, str] = field(default_factory=dict)
-    defined_class_features: dict[str, str] = field(default_factory=dict)
+    defined_class_sentences: dict[str, str] = field(default_factory=dict)
     ambiguous_terms: tuple[str, ...] = field(default_factory=tuple)
     term_glosses: dict[str, str] = field(default_factory=dict)
 
@@ -111,9 +111,9 @@ def get_display_registry() -> DisplayRegistry:
             str(key).casefold(): str(value)
             for key, value in (data.get("properties") or {}).items()
         },
-        defined_class_features={
+        defined_class_sentences={
             str(key).casefold(): str(value)
-            for key, value in (data.get("defined_class_features") or {}).items()
+            for key, value in (data.get("defined_class_sentences") or {}).items()
         },
         ambiguous_terms=tuple(
             str(value).casefold() for value in (data.get("ambiguous_terms") or [])
@@ -134,7 +134,7 @@ def display_label(value: object, namespace: str) -> str:
         return registry.categories[key].display
     if namespace == "property" and key in registry.properties:
         return registry.properties[key]
-    if namespace == "defined_class" and key in registry.defined_class_features:
-        return registry.defined_class_features[key]
+    if namespace == "defined_class" and key in registry.defined_class_sentences:
+        return registry.defined_class_sentences[key]
     words = text.replace("_", " ")
     return re.sub(r"(?<=[a-z0-9])(?=[A-Z])", " ", words).strip()

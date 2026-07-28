@@ -103,7 +103,7 @@ python pipeline.py \
 
 ## Thesis Evaluation Study
 
-The ablation, statistics, expert workbooks, and rehearsal are isolated from the production pipeline under [`evaluation_study/`](evaluation_study/README.md). They read frozen pipeline artifacts and write only to `evaluation_study/output/`.
+The ablation, statistics, expert workbooks, and rehearsal are isolated from the production pipeline under [`evaluation_study/`](evaluation_study/README.md). They read frozen pipeline artifacts and write only to `evaluation_study/output/`. The study uses separate 100-term Representation and 60-term disagreement-enriched Category samples, separates semantic preservation from lean-core appropriateness, and reports disagreement contrasts, consensus, raw agreement, Fleiss kappa, and Gwet sensitivity measures.
 
 ---
 

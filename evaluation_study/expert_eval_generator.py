@@ -558,6 +558,7 @@ def _format_workbook(wb, relevance_df, nld_df, cat_df, tax_df):
 
 def generate_expert_evaluation(
     n_terms: int = 100,
+    n_category_terms: int = 60,
     seed: int = 42,
     output_dir: str | None = None,
     n_experts: int = 3,
@@ -570,6 +571,7 @@ def generate_expert_evaluation(
 
     Args:
         n_terms: Number of terms to include.
+        n_category_terms: Number of A-vs-baseline disagreement terms.
         seed: Random seed for reproducibility.
         output_dir: Output directory (default: evaluation_study/output/ablation/).
         n_experts: Number of independently randomized workbooks.
@@ -584,6 +586,7 @@ def generate_expert_evaluation(
 
     return generate_modular_evaluation(
         n_terms=n_terms,
+        n_category_terms=n_category_terms,
         seed=seed,
         output_dir=output_dir,
         n_experts=n_experts,
@@ -605,6 +608,7 @@ if __name__ == "__main__":
 
     parser = argparse.ArgumentParser(description="Generate expert evaluation spreadsheet")
     parser.add_argument("--n-terms", type=int, default=100, help="Number of representation terms to sample")
+    parser.add_argument("--n-category-terms", type=int, default=60, help="Number of disagreement terms for Category Correct")
     parser.add_argument("--seed", type=int, default=42, help="Random seed")
     parser.add_argument(
         "--n-experts",
@@ -617,6 +621,7 @@ if __name__ == "__main__":
     args = parser.parse_args()
     generate_expert_evaluation(
         n_terms=args.n_terms,
+        n_category_terms=args.n_category_terms,
         seed=args.seed,
         n_experts=args.n_experts,
         ontology_dir=args.ontology_dir,

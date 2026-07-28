@@ -20,6 +20,7 @@ def _build_parser() -> argparse.ArgumentParser:
 
     expert = subparsers.add_parser("expert-workbooks", help="Generate expert workbooks")
     expert.add_argument("--terms", type=int, default=100)
+    expert.add_argument("--category-terms", type=int, default=60)
     expert.add_argument(
         "--experts",
         type=int,
@@ -61,6 +62,7 @@ def main() -> int:
 
         generate_expert_evaluation(
             n_terms=args.terms,
+            n_category_terms=args.category_terms,
             seed=args.seed,
             n_experts=args.experts,
             reference_definitions_path=args.reference_definitions,

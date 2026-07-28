@@ -15,12 +15,12 @@
 sheet_instructions:
   Category_Guide: "Optional reference: consult this sheet only when a proposed category is unfamiliar. You do not need to read or memorize the full list."
   Representation: "For each term, rate Pre-Salt relevance; rate Definition 1 and Definition 2 independently; then choose which definition is better, Tie, or Unsure."
-  Category_Correct: "Judge whether the term belongs in the proposed category using the same reviewed Reference Definition for every proposal for that term."
+  Category_Correct: "Judge whether the term belongs in the proposed category using the same reviewed Reference Definition for every proposal for that term. This sheet emphasizes terms for which the systems proposed different categories."
   Taxonomy: "First judge whether the child is genuinely a type of the proposed parent. Then separately judge whether keeping this distinction is useful for the Pre-Salt model."
   Defined_Classes: "Judge the complete proposed definition. If you choose Partly correct or Incorrect, select the main issue reason; otherwise leave Issue Reason blank."
   Relations: "Judge the explicitly scoped relation sentence with one verdict. The corpus excerpt is context only and may describe a local occurrence."
   Individuals: "Judge whether the term denotes one specific named entity rather than a reusable kind, then judge whether its proposed type is correct."
-  Meaning_Preservation: "Compare the geological meaning before and after the treatment. Judge whether the result preserves the distinction needed for the Pre-Salt model; you are not evaluating OWL syntax. Select Preferred Outcome only for Mostly or No."
+  Meaning_Preservation: "First judge whether the geological meaning is preserved. Separately judge whether the treatment is appropriate for the lean Pre-Salt core. You are not evaluating OWL syntax. Select Preferred Outcome only for Mostly or No meaning preservation."
   Timing: "After completing each evaluation module, enter the actual minutes spent. Comments are optional."
 
 instructions_sheet:
@@ -51,6 +51,7 @@ instructions_sheet:
     - ["", ""]
     - ["SHEET: CATEGORY_CORRECT", ""]
     - ["Task", "Judge whether each term belongs in the proposed category. The same term may appear with different proposed categories; this repetition is intentional, and each proposal must be judged independently."]
+    - ["Sample", "This sheet emphasizes terms for which the systems proposed different categories so the study can compare them directly. It is not a prevalence estimate for all extracted terms."]
     - ["Category guide", "Use the Category_Guide sheet for plain-language meanings and examples. Formal ontology labels are intentionally hidden from the judgment sheets."]
     - ["Reference definition", "Every competing category for a term is judged against the same reviewed, condition-independent definition so category correctness is not confounded with definition quality."]
     - ["No alternative required", "You are not shown the complete category vocabulary and are not expected to select a replacement. For Partial or No, use Notes only when a brief geological explanation would help."]
@@ -81,9 +82,10 @@ instructions_sheet:
     - ["", ""]
     - ["SHEET: MEANING_PRESERVATION", ""]
     - ["TARGET CORE SCOPE", "The core serves geologists and knowledge-model users comparing Brazilian Pre-Salt systems, especially the Santos and Campos basins. It includes reusable concepts needed to answer the ten project questions about geological objects, constituent materials, structures, post-depositional processes, spatial arrangement, dimensions and positions, boundaries, deposits and stratigraphic units, petrophysical properties, and geological age. Named entities remain instances. Paper-specific distinctions, local variants, measurement values, and details not needed by those questions belong in extensions rather than the core."]
-    - ["Task", "Compare the geological meaning before and after the treatment. Judge whether the final result preserves the distinction needed in the Pre-Salt model as Fully, Mostly, No, or Unsure. You are not evaluating OWL syntax."]
+    - ["Meaning preservation", "Compare the geological meaning before and after the treatment. Judge semantic retention as Fully, Mostly, No, or Unsure, independent of whether the concept belongs in the lean core."]
+    - ["Core appropriateness", "Separately judge whether the treatment is appropriate for the stated lean-core scope: Yes, With concern, No, or Unsure. A treatment can fit the core policy even when it does not fully preserve meaning."]
     - ["Exclusion", "Leaving a concept out does not mean it is geologically false. It means the information is outside the stated core boundary or is represented elsewhere."]
     - ["Characteristic treatment", "Representing a term as a characteristic or relation keeps its information without treating it as a separate type of geological thing."]
-    - ["Preferred outcome", "Select a preferred outcome only for Mostly or No: keep as a separate concept; keep its information but not as a separate concept; leave it out; or Unsure."]
+    - ["Preferred outcome", "Select a preferred outcome only when Meaning Preserved is Mostly or No: keep as a separate concept; keep its information but not as a separate concept; leave it out; or Unsure."]
     - ["", ""]
     - ["NOTES", "Use Notes for concise geological reasoning when the bounded choices do not capture an important issue. Thank you for your expertise."]

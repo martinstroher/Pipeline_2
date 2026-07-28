@@ -29,9 +29,11 @@ from evaluation_study.expert_eval_analysis import (
 from evaluation_study.expert_eval_workbook import (
     StudyInputs,
     _category_for_expert,
+    _collapse_accent_variants,
     _representation_for_expert,
     build_final_fates,
     load_reviewed_reference_definitions,
+    select_category_terms,
     select_representation_terms,
 )
 from evaluation_study.layer1_analysis import (
@@ -222,6 +224,57 @@ def test_sampling_and_fates() -> None:
         {"Tier_A", "Frequency_Band"}.issubset(first.columns),
     )
 
+    category_frames = {
+        condition: pd.DataFrame({
+            "Term": terms["Readable_Term"],
+            "Category": ["Sedimentary Rock"] * len(terms),
+        })
+        for condition in ("A", "B", "C", "D")
+    }
+    for index in range(len(terms)):
+        unchanged = {"A", ("D", "C", "B")[index % 3]}
+        for condition in set(category_frames) - unchanged:
+            category_frames[condition].loc[index, "Category"] = "Geological Process"
+    category_terms = pd.concat([terms] * 3, ignore_index=True)
+    category_terms["Readable_Term"] = [
+        f"category-term-{index:03d}" for index in range(len(category_terms))
+    ]
+    for condition, frame in category_frames.items():
+        category_frames[condition] = pd.concat([frame] * 3, ignore_index=True)
+        category_frames[condition]["Term"] = category_terms["Readable_Term"]
+    category_first = select_category_terms(
+        category_terms,
+        category_frames,
+        n_terms=60,
+        seed=42,
+    )
+    category_second = select_category_terms(
+        category_terms,
+        category_frames,
+        n_terms=60,
+        seed=42,
+    )
+    _expect("Category sample has exact requested size", len(category_first) == 60)
+    _expect("Category sample is seed-reproducible", category_first.equals(category_second))
+    _expect(
+        "Category sample contains only A disagreements",
+        category_first[["A_vs_B", "A_vs_C", "A_vs_D"]].any(axis=1).all(),
+    )
+    _expect(
+        "Category sample covers every prespecified contrast",
+        all(int(category_first[f"A_vs_{condition}"].sum()) >= 25 for condition in ("B", "C", "D")),
+    )
+    accent_variants = _collapse_accent_variants(pd.DataFrame([
+        {"Readable_Term": "florianopolis high", "Frequency": 8},
+        {"Readable_Term": "florianópolis high", "Frequency": 6},
+        {"Readable_Term": "basement high", "Frequency": 5},
+    ]))
+    _expect(
+        "Category sampling collapses accent-only duplicate concepts",
+        set(accent_variants["Readable_Term"])
+        == {"florianópolis high", "basement high"},
+    )
+
 
 def test_item_level_nld_inference() -> None:
     _expect(
@@ -351,6 +404,12 @@ def test_modular_blinding_and_analysis() -> None:
         "C": ("no", 0.0),
         "D": ("no", 0.0),
     }
+    proposed_category = {
+        "A": "Sedimentary Rock",
+        "B": "Rock",
+        "C": "Earth Material",
+        "D": "Sedimentary Rock",
+    }
     for term_index in range(1, 7):
         for condition, (raw, score) in raw_score.items():
             for expert_index in range(1, 4):
@@ -358,6 +417,7 @@ def test_modular_blinding_and_analysis() -> None:
                     "Assignment_ID": f"CAT-{term_index}-{condition}",
                     "Term": f"term-{term_index}",
                     "Condition": condition,
+                    "Assigned_Category": proposed_category[condition],
                     "Expert": f"expert_{expert_index}",
                     "Correct_Raw": raw,
                     "Correct_Score": score,
@@ -374,6 +434,20 @@ def test_modular_blinding_and_analysis() -> None:
     _expect(
         "Significant Friedman gate runs three Holm comparisons",
         len(category_results["posthoc_wilcoxon_holm"]) == 3,
+    )
+    disagreement = {
+        row["comparison"]: row
+        for row in category_results["disagreement_contrasts"]
+    }
+    _expect(
+        "Category contrasts include only differing proposals",
+        disagreement["A vs B"]["n_disagreement_terms"] == 6
+        and disagreement["A vs C"]["n_disagreement_terms"] == 6
+        and disagreement["A vs D"]["n_disagreement_terms"] == 0,
+    )
+    _expect(
+        "Category contrast family applies Holm correction",
+        all("wilcoxon_p_value_holm" in row for row in disagreement.values()),
     )
 
     def repeated(sheet_rows: list[dict]) -> pd.DataFrame:
@@ -399,18 +473,58 @@ def test_modular_blinding_and_analysis() -> None:
             {"Row_ID": "IND-001", "Specific_Named_Entity (Yes/No/Unsure)": "Yes", "Type_Correct (Yes/Partial/No/Unsure)": "Yes"},
         ]),
         "Meaning_Preservation": repeated([
-            {"Row_ID": "DEC-001", "Decision_Type": "DEMOTE", "Meaning_Preserved (Fully/Mostly/No/Unsure)": "Fully", "Preferred_Outcome (for Mostly/No)": ""},
-            {"Row_ID": "DEC-002", "Decision_Type": "EXCLUDE", "Meaning_Preserved (Fully/Mostly/No/Unsure)": "Mostly", "Preferred_Outcome (for Mostly/No)": "Leave out"},
+            {"Row_ID": "DEC-001", "Decision_Type": "DEMOTE", "Meaning_Preserved (Fully/Mostly/No/Unsure)": "Fully", "Appropriate_for_Lean_Core (Yes/With concern/No/Unsure)": "Yes", "Preferred_Outcome (for Mostly/No)": ""},
+            {"Row_ID": "DEC-002", "Decision_Type": "EXCLUDE", "Meaning_Preserved (Fully/Mostly/No/Unsure)": "Mostly", "Appropriate_for_Lean_Core (Yes/With concern/No/Unsure)": "With concern", "Preferred_Outcome (for Mostly/No)": "Leave out"},
         ]),
     }
     final_results = analyze_final_ontology(final_frames, bootstrap_iterations=50, seed=42)
     _expect(
         "Final ontology task families remain separate",
-        set(final_results) == {"taxonomy", "defined_classes", "relations", "individuals", "meaning_preservation"},
+        set(final_results) == {"taxonomy", "defined_classes", "relations", "individuals", "meaning_preservation", "core_appropriateness"},
     )
     _expect(
         "Meaning preservation is separated by treatment type",
         set(final_results["meaning_preservation"]) == {"DEMOTE", "EXCLUDE"},
+    )
+    _expect(
+        "Core appropriateness is analyzed separately by treatment type",
+        set(final_results["core_appropriateness"]) == {"DEMOTE", "EXCLUDE"},
+    )
+    invalid_preferred_outcome = {
+        name: frame.copy() for name, frame in final_frames.items()
+    }
+    invalid_preferred_outcome["Meaning_Preservation"].loc[
+        invalid_preferred_outcome["Meaning_Preservation"]["Row_ID"] == "DEC-002",
+        "Preferred_Outcome (for Mostly/No)",
+    ] = "Keep information but not as a separate concept"
+    _expect_raises(
+        "Invalid preferred outcome labels are rejected",
+        ValueError,
+        lambda: analyze_final_ontology(
+            invalid_preferred_outcome,
+            bootstrap_iterations=20,
+            seed=42,
+        ),
+    )
+    invalid_issue_reason = {
+        name: frame.copy() for name, frame in final_frames.items()
+    }
+    invalid_issue_reason["Defined_Classes"].loc[
+        invalid_issue_reason["Defined_Classes"]["Row_ID"] == "DEF-001",
+        "Definition_Verdict (Correct/Partly correct/Incorrect/Unsure)",
+    ] = "Partly correct"
+    invalid_issue_reason["Defined_Classes"].loc[
+        invalid_issue_reason["Defined_Classes"]["Row_ID"] == "DEF-001",
+        "Issue_Reason (select for Partly/Incorrect)",
+    ] = "Wrong wording"
+    _expect_raises(
+        "Invalid definition issue reason labels are rejected",
+        ValueError,
+        lambda: analyze_final_ontology(
+            invalid_issue_reason,
+            bootstrap_iterations=20,
+            seed=42,
+        ),
     )
     _expect(
         "Relation verdicts align with explicit generic and contextual scopes",
@@ -434,6 +548,31 @@ def test_modular_blinding_and_analysis() -> None:
     _expect(
         "All-Unsure outcomes remain JSON-safe",
         unsure_summary["mean_score"] is None and unsure_summary["proportion_yes"] is None,
+    )
+    unanimous = pd.DataFrame([
+        {"Row_ID": row_id, "Expert": f"expert_{expert}", "Judgment": verdict}
+        for row_id, verdict in (("X-001", "Yes"), ("X-002", "No"))
+        for expert in (1, 2, 3)
+    ])
+    unanimous_summary = _summarize_judgments(
+        unanimous,
+        item_column="Row_ID",
+        raw_column="Judgment",
+        allowed=("yes", "no", "unsure"),
+        bootstrap_iterations=20,
+        seed=42,
+        partial=False,
+        ordinal=True,
+    )
+    sensitivity = unanimous_summary["agreement_sensitivity"]
+    _expect(
+        "Raw agreement and Gwet AC1 report unanimous ratings",
+        sensitivity["raw_pairwise_agreement"] == 1.0
+        and sensitivity["gwet_ac1"]["coefficient"] == 1.0,
+    )
+    _expect(
+        "Ordinal Gwet AC2 reports Unsure exclusions",
+        sensitivity["gwet_ac2"]["unsure_ratings_excluded"] == 0,
     )
 
 

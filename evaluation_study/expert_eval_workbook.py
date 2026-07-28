@@ -1,9 +1,11 @@
 """Modular, blinded expert-evaluation workbooks for PreSaltOntoLearn.
 
-The study separates two estimands:
+The study separates three estimands:
 
-* Representation evaluation: relevance, A/B NLD quality, and A/B/C/D category
-  correctness for a seeded 100-term sample.
+* Representation evaluation: relevance and A/B NLD quality for a seeded,
+    stratified 100-term sample.
+* Category evaluation: A/B/C/D correctness for a separate seeded 60-term
+    sample enriched for A-vs-baseline proposal disagreements.
 * Final-ontology evaluation: taxonomy, defined classes, general relations,
   named entities, and critic exclusion/demotion decisions.
 
@@ -20,6 +22,7 @@ import math
 import os
 import random
 import re
+import unicodedata
 from dataclasses import dataclass
 from datetime import datetime, timezone
 from pathlib import Path
@@ -46,6 +49,7 @@ from src.utils.ontology_config import get_config
 
 CONDITIONS = ("A", "B", "C", "D")
 DEFAULT_TERM_SAMPLE = 100
+DEFAULT_CATEGORY_TERM_SAMPLE = 60
 DEFAULT_EXPERTS = 3
 DEFAULT_SEED = 42
 DATA_HEADER_ROW = 2
@@ -82,6 +86,34 @@ class StudyInputs:
 
 def _normalise(value: object) -> str:
     return str(value).strip().casefold()
+
+
+def _accentfold(value: object) -> str:
+    return "".join(
+        character
+        for character in unicodedata.normalize("NFKD", _normalise(value))
+        if not unicodedata.combining(character)
+    )
+
+
+def _collapse_accent_variants(frame: pd.DataFrame) -> pd.DataFrame:
+    """Keep one canonical spelling for terms that differ only by accents."""
+    work = frame.copy()
+    work["_accent_key"] = work["Readable_Term"].map(_accentfold)
+    work["_diacritic_count"] = work["Readable_Term"].map(
+        lambda value: sum(
+            bool(unicodedata.combining(character))
+            for character in unicodedata.normalize("NFKD", str(value))
+        )
+    )
+    work = work.sort_values(
+        ["_accent_key", "_diacritic_count", "Frequency", "Readable_Term"],
+        ascending=[True, False, False, True],
+        kind="stable",
+    )
+    return work.drop_duplicates("_accent_key", keep="first").drop(
+        columns=["_accent_key", "_diacritic_count"]
+    )
 
 
 def _require_columns(df: pd.DataFrame, columns: set[str], label: str) -> None:
@@ -276,6 +308,77 @@ def _proportional_sample(
     return pd.concat(samples, ignore_index=True).drop(columns="_Stratum")
 
 
+def _repair_contrast_coverage(
+    sampled: pd.DataFrame,
+    population: pd.DataFrame,
+    contrast_columns: list[str],
+    minimum: int,
+    seed: int,
+) -> pd.DataFrame:
+    """Swap the fewest rows needed to meet overlapping contrast quotas."""
+    if any(int(population[column].sum()) < minimum for column in contrast_columns):
+        unavailable = {
+            column: int(population[column].sum())
+            for column in contrast_columns
+            if int(population[column].sum()) < minimum
+        }
+        raise ValueError(f"Insufficient population for category contrast quotas: {unavailable}")
+
+    result = sampled.copy().reset_index(drop=True)
+    for target in contrast_columns:
+        while int(result[target].sum()) < minimum:
+            selected = set(result["_key"])
+            counts = {column: int(result[column].sum()) for column in contrast_columns}
+            candidates = population[
+                population[target] & ~population["_key"].isin(selected)
+            ]
+            removable = result[~result[target]]
+            choices = []
+            for candidate_index, candidate in candidates.iterrows():
+                for remove_index, removed in removable.iterrows():
+                    new_counts = {
+                        column: counts[column]
+                        + int(candidate[column])
+                        - int(removed[column])
+                        for column in contrast_columns
+                    }
+                    if any(
+                        new_counts[column]
+                        < (minimum if counts[column] >= minimum else counts[column])
+                        for column in contrast_columns
+                    ):
+                        continue
+                    deficit_reduction = sum(
+                        max(0, minimum - counts[column])
+                        - max(0, minimum - new_counts[column])
+                        for column in contrast_columns
+                    )
+                    stratum_penalty = sum(
+                        candidate[column] != removed[column]
+                        for column in ("Tier_A", "Frequency_Band")
+                    )
+                    stable_rank = hashlib.sha256(
+                        f"{seed}|{target}|{candidate['_key']}|{removed['_key']}".encode(
+                            "utf-8"
+                        )
+                    ).hexdigest()
+                    choices.append(
+                        (
+                            -deficit_reduction,
+                            stratum_penalty,
+                            -sum(new_counts.values()),
+                            stable_rank,
+                            candidate_index,
+                            remove_index,
+                        )
+                    )
+            if not choices:
+                raise ValueError(f"Unable to satisfy category contrast quota for {target}")
+            *_, candidate_index, remove_index = min(choices)
+            result.loc[remove_index] = population.loc[candidate_index]
+    return result
+
+
 def select_representation_terms(
     terms: pd.DataFrame,
     condition_a: pd.DataFrame,
@@ -312,6 +415,83 @@ def select_representation_terms(
     )
     sampled = sampled.sort_values("Readable_Term", key=lambda values: values.str.casefold()).reset_index(drop=True)
     sampled.insert(0, "Row_ID", [f"REP-{index:03d}" for index in range(1, len(sampled) + 1)])
+    return sampled.drop(columns="_key")
+
+
+def select_category_terms(
+    terms: pd.DataFrame,
+    categories: dict[str, pd.DataFrame],
+    n_terms: int = DEFAULT_CATEGORY_TERM_SAMPLE,
+    seed: int = DEFAULT_SEED,
+) -> pd.DataFrame:
+    """Sample A-vs-baseline disagreements across overlap, tier, and frequency."""
+    _require_columns(terms, {"Readable_Term", "Frequency"}, "Filtered terms")
+    if set(categories) != set(CONDITIONS):
+        raise ValueError(f"Category conditions must be exactly {CONDITIONS}")
+
+    frame = terms[["Readable_Term", "Frequency"]].copy()
+    frame["_key"] = frame["Readable_Term"].map(_normalise)
+    for condition in CONDITIONS:
+        condition_frame = categories[condition][["Term", "Category"]].copy()
+        condition_frame["_key"] = condition_frame["Term"].map(_normalise)
+        if condition_frame["_key"].duplicated().any():
+            raise ValueError(f"Condition {condition} contains duplicate terms")
+        frame = frame.merge(
+            condition_frame[["_key", "Category"]].rename(
+                columns={"Category": f"Category_{condition}"}
+            ),
+            on="_key",
+            how="left",
+            validate="one_to_one",
+        )
+    category_columns = [f"Category_{condition}" for condition in CONDITIONS]
+    if frame[category_columns].isna().any().any():
+        raise ValueError("One or more conditions are missing filtered terms")
+
+    for comparator in ("B", "C", "D"):
+        frame[f"A_vs_{comparator}"] = (
+            frame["Category_A"] != frame[f"Category_{comparator}"]
+        )
+    frame = frame[frame[["A_vs_B", "A_vs_C", "A_vs_D"]].any(axis=1)].copy()
+    frame = _collapse_accent_variants(frame)
+    frame["Disagreement_Pattern"] = [
+        "".join(
+            comparator
+            for comparator in ("B", "C", "D")
+            if row[f"A_vs_{comparator}"]
+        )
+        for row in frame.to_dict("records")
+    ]
+    frame["Tier_A"] = frame["Category_A"].map(_category_to_tier())
+    if frame["Tier_A"].isna().any():
+        unknown = sorted(frame.loc[frame["Tier_A"].isna(), "Category_A"].unique())
+        raise ValueError(f"Unknown Condition A categories: {unknown}")
+    frame["Frequency_Band"] = _frequency_bands(frame["Frequency"])
+
+    sampled = _proportional_sample(
+        frame,
+        n_rows=n_terms,
+        strata=["Disagreement_Pattern", "Tier_A", "Frequency_Band"],
+        seed=seed + 200,
+    )
+    contrast_columns = [f"A_vs_{comparator}" for comparator in ("B", "C", "D")]
+    minimum_coverage = min(25, math.ceil(n_terms * 5 / 12))
+    sampled = _repair_contrast_coverage(
+        sampled,
+        frame,
+        contrast_columns,
+        minimum_coverage,
+        seed + 201,
+    )
+    sampled = sampled.sort_values(
+        "Readable_Term",
+        key=lambda values: values.str.casefold(),
+    ).reset_index(drop=True)
+    sampled.insert(
+        0,
+        "Row_ID",
+        [f"CATERM-{index:03d}" for index in range(1, len(sampled) + 1)],
+    )
     return sampled.drop(columns="_key")
 
 
@@ -713,14 +893,16 @@ def _defined_class_sentence(
     property_name: object,
     filler: object,
 ) -> str:
+    registry = get_display_registry()
+    sentence = registry.defined_class_sentences.get(str(bearer).casefold())
+    if sentence:
+        return sentence
     subject = _lower_initial(display_label(bearer, "category"))
     base_kind = display_label(genus, "category").lower()
-    feature = display_label(bearer, "defined_class")
-    if str(bearer).casefold() not in get_display_registry().defined_class_features:
-        feature = (
-            f"{display_label(property_name, 'property')} "
-            f"{display_label(filler, 'category').lower()}"
-        )
+    feature = (
+        f"{display_label(property_name, 'property')} "
+        f"{display_label(filler, 'category').lower()}"
+    )
     article = "an" if base_kind[:1] in "aeiou" else "a"
     subject_article = "An" if subject[:1] in "aeiou" else "A"
     return f"{subject_article} {subject} is {article} {base_kind} that {feature}."
@@ -887,6 +1069,7 @@ def _final_frames_for_expert(
         "Before": decisions["Before_State"],
         "After": decisions["After_State"],
         "Meaning_Preserved (Fully/Mostly/No/Unsure)": "",
+        "Appropriate_for_Lean_Core (Yes/With concern/No/Unsure)": "",
         "Preferred_Outcome (for Mostly/No)": "",
         "Notes": "",
     })
@@ -954,6 +1137,7 @@ _INPUT_VALIDATIONS = {
     },
     "Meaning_Preservation": {
         "Meaning_Preserved (Fully/Mostly/No/Unsure)": "Fully,Mostly,No,Unsure",
+        "Appropriate_for_Lean_Core (Yes/With concern/No/Unsure)": "Yes,With concern,No,Unsure",
         "Preferred_Outcome (for Mostly/No)": "Keep as separate concept,Keep information but not as separate concept,Leave out,Unsure",
         "Notes": None,
     },
@@ -1082,6 +1266,7 @@ def _write_workbook(
 
 def generate_modular_evaluation(
     n_terms: int = DEFAULT_TERM_SAMPLE,
+    n_category_terms: int = DEFAULT_CATEGORY_TERM_SAMPLE,
     seed: int = DEFAULT_SEED,
     output_dir: str | None = None,
     n_experts: int = DEFAULT_EXPERTS,
@@ -1112,6 +1297,12 @@ def generate_modular_evaluation(
     )
     final_fates = build_final_fates(inputs)
     term_sample = select_representation_terms(inputs.terms, inputs.categories["A"], n_terms, seed)
+    category_term_sample = select_category_terms(
+        inputs.terms,
+        inputs.categories,
+        n_terms=n_category_terms,
+        seed=seed,
+    )
     sampled_fates = {
         final_fates[_normalise(term)]
         for term in term_sample["Readable_Term"]
@@ -1139,6 +1330,8 @@ def generate_modular_evaluation(
     )
     reference_definitions: dict[str, str] = {}
     required_reference_terms = set(term_sample["Readable_Term"].astype(str)) | set(
+        category_term_sample["Readable_Term"].astype(str)
+    ) | set(
         final_samples["Meaning_Preservation"]["term"].astype(str)
     )
     if reference_definitions_path:
@@ -1158,7 +1351,7 @@ def generate_modular_evaluation(
             for term in required_reference_terms
         }
     category_items = build_category_items(
-        term_sample,
+        category_term_sample,
         inputs.categories,
         final_fates,
         reference_definitions=reference_definitions,
@@ -1246,7 +1439,12 @@ def generate_modular_evaluation(
         "seed": seed,
         "n_experts": n_experts,
         "representation_sample": len(representation_items),
+        "category_term_sample": len(category_term_sample),
         "category_rows": len(category_items),
+        "category_disagreement_coverage": {
+            comparator: int(category_term_sample[f"A_vs_{comparator}"].sum())
+            for comparator in ("B", "C", "D")
+        },
         "final_sample_sizes": {name: len(frame) for name, frame in final_samples.items()},
         "final_fate_counts": pd.Series(final_fates).value_counts().sort_index().to_dict(),
         "reviewed_reference_definitions": bool(reference_definitions_path),

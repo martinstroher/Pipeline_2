@@ -44,6 +44,7 @@ RELATION_CHOICES = (
     "unsure",
 )
 PRESERVATION_CHOICES = ("fully", "mostly", "no", "unsure")
+CORE_APPROPRIATENESS_CHOICES = ("yes", "with concern", "no", "unsure")
 
 
 def _sha256_file(path: str | Path) -> str:
@@ -500,6 +501,256 @@ def _fleiss_kappa(
     }
 
 
+def _gwet_coefficient(
+    frame: pd.DataFrame,
+    item_column: str,
+    raw_column: str,
+    categories: tuple[str, ...],
+    ordinal: bool,
+) -> dict:
+    """Compute multi-rater Gwet AC1 or quadratic-weighted AC2."""
+    if len(categories) < 2:
+        return {"coefficient": None, "performed": False, "reason": "fewer than two categories"}
+    rating_lists = frame.groupby(item_column)[raw_column].apply(list)
+    counts = np.array([
+        [ratings.count(category) for category in categories]
+        for ratings in rating_lists
+    ], dtype=float)
+    if len(counts) == 0:
+        return {"coefficient": None, "performed": False, "reason": "no data"}
+    raters = counts.sum(axis=1)
+    valid = raters >= 2
+    counts = counts[valid]
+    raters = raters[valid]
+    if len(counts) == 0:
+        return {
+            "coefficient": None,
+            "performed": False,
+            "reason": "no items with at least two ratings",
+        }
+
+    category_count = len(categories)
+    if ordinal:
+        positions = np.arange(category_count, dtype=float)
+        weights = 1 - np.square(
+            (positions[:, None] - positions[None, :]) / (category_count - 1)
+        )
+    else:
+        weights = np.eye(category_count, dtype=float)
+    observed_by_item = []
+    for item_counts, item_raters in zip(counts, raters):
+        ordered_pairs = np.outer(item_counts, item_counts)
+        ordered_pairs[np.diag_indices(category_count)] -= item_counts
+        observed_by_item.append(
+            float(np.sum(weights * ordered_pairs) / (item_raters * (item_raters - 1)))
+        )
+    observed = float(np.mean(observed_by_item))
+    marginals = counts.sum(axis=0) / counts.sum()
+    expected = float(
+        np.sum((1 - marginals)[:, None] * marginals[None, :] * weights)
+        / (category_count - 1)
+    )
+    coefficient = (
+        (observed - expected) / (1 - expected)
+        if expected < 1 - 1e-12
+        else np.nan
+    )
+    return {
+        "coefficient": round(float(coefficient), 4) if np.isfinite(coefficient) else None,
+        "performed": True,
+        "method": "AC2 quadratic weights" if ordinal else "AC1 nominal weights",
+        "observed_agreement": round(observed, 4),
+        "chance_agreement": round(expected, 4),
+        "n_items": int(len(counts)),
+        "n_ratings": int(counts.sum()),
+        "categories": list(categories),
+    }
+
+
+def _agreement_sensitivity(
+    frame: pd.DataFrame,
+    item_column: str,
+    raw_column: str,
+    allowed: tuple[str, ...],
+    ordinal: bool,
+) -> dict:
+    ac1 = _gwet_coefficient(
+        frame,
+        item_column,
+        raw_column,
+        allowed,
+        ordinal=False,
+    )
+    if ordinal:
+        decisive = frame[frame[raw_column] != "unsure"].copy()
+        ordered = tuple(category for category in allowed if category != "unsure")
+        ac2 = _gwet_coefficient(
+            decisive,
+            item_column,
+            raw_column,
+            ordered,
+            ordinal=True,
+        )
+        ac2["unsure_ratings_excluded"] = int((frame[raw_column] == "unsure").sum())
+    else:
+        ac2 = {
+            "coefficient": None,
+            "performed": False,
+            "reason": "response scale was not declared ordinal",
+        }
+    return {
+        "raw_pairwise_agreement": ac1.get("observed_agreement"),
+        "gwet_ac1": ac1,
+        "gwet_ac2": ac2,
+    }
+
+
+def _numeric_gwet_ac2(frame: pd.DataFrame, value_column: str) -> dict:
+    work = frame[["Term", value_column]].copy()
+    missing = int(work[value_column].isna().sum())
+    work = work.dropna(subset=[value_column])
+    work["Rating"] = work[value_column].astype(int).astype(str)
+    result = _gwet_coefficient(
+        work,
+        item_column="Term",
+        raw_column="Rating",
+        categories=("1", "2", "3", "4", "5"),
+        ordinal=True,
+    )
+    result["unsure_ratings_excluded"] = missing
+    return result
+
+
+def _item_consensus(
+    frame: pd.DataFrame,
+    outcome: str,
+    item_column: str,
+    raw_column: str,
+    allowed: tuple[str, ...],
+) -> pd.DataFrame:
+    work = frame[[item_column, "Expert", raw_column]].copy()
+    work["Response"] = [
+        _validated_choice(value, allowed, f"{outcome}:{raw_column}")
+        for value in work[raw_column]
+    ]
+    if work.duplicated([item_column, "Expert"]).any():
+        raise ValueError(f"Duplicate expert judgments for consensus outcome {outcome}")
+    rows = []
+    for item, group in work.groupby(item_column, sort=True):
+        counts = group["Response"].value_counts()
+        top_count = int(counts.max())
+        modes = sorted(counts[counts == top_count].index)
+        n_raters = int(len(group))
+        rows.append({
+            "Outcome": outcome,
+            "Item_ID": str(item),
+            "N_Raters": n_raters,
+            "Top_Count": top_count,
+            "Top_Rate": round(top_count / n_raters, 4),
+            "Modal_Response": " | ".join(modes),
+            "Modal_Tie": len(modes) > 1,
+            "Unanimous": top_count == n_raters,
+            "At_Least_Two_Thirds": top_count / n_raters >= 2 / 3,
+        })
+    return pd.DataFrame(rows)
+
+
+def build_consensus_diagnostics(
+    category: pd.DataFrame,
+    final_frames: dict[str, pd.DataFrame],
+) -> tuple[pd.DataFrame, pd.DataFrame]:
+    """Build item-level modal agreement for categorical expert outcomes."""
+    assignment_ratings = category.drop_duplicates(["Assignment_ID", "Expert"])
+    specifications = [
+        (
+            "category_correctness",
+            assignment_ratings,
+            "Assignment_ID",
+            "Correct_Raw",
+            CORRECTNESS_CHOICES,
+        ),
+        (
+            "taxonomy_relationship",
+            final_frames["Taxonomy"],
+            "Row_ID",
+            "Relationship_Correct (Yes/Partial/No/Unsure)",
+            CORRECTNESS_CHOICES,
+        ),
+        (
+            "taxonomy_usefulness",
+            final_frames["Taxonomy"],
+            "Row_ID",
+            "Useful_PreSalt_Distinction (Yes/No/Unsure)",
+            BINARY_CHOICES,
+        ),
+        (
+            "defined_classes",
+            final_frames["Defined_Classes"],
+            "Row_ID",
+            "Definition_Verdict (Correct/Partly correct/Incorrect/Unsure)",
+            DEFINITION_CHOICES,
+        ),
+        (
+            "relations",
+            final_frames["Relations"],
+            "Row_ID",
+            "Relation_Verdict",
+            RELATION_CHOICES,
+        ),
+        (
+            "individual_named_entity",
+            final_frames["Individuals"],
+            "Row_ID",
+            "Specific_Named_Entity (Yes/No/Unsure)",
+            BINARY_CHOICES,
+        ),
+        (
+            "individual_type",
+            final_frames["Individuals"],
+            "Row_ID",
+            "Type_Correct (Yes/Partial/No/Unsure)",
+            CORRECTNESS_CHOICES,
+        ),
+        (
+            "meaning_preservation",
+            final_frames["Meaning_Preservation"],
+            "Row_ID",
+            "Meaning_Preserved (Fully/Mostly/No/Unsure)",
+            PRESERVATION_CHOICES,
+        ),
+        (
+            "core_appropriateness",
+            final_frames["Meaning_Preservation"],
+            "Row_ID",
+            "Appropriate_for_Lean_Core (Yes/With concern/No/Unsure)",
+            CORE_APPROPRIATENESS_CHOICES,
+        ),
+    ]
+    items = pd.concat(
+        [
+            _item_consensus(frame, outcome, item_column, raw_column, allowed)
+            for outcome, frame, item_column, raw_column, allowed in specifications
+        ],
+        ignore_index=True,
+    )
+    summary_rows = []
+    for outcome, group in items.groupby("Outcome", sort=True):
+        summary_rows.append({
+            "Outcome": outcome,
+            "N_Items": int(len(group)),
+            "Unanimous_N": int(group["Unanimous"].sum()),
+            "Unanimous_Rate": round(float(group["Unanimous"].mean()), 4),
+            "At_Least_Two_Thirds_N": int(group["At_Least_Two_Thirds"].sum()),
+            "At_Least_Two_Thirds_Rate": round(
+                float(group["At_Least_Two_Thirds"].mean()),
+                4,
+            ),
+            "Modal_Tie_N": int(group["Modal_Tie"].sum()),
+            "Mean_Top_Rate": round(float(group["Top_Rate"].mean()), 4),
+        })
+    return items, pd.DataFrame(summary_rows)
+
+
 def _summarize_judgments(
     frame: pd.DataFrame,
     item_column: str,
@@ -510,6 +761,7 @@ def _summarize_judgments(
     partial: bool,
     score_map: dict[str, float] | None = None,
     positive_choice: str | tuple[str, ...] = "yes",
+    ordinal: bool = False,
 ) -> dict:
     work = frame[[item_column, "Expert", raw_column]].copy()
     work["Raw"] = [
@@ -578,6 +830,13 @@ def _summarize_judgments(
         ),
         "rating_distribution": {key: int(value) for key, value in distribution.items()},
         "fleiss_kappa": _fleiss_kappa(work, item_column, "Raw", allowed),
+        "agreement_sensitivity": _agreement_sensitivity(
+            work,
+            item_column,
+            "Raw",
+            allowed,
+            ordinal,
+        ),
     }
     if positive_choices == ("yes",):
         result.update({
@@ -659,6 +918,8 @@ def analyze_representation(
             "icc_B": _icc_2_1(_rating_matrix(representation, "Quality_B")),
             "weighted_kappa_A": _pairwise_weighted_kappa(representation, "Quality_A"),
             "weighted_kappa_B": _pairwise_weighted_kappa(representation, "Quality_B"),
+            "gwet_ac2_A": _numeric_gwet_ac2(representation, "Quality_A"),
+            "gwet_ac2_B": _numeric_gwet_ac2(representation, "Quality_B"),
         },
     }
     relevance_items = item_means.dropna(subset=["Relevance"])
@@ -683,6 +944,7 @@ def analyze_representation(
         ),
         "mean_ci_95": [relevance_lower, relevance_upper],
         "icc": _icc_2_1(_rating_matrix(representation, "Relevance")),
+        "gwet_ac2": _numeric_gwet_ac2(representation, "Relevance"),
     }
     fate_counts = (
         representation.drop_duplicates("Term")["Final_Fate"]
@@ -695,6 +957,92 @@ def analyze_representation(
         "nld_quality": quality_results,
         "sample_final_fates": {key: int(value) for key, value in fate_counts.items()},
     }
+
+
+def _category_disagreement_contrasts(
+    category: pd.DataFrame,
+    bootstrap_iterations: int,
+    seed: int,
+) -> list[dict]:
+    """Compare A with each baseline only where their proposed categories differ."""
+    required = {"Term", "Condition", "Assigned_Category", "Correct_Score"}
+    missing = required - set(category.columns)
+    if missing:
+        raise ValueError(f"Category contrasts missing columns: {sorted(missing)}")
+    proposal_counts = category.groupby(["Term", "Condition"])["Assigned_Category"].nunique()
+    if (proposal_counts != 1).any():
+        raise ValueError("A term-condition maps to more than one proposed category")
+    proposals = (
+        category.drop_duplicates(["Term", "Condition"])
+        .pivot(index="Term", columns="Condition", values="Assigned_Category")
+        .reindex(columns=["A", "B", "C", "D"])
+    )
+    scores = (
+        category.groupby(["Term", "Condition"])["Correct_Score"]
+        .mean()
+        .unstack("Condition")
+        .reindex(columns=["A", "B", "C", "D"])
+    )
+    rows = []
+    raw_p_values = []
+    for offset, comparator in enumerate(("B", "C", "D")):
+        eligible = proposals["A"].notna() & proposals[comparator].notna()
+        eligible &= proposals["A"] != proposals[comparator]
+        paired = scores.loc[eligible, ["A", comparator]]
+        complete = paired.dropna()
+        differences = (complete["A"] - complete[comparator]).to_numpy(dtype=float)
+        nonzero = differences[differences != 0]
+        if len(nonzero):
+            wilcoxon = stats.wilcoxon(
+                nonzero,
+                zero_method="wilcox",
+                alternative="two-sided",
+            )
+            statistic, wilcoxon_p = float(wilcoxon.statistic), float(wilcoxon.pvalue)
+        else:
+            statistic, wilcoxon_p = 0.0, 1.0
+        a_better = int((differences > 0).sum())
+        comparator_better = int((differences < 0).sum())
+        decisive = a_better + comparator_better
+        sign_p = (
+            float(stats.binomtest(a_better, decisive, p=0.5).pvalue)
+            if decisive
+            else 1.0
+        )
+        lower, upper = _bootstrap_mean_ci(
+            differences,
+            bootstrap_iterations,
+            seed + offset,
+        )
+        raw_p_values.append(wilcoxon_p)
+        rows.append({
+            "comparison": f"A vs {comparator}",
+            "eligibility": "sampled terms where proposed categories differ",
+            "n_disagreement_terms": int(eligible.sum()),
+            "n_complete_pairs": int(len(complete)),
+            "n_incomplete_all_unsure": int(len(paired) - len(complete)),
+            "mean_A": round(float(complete["A"].mean()), 4) if len(complete) else None,
+            "mean_comparator": (
+                round(float(complete[comparator].mean()), 4)
+                if len(complete)
+                else None
+            ),
+            "mean_difference_A_minus_comparator": (
+                round(float(differences.mean()), 4) if len(differences) else None
+            ),
+            "mean_difference_ci_95": [lower, upper],
+            "A_better": a_better,
+            "comparator_better": comparator_better,
+            "equal_score_ties": int((differences == 0).sum()),
+            "sign_test_p_value": sign_p,
+            "wilcoxon_W": statistic,
+            "wilcoxon_p_value": wilcoxon_p,
+            "rank_biserial": round(float(_rank_biserial(differences)), 4),
+        })
+    for row, adjusted in zip(rows, _holm_adjust(raw_p_values)):
+        row["wilcoxon_p_value_holm"] = float(adjusted)
+        row["significant_holm_0_05"] = bool(adjusted < 0.05)
+    return rows
 
 
 def analyze_categories(
@@ -716,6 +1064,7 @@ def analyze_categories(
             bootstrap_iterations=bootstrap_iterations,
             seed=seed + offset * 10,
             partial=True,
+            ordinal=True,
         )
 
     item_scores = category.groupby(["Term", "Condition"])["Correct_Score"].mean().reset_index()
@@ -802,11 +1151,96 @@ def analyze_categories(
         raw_column="Correct_Raw",
         categories=CORRECTNESS_CHOICES,
     )
+    agreement["agreement_sensitivity"] = _agreement_sensitivity(
+        assignment_ratings,
+        item_column="Assignment_ID",
+        raw_column="Correct_Raw",
+        allowed=CORRECTNESS_CHOICES,
+        ordinal=True,
+    )
     return {
         "correctness_by_condition": summaries,
         "friedman": omnibus,
         "posthoc_wilcoxon_holm": posthoc,
+        "disagreement_contrasts": _category_disagreement_contrasts(
+            category,
+            bootstrap_iterations,
+            seed + 50,
+        ),
         "assignment_agreement": agreement,
+    }
+
+
+def analyze_cross_layer(
+    representation: pd.DataFrame,
+    category: pd.DataFrame,
+) -> dict:
+    """Run prespecified exploratory term-level Spearman correlations."""
+    representation_means = representation.groupby("Term").agg(
+        Relevance=("Relevance", "mean"),
+        Quality_A=("Quality_A", "mean"),
+        Quality_B=("Quality_B", "mean"),
+    )
+    category_means = (
+        category.groupby(["Term", "Condition"])["Correct_Score"]
+        .mean()
+        .unstack("Condition")
+        .rename(columns=lambda value: f"Category_{value}")
+    )
+    term_means = representation_means.join(category_means, how="left")
+    specifications = (
+        ("quality_A_vs_category_A", "Quality_A", "Category_A"),
+        ("quality_B_vs_category_B", "Quality_B", "Category_B"),
+        ("relevance_vs_quality_A", "Relevance", "Quality_A"),
+        ("relevance_vs_quality_B", "Relevance", "Quality_B"),
+        ("relevance_vs_category_A", "Relevance", "Category_A"),
+    )
+    rows = []
+    valid_indices = []
+    valid_p_values = []
+    for name, first, second in specifications:
+        paired = term_means[[first, second]].dropna()
+        performed = (
+            len(paired) >= 3
+            and paired[first].nunique() > 1
+            and paired[second].nunique() > 1
+        )
+        if performed:
+            result = stats.spearmanr(paired[first], paired[second])
+            rho, p_value = float(result.statistic), float(result.pvalue)
+        else:
+            rho, p_value = None, None
+        rows.append({
+            "comparison": name,
+            "first_measure": first,
+            "second_measure": second,
+            "n_terms": int(len(paired)),
+            "spearman_rho": round(rho, 4) if rho is not None else None,
+            "p_value": p_value,
+            "performed": performed,
+            "reason_not_performed": (
+                "fewer than three complete terms or a constant measure"
+                if not performed
+                else ""
+            ),
+        })
+        if performed:
+            valid_indices.append(len(rows) - 1)
+            valid_p_values.append(p_value)
+    for index, adjusted in zip(valid_indices, _holm_adjust(valid_p_values)):
+        rows[index]["p_value_holm"] = float(adjusted)
+        rows[index]["significant_holm_0_05"] = bool(adjusted < 0.05)
+    for row in rows:
+        row.setdefault("p_value_holm", None)
+        row.setdefault("significant_holm_0_05", False)
+    return {
+        "status": "exploratory",
+        "multiplicity_correction": "Holm across performed correlations",
+        "category_scope": (
+            "Category-linked correlations use only terms shared by the separate "
+            "Representation and disagreement-enriched Category samples"
+        ),
+        "comparisons": rows,
     }
 
 
@@ -818,6 +1252,7 @@ def _final_outcome(
     seed: int,
     score_map: dict[str, float] | None = None,
     positive_choice: str | tuple[str, ...] = "yes",
+    ordinal: bool = False,
 ) -> dict:
     return _summarize_judgments(
         frame,
@@ -829,6 +1264,7 @@ def _final_outcome(
         partial="partial" in allowed,
         score_map=score_map,
         positive_choice=positive_choice,
+        ordinal=ordinal,
     )
 
 
@@ -891,6 +1327,7 @@ def analyze_final_ontology(
                 CORRECTNESS_CHOICES,
                 bootstrap_iterations,
                 seed + 10,
+                ordinal=True,
             ),
             "useful_presalt_distinction": _final_outcome(
                 taxonomy,
@@ -898,6 +1335,7 @@ def analyze_final_ontology(
                 BINARY_CHOICES,
                 bootstrap_iterations,
                 seed + 20,
+                ordinal=True,
             ),
         },
         "defined_classes": {
@@ -914,6 +1352,7 @@ def analyze_final_ontology(
                     "unsure": np.nan,
                 },
                 positive_choice="correct",
+                ordinal=True,
             ),
         },
         "relations": {
@@ -940,6 +1379,7 @@ def analyze_final_ontology(
                 BINARY_CHOICES,
                 bootstrap_iterations,
                 seed + 70,
+                ordinal=True,
             ),
             "type_correctness": _final_outcome(
                 individuals,
@@ -947,9 +1387,11 @@ def analyze_final_ontology(
                 CORRECTNESS_CHOICES,
                 bootstrap_iterations,
                 seed + 80,
+                ordinal=True,
             ),
         },
         "meaning_preservation": {},
+        "core_appropriateness": {},
     }
     issue_reasons = (
         defined["Issue_Reason (select for Partly/Incorrect)"]
@@ -969,6 +1411,20 @@ def analyze_final_ontology(
         raise ValueError("Partly correct/Incorrect definitions require an issue reason")
     if (~required_reason & definition_reasons.ne("")).any():
         raise ValueError("Definition issue reason is only valid for Partly correct/Incorrect")
+    allowed_issue_reasons = {
+        "Base kind is wrong",
+        "Feature is not defining",
+        "Too broad",
+        "Too narrow",
+        "Wording unclear",
+        "Other",
+        "Unsure",
+    }
+    invalid_issue_reasons = sorted(set(issue_reasons) - allowed_issue_reasons)
+    if invalid_issue_reasons:
+        raise ValueError(
+            f"Invalid definition issue reason values: {invalid_issue_reasons}"
+        )
     results["defined_classes"]["issue_reason_distribution"] = {
         key: int(value)
         for key, value in issue_reasons.value_counts().sort_index().to_dict().items()
@@ -989,6 +1445,7 @@ def analyze_final_ontology(
                 "unsure": np.nan,
             },
             positive_choice="fully",
+            ordinal=True,
         )
         treatments = (
             subset["Preferred_Outcome (for Mostly/No)"]
@@ -1005,11 +1462,37 @@ def analyze_final_ontology(
         if (~treatment_required & treatments.ne("")).any():
             raise ValueError("Preferred outcome is only valid for Mostly/No")
         treatments = treatments[treatments != ""]
+        allowed_treatments = {
+            "Keep as separate concept",
+            "Keep information but not as separate concept",
+            "Leave out",
+            "Unsure",
+        }
+        invalid_treatments = sorted(set(treatments) - allowed_treatments)
+        if invalid_treatments:
+            raise ValueError(
+                f"Invalid preferred outcome values: {invalid_treatments}"
+            )
         summary["preferred_outcome_distribution"] = {
             key: int(value)
             for key, value in treatments.value_counts().sort_index().to_dict().items()
         }
         results["meaning_preservation"][str(decision_type)] = summary
+        results["core_appropriateness"][str(decision_type)] = _final_outcome(
+            subset,
+            "Appropriate_for_Lean_Core (Yes/With concern/No/Unsure)",
+            CORE_APPROPRIATENESS_CHOICES,
+            bootstrap_iterations,
+            seed + 95 + offset * 10,
+            score_map={
+                "yes": 1.0,
+                "with concern": 0.5,
+                "no": 0.0,
+                "unsure": np.nan,
+            },
+            positive_choice="yes",
+            ordinal=True,
+        )
     return results
 
 
@@ -1057,6 +1540,37 @@ def run_modular_analysis(
         write_csv(frame, os.path.join(output_dir, filename))
     write_csv(timing, os.path.join(output_dir, "layer2_timing.csv"))
 
+    representation_results = analyze_representation(
+        representation,
+        bootstrap_iterations,
+        seed,
+    )
+    category_results = analyze_categories(
+        categories,
+        bootstrap_iterations,
+        seed + 100,
+    )
+    final_results = analyze_final_ontology(
+        final_frames,
+        bootstrap_iterations,
+        seed + 200,
+    )
+    cross_layer_results = analyze_cross_layer(representation, categories)
+    item_consensus, consensus_summary = build_consensus_diagnostics(
+        categories,
+        final_frames,
+    )
+    write_csv(
+        pd.DataFrame(category_results["disagreement_contrasts"]),
+        os.path.join(output_dir, "discordant_category_contrasts.csv"),
+    )
+    write_csv(
+        pd.DataFrame(cross_layer_results["comparisons"]),
+        os.path.join(output_dir, "cross_layer_spearman.csv"),
+    )
+    write_csv(item_consensus, os.path.join(output_dir, "item_consensus.csv"))
+    write_csv(consensus_summary, os.path.join(output_dir, "consensus_summary.csv"))
+
     results = {
         "analysis_design": {
             "n_experts": len(experts),
@@ -1066,22 +1580,24 @@ def run_modular_analysis(
             "source_hashes_validated": True,
             "inference_unit": "sampled item after averaging expert ratings",
             "final_ontology_composite_score": False,
+            "response_handling": {
+                "ties": "retained and counted explicitly",
+                "partial_and_mostly": "retained as intermediate ordinal responses",
+                "unsure": (
+                    "reported as a response category; excluded only from score-based "
+                    "means/tests and ordinal AC2, with exclusions counted"
+                ),
+                "conditional_blanks": "treated as structurally inapplicable, not missing",
+            },
         },
-        "representation": analyze_representation(
-            representation,
-            bootstrap_iterations,
-            seed,
-        ),
-        "category_correctness": analyze_categories(
-            categories,
-            bootstrap_iterations,
-            seed + 100,
-        ),
-        "final_ontology": analyze_final_ontology(
-            final_frames,
-            bootstrap_iterations,
-            seed + 200,
-        ),
+        "representation": representation_results,
+        "category_correctness": category_results,
+        "final_ontology": final_results,
+        "exploratory_cross_layer": cross_layer_results,
+        "consensus": {
+            "summary": consensus_summary.to_dict("records"),
+            "item_table": "item_consensus.csv",
+        },
         "completion_time": analyze_timing(timing),
     }
     results_path = os.path.join(output_dir, "layer2_results.json")

@@ -59,6 +59,10 @@ def main() -> int:
             "cat_D.csv",
             "ablation_merged.csv",
             "analysis/layer1/sensitivity_flags.csv",
+            "analysis/layer2/discordant_category_contrasts.csv",
+            "analysis/layer2/cross_layer_spearman.csv",
+            "analysis/layer2/item_consensus.csv",
+            "analysis/layer2/consensus_summary.csv",
         ]
         for relative_path in deterministic_files:
             assert _sha256_file(first / relative_path) == _sha256_file(second / relative_path), relative_path
@@ -71,6 +75,10 @@ def main() -> int:
         )
         assert first_analysis["analysis_design"]["source_hashes_validated"] is True
         assert second_analysis["analysis_design"]["source_hashes_validated"] is True
+        assert first_analysis["analysis_design"]["response_handling"]["ties"] == "retained and counted explicitly"
+        assert "core_appropriateness" in first_analysis["final_ontology"]
+        assert first_analysis["exploratory_cross_layer"]["status"] == "exploratory"
+        assert first_analysis["consensus"]["item_table"] == "item_consensus.csv"
         assert first_analysis["completion_time"]["overall_mean_minutes"] > 0
         first_analysis["analysis_design"].pop("source_manifest")
         second_analysis["analysis_design"].pop("source_manifest")
@@ -219,6 +227,7 @@ def main() -> int:
             "Before",
             "After",
             "Meaning_Preserved (Fully/Mostly/No/Unsure)",
+            "Appropriate_for_Lean_Core (Yes/With concern/No/Unsure)",
             "Preferred_Outcome (for Mostly/No)",
         }.issubset(preservation_headers)
 

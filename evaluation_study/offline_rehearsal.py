@@ -707,6 +707,17 @@ def _fill_final_sheets(
             headers["Meaning_Preserved (Fully/Mostly/No/Unsure)"],
             preservation,
         )
+        core_appropriateness = {
+            "Fully": "Yes",
+            "Mostly": "With concern",
+            "No": "No",
+            "Unsure": "Unsure",
+        }[preservation]
+        sheet.cell(
+            row_index,
+            headers["Appropriate_for_Lean_Core (Yes/With concern/No/Unsure)"],
+            core_appropriateness,
+        )
         decision_type = str(item.get("Decision_Type"))
         if preservation == "No":
             treatment = "Keep as separate concept"
