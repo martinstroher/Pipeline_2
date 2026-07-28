@@ -31,6 +31,7 @@ import numpy as np
 import pandas as pd
 from openpyxl.styles import Alignment, Border, Font, PatternFill, Side
 from openpyxl.formatting.rule import CellIsRule
+from openpyxl.formatting.rule import FormulaRule
 from openpyxl.utils import get_column_letter
 from openpyxl.worksheet.datavalidation import DataValidation
 
@@ -1238,6 +1239,14 @@ _INPUT_VALIDATIONS = {
 _OPTIONAL_INPUTS = {
     ("Defined_Classes", "Issue_Reason (select for Partly/Incorrect)"),
     ("Meaning_Preservation", "Preferred_Outcome (for Mostly/No)"),
+    ("Representation", "Notes"),
+    ("Category_Correct", "Notes"),
+    ("Taxonomy", "Notes"),
+    ("Defined_Classes", "Notes"),
+    ("Relations", "Notes"),
+    ("Individuals", "Notes"),
+    ("Meaning_Preservation", "Notes"),
+    ("Timing", "Comments"),
 }
 
 
@@ -1268,7 +1277,7 @@ def _format_data_sheet(
         (
             4,
             instructions.answer_cue
-            or "Yellow cells are for your answers. Choose Unsure when you do not have enough information. Notes are optional.",
+            or "Complete every red cell. Yellow cells are optional. Some yellow cells may turn red after certain answers. Notes are optional.",
             "F3F6F8",
             "404040",
             9,
@@ -1318,10 +1327,10 @@ def _format_data_sheet(
         visible_header = visible_column_name(sheet_name, header)
         column_index = headers[visible_header]
         column_letter = get_column_letter(column_index)
+        optional = (sheet_name, header) in _OPTIONAL_INPUTS
         for row_index in range(DATA_START_ROW, ws.max_row + 1):
             ws.cell(row_index, column_index).fill = _INPUT_FILL
         if options:
-            optional = (sheet_name, header) in _OPTIONAL_INPUTS
             validation = DataValidation(
                 type="list",
                 formula1=f'"{options}"',
@@ -1334,11 +1343,67 @@ def _format_data_sheet(
                 f"{column_letter}{DATA_START_ROW}:{column_letter}{ws.max_row}"
             )
             ws.add_data_validation(validation)
-            if not optional:
-                ws.conditional_formatting.add(
-                    f"{column_letter}{DATA_START_ROW}:{column_letter}{ws.max_row}",
-                    CellIsRule(operator="equal", formula=['""'], fill=_MISSING_FILL),
-                )
+        elif sheet_name == "Timing" and header == "Minutes":
+            validation = DataValidation(
+                type="whole",
+                operator="between",
+                formula1="1",
+                formula2="1440",
+                allow_blank=False,
+                showErrorMessage=True,
+                errorTitle="Time required",
+                error="Enter a positive whole number of minutes.",
+            )
+            validation.add(
+                f"{column_letter}{DATA_START_ROW}:{column_letter}{ws.max_row}"
+            )
+            ws.add_data_validation(validation)
+        if not optional:
+            ws.conditional_formatting.add(
+                f"{column_letter}{DATA_START_ROW}:{column_letter}{ws.max_row}",
+                CellIsRule(operator="equal", formula=['""'], fill=_MISSING_FILL),
+            )
+
+    if sheet_name == "Defined_Classes":
+        verdict = get_column_letter(headers[visible_column_name(
+            sheet_name,
+            "Definition_Verdict (Correct/Partly correct/Incorrect/Unsure)",
+        )])
+        issue = get_column_letter(headers[visible_column_name(
+            sheet_name,
+            "Issue_Reason (select for Partly/Incorrect)",
+        )])
+        ws.conditional_formatting.add(
+            f"{issue}{DATA_START_ROW}:{issue}{ws.max_row}",
+            FormulaRule(
+                formula=[
+                    f'AND(OR(${verdict}{DATA_START_ROW}="Partly correct",'
+                    f'${verdict}{DATA_START_ROW}="Incorrect"),'
+                    f'${issue}{DATA_START_ROW}="")'
+                ],
+                fill=_MISSING_FILL,
+            ),
+        )
+    if sheet_name == "Meaning_Preservation":
+        meaning = get_column_letter(headers[visible_column_name(
+            sheet_name,
+            "Meaning_Preserved (Fully/Mostly/No/Unsure)",
+        )])
+        outcome = get_column_letter(headers[visible_column_name(
+            sheet_name,
+            "Preferred_Outcome (for Mostly/No)",
+        )])
+        ws.conditional_formatting.add(
+            f"{outcome}{DATA_START_ROW}:{outcome}{ws.max_row}",
+            FormulaRule(
+                formula=[
+                    f'AND(OR(${meaning}{DATA_START_ROW}="Mostly",'
+                    f'${meaning}{DATA_START_ROW}="No"),'
+                    f'${outcome}{DATA_START_ROW}="")'
+                ],
+                fill=_MISSING_FILL,
+            ),
+        )
 
 
 def _write_workbook(

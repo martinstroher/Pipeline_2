@@ -1,6 +1,6 @@
 [
   [
-    "EXPERT EVALUATION - PreSaltOntoLearn",
+    "PreSaltOntoLearn Geological Review",
     ""
   ],
   [
@@ -8,255 +8,31 @@
     ""
   ],
   [
-    "PURPOSE",
-    "Use your geological knowledge to review terms, definitions, categories, relationships, named items, and changes made to the final Pre-Salt model."
+    "WHAT IS THIS REVIEW?",
+    "This model was built automatically from scientific papers about Brazilian Pre-Salt geology. We need your geological judgment to check whether its terms, definitions, categories, and relationships make sense."
   ],
   [
-    "WHAT TO COMPLETE",
-    "Complete every yellow answer cell. You may work one sheet at a time and pause between sheets. Record your actual time in the Timing sheet."
+    "WHAT SHOULD YOU DO?",
+    "Work through each sheet and answer every red cell. Yellow cells are optional. Some terms appear more than once because different possible answers are being compared; review each row separately."
   ],
   [
-    "HOW TO ANSWER",
-    "Judge only what is shown in each row. You do not need to know the complete model or suggest a replacement unless the sheet asks what should happen instead. Notes are optional but useful when you choose Partial, No, With concern, or Incorrect."
-  ],
-  [
-    "PARTIAL AND WITH CONCERN",
-    "Choose Partial when the proposal is partly right but too broad, too narrow, incomplete, or imprecise. Choose With concern when a treatment may be acceptable for the main model but loses or weakens useful information."
-  ],
-  [
-    "UNSURE",
-    "Choose Unsure when the term is ambiguous, the information conflicts, or the question falls outside your expertise. Unsure is a valid answer and is better than guessing."
-  ],
-  [
-    "BLIND REVIEW",
-    "Definition 1 and Definition 2 come from different methods. Their order changes between workbooks. Judge the text itself and do not try to identify the method."
-  ],
-  [
-    "",
-    ""
-  ],
-  [
-    "SHEET: TERMS AND DEFINITIONS",
-    ""
-  ],
-  [
-    "Task",
-    "For each term, rate its Pre-Salt relevance based on the term and your geological knowledge, not on definition quality. Then rate Definition 1 and Definition 2 independently and choose the better definition, Tie, or Unsure."
-  ],
-  [
-    "",
-    ""
-  ],
-  [
-    "Relevance 1 - Not relevant",
-    "The term has no meaningful connection to Brazilian Pre-Salt petroleum geology."
-  ],
-  [
-    "Relevance 2 - Marginal",
-    "The term is only loosely connected or is too general to contribute much to the Pre-Salt model."
-  ],
-  [
-    "Relevance 3 - Relevant",
-    "The term is geologically applicable to the Pre-Salt setting."
-  ],
-  [
-    "Relevance 4 - Important",
-    "The term is commonly needed to describe or compare Pre-Salt systems."
-  ],
-  [
-    "Relevance 5 - Essential",
-    "The term is fundamental to understanding Brazilian Pre-Salt geology or reservoirs."
-  ],
-  [
-    "",
-    ""
-  ],
-  [
-    "Quality 1 - Incorrect",
-    "The definition contains a fundamental geological error or does not define the term."
-  ],
-  [
-    "Quality 2 - Poor",
-    "The definition has major inaccuracies, serious imprecision, or omits the essential kind of thing."
-  ],
-  [
-    "Quality 3 - Acceptable",
-    "The definition is broadly correct but has notable gaps or minor inaccuracies."
-  ],
-  [
-    "Quality 4 - Good",
-    "The definition is accurate and useful, with only minor issues."
-  ],
-  [
-    "Quality 5 - Excellent",
-    "The definition is precise, geologically sound, and captures the term's essential meaning in the Pre-Salt context."
-  ],
-  [
-    "Preference",
-    "Choose 1, 2, Tie, or Unsure after rating both definitions independently."
-  ],
-  [
-    "",
-    ""
-  ],
-  [
-    "SHEET: CATEGORY REVIEW",
-    ""
-  ],
-  [
-    "Task",
-    "Judge whether each term belongs in the proposed category. The same term may appear with different proposed categories; this repetition is intentional, and each proposal must be judged independently."
-  ],
-  [
-    "Sample",
-    "This sheet emphasizes terms for which the systems proposed different categories so the study can compare them directly. It is not a prevalence estimate for all extracted terms."
-  ],
-  [
-    "Category guide",
-    "Use the Category Guide sheet when a suggested category is unfamiliar. It explains each category in ordinary geological language and gives an example."
-  ],
-  [
-    "Meaning of the term",
-    "Every suggested category for the same term is shown with the same reviewed meaning. Judge the category, not the wording of the definition."
-  ],
-  [
-    "No alternative required",
-    "You are not shown the complete category vocabulary and are not expected to select a replacement. For Partial or No, use Notes only when a brief geological explanation would help."
-  ],
-  [
-    "Leave unclassified",
-    "Evaluate this proposal too. Mark Yes when the term is outside scope or not a reusable geological concept. Mark No when it is a meaningful Pre-Salt concept that should receive some category; you do not need to name that category."
-  ],
-  [
-    "",
-    ""
-  ],
-  [
-    "Yes",
-    "The suggested category correctly captures what kind of geological thing, process, property, place, or time the term represents."
-  ],
-  [
-    "Partial",
-    "The proposal is in the right direction but is too broad, too narrow, or otherwise imprecise."
-  ],
-  [
-    "No",
-    "The proposed category is geologically wrong for the term."
-  ],
-  [
-    "",
-    ""
-  ],
-  [
-    "SHEET: BROADER AND MORE SPECIFIC TERMS",
-    ""
-  ],
-  [
-    "Relationship task",
-    "Answer whether the more specific term is genuinely a type of the broader term."
-  ],
-  [
-    "Usefulness task",
-    "Separately answer whether a Pre-Salt geologist or model needs this distinction to understand and compare Pre-Salt systems. Mark No when the distinction is too narrow or redundant for that purpose."
-  ],
-  [
-    "No replacement required",
-    "You are not expected to choose another broader term. Explain a Partial or No judgment in Optional notes only when useful."
-  ],
-  [
-    "",
-    ""
-  ],
-  [
-    "SHEET: DEFINITION REVIEW",
-    ""
-  ],
-  [
-    "Task",
-    "Judge the complete plain-language definition as Correct, Partly correct, Incorrect, or Unsure."
-  ],
-  [
-    "Main problem",
-    "For Partly correct or Incorrect, choose the main problem: Wrong general type; Missing or wrong defining feature; Too broad; Too narrow; Unclear wording; Other; or Unsure. Leave this field blank for Correct."
-  ],
-  [
-    "",
-    ""
-  ],
-  [
-    "SHEET: GEOLOGICAL STATEMENTS",
-    ""
-  ],
-  [
-    "Task",
-    "Judge each geological statement as Generally true, Context-specific, Partly wrong, Incorrect, or Unsure."
-  ],
-  [
-    "Scope wording",
-    "Generally true means the relationship normally holds. Context-specific means it holds only in some geological settings. A statement beginning 'For this named item' concerns only that particular item."
-  ],
-  [
-    "Use your knowledge",
-    "Judge the statement itself using your geological knowledge. No source excerpt is shown because a local occurrence could be mistaken for a general rule."
-  ],
-  [
-    "",
-    ""
-  ],
-  [
-    "SHEET: NAMED ITEMS",
-    ""
-  ],
-  [
-    "Named-item task",
-    "Judge whether the term names one specific basin, field, formation, time interval, structure, or other particular item rather than a reusable kind."
-  ],
-  [
-    "Time intervals",
-    "A formally named and bounded geological age or stage is treated as one specific time interval. A general descriptive interval is a reusable kind unless it refers to one explicitly bounded interval."
-  ],
-  [
-    "Type task",
-    "Judge whether the proposed geological type is correct. You are not shown the complete type vocabulary and do not need to select a replacement; explain in Notes only when useful."
-  ],
-  [
-    "",
-    ""
-  ],
-  [
-    "SHEET: REMOVED OR REWRITTEN TERMS",
-    ""
-  ],
-  [
-    "MAIN PRE-SALT MODEL",
-    "The main model contains reusable concepts needed to compare Brazilian Pre-Salt systems, especially geological objects, materials, structures, processes, spatial arrangement, boundaries, stratigraphic units, petrophysical properties, and geological time. Narrow local variants, individual measurements, and paper-specific details may stay in extensions instead."
-  ],
-  [
-    "Geological meaning",
-    "Compare the term's original meaning with how it is represented now. Choose Fully when the important geological meaning remains, Mostly when some important detail is weakened or lost, No when the meaning is not retained, or Unsure."
-  ],
-  [
-    "Suitable for the main model",
-    "Separately decide whether the new treatment is suitable for the main Pre-Salt model: Yes, With concern, No, or Unsure. A treatment may suit the main model even when a narrow detail moves to an extension."
-  ],
-  [
-    "Leaving a term out",
-    "Leaving a term out does not mean it is geologically false. It means the information is too narrow for the main model or is represented somewhere else."
-  ],
-  [
-    "Rewritten information",
-    "A term may be kept as a property or relationship instead of a separate concept. Judge whether the new wording still makes the important geological information available."
-  ],
-  [
-    "What should happen instead",
-    "Choose an answer only when geological meaning is Mostly preserved or not preserved: keep the term separately; keep its information without a separate term; leave it out; or Unsure."
-  ],
-  [
-    "",
-    ""
+    "HOW SHOULD YOU ANSWER?",
+    "Choose the answer that best reflects your professional judgment. Choose Partial when something is broadly right but incomplete or imprecise. Choose Unsure when you do not have enough information or the question falls outside your expertise; it is better to choose Unsure than to guess."
   ],
   [
     "NOTES",
-    "Use Notes for concise geological reasoning when the bounded choices do not capture an important issue. Thank you for your expertise."
+    "Notes are optional, but a short explanation is useful when you disagree with something."
+  ],
+  [
+    "COMPLETING THE REVIEW",
+    "You may complete the sheets in separate sessions. Before returning the workbook, check that no red cells remain."
+  ],
+  [
+    "",
+    ""
+  ],
+  [
+    "THANK YOU",
+    "Thank you for contributing your expertise."
   ]
 ]
