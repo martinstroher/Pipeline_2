@@ -37,11 +37,11 @@ sheet_instructions:
   Relations:
     title: "Geological statement review"
     task: "Decide how accurately each sentence describes the relationship between the two geological terms."
-    guidance: "Choose Generally true when the relationship normally holds, Context-specific when it holds only in some settings, Partly wrong when part of the statement is inaccurate, and Incorrect when the relationship is wrong. The evidence excerpt is context, not proof that the statement always holds."
+    guidance: "Choose Generally true when the relationship normally holds, Context-specific when it holds only in some settings, Partly wrong when part of the statement is inaccurate, and Incorrect when the relationship is wrong. Judge the statement using your geological knowledge."
   Individuals:
     title: "Named items"
     task: "First decide whether the term names one specific basin, field, formation, time interval, structure, or other particular item. Then decide whether its suggested type is correct."
-    guidance: "A named item is one particular thing, such as Búzios Field or the Aptian time interval. A reusable kind, such as carbonate platform, is not one specific named item."
+    guidance: "A named item is one particular thing with its own name, rather than a reusable kind that could describe many different things. Judge only the item shown in each row."
   Meaning_Preservation:
     title: "Removed or rewritten terms"
     task: "Compare the term's original meaning with how it is handled in the final model. First decide whether its geological meaning is still available. Then decide whether this treatment is suitable for the main Pre-Salt model."
@@ -103,11 +103,11 @@ instructions_sheet:
     - ["SHEET: GEOLOGICAL STATEMENTS", ""]
     - ["Task", "Judge each geological statement as Generally true, Context-specific, Partly wrong, Incorrect, or Unsure."]
     - ["Scope wording", "Generally true means the relationship normally holds. Context-specific means it holds only in some geological settings. A statement beginning 'For this named item' concerns only that particular item."]
-    - ["Corpus excerpt", "The excerpt appears after the judgment columns and is context only. It may be incomplete or locally specific; base the judgment on geological knowledge."]
+    - ["Use your knowledge", "Judge the statement itself using your geological knowledge. No source excerpt is shown because a local occurrence could be mistaken for a general rule."]
     - ["", ""]
     - ["SHEET: NAMED ITEMS", ""]
     - ["Named-item task", "Judge whether the term names one specific basin, field, formation, time interval, structure, or other particular item rather than a reusable kind."]
-    - ["Age and interval convention", "A named age or stage such as Aptian is treated as one specific time interval. An informal descriptive interval is a reusable kind unless it denotes one explicitly bounded interval."]
+    - ["Time intervals", "A formally named and bounded geological age or stage is treated as one specific time interval. A general descriptive interval is a reusable kind unless it refers to one explicitly bounded interval."]
     - ["Type task", "Judge whether the proposed geological type is correct. You are not shown the complete type vocabulary and do not need to select a replacement; explain in Notes only when useful."]
     - ["", ""]
     - ["SHEET: REMOVED OR REWRITTEN TERMS", ""]

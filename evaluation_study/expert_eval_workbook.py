@@ -101,7 +101,6 @@ COLUMN_DISPLAY_NAMES = {
     "Relations": {
         "Relation_Statement": "Statement to review",
         "Relation_Verdict": "How accurate is this statement?",
-        "Corpus_Excerpt (context only)": "Evidence excerpt (for context only)",
         "Notes": "Optional notes",
     },
     "Individuals": {
@@ -786,7 +785,7 @@ def build_timing_sheet() -> pd.DataFrame:
     modules = [
         "Representation",
         "Category Correct and Taxonomy",
-        "Defined Classes, Relations, Individuals, and Meaning Preservation",
+        "Definition Review, Relations, and Named Items",
     ]
     return pd.DataFrame({
         "Row_ID": [f"TIME-{index:02d}" for index in range(1, len(modules) + 1)],
@@ -1135,7 +1134,6 @@ def _final_frames_for_expert(
             )
         ],
         "Relation_Verdict": "",
-        "Corpus_Excerpt (context only)": relations["Evidence"],
         "Notes": "",
     })
 
@@ -1370,6 +1368,34 @@ def _write_workbook(
             )
 
 
+def _write_optional_model_changes_workbook(
+    path: str,
+    instructions: pd.DataFrame,
+    frame: pd.DataFrame,
+) -> None:
+    optional_instructions = pd.concat(
+        [
+            pd.DataFrame([
+                {
+                    "Section": "OPTIONAL SPECIALIST REVIEW",
+                    "Details": (
+                        "This separate file is for a geologist or ontologist who is "
+                        "comfortable reviewing how terms were removed or rewritten. "
+                        "It is not part of the main three-expert study."
+                    ),
+                }
+            ]),
+            instructions,
+        ],
+        ignore_index=True,
+    )
+    _write_workbook(
+        path,
+        optional_instructions,
+        {"Meaning_Preservation": frame},
+    )
+
+
 def generate_modular_evaluation(
     n_terms: int = DEFAULT_TERM_SAMPLE,
     n_category_terms: int = DEFAULT_CATEGORY_TERM_SAMPLE,
@@ -1476,6 +1502,7 @@ def generate_modular_evaluation(
     timing = build_timing_sheet()
     workbook_paths = []
     key_parts = []
+    optional_review_frame: pd.DataFrame | None = None
     for expert_number in range(1, n_experts + 1):
         expert_id = f"expert_{expert_number}"
         expert_seed = seed + expert_number * 10_000
@@ -1494,11 +1521,17 @@ def generate_modular_evaluation(
             expert_id,
             expert_seed + 200,
         )
+        if optional_review_frame is None:
+            optional_review_frame = final_frames["Meaning_Preservation"].copy()
         frames = {
             "Category_Guide": category_guide,
             "Representation": representation,
             "Category_Correct": category,
-            **final_frames,
+            **{
+                name: frame
+                for name, frame in final_frames.items()
+                if name != "Meaning_Preservation"
+            },
             "Timing": timing,
         }
         workbook_path = os.path.join(
@@ -1508,6 +1541,18 @@ def generate_modular_evaluation(
         _write_workbook(workbook_path, instructions, frames)
         workbook_paths.append(workbook_path)
         key_parts.extend([representation_key, category_key, *final_keys])
+
+    if optional_review_frame is None:
+        raise RuntimeError("Optional model-changes review was not generated")
+    optional_review_path = os.path.join(
+        ablation_dir,
+        "model_changes_review.xlsx",
+    )
+    _write_optional_model_changes_workbook(
+        optional_review_path,
+        instructions,
+        optional_review_frame,
+    )
 
     key_path = os.path.join(private_dir, f"blinding_key_{seed}.csv")
     key = pd.concat(key_parts, ignore_index=True, sort=False)
@@ -1560,6 +1605,7 @@ def generate_modular_evaluation(
         },
         "source_sha256": {name: _sha256_file(path) for name, path in source_paths.items()},
         "workbooks": workbook_paths,
+        "optional_model_changes_review": optional_review_path,
         "blinding_key": key_path,
     }
     manifest_path = os.path.join(ablation_dir, "expert_evaluation_manifest.json")
@@ -1572,6 +1618,7 @@ def generate_modular_evaluation(
         print(f"  {sheet_name}: {len(frame)} sampled rows")
     for path in workbook_paths:
         print(f"  Workbook: {path}")
+    print(f"  Optional model-changes review: {optional_review_path}")
     print(f"  Blinding key: {key_path} (do not share with experts)")
     print(f"  Manifest: {manifest_path}")
     return workbook_paths, key_path

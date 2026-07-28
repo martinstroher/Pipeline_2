@@ -78,7 +78,8 @@ def main() -> int:
         assert first_analysis["analysis_design"]["source_hashes_validated"] is True
         assert second_analysis["analysis_design"]["source_hashes_validated"] is True
         assert first_analysis["analysis_design"]["response_handling"]["ties"] == "retained and counted explicitly"
-        assert "core_appropriateness" in first_analysis["final_ontology"]
+        assert "meaning_preservation" not in first_analysis["final_ontology"]
+        assert "core_appropriateness" not in first_analysis["final_ontology"]
         assert first_analysis["exploratory_cross_layer"]["status"] == "exploratory"
         assert first_analysis["consensus"]["item_table"] == "item_consensus.csv"
         assert first_analysis["completion_time"]["overall_mean_minutes"] > 0
@@ -126,7 +127,6 @@ def main() -> int:
             "Defined_Classes",
             "Relations",
             "Individuals",
-            "Meaning_Preservation",
         )
         expert_facing_sheets = (
             "Category_Guide",
@@ -168,6 +168,44 @@ def main() -> int:
             (first / "expert_evaluation_manifest.json").read_text(encoding="utf-8")
         )
         assert "assignment_design" not in workbook_manifest
+        optional_review_path = Path(
+            workbook_manifest["optional_model_changes_review"]
+        )
+        assert optional_review_path.exists()
+        optional_review = load_workbook(optional_review_path)
+        assert optional_review.sheetnames == [
+            "Instructions",
+            visible_sheet_name("Meaning_Preservation"),
+        ]
+        assert optional_review["Instructions"]["A2"].value == (
+            "OPTIONAL SPECIALIST REVIEW"
+        )
+        assert optional_review["Instructions"]["B2"].value == (
+            "This separate file is for a geologist or ontologist who is comfortable "
+            "reviewing how terms were removed or rewritten. It is not part of the "
+            "main three-expert study."
+        )
+        optional_sheet = optional_review[
+            visible_sheet_name("Meaning_Preservation")
+        ]
+        assert optional_sheet.max_row - DATA_HEADER_ROW == 40
+        optional_headers = {
+            cell.value: cell.column for cell in optional_sheet[DATA_HEADER_ROW]
+        }
+        for header in (
+            visible_column_name(
+                "Meaning_Preservation",
+                "Meaning_Preserved (Fully/Mostly/No/Unsure)",
+            ),
+            visible_column_name(
+                "Meaning_Preservation",
+                "Appropriate_for_Lean_Core (Yes/With concern/No/Unsure)",
+            ),
+        ):
+            assert all(
+                optional_sheet.cell(row, optional_headers[header]).value in (None, "")
+                for row in range(DATA_START_ROW, optional_sheet.max_row + 1)
+            )
 
         expected_absent = {
             "Category_Correct": {"Suggested_Category"},
@@ -175,12 +213,6 @@ def main() -> int:
             "Defined_Classes": {"Suggested_Change", "Characteristic_General (Yes/No/Unsure)", "Feature_Is_Defining_in_PreSalt (Yes/No/Unsure)"},
             "Relations": {"Statement_Correct (Yes/Partial/No/Unsure)", "Generally_True (Yes/No/Unsure)"},
             "Individuals": {"Suggested_Type", "Rationale"},
-            "Meaning_Preservation": {
-                "Rationale",
-                "Critic_Decision",
-                "Current_Category",
-                "Decision_Acceptability (Accept/Accept with concern/Reject/Unsure)",
-            },
         }
         for sheet_name, absent_headers in expected_absent.items():
             headers = {
@@ -246,19 +278,7 @@ def main() -> int:
             value.startswith("For this named entity, ")
             for value in relation_statements
         )
-        preservation_headers = {
-            cell.value
-            for cell in workbook[visible_sheet_name("Meaning_Preservation")][DATA_HEADER_ROW]
-        }
-        assert {
-            visible_column_name("Meaning_Preservation", "Concept"),
-            visible_column_name("Meaning_Preservation", "Reference_Definition"),
-            visible_column_name("Meaning_Preservation", "Before"),
-            visible_column_name("Meaning_Preservation", "After"),
-            visible_column_name("Meaning_Preservation", "Meaning_Preserved (Fully/Mostly/No/Unsure)"),
-            visible_column_name("Meaning_Preservation", "Appropriate_for_Lean_Core (Yes/With concern/No/Unsure)"),
-            visible_column_name("Meaning_Preservation", "Preferred_Outcome (for Mostly/No)"),
-        }.issubset(preservation_headers)
+        assert visible_sheet_name("Meaning_Preservation") not in workbook.sheetnames
 
     print("=== OFFLINE REHEARSAL TEST PASSED ===")
     return 0

@@ -704,7 +704,10 @@ def _fill_final_sheets(
         sheet.cell(row_index, headers["Type_Correct (Yes/Partial/No/Unsure)"], type_verdict)
         sheet.cell(row_index, headers["Notes"], f"[{PROVENANCE}]")
 
-    sheet = workbook[visible_sheet_name("Meaning_Preservation")]
+    optional_sheet_name = visible_sheet_name("Meaning_Preservation")
+    if optional_sheet_name not in workbook.sheetnames:
+        return
+    sheet = workbook[optional_sheet_name]
     headers = _visible_headers(sheet, "Meaning_Preservation")
     hidden = key_for("Meaning_Preservation")
     for row_index in range(DATA_START_ROW, sheet.max_row + 1):
@@ -942,10 +945,11 @@ def _write_findings_report(
         ("Named entity", final["individuals"]["named_entity_correctness"]),
         ("Individual type", final["individuals"]["type_correctness"]),
     ]
-    final_outcomes.extend(
-        (f"Meaning preservation: {decision_type}", summary)
-        for decision_type, summary in final["meaning_preservation"].items()
-    )
+    if "meaning_preservation" in final:
+        final_outcomes.extend(
+            (f"Meaning preservation: {decision_type}", summary)
+            for decision_type, summary in final["meaning_preservation"].items()
+        )
 
     lines = [
         "# Offline Evaluation Rehearsal Findings",

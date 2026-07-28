@@ -33,9 +33,9 @@ REQUIRED_SHEETS = (
     "Defined_Classes",
     "Relations",
     "Individuals",
-    "Meaning_Preservation",
     "Timing",
 )
+OPTIONAL_SHEETS = ("Meaning_Preservation",)
 CORRECTNESS_CHOICES = ("yes", "partial", "no", "unsure")
 BINARY_CHOICES = ("yes", "no", "unsure")
 DEFINITION_CHOICES = ("correct", "partly correct", "incorrect", "unsure")
@@ -121,11 +121,12 @@ def load_completed_workbooks(workbook_paths: list[str]) -> dict[str, dict[str, p
                 if visible_sheet_name(sheet) in excel.sheet_names
                 else sheet
             )
-            for sheet in REQUIRED_SHEETS
+            for sheet in (*REQUIRED_SHEETS, *OPTIONAL_SHEETS)
         }
         missing = sorted(
             sheet
-            for sheet, workbook_sheet in workbook_sheet_names.items()
+            for sheet in REQUIRED_SHEETS
+            for workbook_sheet in (workbook_sheet_names[sheet],)
             if workbook_sheet not in excel.sheet_names
         )
         if missing:
@@ -139,7 +140,8 @@ def load_completed_workbooks(workbook_paths: list[str]) -> dict[str, dict[str, p
                     header=_detect_header_row(excel, workbook_sheet_names[sheet]),
                 ),
             )
-            for sheet in REQUIRED_SHEETS
+            for sheet in (*REQUIRED_SHEETS, *OPTIONAL_SHEETS)
+            if workbook_sheet_names[sheet] in excel.sheet_names
         }
         for sheet, frame in sheets.items():
             if "Row_ID" not in frame.columns:
@@ -737,21 +739,24 @@ def build_consensus_diagnostics(
             "Type_Correct (Yes/Partial/No/Unsure)",
             CORRECTNESS_CHOICES,
         ),
-        (
-            "meaning_preservation",
-            final_frames["Meaning_Preservation"],
-            "Row_ID",
-            "Meaning_Preserved (Fully/Mostly/No/Unsure)",
-            PRESERVATION_CHOICES,
-        ),
-        (
-            "core_appropriateness",
-            final_frames["Meaning_Preservation"],
-            "Row_ID",
-            "Appropriate_for_Lean_Core (Yes/With concern/No/Unsure)",
-            CORE_APPROPRIATENESS_CHOICES,
-        ),
     ]
+    if "Meaning_Preservation" in final_frames:
+        specifications.extend([
+            (
+                "meaning_preservation",
+                final_frames["Meaning_Preservation"],
+                "Row_ID",
+                "Meaning_Preserved (Fully/Mostly/No/Unsure)",
+                PRESERVATION_CHOICES,
+            ),
+            (
+                "core_appropriateness",
+                final_frames["Meaning_Preservation"],
+                "Row_ID",
+                "Appropriate_for_Lean_Core (Yes/With concern/No/Unsure)",
+                CORE_APPROPRIATENESS_CHOICES,
+            ),
+        ])
     items = pd.concat(
         [
             _item_consensus(frame, outcome, item_column, raw_column, allowed)
@@ -1343,7 +1348,7 @@ def analyze_final_ontology(
     defined = final_frames["Defined_Classes"]
     relations = final_frames["Relations"]
     individuals = final_frames["Individuals"]
-    decisions = final_frames["Meaning_Preservation"]
+    decisions = final_frames.get("Meaning_Preservation")
 
     results = {
         "taxonomy": {
@@ -1416,9 +1421,10 @@ def analyze_final_ontology(
                 ordinal=True,
             ),
         },
-        "meaning_preservation": {},
-        "core_appropriateness": {},
     }
+    if decisions is not None:
+        results["meaning_preservation"] = {}
+        results["core_appropriateness"] = {}
     issue_reasons = (
         defined["Issue_Reason (select for Partly/Incorrect)"]
         .dropna()
@@ -1463,6 +1469,8 @@ def analyze_final_ontology(
         for key, value in issue_reasons.value_counts().sort_index().to_dict().items()
     }
     results["relations"]["scope_alignment"] = _relation_scope_alignment(relations)
+    if decisions is None:
+        return results
     for offset, decision_type in enumerate(sorted(decisions["Decision_Type"].dropna().unique())):
         subset = decisions[decisions["Decision_Type"] == decision_type]
         summary = _final_outcome(
@@ -1560,9 +1568,12 @@ def run_modular_analysis(
 
     representation = unblind_representation(experts, key)
     categories = unblind_categories(experts, key)
+    final_sheet_names = ["Taxonomy", "Defined_Classes", "Relations", "Individuals"]
+    if all("Meaning_Preservation" in sheets for sheets in experts.values()):
+        final_sheet_names.append("Meaning_Preservation")
     final_frames = {
         sheet: collect_final_sheet(experts, key, sheet)
-        for sheet in ("Taxonomy", "Defined_Classes", "Relations", "Individuals", "Meaning_Preservation")
+        for sheet in final_sheet_names
     }
     timing = collect_timing(experts)
 

@@ -196,8 +196,8 @@
     "Generally true means the relationship normally holds. Context-specific means it holds only in some geological settings. A statement beginning 'For this named item' concerns only that particular item."
   ],
   [
-    "Corpus excerpt",
-    "The excerpt appears after the judgment columns and is context only. It may be incomplete or locally specific; base the judgment on geological knowledge."
+    "Use your knowledge",
+    "Judge the statement itself using your geological knowledge. No source excerpt is shown because a local occurrence could be mistaken for a general rule."
   ],
   [
     "",
@@ -212,8 +212,8 @@
     "Judge whether the term names one specific basin, field, formation, time interval, structure, or other particular item rather than a reusable kind."
   ],
   [
-    "Age and interval convention",
-    "A named age or stage such as Aptian is treated as one specific time interval. An informal descriptive interval is a reusable kind unless it denotes one explicitly bounded interval."
+    "Time intervals",
+    "A formally named and bounded geological age or stage is treated as one specific time interval. A general descriptive interval is a reusable kind unless it refers to one explicitly bounded interval."
   ],
   [
     "Type task",

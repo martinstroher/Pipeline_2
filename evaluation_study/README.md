@@ -47,17 +47,17 @@ Visible sheets use plain geological language:
 - visible column names use ordinary questions such as `Does the term fit this category?` and `Is this definition geologically correct?`; internal analysis keys remain stable.
 - `Category Review` shows the same reviewed, condition-independent term meaning for every competing proposal. The disagreement-enriched sample estimates comparative correctness on disputed terms, not population-wide absolute correctness. Real workbook generation refuses missing, pending, duplicate, or empty definitions.
 - `Definition Review` shows one natural-language definition and one verdict. Its conditional problem choices use plain language, including `Wrong general type` instead of `Base kind is wrong`.
-- `Relations` samples generic, corpus-context, and individual-fact rows, shows an explicit scope prefix, and asks for one verdict.
+- `Relations` samples generic, context-specific, and named-item statements, shows the intended scope in the sentence, and asks for one verdict. Source excerpts remain private because a local occurrence could be mistaken for a general rule.
 - `Taxonomy` separately asks whether the IS-A relation is correct and whether the distinction is useful for the Pre-Salt model.
-- `Removed or Rewritten Terms` compares plain-language before/after states for sampled exclusions and rewrites. Experts judge whether geological meaning remains and whether the treatment suits the main Pre-Salt model; `What should happen instead?` remains conditional on `Mostly` or `No` meaning preservation.
-- Meaning Preservation samples only extracted source terms; LLM-created intermediate taxonomy nodes are excluded from domain-expert review.
+- `Removed or Rewritten Terms` is generated separately as `model_changes_review.xlsx`. It contains 40 sampled exclusions and rewrites for an optional geologist/ontologist review and is not included in the main three-expert workbooks or statistics.
+- The optional review samples only extracted source terms; LLM-created intermediate taxonomy nodes are excluded.
 - Rehearsal `Reference_Definition` values are the first sentence of frozen Condition A and are preview-only. Real workbooks must replace them with the agreed reviewed neutral-definition CSV.
 - `Timing` records actual completion time by module.
 
 Formal identifiers and source metadata remain in the private key. The display text is curated in `config/display_text.yaml`; workbook generation makes no LLM call.
 Set `EXPERT_REFERENCE_DEFINITIONS` (or pass `--reference-definitions`) to the approved CSV/XLSX. Its hash is recorded in the workbook manifest. Synthetic rehearsal explicitly bypasses the approval gate and uses A-derived preview definitions.
 
-Layer 2 keeps the term-level paired analysis as primary. It always reports A-vs-B/C/D contrasts on sampled proposal disagreements with bootstrap confidence intervals and Holm correction. Exploratory cross-layer Spearman tests also use Holm correction. Raw pairwise agreement and response marginals are reported beside Fleiss kappa; Gwet AC1 and ordinal AC2 are sensitivity measures. Ties and intermediate responses remain explicit, `Unsure` is reported and excluded only from score-based tests and AC2, and conditional blanks are structurally inapplicable. Conditional issue reasons and preferred outcomes are validated against their exact workbook labels. The analyzer writes `discordant_category_contrasts.csv`, `cross_layer_spearman.csv`, `item_consensus.csv`, and `consensus_summary.csv` beside `layer2_results.json`.
+Layer 2 keeps the term-level paired analysis as primary. It always reports A-vs-B/C/D contrasts on sampled proposal disagreements with bootstrap confidence intervals and Holm correction. Exploratory cross-layer Spearman tests also use Holm correction. Raw pairwise agreement and response marginals are reported beside Fleiss kappa; Gwet AC1 and ordinal AC2 are sensitivity measures. Ties and intermediate responses remain explicit, and `Unsure` is reported and excluded only from score-based tests and AC2. The main analysis does not claim that critic exclusions or rewrites preserve meaning; those judgments belong to the optional specialist review. The analyzer writes `discordant_category_contrasts.csv`, `cross_layer_spearman.csv`, `item_consensus.csv`, and `consensus_summary.csv` beside `layer2_results.json`.
 
 ## Layout
 
