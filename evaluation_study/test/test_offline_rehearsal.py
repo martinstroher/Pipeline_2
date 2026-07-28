@@ -26,6 +26,8 @@ from evaluation_study.offline_rehearsal import (  # noqa: E402
 from evaluation_study.expert_eval_workbook import (  # noqa: E402
     DATA_HEADER_ROW,
     DATA_START_ROW,
+    visible_column_name,
+    visible_sheet_name,
 )
 
 
@@ -105,7 +107,9 @@ def main() -> int:
         relevance_column = next(
             cell.column_letter
             for cell in representation[DATA_HEADER_ROW]
-            if cell.value == "Relevance (1-5/Unsure)"
+            if cell.value == visible_column_name(
+                "Representation", "Relevance (1-5/Unsure)"
+            )
         )
         validations = list(representation.data_validations.dataValidation)
         assert any(
@@ -130,7 +134,19 @@ def main() -> int:
             "Timing",
         )
         for sheet_name in expert_facing_sheets:
-            assert str(workbook[sheet_name]["A1"].value).startswith("What to do: ")
+            sheet = workbook[visible_sheet_name(sheet_name)]
+            assert str(sheet["A1"].value).strip()
+            assert str(sheet["A2"].value).startswith("YOUR TASK\n")
+            assert str(sheet["A3"].value).startswith("HOW TO ANSWER\n")
+            if sheet_name == "Category_Guide":
+                assert "nothing to fill in" in str(sheet["A4"].value)
+            elif sheet_name == "Timing":
+                assert "Enter the minutes" in str(sheet["A4"].value)
+            else:
+                assert "Yellow cells" in str(sheet["A4"].value)
+            assert sheet.row_dimensions[1].height >= 30
+            assert sheet.row_dimensions[2].height >= 45
+            assert sheet.row_dimensions[3].height >= 55
 
         row_ids_by_workbook = []
         for path in workbooks:
@@ -138,7 +154,7 @@ def main() -> int:
             row_ids_by_workbook.append({
                 sheet_name: {
                     str(row[0])
-                    for row in candidate[sheet_name].iter_rows(
+                    for row in candidate[visible_sheet_name(sheet_name)].iter_rows(
                         min_row=DATA_START_ROW,
                         values_only=True,
                     )
@@ -168,22 +184,31 @@ def main() -> int:
         }
         for sheet_name, absent_headers in expected_absent.items():
             headers = {
-                cell.value for cell in workbook[sheet_name][DATA_HEADER_ROW]
+                cell.value
+                for cell in workbook[visible_sheet_name(sheet_name)][DATA_HEADER_ROW]
             }
             assert not headers & absent_headers, (sheet_name, headers & absent_headers)
 
-        assert "Category_Guide" in workbook.sheetnames
-        assert "Useful_PreSalt_Distinction (Yes/No/Unsure)" in {
+        assert visible_sheet_name("Category_Guide") in workbook.sheetnames
+        assert visible_column_name(
+            "Taxonomy", "Useful_PreSalt_Distinction (Yes/No/Unsure)"
+        ) in {
             cell.value for cell in workbook["Taxonomy"][DATA_HEADER_ROW]
         }
-        assert "Definition_Verdict (Correct/Partly correct/Incorrect/Unsure)" in {
-            cell.value for cell in workbook["Defined_Classes"][DATA_HEADER_ROW]
+        assert visible_column_name(
+            "Defined_Classes",
+            "Definition_Verdict (Correct/Partly correct/Incorrect/Unsure)",
+        ) in {
+            cell.value
+            for cell in workbook[visible_sheet_name("Defined_Classes")][DATA_HEADER_ROW]
         }
-        assert "Relation_Verdict" in {
+        assert visible_column_name("Relations", "Relation_Verdict") in {
             cell.value for cell in workbook["Relations"][DATA_HEADER_ROW]
         }
-        reference_header = "Reference_Definition"
-        category_sheet = workbook["Category_Correct"]
+        reference_header = visible_column_name(
+            "Category_Correct", "Reference_Definition"
+        )
+        category_sheet = workbook[visible_sheet_name("Category_Correct")]
         category_headers = {
             cell.value: cell.column
             for cell in category_sheet[DATA_HEADER_ROW]
@@ -196,7 +221,8 @@ def main() -> int:
         assert all(value not in (None, "") for value in reference_values)
         for sheet_name in response_sheets[2:]:
             assert "Term_Context (only when needed)" not in {
-                cell.value for cell in workbook[sheet_name][DATA_HEADER_ROW]
+                cell.value
+                for cell in workbook[visible_sheet_name(sheet_name)][DATA_HEADER_ROW]
             }
 
         relation_sheet = workbook["Relations"]
@@ -204,8 +230,11 @@ def main() -> int:
             cell.value: cell.column
             for cell in relation_sheet[DATA_HEADER_ROW]
         }
+        relation_statement_header = visible_column_name(
+            "Relations", "Relation_Statement"
+        )
         relation_statements = {
-            str(relation_sheet.cell(row, relation_headers["Relation_Statement"]).value)
+            str(relation_sheet.cell(row, relation_headers[relation_statement_header]).value)
             for row in range(DATA_START_ROW, relation_sheet.max_row + 1)
         }
         assert any(value.startswith("Generally, ") for value in relation_statements)
@@ -219,16 +248,16 @@ def main() -> int:
         )
         preservation_headers = {
             cell.value
-            for cell in workbook["Meaning_Preservation"][DATA_HEADER_ROW]
+            for cell in workbook[visible_sheet_name("Meaning_Preservation")][DATA_HEADER_ROW]
         }
         assert {
-            "Concept",
-            "Reference_Definition",
-            "Before",
-            "After",
-            "Meaning_Preserved (Fully/Mostly/No/Unsure)",
-            "Appropriate_for_Lean_Core (Yes/With concern/No/Unsure)",
-            "Preferred_Outcome (for Mostly/No)",
+            visible_column_name("Meaning_Preservation", "Concept"),
+            visible_column_name("Meaning_Preservation", "Reference_Definition"),
+            visible_column_name("Meaning_Preservation", "Before"),
+            visible_column_name("Meaning_Preservation", "After"),
+            visible_column_name("Meaning_Preservation", "Meaning_Preserved (Fully/Mostly/No/Unsure)"),
+            visible_column_name("Meaning_Preservation", "Appropriate_for_Lean_Core (Yes/With concern/No/Unsure)"),
+            visible_column_name("Meaning_Preservation", "Preferred_Outcome (for Mostly/No)"),
         }.issubset(preservation_headers)
 
     print("=== OFFLINE REHEARSAL TEST PASSED ===")

@@ -29,10 +29,13 @@ import evaluation_study.layer1_analysis as layer1
 from evaluation_study.expert_eval_analysis import run_modular_analysis
 from evaluation_study.expert_eval_generator import generate_expert_evaluation
 from evaluation_study.expert_eval_workbook import (
+    COLUMN_DISPLAY_NAMES,
     DATA_HEADER_ROW,
     DATA_START_ROW,
     StudyInputs,
     build_final_fates,
+    visible_column_name,
+    visible_sheet_name,
 )
 from evaluation_study.paths import (
     APPROVED_ONTOLOGY_DIR,
@@ -85,6 +88,23 @@ def _sha256_file(path: str | Path) -> str:
 
 def _sha256_text(text: str) -> str:
     return hashlib.sha256(text.encode("utf-8")).hexdigest()
+
+
+def _visible_headers(sheet, internal_sheet_name: str) -> dict[str, int]:
+    headers = {cell.value: cell.column for cell in sheet[DATA_HEADER_ROW]}
+    canonical = {
+        internal_name: headers[visible_name]
+        for internal_name, visible_name in COLUMN_DISPLAY_NAMES.get(
+            internal_sheet_name, {}
+        ).items()
+        if visible_name in headers
+    }
+    canonical.update({
+        name: column
+        for name, column in headers.items()
+        if name is not None and name not in canonical
+    })
+    return canonical
 
 
 def _unit(seed: int, *parts: object) -> float:
@@ -521,7 +541,7 @@ def _fill_representation_sheet(
     expert_id: str,
     seed: int,
 ) -> None:
-    headers = {cell.value: cell.column for cell in sheet[DATA_HEADER_ROW]}
+    headers = _visible_headers(sheet, "Representation")
     key = hidden.set_index("Row_ID")
     for row_index in range(DATA_START_ROW, sheet.max_row + 1):
         row_id = str(sheet.cell(row_index, headers["Row_ID"]).value)
@@ -564,7 +584,7 @@ def _fill_category_sheet(
     tiers: dict[str, str],
     seed: int,
 ) -> None:
-    headers = {cell.value: cell.column for cell in sheet[DATA_HEADER_ROW]}
+    headers = _visible_headers(sheet, "Category_Correct")
     key = hidden.set_index("Row_ID")
     for row_index in range(DATA_START_ROW, sheet.max_row + 1):
         row_id = str(sheet.cell(row_index, headers["Row_ID"]).value)
@@ -594,8 +614,8 @@ def _fill_final_sheets(
     def key_for(sheet_name: str) -> pd.DataFrame:
         return key[(key["Expert_ID"] == expert_id) & (key["Sheet"] == sheet_name)].set_index("Row_ID")
 
-    sheet = workbook["Taxonomy"]
-    headers = {cell.value: cell.column for cell in sheet[DATA_HEADER_ROW]}
+    sheet = workbook[visible_sheet_name("Taxonomy")]
+    headers = _visible_headers(sheet, "Taxonomy")
     hidden = key_for("Taxonomy")
     for row_index in range(DATA_START_ROW, sheet.max_row + 1):
         row_id = str(sheet.cell(row_index, headers["Row_ID"]).value)
@@ -607,8 +627,8 @@ def _fill_final_sheets(
         sheet.cell(row_index, headers["Useful_PreSalt_Distinction (Yes/No/Unsure)"], keep)
         sheet.cell(row_index, headers["Notes"], f"[{PROVENANCE}]")
 
-    sheet = workbook["Defined_Classes"]
-    headers = {cell.value: cell.column for cell in sheet[DATA_HEADER_ROW]}
+    sheet = workbook[visible_sheet_name("Defined_Classes")]
+    headers = _visible_headers(sheet, "Defined_Classes")
     hidden = key_for("Defined_Classes")
     for row_index in range(DATA_START_ROW, sheet.max_row + 1):
         row_id = str(sheet.cell(row_index, headers["Row_ID"]).value)
@@ -630,18 +650,18 @@ def _fill_final_sheets(
             sheet.cell(
                 row_index,
                 headers["Issue_Reason (select for Partly/Incorrect)"],
-                "Feature is not defining",
+                "Missing or wrong defining feature",
             )
         elif definition == "Incorrect":
             sheet.cell(
                 row_index,
                 headers["Issue_Reason (select for Partly/Incorrect)"],
-                "Base kind is wrong",
+                "Wrong general type",
             )
         sheet.cell(row_index, headers["Notes"], f"[{PROVENANCE}]")
 
-    sheet = workbook["Relations"]
-    headers = {cell.value: cell.column for cell in sheet[DATA_HEADER_ROW]}
+    sheet = workbook[visible_sheet_name("Relations")]
+    headers = _visible_headers(sheet, "Relations")
     hidden = key_for("Relations")
     for row_index in range(DATA_START_ROW, sheet.max_row + 1):
         row_id = str(sheet.cell(row_index, headers["Row_ID"]).value)
@@ -671,8 +691,8 @@ def _fill_final_sheets(
         sheet.cell(row_index, headers["Relation_Verdict"], verdict)
         sheet.cell(row_index, headers["Notes"], f"[{PROVENANCE}; confidence-derived]")
 
-    sheet = workbook["Individuals"]
-    headers = {cell.value: cell.column for cell in sheet[DATA_HEADER_ROW]}
+    sheet = workbook[visible_sheet_name("Individuals")]
+    headers = _visible_headers(sheet, "Individuals")
     hidden = key_for("Individuals")
     for row_index in range(DATA_START_ROW, sheet.max_row + 1):
         row_id = str(sheet.cell(row_index, headers["Row_ID"]).value)
@@ -684,8 +704,8 @@ def _fill_final_sheets(
         sheet.cell(row_index, headers["Type_Correct (Yes/Partial/No/Unsure)"], type_verdict)
         sheet.cell(row_index, headers["Notes"], f"[{PROVENANCE}]")
 
-    sheet = workbook["Meaning_Preservation"]
-    headers = {cell.value: cell.column for cell in sheet[DATA_HEADER_ROW]}
+    sheet = workbook[visible_sheet_name("Meaning_Preservation")]
+    headers = _visible_headers(sheet, "Meaning_Preservation")
     hidden = key_for("Meaning_Preservation")
     for row_index in range(DATA_START_ROW, sheet.max_row + 1):
         row_id = str(sheet.cell(row_index, headers["Row_ID"]).value)
@@ -761,10 +781,10 @@ def _fill_mock_workbooks(
             (key["Expert_ID"] == expert_id) & (key["Sheet"] == "Category_Correct")
         ]
         _fill_representation_sheet(
-            workbook["Representation"], representation_key, expert_id, seed
+            workbook[visible_sheet_name("Representation")], representation_key, expert_id, seed
         )
         _fill_category_sheet(
-            workbook["Category_Correct"],
+            workbook[visible_sheet_name("Category_Correct")],
             category_key,
             expert_id,
             reference,
@@ -772,10 +792,8 @@ def _fill_mock_workbooks(
             seed,
         )
         _fill_final_sheets(workbook, key, expert_id, seed)
-        timing = workbook["Timing"]
-        timing_headers = {
-            cell.value: cell.column for cell in timing[DATA_HEADER_ROW]
-        }
+        timing = workbook[visible_sheet_name("Timing")]
+        timing_headers = _visible_headers(timing, "Timing")
         for row_index in range(DATA_START_ROW, timing.max_row + 1):
             row_id = str(timing.cell(row_index, timing_headers["Row_ID"]).value)
             minutes = 35 + int(_unit(seed, expert_id, row_id, "timing") * 31)
@@ -845,7 +863,8 @@ def _verify_outputs(
             "Defined_Classes",
             "Individuals",
         ):
-            headers = {cell.value for cell in next(workbook[sheet_name].iter_rows(max_row=1))}
+            sheet = workbook[visible_sheet_name(sheet_name)]
+            headers = {cell.value for cell in sheet[DATA_HEADER_ROW]}
             if headers & forbidden_headers:
                 raise AssertionError(
                     f"{sheet_name} asks for a hidden-vocabulary replacement: "

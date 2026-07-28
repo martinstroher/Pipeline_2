@@ -9,30 +9,34 @@
   ],
   [
     "PURPOSE",
-    "Evaluate geological representations and the final Pre-Salt knowledge model. The representation tasks are blinded; do not try to identify which system produced an item."
+    "Use your geological knowledge to review terms, definitions, categories, relationships, named items, and changes made to the final Pre-Salt model."
   ],
   [
-    "STUDY DESIGN",
-    "All experts receive the same sampled items in a different order. Definition 1 and Definition 2 are independently swapped for each expert."
+    "WHAT TO COMPLETE",
+    "Complete every yellow answer cell. You may work one sheet at a time and pause between sheets. Record your actual time in the Timing sheet."
   ],
   [
-    "GENERAL RULE",
-    "Judge only the proposal shown in each row. You do not need to reconstruct the complete ontology or suggest an alternative from a hidden list. Use Notes for an optional short explanation, especially for Partial or No."
+    "HOW TO ANSWER",
+    "Judge only what is shown in each row. You do not need to know the complete model or suggest a replacement unless the sheet asks what should happen instead. Notes are optional but useful when you choose Partial, No, With concern, or Incorrect."
+  ],
+  [
+    "PARTIAL AND WITH CONCERN",
+    "Choose Partial when the proposal is partly right but too broad, too narrow, incomplete, or imprecise. Choose With concern when a treatment may be acceptable for the main model but loses or weakens useful information."
   ],
   [
     "UNSURE",
-    "Choose Unsure when you lack enough expertise, the meaning is ambiguous, or the available information conflicts. Choose Partial when you can judge the item and it is only partly correct. Representation ratings also include an explicit Unsure option."
+    "Choose Unsure when the term is ambiguous, the information conflicts, or the question falls outside your expertise. Unsure is a valid answer and is better than guessing."
   ],
   [
-    "SESSIONS AND TIMING",
-    "Every expert must complete every sampled item. Work may be paused between modules; record actual minutes for each module in the Timing sheet."
+    "BLIND REVIEW",
+    "Definition 1 and Definition 2 come from different methods. Their order changes between workbooks. Judge the text itself and do not try to identify the method."
   ],
   [
     "",
     ""
   ],
   [
-    "SHEET: REPRESENTATION",
+    "SHEET: TERMS AND DEFINITIONS",
     ""
   ],
   [
@@ -60,7 +64,7 @@
     "The term is commonly needed to describe or compare Pre-Salt systems."
   ],
   [
-    "Relevance 5 - Core",
+    "Relevance 5 - Essential",
     "The term is fundamental to understanding Brazilian Pre-Salt geology or reservoirs."
   ],
   [
@@ -96,7 +100,7 @@
     ""
   ],
   [
-    "SHEET: CATEGORY_CORRECT",
+    "SHEET: CATEGORY REVIEW",
     ""
   ],
   [
@@ -109,11 +113,11 @@
   ],
   [
     "Category guide",
-    "Use the Category_Guide sheet for plain-language meanings and examples. Formal ontology labels are intentionally hidden from the judgment sheets."
+    "Use the Category Guide sheet when a suggested category is unfamiliar. It explains each category in ordinary geological language and gives an example."
   ],
   [
-    "Reference definition",
-    "Every competing category for a term is judged against the same reviewed, condition-independent definition so category correctness is not confounded with definition quality."
+    "Meaning of the term",
+    "Every suggested category for the same term is shown with the same reviewed meaning. Judge the category, not the wording of the definition."
   ],
   [
     "No alternative required",
@@ -129,7 +133,7 @@
   ],
   [
     "Yes",
-    "The proposed category correctly captures the kind of geological entity, process, property, or other item represented by the term."
+    "The suggested category correctly captures what kind of geological thing, process, property, place, or time the term represents."
   ],
   [
     "Partial",
@@ -144,12 +148,12 @@
     ""
   ],
   [
-    "SHEET: TAXONOMY",
+    "SHEET: BROADER AND MORE SPECIFIC TERMS",
     ""
   ],
   [
     "Relationship task",
-    "Answer whether the child concept is genuinely a type of the proposed parent concept."
+    "Answer whether the more specific term is genuinely a type of the broader term."
   ],
   [
     "Usefulness task",
@@ -157,14 +161,14 @@
   ],
   [
     "No replacement required",
-    "You are not shown the complete hierarchy and are not expected to choose another parent. Explain a Partial or No judgment in Notes only when useful."
+    "You are not expected to choose another broader term. Explain a Partial or No judgment in Optional notes only when useful."
   ],
   [
     "",
     ""
   ],
   [
-    "SHEET: DEFINED_CLASSES",
+    "SHEET: DEFINITION REVIEW",
     ""
   ],
   [
@@ -172,24 +176,24 @@
     "Judge the complete plain-language definition as Correct, Partly correct, Incorrect, or Unsure."
   ],
   [
-    "Issue reason",
-    "For Partly correct or Incorrect, select the main issue: wrong base kind, non-defining feature, too broad, too narrow, unclear wording, or Other. Leave this field blank for Correct."
+    "Main problem",
+    "For Partly correct or Incorrect, choose the main problem: Wrong general type; Missing or wrong defining feature; Too broad; Too narrow; Unclear wording; Other; or Unsure. Leave this field blank for Correct."
   ],
   [
     "",
     ""
   ],
   [
-    "SHEET: RELATIONS",
+    "SHEET: GEOLOGICAL STATEMENTS",
     ""
   ],
   [
     "Task",
-    "Judge the explicitly scoped relation sentence with one verdict: Generally true; Context-specific; Partly wrong; Incorrect; or Unsure."
+    "Judge each geological statement as Generally true, Context-specific, Partly wrong, Incorrect, or Unsure."
   ],
   [
     "Scope wording",
-    "Generally means the relation holds across the concept. In some reported Pre-Salt contexts means it is supported only in particular settings. For this named entity means it is an individual fact."
+    "Generally true means the relationship normally holds. Context-specific means it holds only in some geological settings. A statement beginning 'For this named item' concerns only that particular item."
   ],
   [
     "Corpus excerpt",
@@ -200,16 +204,16 @@
     ""
   ],
   [
-    "SHEET: INDIVIDUALS",
+    "SHEET: NAMED ITEMS",
     ""
   ],
   [
-    "Named-entity task",
-    "Judge whether the item is one specific named basin, field, formation, time interval, structure, or other particular entity rather than a reusable kind."
+    "Named-item task",
+    "Judge whether the term names one specific basin, field, formation, time interval, structure, or other particular item rather than a reusable kind."
   ],
   [
     "Age and interval convention",
-    "A named age or stage such as Aptian is one defined time interval and is treated as a named entity. An informal descriptive interval is a reusable kind unless it denotes one explicitly bounded interval."
+    "A named age or stage such as Aptian is treated as one specific time interval. An informal descriptive interval is a reusable kind unless it denotes one explicitly bounded interval."
   ],
   [
     "Type task",
@@ -220,32 +224,32 @@
     ""
   ],
   [
-    "SHEET: MEANING_PRESERVATION",
+    "SHEET: REMOVED OR REWRITTEN TERMS",
     ""
   ],
   [
-    "TARGET CORE SCOPE",
-    "The core serves geologists and knowledge-model users comparing Brazilian Pre-Salt systems, especially the Santos and Campos basins. It includes reusable concepts needed to answer the ten project questions about geological objects, constituent materials, structures, post-depositional processes, spatial arrangement, dimensions and positions, boundaries, deposits and stratigraphic units, petrophysical properties, and geological age. Named entities remain instances. Paper-specific distinctions, local variants, measurement values, and details not needed by those questions belong in extensions rather than the core."
+    "MAIN PRE-SALT MODEL",
+    "The main model contains reusable concepts needed to compare Brazilian Pre-Salt systems, especially geological objects, materials, structures, processes, spatial arrangement, boundaries, stratigraphic units, petrophysical properties, and geological time. Narrow local variants, individual measurements, and paper-specific details may stay in extensions instead."
   ],
   [
-    "Meaning preservation",
-    "Compare the geological meaning before and after the treatment. Judge semantic retention as Fully, Mostly, No, or Unsure, independent of whether the concept belongs in the lean core."
+    "Geological meaning",
+    "Compare the term's original meaning with how it is represented now. Choose Fully when the important geological meaning remains, Mostly when some important detail is weakened or lost, No when the meaning is not retained, or Unsure."
   ],
   [
-    "Core appropriateness",
-    "Separately judge whether the treatment is appropriate for the stated lean-core scope: Yes, With concern, No, or Unsure. A treatment can fit the core policy even when it does not fully preserve meaning."
+    "Suitable for the main model",
+    "Separately decide whether the new treatment is suitable for the main Pre-Salt model: Yes, With concern, No, or Unsure. A treatment may suit the main model even when a narrow detail moves to an extension."
   ],
   [
-    "Exclusion",
-    "Leaving a concept out does not mean it is geologically false. It means the information is outside the stated core boundary or is represented elsewhere."
+    "Leaving a term out",
+    "Leaving a term out does not mean it is geologically false. It means the information is too narrow for the main model or is represented somewhere else."
   ],
   [
-    "Characteristic treatment",
-    "Representing a term as a characteristic or relation keeps its information without treating it as a separate type of geological thing."
+    "Rewritten information",
+    "A term may be kept as a property or relationship instead of a separate concept. Judge whether the new wording still makes the important geological information available."
   ],
   [
-    "Preferred outcome",
-    "Select a preferred outcome only when Meaning Preserved is Mostly or No: keep as a separate concept; keep its information but not as a separate concept; leave it out; or Unsure."
+    "What should happen instead",
+    "Choose an answer only when geological meaning is Mostly preserved or not preserved: keep the term separately; keep its information without a separate term; leave it out; or Unsure."
   ],
   [
     "",

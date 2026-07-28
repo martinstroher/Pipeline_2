@@ -52,8 +52,82 @@ DEFAULT_TERM_SAMPLE = 100
 DEFAULT_CATEGORY_TERM_SAMPLE = 60
 DEFAULT_EXPERTS = 3
 DEFAULT_SEED = 42
-DATA_HEADER_ROW = 2
+DATA_HEADER_ROW = 5
 DATA_START_ROW = DATA_HEADER_ROW + 1
+
+VISIBLE_SHEET_NAMES = {
+    "Category_Guide": "Category Guide",
+    "Category_Correct": "Category Review",
+    "Defined_Classes": "Definition Review",
+    "Individuals": "Named Items",
+    "Meaning_Preservation": "Removed or Rewritten Terms",
+}
+
+COLUMN_DISPLAY_NAMES = {
+    "Category_Guide": {
+        "Positive_Example": "Example",
+        "Not_This": "Different from",
+    },
+    "Representation": {
+        "Relevance (1-5/Unsure)": "Pre-Salt relevance",
+        "Definition_1": "Definition 1",
+        "Definition_2": "Definition 2",
+        "Quality_1 (1-5/Unsure)": "Definition 1 accuracy",
+        "Quality_2 (1-5/Unsure)": "Definition 2 accuracy",
+        "Preference (1/2/Tie/Unsure)": "Which definition is better?",
+        "Notes": "Optional notes",
+    },
+    "Category_Correct": {
+        "Reference_Definition": "Meaning of the term",
+        "Proposed_Category": "Suggested category",
+        "Category_Definition": "What the category means",
+        "Correct (Yes/Partial/No/Unsure)": "Does the term fit this category?",
+        "Notes": "Optional notes",
+    },
+    "Taxonomy": {
+        "Child_Concept": "More specific term",
+        "Parent_Concept": "Broader term",
+        "Relationship_Correct (Yes/Partial/No/Unsure)": "Is the first term a type of the broader term?",
+        "Useful_PreSalt_Distinction (Yes/No/Unsure)": "Is this separate term useful for Pre-Salt geology?",
+        "Notes": "Optional notes",
+    },
+    "Defined_Classes": {
+        "Concept": "Term",
+        "Proposed_Definition": "Definition to review",
+        "Definition_Verdict (Correct/Partly correct/Incorrect/Unsure)": "Is this definition geologically correct?",
+        "Issue_Reason (select for Partly/Incorrect)": "Main problem with the definition",
+        "Notes": "Optional notes",
+    },
+    "Relations": {
+        "Relation_Statement": "Statement to review",
+        "Relation_Verdict": "How accurate is this statement?",
+        "Corpus_Excerpt (context only)": "Evidence excerpt (for context only)",
+        "Notes": "Optional notes",
+    },
+    "Individuals": {
+        "Named_Entity": "Named item",
+        "Proposed_Type": "Suggested type",
+        "Specific_Named_Entity (Yes/No/Unsure)": "Is this one specific named item?",
+        "Type_Correct (Yes/Partial/No/Unsure)": "Is the suggested type correct?",
+        "Notes": "Optional notes",
+    },
+    "Meaning_Preservation": {
+        "Concept": "Term",
+        "Reference_Definition": "Meaning of the term",
+        "Before": "How it was represented before",
+        "After": "How it is represented now",
+        "Meaning_Preserved (Fully/Mostly/No/Unsure)": "Does the new treatment keep the term's geological meaning?",
+        "Appropriate_for_Lean_Core (Yes/With concern/No/Unsure)": "Is the new treatment suitable for the main Pre-Salt model?",
+        "Preferred_Outcome (for Mostly/No)": "What should happen instead?",
+        "Notes": "Optional notes",
+    },
+    "Timing": {
+        "Session": "Work group",
+        "Module": "Work completed",
+        "Minutes": "Time spent (minutes)",
+        "Comments": "Optional comments",
+    },
+}
 FINAL_SAMPLE_SIZES = {
     "Taxonomy": 40,
     "Defined_Classes": 13,
@@ -82,6 +156,22 @@ class StudyInputs:
     individuals: pd.DataFrame
     demotions: pd.DataFrame
     class_fates: pd.DataFrame
+
+
+def visible_sheet_name(internal_name: str) -> str:
+    return VISIBLE_SHEET_NAMES.get(internal_name, internal_name)
+
+
+def visible_column_name(sheet_name: str, internal_name: str) -> str:
+    return COLUMN_DISPLAY_NAMES.get(sheet_name, {}).get(internal_name, internal_name)
+
+
+def canonicalize_workbook_frame(sheet_name: str, frame: pd.DataFrame) -> pd.DataFrame:
+    inverse = {
+        visible: internal
+        for internal, visible in COLUMN_DISPLAY_NAMES.get(sheet_name, {}).items()
+    }
+    return frame.rename(columns=inverse)
 
 
 def _normalise(value: object) -> str:
@@ -1123,7 +1213,7 @@ _INPUT_VALIDATIONS = {
     },
     "Defined_Classes": {
         "Definition_Verdict (Correct/Partly correct/Incorrect/Unsure)": "Correct,Partly correct,Incorrect,Unsure",
-        "Issue_Reason (select for Partly/Incorrect)": "Base kind is wrong,Feature is not defining,Too broad,Too narrow,Wording unclear,Other,Unsure",
+        "Issue_Reason (select for Partly/Incorrect)": "Wrong general type,Missing or wrong defining feature,Too broad,Too narrow,Unclear wording,Other,Unsure",
         "Notes": None,
     },
     "Relations": {
@@ -1170,20 +1260,32 @@ def _format_data_sheet(
     ws,
     input_validations: dict[str, str | None],
     sheet_name: str,
-    task_text: str,
+    instructions,
 ) -> None:
     last_column_letter = get_column_letter(ws.max_column)
-    ws.merge_cells(start_row=1, start_column=1, end_row=1, end_column=ws.max_column)
-    ws.cell(1, 1).value = f"What to do: {task_text}"
-    ws.cell(1, 1).font = Font(bold=True, color="1F4E78")
-    ws.cell(1, 1).fill = PatternFill(
-        start_color="D9EAF7",
-        end_color="D9EAF7",
-        fill_type="solid",
+    panel_rows = (
+        (1, instructions.title, "1F4E78", "FFFFFF", 16, 30),
+        (2, f"YOUR TASK\n{instructions.task}", "D9EAF7", "1F1F1F", 11, 48),
+        (3, f"HOW TO ANSWER\n{instructions.guidance}", "EAF2F8", "1F1F1F", 10, 60),
+        (
+            4,
+            instructions.answer_cue
+            or "Yellow cells are for your answers. Choose Unsure when you do not have enough information. Notes are optional.",
+            "F3F6F8",
+            "404040",
+            9,
+            28,
+        ),
     )
-    ws.cell(1, 1).alignment = _WRAP
-    ws.cell(1, 1).border = _BORDER
-    ws.row_dimensions[1].height = 42
+    for row, text, fill, color, size, height in panel_rows:
+        ws.merge_cells(start_row=row, start_column=1, end_row=row, end_column=ws.max_column)
+        cell = ws.cell(row, 1)
+        cell.value = text
+        cell.font = Font(bold=row <= 2, color=color, size=size)
+        cell.fill = PatternFill(start_color=fill, end_color=fill, fill_type="solid")
+        cell.alignment = Alignment(wrap_text=True, vertical="center")
+        cell.border = _BORDER
+        ws.row_dimensions[row].height = height
     ws.freeze_panes = f"A{DATA_START_ROW}"
     ws.auto_filter.ref = (
         f"A{DATA_HEADER_ROW}:{last_column_letter}{ws.max_row}"
@@ -1200,12 +1302,14 @@ def _format_data_sheet(
     for column_index in range(1, ws.max_column + 1):
         header = str(ws.cell(DATA_HEADER_ROW, column_index).value or "")
         width = 15
-        if any(token in header for token in ("Definition", "Description", "Rationale", "Evidence", "Excerpt", "Question", "Decision", "Statement", "Before", "After")):
+        if any(token in header for token in ("Definition", "Description", "Meaning", "Rationale", "Evidence", "Excerpt", "Question", "Decision", "Statement", "represented", "treatment")):
             width = 70
-        elif any(token in header for token in ("Term", "Concept", "Category", "Parent", "Subject", "Entity", "Type")):
+        elif any(token in header for token in ("Term", "Concept", "Category", "Parent", "Subject", "Entity", "Type", "Broader", "specific", "Named item")):
             width = 28
-        elif header == "Notes" or "Outcome" in header or header.startswith("Suggested"):
+        elif header in {"Optional notes", "Optional comments"} or "Outcome" in header or header.startswith("Suggested") or header.startswith("What should"):
             width = 35
+        elif len(header) > 32:
+            width = 28
         ws.column_dimensions[get_column_letter(column_index)].width = width
         for row_index in range(DATA_START_ROW, ws.max_row + 1):
             cell = ws.cell(row_index, column_index)
@@ -1213,7 +1317,8 @@ def _format_data_sheet(
             cell.border = _BORDER
 
     for header, options in input_validations.items():
-        column_index = headers[header]
+        visible_header = visible_column_name(sheet_name, header)
+        column_index = headers[visible_header]
         column_letter = get_column_letter(column_index)
         for row_index in range(DATA_START_ROW, ws.max_row + 1):
             ws.cell(row_index, column_index).fill = _INPUT_FILL
@@ -1247,9 +1352,10 @@ def _write_workbook(
     with pd.ExcelWriter(path, engine="openpyxl") as writer:
         instructions.to_excel(writer, sheet_name="Instructions", index=False)
         for sheet_name, frame in frames.items():
-            frame.to_excel(
+            visible_frame = frame.rename(columns=COLUMN_DISPLAY_NAMES.get(sheet_name, {}))
+            visible_frame.to_excel(
                 writer,
-                sheet_name=sheet_name,
+                sheet_name=visible_sheet_name(sheet_name),
                 index=False,
                 startrow=DATA_HEADER_ROW - 1,
             )
@@ -1257,7 +1363,7 @@ def _write_workbook(
         _format_instructions(workbook["Instructions"])
         for sheet_name in frames:
             _format_data_sheet(
-                workbook[sheet_name],
+                workbook[visible_sheet_name(sheet_name)],
                 _INPUT_VALIDATIONS.get(sheet_name, {}),
                 sheet_name,
                 sheet_instructions[sheet_name],

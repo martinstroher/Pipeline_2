@@ -27,7 +27,15 @@ _DEFAULT_PATH = STUDY_CONFIG
 @dataclass(frozen=True)
 class StudyConfig:
     instruction_rows: tuple[tuple[str, str], ...] = field(default_factory=tuple)
-    sheet_instructions: dict[str, str] = field(default_factory=dict)
+    sheet_instructions: dict[str, "SheetInstruction"] = field(default_factory=dict)
+
+
+@dataclass(frozen=True)
+class SheetInstruction:
+    title: str
+    task: str
+    guidance: str
+    answer_cue: str = ""
 
 
 @dataclass(frozen=True)
@@ -74,10 +82,16 @@ def get_study_config() -> StudyConfig:
         raise RuntimeError(
             f"Study config '{path}' has no instructions_sheet.rows entries."
         )
-    sheet_instructions = {
-        str(key): str(value)
-        for key, value in (data.get("sheet_instructions") or {}).items()
-    }
+    sheet_instructions = {}
+    for key, value in (data.get("sheet_instructions") or {}).items():
+        if isinstance(value, str):
+            value = {"title": str(key).replace("_", " "), "task": value}
+        sheet_instructions[str(key)] = SheetInstruction(
+            title=str(value.get("title") or str(key).replace("_", " ")),
+            task=str(value.get("task") or ""),
+            guidance=str(value.get("guidance") or ""),
+            answer_cue=str(value.get("answer_cue") or ""),
+        )
     return StudyConfig(
         instruction_rows=instruction_rows,
         sheet_instructions=sheet_instructions,

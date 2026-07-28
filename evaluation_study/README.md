@@ -29,7 +29,7 @@ python -m evaluation_study.cli ablation
 python -m evaluation_study.cli layer1
 python -m evaluation_study.cli expert-workbooks
 python -m evaluation_study.cli layer2 \
-  evaluation_study/output/ablation/expert_workbooks/*.xlsx \
+  evaluation_study/output/ablation/expert_workbooks/expert_evaluation_[1-3].xlsx \
   --key evaluation_study/output/ablation/private/blinding_key_42.csv
 python -m evaluation_study.cli rehearsal --overwrite
 ```
@@ -42,13 +42,14 @@ The default design generates three independently ordered workbooks. Every expert
 
 Visible sheets use plain geological language:
 
-- `Category_Guide` translates opaque upper-ontology labels and gives examples.
-- every expert-facing sheet starts with one short `What to do` banner.
-- `Category_Correct` shows the same reviewed, condition-independent `Reference_Definition` for every competing proposal for a term. The disagreement-enriched sample estimates comparative correctness on disputed terms, not population-wide absolute correctness. Real workbook generation refuses missing, pending, duplicate, or empty definitions.
-- `Defined_Classes` shows one natural-language definition and one verdict.
+- `Category Guide` translates opaque upper-ontology labels and gives examples.
+- every expert-facing sheet starts with a four-row panel: a clear title, the task, how to answer, and a short answer-cell cue.
+- visible column names use ordinary questions such as `Does the term fit this category?` and `Is this definition geologically correct?`; internal analysis keys remain stable.
+- `Category Review` shows the same reviewed, condition-independent term meaning for every competing proposal. The disagreement-enriched sample estimates comparative correctness on disputed terms, not population-wide absolute correctness. Real workbook generation refuses missing, pending, duplicate, or empty definitions.
+- `Definition Review` shows one natural-language definition and one verdict. Its conditional problem choices use plain language, including `Wrong general type` instead of `Base kind is wrong`.
 - `Relations` samples generic, corpus-context, and individual-fact rows, shows an explicit scope prefix, and asks for one verdict.
 - `Taxonomy` separately asks whether the IS-A relation is correct and whether the distinction is useful for the Pre-Salt model.
-- `Meaning_Preservation` compares plain-language before/after states for sampled exclusions and demotions without exposing formal critic jargon. It records semantic preservation and lean-core appropriateness as separate mandatory judgments; Preferred Outcome remains conditional on `Mostly` or `No` semantic preservation.
+- `Removed or Rewritten Terms` compares plain-language before/after states for sampled exclusions and rewrites. Experts judge whether geological meaning remains and whether the treatment suits the main Pre-Salt model; `What should happen instead?` remains conditional on `Mostly` or `No` meaning preservation.
 - Meaning Preservation samples only extracted source terms; LLM-created intermediate taxonomy nodes are excluded from domain-expert review.
 - Rehearsal `Reference_Definition` values are the first sentence of frozen Condition A and are preview-only. Real workbooks must replace them with the agreed reviewed neutral-definition CSV.
 - `Timing` records actual completion time by module.

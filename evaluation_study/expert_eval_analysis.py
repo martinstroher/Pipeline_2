@@ -20,7 +20,10 @@ from scipy import stats
 from sklearn.metrics import cohen_kappa_score
 
 from src.utils.csv_io import read_csv, write_csv
-from evaluation_study.expert_eval_workbook import DATA_HEADER_ROW
+from evaluation_study.expert_eval_workbook import (
+    canonicalize_workbook_frame,
+    visible_sheet_name,
+)
 
 
 REQUIRED_SHEETS = (
@@ -94,6 +97,14 @@ def _expert_id(path: str, fallback_index: int) -> str:
     return f"expert_{match.group(1)}" if match else f"expert_{fallback_index}"
 
 
+def _detect_header_row(excel: pd.ExcelFile, sheet_name: str) -> int:
+    preview = pd.read_excel(excel, sheet_name=sheet_name, header=None, nrows=8)
+    for index, row in preview.iterrows():
+        if row.astype(str).str.strip().eq("Row_ID").any():
+            return int(index)
+    raise ValueError(f"{sheet_name} has no Row_ID header in the first eight rows")
+
+
 def load_completed_workbooks(workbook_paths: list[str]) -> dict[str, dict[str, pd.DataFrame]]:
     """Load modular sheets and reject missing or duplicate stable row IDs."""
     experts: dict[str, dict[str, pd.DataFrame]] = {}
@@ -104,14 +115,29 @@ def load_completed_workbooks(workbook_paths: list[str]) -> dict[str, dict[str, p
         if expert_id in experts:
             raise ValueError(f"Duplicate expert ID inferred from workbook paths: {expert_id}")
         excel = pd.ExcelFile(path, engine="openpyxl")
-        missing = sorted(set(REQUIRED_SHEETS) - set(excel.sheet_names))
+        workbook_sheet_names = {
+            sheet: (
+                visible_sheet_name(sheet)
+                if visible_sheet_name(sheet) in excel.sheet_names
+                else sheet
+            )
+            for sheet in REQUIRED_SHEETS
+        }
+        missing = sorted(
+            sheet
+            for sheet, workbook_sheet in workbook_sheet_names.items()
+            if workbook_sheet not in excel.sheet_names
+        )
         if missing:
             raise ValueError(f"{path} missing sheets: {missing}")
         sheets = {
-            sheet: pd.read_excel(
-                excel,
-                sheet_name=sheet,
-                header=DATA_HEADER_ROW - 1,
+            sheet: canonicalize_workbook_frame(
+                sheet,
+                pd.read_excel(
+                    excel,
+                    sheet_name=workbook_sheet_names[sheet],
+                    header=_detect_header_row(excel, workbook_sheet_names[sheet]),
+                ),
             )
             for sheet in REQUIRED_SHEETS
         }
@@ -1400,23 +1426,30 @@ def analyze_final_ontology(
         .str.strip()
     )
     issue_reasons = issue_reasons[issue_reasons != ""]
+    issue_reason_aliases = {
+        "Base kind is wrong": "Wrong general type",
+        "Feature is not defining": "Missing or wrong defining feature",
+        "Wording unclear": "Unclear wording",
+    }
+    issue_reasons = issue_reasons.replace(issue_reason_aliases)
     definition_verdicts = defined[
         "Definition_Verdict (Correct/Partly correct/Incorrect/Unsure)"
     ].astype(str).str.strip().str.casefold()
     definition_reasons = defined[
         "Issue_Reason (select for Partly/Incorrect)"
     ].fillna("").astype(str).str.strip()
+    definition_reasons = definition_reasons.replace(issue_reason_aliases)
     required_reason = definition_verdicts.isin({"partly correct", "incorrect"})
     if (required_reason & definition_reasons.eq("")).any():
         raise ValueError("Partly correct/Incorrect definitions require an issue reason")
     if (~required_reason & definition_reasons.ne("")).any():
         raise ValueError("Definition issue reason is only valid for Partly correct/Incorrect")
     allowed_issue_reasons = {
-        "Base kind is wrong",
-        "Feature is not defining",
+        "Wrong general type",
+        "Missing or wrong defining feature",
         "Too broad",
         "Too narrow",
-        "Wording unclear",
+        "Unclear wording",
         "Other",
         "Unsure",
     }
