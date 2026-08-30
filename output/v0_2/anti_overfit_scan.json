@@ -1,11 +1,6 @@
 {
   "scope": "added and untracked src content relative to bd2108ac5a0e4f582d79d79eca76d98e1a3d7785",
-  "untracked_src_files": [
-    "src/modules/emit/correction_manifest.py",
-    "src/modules/emit/cq_answerability.py",
-    "src/modules/emit/provenance.py",
-    "src/modules/emit/release.py"
-  ],
+  "untracked_src_files": [],
   "term_sources": [
     "domains/presalt/anti_overfit_terms.txt",
     "evaluation_study/inputs/approved_run/validate_taxonomy.csv",

@@ -176,12 +176,12 @@
         [
           "https://w3id.org/presalt-onto#PetroleumSystem",
           "http://purl.obolibrary.org/obo/BFO_0000178",
-          "https://w3id.org/presalt-onto#Seal"
+          "https://w3id.org/presalt-onto#SourceRock"
         ],
         [
           "https://w3id.org/presalt-onto#PetroleumSystem",
           "http://purl.obolibrary.org/obo/BFO_0000178",
-          "https://w3id.org/presalt-onto#SourceRock"
+          "https://w3id.org/presalt-onto#Seal"
         ],
         [
           "https://w3id.org/presalt-onto#PreSaltReservoir",
@@ -191,12 +191,12 @@
         [
           "https://w3id.org/presalt-onto#PreSaltReservoir",
           "http://purl.obolibrary.org/obo/BFO_0000178",
-          "https://w3id.org/presalt-onto#Microbialite"
+          "https://w3id.org/presalt-onto#Coquina"
         ],
         [
           "https://w3id.org/presalt-onto#PreSaltReservoir",
           "http://purl.obolibrary.org/obo/BFO_0000178",
-          "https://w3id.org/presalt-onto#Coquina"
+          "https://w3id.org/presalt-onto#Microbialite"
         ],
         [
           "https://w3id.org/presalt-onto#ReservoirArchitecture",
