@@ -1,0 +1,326 @@
+{
+  "spec": "domains/presalt/cq_answerability.yaml",
+  "questions": [
+    {
+      "id": "CQ1",
+      "question": "What are the geological objects of the Pre-Salt domain?",
+      "mode": "enumeration",
+      "inventory_count": 55,
+      "answer_bindings": 0,
+      "verdict": "FULL",
+      "inventory_sample": [
+        [
+          "https://w3id.org/presalt-onto#Shrub"
+        ],
+        [
+          "https://w3id.org/presalt-onto#CoatedGrain"
+        ],
+        [
+          "https://w3id.org/presalt-onto#CarbonateGrain"
+        ],
+        [
+          "https://w3id.org/presalt-onto#Oncoid"
+        ],
+        [
+          "https://w3id.org/presalt-onto#Ooid"
+        ],
+        [
+          "https://w3id.org/presalt-onto#Ostracod"
+        ],
+        [
+          "https://w3id.org/presalt-onto#Peloid"
+        ],
+        [
+          "https://w3id.org/presalt-onto#Bioclast"
+        ],
+        [
+          "https://w3id.org/presalt-onto#Intraclast"
+        ],
+        [
+          "https://w3id.org/presalt-onto#Spherulite"
+        ],
+        [
+          "https://w3id.org/presalt-onto#Aquifer"
+        ],
+        [
+          "https://w3id.org/presalt-onto#BasementHigh"
+        ],
+        [
+          "https://w3id.org/presalt-onto#HydrothermalVent"
+        ],
+        [
+          "https://w3id.org/presalt-onto#Basement"
+        ],
+        [
+          "https://w3id.org/presalt-onto#FaultBlock"
+        ],
+        [
+          "https://w3id.org/presalt-onto#HydrocarbonReservoir"
+        ],
+        [
+          "https://w3id.org/presalt-onto#Seal"
+        ],
+        [
+          "https://w3id.org/presalt-onto#CarbonateBuildUp"
+        ],
+        [
+          "https://w3id.org/presalt-onto#CarbonateMound"
+        ],
+        [
+          "https://w3id.org/presalt-onto#CrystallineBasement"
+        ]
+      ],
+      "answer_sample": [],
+      "absent_relation_pattern": ""
+    },
+    {
+      "id": "CQ2",
+      "question": "What earth materials constitute the Pre-Salt geological objects?",
+      "mode": "relational",
+      "inventory_count": 0,
+      "answer_bindings": 3,
+      "verdict": "PARTIAL",
+      "inventory_sample": [],
+      "answer_sample": [
+        [
+          "https://w3id.org/presalt-onto#Shrub",
+          "https://w3id.org/presalt-onto#Calcite"
+        ],
+        [
+          "https://w3id.org/presalt-onto#Spherulite",
+          "https://w3id.org/presalt-onto#Calcite"
+        ],
+        [
+          "https://www.inf.ufrgs.br/bdi/ontologies/GEORES_0000001",
+          "https://www.inf.ufrgs.br/bdi/ontologies/GEOCORE_0000008"
+        ]
+      ],
+      "absent_relation_pattern": ""
+    },
+    {
+      "id": "CQ3",
+      "question": "What geological structures occur in the Pre-Salt geological objects?",
+      "mode": "relational",
+      "inventory_count": 0,
+      "answer_bindings": 0,
+      "verdict": "NOT ANSWERABLE",
+      "inventory_sample": [],
+      "answer_sample": [],
+      "absent_relation_pattern": "geological structure occurring in or forming part of a geological object"
+    },
+    {
+      "id": "CQ4",
+      "question": "What post-depositional processes and structures occur in the Pre-Salt geological objects?",
+      "mode": "relational",
+      "inventory_count": 0,
+      "answer_bindings": 0,
+      "verdict": "NOT ANSWERABLE",
+      "inventory_sample": [],
+      "answer_sample": [],
+      "absent_relation_pattern": "post-depositional process or structure occurring in a geological object"
+    },
+    {
+      "id": "CQ5",
+      "question": "What are the spatial relations and arrangements in the Pre-Salt domain?",
+      "mode": "relations_exist",
+      "inventory_count": 0,
+      "answer_bindings": 35,
+      "verdict": "FULL",
+      "inventory_sample": [],
+      "answer_sample": [
+        [
+          "https://w3id.org/presalt-onto#FaultSystem",
+          "http://purl.obolibrary.org/obo/BFO_0000178",
+          "https://w3id.org/presalt-onto#Fault"
+        ],
+        [
+          "https://w3id.org/presalt-onto#Karst",
+          "http://purl.obolibrary.org/obo/BFO_0000178",
+          "https://w3id.org/presalt-onto#Fracture"
+        ],
+        [
+          "https://w3id.org/presalt-onto#Kerolite",
+          "http://purl.obolibrary.org/obo/BFO_0000171",
+          "https://w3id.org/presalt-onto#FascicularCalciteCrust"
+        ],
+        [
+          "https://w3id.org/presalt-onto#Kerolite",
+          "http://purl.obolibrary.org/obo/BFO_0000171",
+          "https://w3id.org/presalt-onto#Laminite"
+        ],
+        [
+          "https://w3id.org/presalt-onto#LakeMargin",
+          "http://purl.obolibrary.org/obo/BFO_0000176",
+          "https://w3id.org/presalt-onto#LacustrineSystem"
+        ],
+        [
+          "https://w3id.org/presalt-onto#Microquartz",
+          "http://purl.obolibrary.org/obo/BFO_0000171",
+          "https://w3id.org/presalt-onto#PreSaltCarbonate"
+        ],
+        [
+          "https://w3id.org/presalt-onto#Microquartz",
+          "http://purl.obolibrary.org/obo/BFO_0000171",
+          "https://w3id.org/presalt-onto#InterparticlePore"
+        ],
+        [
+          "https://w3id.org/presalt-onto#OilWaterContact",
+          "http://purl.obolibrary.org/obo/BFO_0000171",
+          "https://w3id.org/presalt-onto#HydrocarbonReservoir"
+        ],
+        [
+          "https://w3id.org/presalt-onto#PassiveMarginBasin",
+          "http://purl.obolibrary.org/obo/BFO_0000171",
+          "https://w3id.org/presalt-onto#ContinentalMargin"
+        ],
+        [
+          "https://w3id.org/presalt-onto#PetroleumSystem",
+          "http://purl.obolibrary.org/obo/BFO_0000178",
+          "https://w3id.org/presalt-onto#Seal"
+        ],
+        [
+          "https://w3id.org/presalt-onto#PetroleumSystem",
+          "http://purl.obolibrary.org/obo/BFO_0000178",
+          "https://w3id.org/presalt-onto#SourceRock"
+        ],
+        [
+          "https://w3id.org/presalt-onto#PreSaltReservoir",
+          "http://purl.obolibrary.org/obo/BFO_0000171",
+          "https://w3id.org/presalt-onto#LacustrineCarbonate"
+        ],
+        [
+          "https://w3id.org/presalt-onto#PreSaltReservoir",
+          "http://purl.obolibrary.org/obo/BFO_0000178",
+          "https://w3id.org/presalt-onto#Microbialite"
+        ],
+        [
+          "https://w3id.org/presalt-onto#PreSaltReservoir",
+          "http://purl.obolibrary.org/obo/BFO_0000178",
+          "https://w3id.org/presalt-onto#Coquina"
+        ],
+        [
+          "https://w3id.org/presalt-onto#ReservoirArchitecture",
+          "http://purl.obolibrary.org/obo/BFO_0000178",
+          "https://w3id.org/presalt-onto#ReservoirFacies"
+        ],
+        [
+          "https://w3id.org/presalt-onto#ReservoirArchitecture",
+          "http://purl.obolibrary.org/obo/BFO_0000178",
+          "https://w3id.org/presalt-onto#Fault"
+        ],
+        [
+          "https://w3id.org/presalt-onto#SilicaCement",
+          "http://purl.obolibrary.org/obo/BFO_0000171",
+          "https://w3id.org/presalt-onto#InterparticlePore"
+        ],
+        [
+          "https://w3id.org/presalt-onto#Spherulitestone",
+          "http://purl.obolibrary.org/obo/BFO_0000178",
+          "https://w3id.org/presalt-onto#Spherulite"
+        ],
+        [
+          "https://w3id.org/presalt-onto#SpheruliticCarbonate",
+          "http://purl.obolibrary.org/obo/BFO_0000178",
+          "https://w3id.org/presalt-onto#Spherulite"
+        ],
+        [
+          "https://w3id.org/presalt-onto#Spherulitite",
+          "http://purl.obolibrary.org/obo/BFO_0000178",
+          "https://w3id.org/presalt-onto#Spherulite"
+        ]
+      ],
+      "absent_relation_pattern": ""
+    },
+    {
+      "id": "CQ6",
+      "question": "What are the dimensions and positions of the Pre-Salt geological objects?",
+      "mode": "relational",
+      "inventory_count": 0,
+      "answer_bindings": 0,
+      "verdict": "NOT ANSWERABLE",
+      "inventory_sample": [],
+      "answer_sample": [],
+      "absent_relation_pattern": "geological object dimension or spatial position"
+    },
+    {
+      "id": "CQ7",
+      "question": "What types of boundaries exist and where are they in the Pre-Salt geological objects?",
+      "mode": "relational",
+      "inventory_count": 4,
+      "answer_bindings": 1,
+      "verdict": "PARTIAL",
+      "inventory_sample": [
+        [
+          "https://w3id.org/presalt-onto#OilWaterContact"
+        ],
+        [
+          "https://w3id.org/presalt-onto#StratigraphicSurface"
+        ],
+        [
+          "https://w3id.org/presalt-onto#Unconformity"
+        ],
+        [
+          "https://w3id.org/presalt-onto#SequenceBoundary"
+        ]
+      ],
+      "answer_sample": [
+        [
+          "https://w3id.org/presalt-onto#OilWaterContact",
+          "https://w3id.org/presalt-onto#HydrocarbonReservoir"
+        ]
+      ],
+      "absent_relation_pattern": ""
+    },
+    {
+      "id": "CQ8",
+      "question": "What deposits and stratigraphic units are associated with Pre-Salt reservoirs?",
+      "mode": "relational",
+      "inventory_count": 0,
+      "answer_bindings": 0,
+      "verdict": "NOT ANSWERABLE",
+      "inventory_sample": [],
+      "answer_sample": [],
+      "absent_relation_pattern": "association between a stratigraphic unit and a reservoir"
+    },
+    {
+      "id": "CQ9",
+      "question": "What are the petrophysical characteristics of Pre-Salt reservoirs?",
+      "mode": "relational",
+      "inventory_count": 0,
+      "answer_bindings": 3,
+      "verdict": "PARTIAL",
+      "inventory_sample": [],
+      "answer_sample": [
+        [
+          "https://w3id.org/presalt-onto#CarbonateReservoir",
+          "https://w3id.org/presalt-onto#Porosity"
+        ],
+        [
+          "https://w3id.org/presalt-onto#HydrocarbonReservoir",
+          "https://w3id.org/presalt-onto#Porosity"
+        ],
+        [
+          "https://w3id.org/presalt-onto#ReservoirRock",
+          "https://w3id.org/presalt-onto#Porosity"
+        ]
+      ],
+      "absent_relation_pattern": ""
+    },
+    {
+      "id": "CQ10",
+      "question": "What geological age is associated with the Pre-Salt reservoir intervals?",
+      "mode": "relational",
+      "inventory_count": 0,
+      "answer_bindings": 0,
+      "verdict": "NOT ANSWERABLE",
+      "inventory_sample": [],
+      "answer_sample": [],
+      "absent_relation_pattern": "interval-to-age or formation-to-age relation"
+    }
+  ],
+  "summary": {
+    "FULL": 2,
+    "PARTIAL": 3,
+    "NOT ANSWERABLE": 5
+  }
+}

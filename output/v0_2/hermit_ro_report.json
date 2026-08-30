@@ -1,0 +1,18 @@
+{
+  "layer": "reasoner_ro",
+  "status": "TIMEOUT",
+  "mode": "configured class and property closure",
+  "consistent": null,
+  "coherent": null,
+  "unsatisfiable_classes": [],
+  "closure_paths": [
+    "domains/presalt/resources/bfo-core.owl",
+    "domains/presalt/resources/geocore-full.owl",
+    "domains/presalt/resources/geores-full.owl",
+    "domains/presalt/resources/ro-core.owl"
+  ],
+  "errors": [
+    "HermiT timed out after 120 seconds"
+  ],
+  "gating": false
+}

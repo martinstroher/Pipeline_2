@@ -1,0 +1,344 @@
+[
+  {
+    "decision_id": "PIPE-F044",
+    "action": "pipeline_fix",
+    "matches": 0,
+    "graph_change": false
+  },
+  {
+    "decision_id": "PIPE-F032",
+    "action": "pipeline_fix",
+    "matches": 0,
+    "graph_change": false
+  },
+  {
+    "decision_id": "PIPE-F031",
+    "action": "pipeline_fix",
+    "matches": 0,
+    "graph_change": false
+  },
+  {
+    "decision_id": "COH-001",
+    "action": "drop_restriction",
+    "matches": 1,
+    "graph_change": true
+  },
+  {
+    "decision_id": "COH-002",
+    "action": "drop_restriction",
+    "matches": 1,
+    "graph_change": true
+  },
+  {
+    "decision_id": "COH-003",
+    "action": "drop_restriction",
+    "matches": 1,
+    "graph_change": true
+  },
+  {
+    "decision_id": "COH-004",
+    "action": "drop_restriction",
+    "matches": 1,
+    "graph_change": true
+  },
+  {
+    "decision_id": "COH-005",
+    "action": "drop_restriction",
+    "matches": 1,
+    "graph_change": true
+  },
+  {
+    "decision_id": "COH-006",
+    "action": "drop_restriction",
+    "matches": 1,
+    "graph_change": true
+  },
+  {
+    "decision_id": "COH-007",
+    "action": "drop_restriction",
+    "matches": 1,
+    "graph_change": true
+  },
+  {
+    "decision_id": "COH-008",
+    "action": "drop_restriction",
+    "matches": 1,
+    "graph_change": true
+  },
+  {
+    "decision_id": "COH-009",
+    "action": "drop_restriction",
+    "matches": 1,
+    "graph_change": true
+  },
+  {
+    "decision_id": "COH-010",
+    "action": "drop_restriction",
+    "matches": 1,
+    "graph_change": true
+  },
+  {
+    "decision_id": "COH-011",
+    "action": "reparent_class",
+    "matches": 1,
+    "graph_change": true
+  },
+  {
+    "decision_id": "COH-012",
+    "action": "replace_equivalent_genus",
+    "matches": 1,
+    "graph_change": true
+  },
+  {
+    "decision_id": "COH-013",
+    "action": "reparent_class",
+    "matches": 1,
+    "graph_change": true
+  },
+  {
+    "decision_id": "GEO-F020-01",
+    "action": "reparent_class",
+    "matches": 1,
+    "graph_change": true
+  },
+  {
+    "decision_id": "GEO-F020-02",
+    "action": "replace_equivalent_genus",
+    "matches": 1,
+    "graph_change": true
+  },
+  {
+    "decision_id": "GEO-F021-01",
+    "action": "drop_restriction",
+    "matches": 1,
+    "graph_change": true
+  },
+  {
+    "decision_id": "CQ4-DEFER",
+    "action": "cq_deferred",
+    "matches": 0,
+    "graph_change": false
+  },
+  {
+    "decision_id": "CQ6-DEFER",
+    "action": "cq_deferred",
+    "matches": 0,
+    "graph_change": false
+  },
+  {
+    "decision_id": "CQ8-DEFER",
+    "action": "cq_deferred",
+    "matches": 0,
+    "graph_change": false
+  },
+  {
+    "decision_id": "CQ10-DEFER",
+    "action": "cq_deferred",
+    "matches": 0,
+    "graph_change": false
+  },
+  {
+    "decision_id": "DEM-001",
+    "action": "demotion_trace",
+    "matches": 0,
+    "graph_change": false
+  },
+  {
+    "decision_id": "DEM-002",
+    "action": "demotion_trace",
+    "matches": 0,
+    "graph_change": false
+  },
+  {
+    "decision_id": "DEM-003",
+    "action": "demotion_trace",
+    "matches": 0,
+    "graph_change": false
+  },
+  {
+    "decision_id": "DEM-004",
+    "action": "demotion_trace",
+    "matches": 0,
+    "graph_change": false
+  },
+  {
+    "decision_id": "DEM-005",
+    "action": "demotion_trace",
+    "matches": 0,
+    "graph_change": false
+  },
+  {
+    "decision_id": "DEM-006",
+    "action": "demotion_trace",
+    "matches": 0,
+    "graph_change": false
+  },
+  {
+    "decision_id": "DEM-007",
+    "action": "demotion_trace",
+    "matches": 0,
+    "graph_change": false
+  },
+  {
+    "decision_id": "DEM-008",
+    "action": "demotion_trace",
+    "matches": 0,
+    "graph_change": false
+  },
+  {
+    "decision_id": "DEM-009",
+    "action": "demotion_trace",
+    "matches": 0,
+    "graph_change": false
+  },
+  {
+    "decision_id": "DEM-010",
+    "action": "demotion_trace",
+    "matches": 0,
+    "graph_change": false
+  },
+  {
+    "decision_id": "DEM-011",
+    "action": "demotion_trace",
+    "matches": 0,
+    "graph_change": false
+  },
+  {
+    "decision_id": "DEM-012",
+    "action": "demotion_trace",
+    "matches": 0,
+    "graph_change": false
+  },
+  {
+    "decision_id": "DEM-013",
+    "action": "demotion_trace",
+    "matches": 0,
+    "graph_change": false
+  },
+  {
+    "decision_id": "DEM-014",
+    "action": "demotion_trace",
+    "matches": 0,
+    "graph_change": false
+  },
+  {
+    "decision_id": "DEM-015",
+    "action": "demotion_trace",
+    "matches": 0,
+    "graph_change": false
+  },
+  {
+    "decision_id": "DEM-016",
+    "action": "demotion_trace",
+    "matches": 0,
+    "graph_change": false
+  },
+  {
+    "decision_id": "DEM-017",
+    "action": "demotion_trace",
+    "matches": 0,
+    "graph_change": false
+  },
+  {
+    "decision_id": "DEM-018",
+    "action": "demotion_trace",
+    "matches": 0,
+    "graph_change": false
+  },
+  {
+    "decision_id": "DEM-019",
+    "action": "demotion_trace",
+    "matches": 0,
+    "graph_change": false
+  },
+  {
+    "decision_id": "DEM-020",
+    "action": "demotion_trace",
+    "matches": 0,
+    "graph_change": false
+  },
+  {
+    "decision_id": "DEM-021",
+    "action": "demotion_trace",
+    "matches": 0,
+    "graph_change": false
+  },
+  {
+    "decision_id": "DEM-022",
+    "action": "demotion_trace",
+    "matches": 0,
+    "graph_change": false
+  },
+  {
+    "decision_id": "DEM-023",
+    "action": "demotion_trace",
+    "matches": 0,
+    "graph_change": false
+  },
+  {
+    "decision_id": "DEM-024",
+    "action": "demotion_trace",
+    "matches": 0,
+    "graph_change": false
+  },
+  {
+    "decision_id": "DEM-025",
+    "action": "demotion_trace",
+    "matches": 0,
+    "graph_change": false
+  },
+  {
+    "decision_id": "DEM-026",
+    "action": "demotion_trace",
+    "matches": 0,
+    "graph_change": false
+  },
+  {
+    "decision_id": "DEM-027",
+    "action": "demotion_trace",
+    "matches": 0,
+    "graph_change": false
+  },
+  {
+    "decision_id": "DEM-028",
+    "action": "demotion_trace",
+    "matches": 0,
+    "graph_change": false
+  },
+  {
+    "decision_id": "DEM-029",
+    "action": "demotion_trace",
+    "matches": 0,
+    "graph_change": false
+  },
+  {
+    "decision_id": "DEM-030",
+    "action": "demotion_trace",
+    "matches": 0,
+    "graph_change": false
+  },
+  {
+    "decision_id": "DEM-031",
+    "action": "demotion_trace",
+    "matches": 0,
+    "graph_change": false
+  },
+  {
+    "decision_id": "DEM-032",
+    "action": "demotion_trace",
+    "matches": 0,
+    "graph_change": false
+  },
+  {
+    "decision_id": "DEM-033",
+    "action": "demotion_trace",
+    "matches": 0,
+    "graph_change": false
+  },
+  {
+    "decision_id": "DEM-034",
+    "action": "demotion_trace",
+    "matches": 0,
+    "graph_change": false
+  }
+]

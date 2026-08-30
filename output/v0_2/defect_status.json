@@ -1,0 +1,159 @@
+{
+  "F020": {
+    "decisions": [
+      "GEO-F020-01",
+      "GEO-F020-02"
+    ],
+    "terminal_states": [
+      "fixed"
+    ],
+    "complete": true
+  },
+  "F021": {
+    "decisions": [
+      "GEO-F021-01"
+    ],
+    "terminal_states": [
+      "fixed"
+    ],
+    "complete": true
+  },
+  "F026": {
+    "decisions": [
+      "DEM-001",
+      "DEM-002",
+      "DEM-003",
+      "DEM-004",
+      "DEM-005",
+      "DEM-006",
+      "DEM-007",
+      "DEM-008",
+      "DEM-009",
+      "DEM-010",
+      "DEM-011",
+      "DEM-012",
+      "DEM-013",
+      "DEM-014",
+      "DEM-015",
+      "DEM-016",
+      "DEM-017",
+      "DEM-018",
+      "DEM-019",
+      "DEM-020",
+      "DEM-021",
+      "DEM-022",
+      "DEM-023",
+      "DEM-024",
+      "DEM-025",
+      "DEM-026",
+      "DEM-027",
+      "DEM-028",
+      "DEM-029",
+      "DEM-030",
+      "DEM-031",
+      "DEM-032",
+      "DEM-033",
+      "DEM-034"
+    ],
+    "terminal_states": [
+      "recorded"
+    ],
+    "complete": true
+  },
+  "F028": {
+    "decisions": [
+      "COH-001",
+      "COH-002",
+      "COH-003",
+      "COH-004",
+      "COH-005",
+      "COH-006",
+      "COH-007",
+      "COH-008",
+      "COH-009",
+      "COH-010",
+      "COH-011",
+      "COH-012",
+      "COH-013"
+    ],
+    "terminal_states": [
+      "fixed"
+    ],
+    "complete": true
+  },
+  "F029": {
+    "decisions": [
+      "COH-001",
+      "COH-002"
+    ],
+    "terminal_states": [
+      "fixed"
+    ],
+    "complete": true
+  },
+  "F031": {
+    "decisions": [
+      "PIPE-F031"
+    ],
+    "terminal_states": [
+      "fixed"
+    ],
+    "complete": true
+  },
+  "F032": {
+    "decisions": [
+      "PIPE-F032"
+    ],
+    "terminal_states": [
+      "fixed"
+    ],
+    "complete": true
+  },
+  "F035": {
+    "decisions": [
+      "CQ4-DEFER",
+      "CQ6-DEFER",
+      "CQ8-DEFER",
+      "CQ10-DEFER"
+    ],
+    "terminal_states": [
+      "deferred"
+    ],
+    "complete": true
+  },
+  "F036": {
+    "decisions": [
+      "CQ4-DEFER",
+      "CQ6-DEFER",
+      "CQ8-DEFER",
+      "CQ10-DEFER"
+    ],
+    "terminal_states": [
+      "deferred"
+    ],
+    "complete": true
+  },
+  "F044": {
+    "decisions": [
+      "PIPE-F044"
+    ],
+    "terminal_states": [
+      "fixed"
+    ],
+    "complete": true
+  },
+  "F046": {
+    "decisions": [
+      "DEM-018",
+      "DEM-019",
+      "DEM-020",
+      "DEM-022",
+      "DEM-023",
+      "DEM-026"
+    ],
+    "terminal_states": [
+      "recorded"
+    ],
+    "complete": true
+  }
+}

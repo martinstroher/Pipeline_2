@@ -1,0 +1,11 @@
+{
+  "graph_isomorphic": true,
+  "release_triples": 1778,
+  "replay_triples": 1778,
+  "classes": 249,
+  "named_individuals": 59,
+  "provenance_rows": 1778,
+  "replay_provenance_rows": 1778,
+  "provenance_records_equal": true,
+  "live_llm_calls": 0
+}

@@ -1,0 +1,556 @@
+{
+  "input": "output/v0_2/geopresalt_0_2.ttl",
+  "layers": {
+    "syntax": {
+      "layer": "syntax",
+      "status": "PASS",
+      "errors": [],
+      "triple_count": 1778
+    },
+    "structure": {
+      "layer": "structure",
+      "status": "PASS",
+      "classes": 249,
+      "individuals": 59,
+      "triples": 1778,
+      "upper_iris_referenced": 46,
+      "upper_iris_list": [
+        "http://purl.obolibrary.org/obo/BFO_0000001",
+        "http://purl.obolibrary.org/obo/BFO_0000002",
+        "http://purl.obolibrary.org/obo/BFO_0000003",
+        "http://purl.obolibrary.org/obo/BFO_0000004",
+        "http://purl.obolibrary.org/obo/BFO_0000008",
+        "http://purl.obolibrary.org/obo/BFO_0000015",
+        "http://purl.obolibrary.org/obo/BFO_0000016",
+        "http://purl.obolibrary.org/obo/BFO_0000017",
+        "http://purl.obolibrary.org/obo/BFO_0000019",
+        "http://purl.obolibrary.org/obo/BFO_0000020",
+        "http://purl.obolibrary.org/obo/BFO_0000023",
+        "http://purl.obolibrary.org/obo/BFO_0000027",
+        "http://purl.obolibrary.org/obo/BFO_0000029",
+        "http://purl.obolibrary.org/obo/BFO_0000030",
+        "http://purl.obolibrary.org/obo/BFO_0000031",
+        "http://purl.obolibrary.org/obo/BFO_0000038",
+        "http://purl.obolibrary.org/obo/BFO_0000040",
+        "http://purl.obolibrary.org/obo/BFO_0000140",
+        "http://purl.obolibrary.org/obo/BFO_0000141",
+        "http://purl.obolibrary.org/obo/BFO_0000146",
+        "https://www.inf.ufrgs.br/bdi/ontologies/GEOCORE_0000001",
+        "https://www.inf.ufrgs.br/bdi/ontologies/GEOCORE_0000002",
+        "https://www.inf.ufrgs.br/bdi/ontologies/GEOCORE_0000003",
+        "https://www.inf.ufrgs.br/bdi/ontologies/GEOCORE_0000004",
+        "https://www.inf.ufrgs.br/bdi/ontologies/GEOCORE_0000005",
+        "https://www.inf.ufrgs.br/bdi/ontologies/GEOCORE_0000006",
+        "https://www.inf.ufrgs.br/bdi/ontologies/GEOCORE_0000008",
+        "https://www.inf.ufrgs.br/bdi/ontologies/GEOCORE_0000009",
+        "https://www.inf.ufrgs.br/bdi/ontologies/GEOCORE_0000010",
+        "https://www.inf.ufrgs.br/bdi/ontologies/GEOCORE_0000011",
+        "https://www.inf.ufrgs.br/bdi/ontologies/GEORES_0000001",
+        "https://www.inf.ufrgs.br/bdi/ontologies/GEORES_0000002",
+        "https://www.inf.ufrgs.br/bdi/ontologies/GEORES_0000003",
+        "https://www.inf.ufrgs.br/bdi/ontologies/GEORES_0000004",
+        "https://www.inf.ufrgs.br/bdi/ontologies/GEORES_0000006",
+        "https://www.inf.ufrgs.br/bdi/ontologies/GEORES_0000015",
+        "https://www.inf.ufrgs.br/bdi/ontologies/GEORES_0000018",
+        "https://www.inf.ufrgs.br/bdi/ontologies/GEORES_0000020",
+        "https://www.inf.ufrgs.br/bdi/ontologies/GEORES_0000021",
+        "https://www.inf.ufrgs.br/bdi/ontologies/GEORES_0000022",
+        "https://www.inf.ufrgs.br/bdi/ontologies/GEORES_0000023",
+        "https://www.inf.ufrgs.br/bdi/ontologies/GEORES_0000028",
+        "https://www.inf.ufrgs.br/bdi/ontologies/GEORES_0000029",
+        "https://www.inf.ufrgs.br/bdi/ontologies/GEORES_0000031",
+        "https://www.inf.ufrgs.br/bdi/ontologies/GEORES_0000032",
+        "https://www.inf.ufrgs.br/bdi/ontologies/GEORES_0000039"
+      ],
+      "issues": [],
+      "issue_summary": {}
+    },
+    "oops_pitfalls": {
+      "layer": "oops_pitfalls",
+      "status": "PASS",
+      "pitfalls": [
+        {
+          "code": "P04",
+          "name": "Creating unconnected ontology elements",
+          "importance": "Minor",
+          "description": "Ontology elements (classes, object properties and datatype properties) are created isolated, with no relation to the rest of the ontology.",
+          "affected_elements": 1,
+          "affected_values": [
+            "http://purl.obolibrary.org/obo/BFO_0000001"
+          ]
+        },
+        {
+          "code": "P08",
+          "name": "Missing annotations",
+          "importance": "Minor",
+          "description": "This pitfall consists in creating an ontology element and failing to provide human readable annotations attached to it. Consequently, ontology elements lack annotation properties that label them (e.g.",
+          "affected_elements": 61,
+          "affected_values": [
+            "http://purl.obolibrary.org/obo/BFO_0000002",
+            "http://purl.obolibrary.org/obo/BFO_0000020",
+            "http://purl.obolibrary.org/obo/BFO_0000031",
+            "https://www.inf.ufrgs.br/bdi/ontologies/GEOCORE_0000005",
+            "https://www.inf.ufrgs.br/bdi/ontologies/GEORES_0000021",
+            "https://www.inf.ufrgs.br/bdi/ontologies/GEORES_0000031",
+            "http://purl.obolibrary.org/obo/BFO_0000146",
+            "https://www.inf.ufrgs.br/bdi/ontologies/GEORES_0000002",
+            "http://purl.obolibrary.org/obo/BFO_0000038",
+            "http://purl.obolibrary.org/obo/BFO_0000117",
+            "http://purl.obolibrary.org/obo/RO_0001001",
+            "https://www.inf.ufrgs.br/bdi/ontologies/GEOCORE_0000002",
+            "http://purl.obolibrary.org/obo/BFO_0000017",
+            "https://www.inf.ufrgs.br/bdi/ontologies/GEORES_0000039",
+            "https://www.inf.ufrgs.br/bdi/ontologies/GEOCORE_0000010",
+            "https://www.inf.ufrgs.br/bdi/ontologies/GEORES_0000001",
+            "http://purl.obolibrary.org/obo/BFO_0000141",
+            "http://purl.obolibrary.org/obo/BFO_0000057",
+            "http://purl.obolibrary.org/obo/BFO_0000003",
+            "http://purl.obolibrary.org/obo/BFO_0000023",
+            "https://www.inf.ufrgs.br/bdi/ontologies/GEORES_0000006",
+            "http://purl.obolibrary.org/obo/RO_0000087",
+            "https://www.inf.ufrgs.br/bdi/ontologies/GEORES_0000003",
+            "http://purl.obolibrary.org/obo/BFO_0000062",
+            "https://www.inf.ufrgs.br/bdi/ontologies/GEOCORE_0000006",
+            "https://www.inf.ufrgs.br/bdi/ontologies/GEORES_0000022",
+            "https://www.inf.ufrgs.br/bdi/ontologies/GEORES_0000032",
+            "https://www.inf.ufrgs.br/bdi/ontologies/GEOCORE_0000003",
+            "https://www.inf.ufrgs.br/bdi/ontologies/GEOCORE_0000013",
+            "http://purl.obolibrary.org/obo/BFO_0000178",
+            "http://purl.obolibrary.org/obo/BFO_0000176",
+            "http://purl.obolibrary.org/obo/RO_0000086",
+            "http://purl.obolibrary.org/obo/BFO_0000008",
+            "http://purl.obolibrary.org/obo/BFO_0000029",
+            "http://purl.obolibrary.org/obo/BFO_0000056",
+            "https://www.inf.ufrgs.br/bdi/ontologies/GEOCORE_0000008",
+            "http://purl.obolibrary.org/obo/BFO_0000004",
+            "https://www.inf.ufrgs.br/bdi/ontologies/GEOCORE_0000017",
+            "http://purl.obolibrary.org/obo/BFO_0000001",
+            "https://www.inf.ufrgs.br/bdi/ontologies/GEORES_0000004"
+          ]
+        },
+        {
+          "code": "P11",
+          "name": "Missing domain or range in properties",
+          "importance": "Important",
+          "description": "Object and/or datatype properties without domain or range (or none of them) are included in the ontology.",
+          "affected_elements": 16,
+          "affected_values": [
+            "http://purl.obolibrary.org/obo/RO_0001000",
+            "http://purl.obolibrary.org/obo/BFO_0000178",
+            "http://purl.obolibrary.org/obo/RO_0001001",
+            "http://purl.obolibrary.org/obo/BFO_0000057",
+            "http://purl.obolibrary.org/obo/BFO_0000062",
+            "http://purl.obolibrary.org/obo/BFO_0000171",
+            "http://purl.obolibrary.org/obo/RO_0000091",
+            "http://purl.obolibrary.org/obo/BFO_0000117",
+            "http://purl.obolibrary.org/obo/BFO_0000197",
+            "http://purl.obolibrary.org/obo/BFO_0000054",
+            "http://purl.obolibrary.org/obo/BFO_0000176",
+            "https://www.inf.ufrgs.br/bdi/ontologies/GEOCORE_0000017",
+            "http://purl.obolibrary.org/obo/RO_0000086",
+            "http://purl.obolibrary.org/obo/BFO_0000056",
+            "https://www.inf.ufrgs.br/bdi/ontologies/GEOCORE_0000013",
+            "http://purl.obolibrary.org/obo/RO_0000087"
+          ]
+        },
+        {
+          "code": "P13",
+          "name": "Inverse relationships not explicitly declared",
+          "importance": "Minor",
+          "description": "This pitfall appears when any relationship (except for those that are defined as symmetric properties using owl:SymmetricProperty) does not have an inverse relationship (owl:inverseOf) defined within ",
+          "affected_elements": 0,
+          "affected_values": []
+        },
+        {
+          "code": "P22",
+          "name": "Using different naming conventions in the ontology",
+          "importance": "Minor",
+          "description": "The ontology elements are not named following the same convention (for example CamelCase or use of delimiters as &quot;-&quot; or &quot;_&quot;) . Some notions about naming conventions are provided in",
+          "affected_elements": 1,
+          "affected_values": [
+            "There are elements following different naming conventions as for example: http://purl.obolibrary.org/obo/BFO_0000146 https://w3id.org/presalt-onto#MgRichClay"
+          ]
+        },
+        {
+          "code": "P30",
+          "name": "Equivalent classes not explicitly declared",
+          "importance": "Important",
+          "description": "This pitfall consists in missing the definition of equivalent classes (owl:equivalentClass) in case of duplicated concepts. When an ontology reuses terms from other ontologies, classes that have the s",
+          "affected_elements": 0,
+          "affected_values": []
+        }
+      ],
+      "pitfall_summary": {
+        "Minor": 4,
+        "Important": 2
+      },
+      "errors": [],
+      "oops_url": "http://127.0.0.1:8080/OOPS/rest",
+      "request_omitted_imports": [
+        "http://purl.obolibrary.org/obo/bfo.owl",
+        "https://www.inf.ufrgs.br/bdi/ontologies/geocore/geocore-full.owl",
+        "https://www.inf.ufrgs.br/bdi/ontologies/geores.owl"
+      ]
+    },
+    "reasoner": {
+      "layer": "reasoner",
+      "status": "PASS",
+      "mode": "configured class closure",
+      "consistent": true,
+      "coherent": true,
+      "unsatisfiable_classes": [],
+      "closure_paths": [
+        "domains/presalt/resources/bfo-core.owl",
+        "domains/presalt/resources/geocore-full.owl",
+        "domains/presalt/resources/geores-full.owl"
+      ],
+      "errors": [],
+      "gating": true
+    },
+    "reasoner_ro": {
+      "layer": "reasoner_ro",
+      "status": "TIMEOUT",
+      "mode": "configured class and property closure",
+      "consistent": null,
+      "coherent": null,
+      "unsatisfiable_classes": [],
+      "closure_paths": [
+        "domains/presalt/resources/bfo-core.owl",
+        "domains/presalt/resources/geocore-full.owl",
+        "domains/presalt/resources/geores-full.owl",
+        "domains/presalt/resources/ro-core.owl"
+      ],
+      "errors": [
+        "HermiT timed out after 120 seconds"
+      ],
+      "gating": false
+    },
+    "competency_questions": {
+      "spec": "domains/presalt/cq_answerability.yaml",
+      "questions": [
+        {
+          "id": "CQ1",
+          "question": "What are the geological objects of the Pre-Salt domain?",
+          "mode": "enumeration",
+          "inventory_count": 55,
+          "answer_bindings": 0,
+          "verdict": "FULL",
+          "inventory_sample": [
+            [
+              "https://w3id.org/presalt-onto#Shrub"
+            ],
+            [
+              "https://w3id.org/presalt-onto#CoatedGrain"
+            ],
+            [
+              "https://w3id.org/presalt-onto#CarbonateGrain"
+            ],
+            [
+              "https://w3id.org/presalt-onto#Oncoid"
+            ],
+            [
+              "https://w3id.org/presalt-onto#Ooid"
+            ],
+            [
+              "https://w3id.org/presalt-onto#Ostracod"
+            ],
+            [
+              "https://w3id.org/presalt-onto#Peloid"
+            ],
+            [
+              "https://w3id.org/presalt-onto#Bioclast"
+            ],
+            [
+              "https://w3id.org/presalt-onto#Intraclast"
+            ],
+            [
+              "https://w3id.org/presalt-onto#Spherulite"
+            ],
+            [
+              "https://w3id.org/presalt-onto#Aquifer"
+            ],
+            [
+              "https://w3id.org/presalt-onto#BasementHigh"
+            ],
+            [
+              "https://w3id.org/presalt-onto#HydrothermalVent"
+            ],
+            [
+              "https://w3id.org/presalt-onto#Basement"
+            ],
+            [
+              "https://w3id.org/presalt-onto#FaultBlock"
+            ],
+            [
+              "https://w3id.org/presalt-onto#HydrocarbonReservoir"
+            ],
+            [
+              "https://w3id.org/presalt-onto#Seal"
+            ],
+            [
+              "https://w3id.org/presalt-onto#CarbonateBuildUp"
+            ],
+            [
+              "https://w3id.org/presalt-onto#CarbonateMound"
+            ],
+            [
+              "https://w3id.org/presalt-onto#CrystallineBasement"
+            ]
+          ],
+          "answer_sample": [],
+          "absent_relation_pattern": ""
+        },
+        {
+          "id": "CQ2",
+          "question": "What earth materials constitute the Pre-Salt geological objects?",
+          "mode": "relational",
+          "inventory_count": 0,
+          "answer_bindings": 3,
+          "verdict": "PARTIAL",
+          "inventory_sample": [],
+          "answer_sample": [
+            [
+              "https://w3id.org/presalt-onto#Shrub",
+              "https://w3id.org/presalt-onto#Calcite"
+            ],
+            [
+              "https://w3id.org/presalt-onto#Spherulite",
+              "https://w3id.org/presalt-onto#Calcite"
+            ],
+            [
+              "https://www.inf.ufrgs.br/bdi/ontologies/GEORES_0000001",
+              "https://www.inf.ufrgs.br/bdi/ontologies/GEOCORE_0000008"
+            ]
+          ],
+          "absent_relation_pattern": ""
+        },
+        {
+          "id": "CQ3",
+          "question": "What geological structures occur in the Pre-Salt geological objects?",
+          "mode": "relational",
+          "inventory_count": 0,
+          "answer_bindings": 0,
+          "verdict": "NOT ANSWERABLE",
+          "inventory_sample": [],
+          "answer_sample": [],
+          "absent_relation_pattern": "geological structure occurring in or forming part of a geological object"
+        },
+        {
+          "id": "CQ4",
+          "question": "What post-depositional processes and structures occur in the Pre-Salt geological objects?",
+          "mode": "relational",
+          "inventory_count": 0,
+          "answer_bindings": 0,
+          "verdict": "NOT ANSWERABLE",
+          "inventory_sample": [],
+          "answer_sample": [],
+          "absent_relation_pattern": "post-depositional process or structure occurring in a geological object"
+        },
+        {
+          "id": "CQ5",
+          "question": "What are the spatial relations and arrangements in the Pre-Salt domain?",
+          "mode": "relations_exist",
+          "inventory_count": 0,
+          "answer_bindings": 35,
+          "verdict": "FULL",
+          "inventory_sample": [],
+          "answer_sample": [
+            [
+              "https://w3id.org/presalt-onto#FaultSystem",
+              "http://purl.obolibrary.org/obo/BFO_0000178",
+              "https://w3id.org/presalt-onto#Fault"
+            ],
+            [
+              "https://w3id.org/presalt-onto#Karst",
+              "http://purl.obolibrary.org/obo/BFO_0000178",
+              "https://w3id.org/presalt-onto#Fracture"
+            ],
+            [
+              "https://w3id.org/presalt-onto#Kerolite",
+              "http://purl.obolibrary.org/obo/BFO_0000171",
+              "https://w3id.org/presalt-onto#FascicularCalciteCrust"
+            ],
+            [
+              "https://w3id.org/presalt-onto#Kerolite",
+              "http://purl.obolibrary.org/obo/BFO_0000171",
+              "https://w3id.org/presalt-onto#Laminite"
+            ],
+            [
+              "https://w3id.org/presalt-onto#LakeMargin",
+              "http://purl.obolibrary.org/obo/BFO_0000176",
+              "https://w3id.org/presalt-onto#LacustrineSystem"
+            ],
+            [
+              "https://w3id.org/presalt-onto#Microquartz",
+              "http://purl.obolibrary.org/obo/BFO_0000171",
+              "https://w3id.org/presalt-onto#PreSaltCarbonate"
+            ],
+            [
+              "https://w3id.org/presalt-onto#Microquartz",
+              "http://purl.obolibrary.org/obo/BFO_0000171",
+              "https://w3id.org/presalt-onto#InterparticlePore"
+            ],
+            [
+              "https://w3id.org/presalt-onto#OilWaterContact",
+              "http://purl.obolibrary.org/obo/BFO_0000171",
+              "https://w3id.org/presalt-onto#HydrocarbonReservoir"
+            ],
+            [
+              "https://w3id.org/presalt-onto#PassiveMarginBasin",
+              "http://purl.obolibrary.org/obo/BFO_0000171",
+              "https://w3id.org/presalt-onto#ContinentalMargin"
+            ],
+            [
+              "https://w3id.org/presalt-onto#PetroleumSystem",
+              "http://purl.obolibrary.org/obo/BFO_0000178",
+              "https://w3id.org/presalt-onto#Seal"
+            ],
+            [
+              "https://w3id.org/presalt-onto#PetroleumSystem",
+              "http://purl.obolibrary.org/obo/BFO_0000178",
+              "https://w3id.org/presalt-onto#SourceRock"
+            ],
+            [
+              "https://w3id.org/presalt-onto#PreSaltReservoir",
+              "http://purl.obolibrary.org/obo/BFO_0000171",
+              "https://w3id.org/presalt-onto#LacustrineCarbonate"
+            ],
+            [
+              "https://w3id.org/presalt-onto#PreSaltReservoir",
+              "http://purl.obolibrary.org/obo/BFO_0000178",
+              "https://w3id.org/presalt-onto#Microbialite"
+            ],
+            [
+              "https://w3id.org/presalt-onto#PreSaltReservoir",
+              "http://purl.obolibrary.org/obo/BFO_0000178",
+              "https://w3id.org/presalt-onto#Coquina"
+            ],
+            [
+              "https://w3id.org/presalt-onto#ReservoirArchitecture",
+              "http://purl.obolibrary.org/obo/BFO_0000178",
+              "https://w3id.org/presalt-onto#ReservoirFacies"
+            ],
+            [
+              "https://w3id.org/presalt-onto#ReservoirArchitecture",
+              "http://purl.obolibrary.org/obo/BFO_0000178",
+              "https://w3id.org/presalt-onto#Fault"
+            ],
+            [
+              "https://w3id.org/presalt-onto#SilicaCement",
+              "http://purl.obolibrary.org/obo/BFO_0000171",
+              "https://w3id.org/presalt-onto#InterparticlePore"
+            ],
+            [
+              "https://w3id.org/presalt-onto#Spherulitestone",
+              "http://purl.obolibrary.org/obo/BFO_0000178",
+              "https://w3id.org/presalt-onto#Spherulite"
+            ],
+            [
+              "https://w3id.org/presalt-onto#SpheruliticCarbonate",
+              "http://purl.obolibrary.org/obo/BFO_0000178",
+              "https://w3id.org/presalt-onto#Spherulite"
+            ],
+            [
+              "https://w3id.org/presalt-onto#Spherulitite",
+              "http://purl.obolibrary.org/obo/BFO_0000178",
+              "https://w3id.org/presalt-onto#Spherulite"
+            ]
+          ],
+          "absent_relation_pattern": ""
+        },
+        {
+          "id": "CQ6",
+          "question": "What are the dimensions and positions of the Pre-Salt geological objects?",
+          "mode": "relational",
+          "inventory_count": 0,
+          "answer_bindings": 0,
+          "verdict": "NOT ANSWERABLE",
+          "inventory_sample": [],
+          "answer_sample": [],
+          "absent_relation_pattern": "geological object dimension or spatial position"
+        },
+        {
+          "id": "CQ7",
+          "question": "What types of boundaries exist and where are they in the Pre-Salt geological objects?",
+          "mode": "relational",
+          "inventory_count": 4,
+          "answer_bindings": 1,
+          "verdict": "PARTIAL",
+          "inventory_sample": [
+            [
+              "https://w3id.org/presalt-onto#OilWaterContact"
+            ],
+            [
+              "https://w3id.org/presalt-onto#StratigraphicSurface"
+            ],
+            [
+              "https://w3id.org/presalt-onto#Unconformity"
+            ],
+            [
+              "https://w3id.org/presalt-onto#SequenceBoundary"
+            ]
+          ],
+          "answer_sample": [
+            [
+              "https://w3id.org/presalt-onto#OilWaterContact",
+              "https://w3id.org/presalt-onto#HydrocarbonReservoir"
+            ]
+          ],
+          "absent_relation_pattern": ""
+        },
+        {
+          "id": "CQ8",
+          "question": "What deposits and stratigraphic units are associated with Pre-Salt reservoirs?",
+          "mode": "relational",
+          "inventory_count": 0,
+          "answer_bindings": 0,
+          "verdict": "NOT ANSWERABLE",
+          "inventory_sample": [],
+          "answer_sample": [],
+          "absent_relation_pattern": "association between a stratigraphic unit and a reservoir"
+        },
+        {
+          "id": "CQ9",
+          "question": "What are the petrophysical characteristics of Pre-Salt reservoirs?",
+          "mode": "relational",
+          "inventory_count": 0,
+          "answer_bindings": 3,
+          "verdict": "PARTIAL",
+          "inventory_sample": [],
+          "answer_sample": [
+            [
+              "https://w3id.org/presalt-onto#CarbonateReservoir",
+              "https://w3id.org/presalt-onto#Porosity"
+            ],
+            [
+              "https://w3id.org/presalt-onto#HydrocarbonReservoir",
+              "https://w3id.org/presalt-onto#Porosity"
+            ],
+            [
+              "https://w3id.org/presalt-onto#ReservoirRock",
+              "https://w3id.org/presalt-onto#Porosity"
+            ]
+          ],
+          "absent_relation_pattern": ""
+        },
+        {
+          "id": "CQ10",
+          "question": "What geological age is associated with the Pre-Salt reservoir intervals?",
+          "mode": "relational",
+          "inventory_count": 0,
+          "answer_bindings": 0,
+          "verdict": "NOT ANSWERABLE",
+          "inventory_sample": [],
+          "answer_sample": [],
+          "absent_relation_pattern": "interval-to-age or formation-to-age relation"
+        }
+      ],
+      "summary": {
+        "FULL": 2,
+        "PARTIAL": 3,
+        "NOT ANSWERABLE": 5
+      }
+    }
+  },
+  "overall_status": "PASS"
+}

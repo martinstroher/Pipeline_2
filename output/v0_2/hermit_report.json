@@ -1,0 +1,15 @@
+{
+  "layer": "reasoner",
+  "status": "PASS",
+  "mode": "configured class closure",
+  "consistent": true,
+  "coherent": true,
+  "unsatisfiable_classes": [],
+  "closure_paths": [
+    "domains/presalt/resources/bfo-core.owl",
+    "domains/presalt/resources/geocore-full.owl",
+    "domains/presalt/resources/geores-full.owl"
+  ],
+  "errors": [],
+  "gating": true
+}

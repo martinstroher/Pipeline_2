@@ -1,0 +1,12 @@
+{
+  "paths_checked": [
+    "output/v0_2/geopresalt_0_2.ttl",
+    "domains/presalt/corrections/geopresalt_0_2.yaml",
+    "domains/presalt/corrections/geopresalt_0_2_demotions.csv",
+    "domains/presalt/cq_answerability.yaml",
+    "domains/presalt/corrections/geopresalt_0_2_disclosure.md",
+    "output/v0_2"
+  ],
+  "hits": [],
+  "pass": true
+}
