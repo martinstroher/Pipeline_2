@@ -441,6 +441,7 @@ def build_release(
         "oops_recorded": (
             verification["layers"].get("oops_pitfalls", {}).get("status") == "PASS"
         ),
+        # SKIP and every other non-PASS reasoner status fail the release gate.
         "hermit_recorded": verification["layers"]["reasoner"].get("status") == "PASS",
         "class_closure_complete": (
             verification["layers"]["reasoner"].get("closure_paths")

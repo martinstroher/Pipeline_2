@@ -5,10 +5,16 @@ prefixes: |
   PREFIX presalt: <https://w3id.org/presalt-onto#>
   PREFIX geo: <https://www.inf.ufrgs.br/bdi/ontologies/>
   PREFIX obo: <http://purl.obolibrary.org/obo/>
+baseline_artifact: "../../output/final/presalt_ontology.ttl"
+expected_baseline_summary:
+  FULL: 2
+  PARTIAL: 4
+  NOT ANSWERABLE: 4
 questions:
   - id: CQ1
     question: What are the geological objects of the Pre-Salt domain?
     mode: enumeration
+    expected_baseline_verdict: FULL
     inventory_query: |
       PREFIX rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#>
       PREFIX rdfs: <http://www.w3.org/2000/01/rdf-schema#>
@@ -20,6 +26,14 @@ questions:
   - id: CQ2
     question: What earth materials constitute the Pre-Salt geological objects?
     mode: relational
+    expected_baseline_verdict: PARTIAL
+    inventory_query: |
+      PREFIX rdfs: <http://www.w3.org/2000/01/rdf-schema#>
+      SELECT DISTINCT ?material WHERE {
+        ?material rdfs:subClassOf*
+          <https://www.inf.ufrgs.br/bdi/ontologies/GEOCORE_0000006> .
+        FILTER(STRSTARTS(STR(?material), "https://w3id.org/presalt-onto#"))
+      }
     answer_query: |
       PREFIX rdfs: <http://www.w3.org/2000/01/rdf-schema#>
       PREFIX owl: <http://www.w3.org/2002/07/owl#>
@@ -35,12 +49,23 @@ questions:
   - id: CQ3
     question: What geological structures occur in the Pre-Salt geological objects?
     mode: relational
+    expected_baseline_verdict: PARTIAL
+    inventory_query: |
+      PREFIX rdfs: <http://www.w3.org/2000/01/rdf-schema#>
+      SELECT DISTINCT ?structure WHERE {
+        ?structure rdfs:subClassOf*
+          <https://www.inf.ufrgs.br/bdi/ontologies/GEOCORE_0000004> .
+      }
     answer_query: |
+      PREFIX rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#>
       PREFIX rdfs: <http://www.w3.org/2000/01/rdf-schema#>
       PREFIX owl: <http://www.w3.org/2002/07/owl#>
       SELECT DISTINCT ?structure ?object WHERE {
-        ?structure rdfs:subClassOf* <https://www.inf.ufrgs.br/bdi/ontologies/GEOCORE_0000004> ;
-          rdfs:subClassOf ?restriction .
+        ?structure rdfs:subClassOf*
+          <https://www.inf.ufrgs.br/bdi/ontologies/GEOCORE_0000004> .
+        ?structure
+          (rdfs:subClassOf|(owl:equivalentClass/owl:intersectionOf/rdf:rest*/rdf:first))
+          ?restriction .
         ?restriction a owl:Restriction ;
           owl:onProperty ?property ;
           owl:someValuesFrom ?object .
@@ -51,9 +76,43 @@ questions:
         ?object rdfs:subClassOf* <https://www.inf.ufrgs.br/bdi/ontologies/GEOCORE_0000001> .
       }
     absent_relation_pattern: geological structure occurring in or forming part of a geological object
+    verdict_change:
+      correction_ids: [COH-011]
+      cause: >
+        COH-011 reclassifies Basement High from the geological-structure branch
+        to Body of Rock. The CQ3 query therefore no longer selects it as a
+        geological structure.
+      underlying_axiom: Basement High continuant part of Basement
+      require_retained_axiom: true
+      retained_axiom_query: |
+        PREFIX rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#>
+        PREFIX rdfs: <http://www.w3.org/2000/01/rdf-schema#>
+        PREFIX owl: <http://www.w3.org/2002/07/owl#>
+        SELECT DISTINCT ?subject ?property ?filler WHERE {
+          VALUES ?subject { <https://w3id.org/presalt-onto#BasementHigh> }
+          VALUES ?property { <http://purl.obolibrary.org/obo/BFO_0000176> }
+          VALUES ?filler { <https://w3id.org/presalt-onto#Basement> }
+          ?subject
+            (rdfs:subClassOf|(owl:equivalentClass/owl:intersectionOf/rdf:rest*/rdf:first))
+            ?restriction .
+          ?restriction a owl:Restriction ;
+            owl:onProperty ?property ;
+            owl:someValuesFrom ?filler .
+        }
   - id: CQ4
     question: What post-depositional processes and structures occur in the Pre-Salt geological objects?
     mode: relational
+    expected_baseline_verdict: NOT ANSWERABLE
+    inventory_query: |
+      PREFIX rdfs: <http://www.w3.org/2000/01/rdf-schema#>
+      SELECT DISTINCT ?feature WHERE {
+        VALUES ?postDepositionalRoot {
+          <https://w3id.org/presalt-onto#DiageneticProcess>
+          <https://w3id.org/presalt-onto#Stylolite>
+        }
+        ?feature rdfs:subClassOf* ?postDepositionalRoot .
+        FILTER(STRSTARTS(STR(?feature), "https://w3id.org/presalt-onto#"))
+      }
     answer_query: |
       PREFIX rdfs: <http://www.w3.org/2000/01/rdf-schema#>
       PREFIX owl: <http://www.w3.org/2002/07/owl#>
@@ -78,6 +137,7 @@ questions:
   - id: CQ5
     question: What are the spatial relations and arrangements in the Pre-Salt domain?
     mode: relations_exist
+    expected_baseline_verdict: FULL
     answer_query: |
       PREFIX rdfs: <http://www.w3.org/2000/01/rdf-schema#>
       PREFIX owl: <http://www.w3.org/2002/07/owl#>
@@ -96,6 +156,17 @@ questions:
   - id: CQ6
     question: What are the dimensions and positions of the Pre-Salt geological objects?
     mode: relational
+    expected_baseline_verdict: NOT ANSWERABLE
+    inventory_query: |
+      PREFIX rdfs: <http://www.w3.org/2000/01/rdf-schema#>
+      SELECT DISTINCT ?quality WHERE {
+        VALUES ?root {
+          <https://www.inf.ufrgs.br/bdi/ontologies/GEORES_0000022>
+          <https://www.inf.ufrgs.br/bdi/ontologies/GEORES_0000023>
+        }
+        ?quality rdfs:subClassOf* ?root .
+        FILTER(STRSTARTS(STR(?quality), "https://w3id.org/presalt-onto#"))
+      }
     answer_query: |
       PREFIX rdfs: <http://www.w3.org/2000/01/rdf-schema#>
       PREFIX owl: <http://www.w3.org/2002/07/owl#>
@@ -125,7 +196,9 @@ questions:
   - id: CQ7
     question: What types of boundaries exist and where are they in the Pre-Salt geological objects?
     mode: relational
+    expected_baseline_verdict: PARTIAL
     inventory_query: |
+      PREFIX rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#>
       PREFIX rdfs: <http://www.w3.org/2000/01/rdf-schema#>
       SELECT DISTINCT ?boundary WHERE {
         VALUES ?root {
@@ -133,7 +206,7 @@ questions:
           <http://purl.obolibrary.org/obo/BFO_0000140>
           <http://purl.obolibrary.org/obo/BFO_0000146>
         }
-        ?boundary rdfs:subClassOf* ?root .
+        ?boundary (rdf:type|rdfs:subClassOf)/rdfs:subClassOf* ?root .
         FILTER(STRSTARTS(STR(?boundary), "https://w3id.org/presalt-onto#"))
       }
     answer_query: |
@@ -151,6 +224,15 @@ questions:
   - id: CQ8
     question: What deposits and stratigraphic units are associated with Pre-Salt reservoirs?
     mode: relational
+    expected_baseline_verdict: NOT ANSWERABLE
+    inventory_query: |
+      PREFIX rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#>
+      PREFIX rdfs: <http://www.w3.org/2000/01/rdf-schema#>
+      SELECT DISTINCT ?unit WHERE {
+        ?unit (rdf:type|rdfs:subClassOf)/rdfs:subClassOf*
+          <https://www.inf.ufrgs.br/bdi/ontologies/GEORES_0000002> .
+        FILTER(STRSTARTS(STR(?unit), "https://w3id.org/presalt-onto#"))
+      }
     answer_query: |
       PREFIX rdfs: <http://www.w3.org/2000/01/rdf-schema#>
       PREFIX owl: <http://www.w3.org/2002/07/owl#>
@@ -172,6 +254,15 @@ questions:
   - id: CQ9
     question: What are the petrophysical characteristics of Pre-Salt reservoirs?
     mode: relational
+    expected_baseline_verdict: PARTIAL
+    inventory_query: |
+      PREFIX rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#>
+      PREFIX rdfs: <http://www.w3.org/2000/01/rdf-schema#>
+      SELECT DISTINCT ?quality WHERE {
+        ?quality (rdf:type|rdfs:subClassOf)/rdfs:subClassOf*
+          <http://purl.obolibrary.org/obo/BFO_0000019> .
+        FILTER(STRSTARTS(STR(?quality), "https://w3id.org/presalt-onto#"))
+      }
     answer_query: |
       PREFIX rdfs: <http://www.w3.org/2000/01/rdf-schema#>
       PREFIX owl: <http://www.w3.org/2002/07/owl#>
@@ -193,6 +284,18 @@ questions:
   - id: CQ10
     question: What geological age is associated with the Pre-Salt reservoir intervals?
     mode: relational
+    expected_baseline_verdict: NOT ANSWERABLE
+    inventory_query: |
+      PREFIX rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#>
+      PREFIX rdfs: <http://www.w3.org/2000/01/rdf-schema#>
+      SELECT DISTINCT ?interval WHERE {
+        VALUES ?root {
+          <https://www.inf.ufrgs.br/bdi/ontologies/GEOCORE_0000003>
+          <https://www.inf.ufrgs.br/bdi/ontologies/GEOCORE_0000005>
+        }
+        ?interval (rdf:type|rdfs:subClassOf)/rdfs:subClassOf* ?root .
+        FILTER(STRSTARTS(STR(?interval), "https://w3id.org/presalt-onto#"))
+      }
     answer_query: |
       PREFIX rdfs: <http://www.w3.org/2000/01/rdf-schema#>
       PREFIX owl: <http://www.w3.org/2002/07/owl#>

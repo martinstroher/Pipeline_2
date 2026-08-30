@@ -223,6 +223,7 @@ The combination of taxonomy axioms and existential restrictions is the standard 
 - **Layer 4, HermiT closure:** Loads the configured class-bearing upper ontologies with the artifact. Consistency and coherence are reported separately, and any unsatisfiable named class fails the release.
 - **Layer 4b, bounded property closure:** Adds property-only ontologies such as RO in a child process group. A timeout is recorded and disclosed but does not override the class-closure result.
 - **Layer 5, CQ answerability:** Runs domain-configured SPARQL queries and records FULL, PARTIAL, or NOT ANSWERABLE for every competency question.
+- **CQ reporting:** Every relational CQ requires an executable inventory query, so an empty answer set cannot be misreported as an empty entity inventory. The same queries run against the frozen baseline artifact to derive prior inventories, bindings, and verdicts. Any changed verdict must name its correction decision and prove whether the prior supporting axiom remains in the graph.
 - Issues are classified by severity: CRITICAL, IMPORTANT, MINOR.
 - **Robustness:** OOPS receives RDF/XML for local-container compatibility. Missing Java, reasoner errors, unsatisfiable classes, and malformed query specs are explicit failures. The RO process group is terminated at its configured bound.
 - Output: `output/7b_verification_report.json`

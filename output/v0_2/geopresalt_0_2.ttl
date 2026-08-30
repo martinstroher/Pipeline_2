@@ -47,11 +47,11 @@ presalt:Aragonite a owl:Class ;
     rdfs:label "Aragonite"@en ;
     rdfs:comment "Aragonite is a metastable calcium carbonate mineral that commonly constitutes the original mineralogy of shells and some lacustrine carbonate components in pre-salt reservoirs and is readily transformed by dissolution or neomorphism to calcite. In Brazilian pre-salt carbonates, the diagenetic fate of aragonitic bivalves, gastropods, and possible spherulitic constituents strongly influences moldic porosity, preservation of interparticle porosity, and reservoir permeability."@en ;
     rdfs:subClassOf [ a owl:Restriction ;
-            owl:onProperty bfo:RO_0001001 ;
-            owl:someValuesFrom presalt:Calcite ],
-        [ a owl:Restriction ;
             owl:onProperty bfo:BFO_0000056 ;
             owl:someValuesFrom presalt:Dissolution ],
+        [ a owl:Restriction ;
+            owl:onProperty bfo:RO_0001001 ;
+            owl:someValuesFrom presalt:Calcite ],
         presalt:CarbonateMineral .
 
 presalt:AririFormation a owl:NamedIndividual,
@@ -214,11 +214,11 @@ presalt:Dolomudstone a owl:Class ;
     rdfs:label "Dolomudstone"@en ;
     rdfs:comment "Dolomudstone is a mud-supported dolomitic carbonate rock that is composed mainly of very fine dolomite crystals with variable mud content and, in some cases, interlayered fine calcite particles arranged in irregular discontinuous laminations. In the Brazilian Pre-Salt, laminated dolomudstone commonly occurs as thin beds and generally acts as a non-reservoir because its porosity is very low and dominated by tiny intercrystalline and interparticle pores. Where intense fracturing is present, however, it may locally develop significant fracture-related porosity and permeability."@en ;
     rdfs:subClassOf [ a owl:Restriction ;
-            owl:onProperty georeservoir:GEOCORE_0000017 ;
-            owl:someValuesFrom presalt:Dolomite ],
-        [ a owl:Restriction ;
             owl:onProperty bfo:RO_0000086 ;
             owl:someValuesFrom presalt:Porosity ],
+        [ a owl:Restriction ;
+            owl:onProperty georeservoir:GEOCORE_0000017 ;
+            owl:someValuesFrom presalt:Dolomite ],
         [ a owl:Restriction ;
             owl:onProperty georeservoir:GEOCORE_0000017 ;
             owl:someValuesFrom presalt:Mud ],
@@ -422,10 +422,10 @@ presalt:Kerolite a owl:Class ;
     rdfs:comment "Kerolite is a magnesium-rich clay mineral that occurs as a principal authigenic Mg-clay in Aptian pre-salt lacustrine carbonate facies of the Santos Basin. In the Barra Velha reservoir succession, it is common in Mg-claystones, intraclastic grainstones, fascicular calcite crusts, and laminites, and its abundance generally increases upward into Units 2 and 1, reaching its highest proportions in Unit 1."@en ;
     rdfs:subClassOf [ a owl:Restriction ;
             owl:onProperty bfo:BFO_0000171 ;
-            owl:someValuesFrom presalt:FascicularCalciteCrust ],
+            owl:someValuesFrom presalt:Laminite ],
         [ a owl:Restriction ;
             owl:onProperty bfo:BFO_0000171 ;
-            owl:someValuesFrom presalt:Laminite ],
+            owl:someValuesFrom presalt:FascicularCalciteCrust ],
         presalt:ClayMineral .
 
 presalt:KwanzaBasin a owl:NamedIndividual,
@@ -527,14 +527,14 @@ presalt:Microquartz a owl:Class ;
     rdfs:label "Microquartz"@en ;
     rdfs:comment "Microquartz is a diagenetic silica phase that consists of quartz crystals smaller than 20 μm and commonly fills inter-aggregate, interparticle, and vugular pores or replaces carbonate fabric in pre-salt carbonates. In the Santos Basin pre-salt, it is the most frequent silica phase associated with pervasive silicification and is generally interpreted as a late eogenetic cement, commonly occurring with chalcedony and megaquartz."@en ;
     rdfs:subClassOf [ a owl:Restriction ;
+            owl:onProperty georeservoir:GEOCORE_0000017 ;
+            owl:someValuesFrom presalt:Quartz ],
+        [ a owl:Restriction ;
             owl:onProperty bfo:BFO_0000171 ;
             owl:someValuesFrom presalt:PreSaltCarbonate ],
         [ a owl:Restriction ;
             owl:onProperty bfo:BFO_0000171 ;
             owl:someValuesFrom presalt:InterparticlePore ],
-        [ a owl:Restriction ;
-            owl:onProperty georeservoir:GEOCORE_0000017 ;
-            owl:someValuesFrom presalt:Quartz ],
         presalt:Quartz .
 
 presalt:MoldicPorosity a owl:Class ;
@@ -680,14 +680,14 @@ presalt:PreSaltReservoir a owl:Class ;
     rdfs:label "Pre-Salt Reservoir"@en ;
     rdfs:comment "Pre-salt reservoir is a hydrocarbon reservoir that is hosted in Aptian syn-rift to sag lacustrine carbonate rocks beneath the regional evaporite seal of the Ariri Formation in the Brazilian pre-salt province. It is typically composed of heterogeneous carbonate facies such as coquinas, microbialites, and associated bioclastic, intraclastic, and laminated carbonates of intervals like the Itapema and Barra Velha formations, with reservoir architecture and quality strongly controlled by tectonics and diagenesis."@en ;
     rdfs:subClassOf [ a owl:Restriction ;
-            owl:onProperty bfo:BFO_0000171 ;
-            owl:someValuesFrom presalt:LacustrineCarbonate ],
+            owl:onProperty bfo:BFO_0000178 ;
+            owl:someValuesFrom presalt:Microbialite ],
         [ a owl:Restriction ;
             owl:onProperty bfo:BFO_0000178 ;
             owl:someValuesFrom presalt:Coquina ],
         [ a owl:Restriction ;
-            owl:onProperty bfo:BFO_0000178 ;
-            owl:someValuesFrom presalt:Microbialite ],
+            owl:onProperty bfo:BFO_0000171 ;
+            owl:someValuesFrom presalt:LacustrineCarbonate ],
         presalt:CarbonateReservoir .
 
 presalt:PrimaryPorosity a owl:Class ;
@@ -846,10 +846,10 @@ presalt:SilicaCement a owl:Class ;
             owl:someValuesFrom presalt:InterparticlePore ],
         [ a owl:Restriction ;
             owl:onProperty georeservoir:GEOCORE_0000017 ;
-            owl:someValuesFrom presalt:Chalcedony ],
+            owl:someValuesFrom presalt:Quartz ],
         [ a owl:Restriction ;
             owl:onProperty georeservoir:GEOCORE_0000017 ;
-            owl:someValuesFrom presalt:Quartz ],
+            owl:someValuesFrom presalt:Chalcedony ],
         presalt:Silica ;
     owl:equivalentClass [ a owl:Class ;
             owl:intersectionOf ( presalt:Silica [ a owl:Restriction ;
@@ -861,10 +861,10 @@ presalt:Siltstone a owl:Class ;
     rdfs:comment "Siltstone is a siliciclastic sedimentary rock that is composed predominantly of silt-sized particles, with a higher proportion of silt and less clay than mudstone. In the Brazilian pre-salt Barra Velha succession, it commonly occurs as massive or incipiently plane-parallel laminated microfacies, ranging from coarse to fine silt and locally containing trace very fine to fine sand. Its main constituents are typically K-feldspar, monocrystalline quartz, white mica, and clay minerals."@en ;
     rdfs:subClassOf [ a owl:Restriction ;
             owl:onProperty georeservoir:GEOCORE_0000017 ;
-            owl:someValuesFrom presalt:Quartz ],
+            owl:someValuesFrom presalt:ClayMineral ],
         [ a owl:Restriction ;
             owl:onProperty georeservoir:GEOCORE_0000017 ;
-            owl:someValuesFrom presalt:ClayMineral ],
+            owl:someValuesFrom presalt:Quartz ],
         georeservoir:GEORES_0000032 .
 
 presalt:Slope a owl:Class ;
@@ -1070,14 +1070,14 @@ presalt:Calcirudite a owl:Class ;
     rdfs:label "Calcirudite"@en ;
     rdfs:comment "Calcirudite is a coarse-grained clastic carbonate rock that is composed mainly of granule- to pebble-sized intra- or extra-clasts, chiefly fragments of limestone and dolostone, in reworked or hybrid carbonate successions. In the Brazilian Pre-Salt, it commonly occurs as a massive, poorly sorted ruditic facies dominated by carbonate intraclasts, and it may be either clast-supported or matrix-supported with minor chert, silica, silicate grains, or ooidal-peloidal components."@en ;
     rdfs:subClassOf [ a owl:Restriction ;
-            owl:onProperty bfo:RO_0001000 ;
-            owl:someValuesFrom presalt:Limestone ],
+            owl:onProperty bfo:BFO_0000178 ;
+            owl:someValuesFrom presalt:Intraclast ],
         [ a owl:Restriction ;
             owl:onProperty bfo:RO_0001000 ;
             owl:someValuesFrom presalt:Dolostone ],
         [ a owl:Restriction ;
-            owl:onProperty bfo:BFO_0000178 ;
-            owl:someValuesFrom presalt:Intraclast ],
+            owl:onProperty bfo:RO_0001000 ;
+            owl:someValuesFrom presalt:Limestone ],
         georeservoir:GEORES_0000032 .
 
 presalt:CarbonateBuildUp a owl:Class ;
@@ -1105,10 +1105,10 @@ presalt:Chalcedony a owl:Class ;
     rdfs:comment "Chalcedony is a microcrystalline silica phase that forms fibrous-radial, spherulitic, and botryoidal aggregates as syndepositional to diagenetic cement in pre-salt lacustrine carbonates. In the Brazilian Pre-Salt it commonly occurs in chert and silicified intervals, lining or partly filling pores, fractures, and vugs, and may locally replace the host rock, thereby affecting reservoir quality and permeability."@en ;
     rdfs:subClassOf [ a owl:Restriction ;
             owl:onProperty bfo:BFO_0000171 ;
-            owl:someValuesFrom presalt:Chert ],
+            owl:someValuesFrom presalt:Vug ],
         [ a owl:Restriction ;
             owl:onProperty bfo:BFO_0000171 ;
-            owl:someValuesFrom presalt:Vug ],
+            owl:someValuesFrom presalt:Chert ],
         presalt:Silica .
 
 presalt:Chert a owl:Class ;
@@ -1144,14 +1144,14 @@ presalt:FascicularCalciteCrust a owl:Class ;
             owl:onProperty bfo:BFO_0000056 ;
             owl:someValuesFrom presalt:Dolomitization ],
         [ a owl:Restriction ;
-            owl:onProperty georeservoir:GEOCORE_0000017 ;
-            owl:someValuesFrom presalt:Calcite ],
-        [ a owl:Restriction ;
             owl:onProperty bfo:BFO_0000056 ;
             owl:someValuesFrom presalt:Silicification ],
         [ a owl:Restriction ;
             owl:onProperty bfo:BFO_0000056 ;
             owl:someValuesFrom presalt:Recrystallization ],
+        [ a owl:Restriction ;
+            owl:onProperty georeservoir:GEOCORE_0000017 ;
+            owl:someValuesFrom presalt:Calcite ],
         georeservoir:GEORES_0000032 .
 
 presalt:Fracture a owl:Class ;
@@ -1228,10 +1228,10 @@ presalt:Mud a owl:Class ;
             owl:someValuesFrom presalt:ClayMineral ],
         [ a owl:Restriction ;
             owl:onProperty georeservoir:GEOCORE_0000017 ;
-            owl:someValuesFrom presalt:Dolomite ],
+            owl:someValuesFrom presalt:Calcite ],
         [ a owl:Restriction ;
             owl:onProperty georeservoir:GEOCORE_0000017 ;
-            owl:someValuesFrom presalt:Calcite ],
+            owl:someValuesFrom presalt:Dolomite ],
         georeservoir:GEORES_0000031 .
 
 presalt:OrganicMatter a owl:Class ;
@@ -1252,10 +1252,10 @@ presalt:PreSaltCarbonate a owl:Class ;
     rdfs:comment "Pre-salt carbonate is a lacustrine carbonate rock that was deposited in the Lower Cretaceous pre-evaporitic interval beneath the South Atlantic salt, forming the main reservoir facies of the Brazilian Pre-Salt. It is typically composed of limestone, dolomite, and silica with frequent magnesian clays such as stevensite, and occurs in highly variable facies including bioclastic grainstones and rudstones, fascicular calcite crusts, spherulitic deposits, and reworked intraclastic carbonates. Its reservoir quality is commonly highly heterogeneous because of strong facies variability and complex diagenetic overprinting, including dolomitization and silicification."@en ;
     rdfs:subClassOf [ a owl:Restriction ;
             owl:onProperty georeservoir:GEOCORE_0000017 ;
-            owl:someValuesFrom presalt:Silica ],
+            owl:someValuesFrom presalt:Dolomite ],
         [ a owl:Restriction ;
             owl:onProperty georeservoir:GEOCORE_0000017 ;
-            owl:someValuesFrom presalt:Dolomite ],
+            owl:someValuesFrom presalt:Silica ],
         presalt:CarbonateRock .
 
 presalt:Regionalsealrole a owl:Class ;
@@ -1444,10 +1444,10 @@ presalt:InterparticlePore a owl:Class ;
             owl:someValuesFrom presalt:Calcirudite ],
         [ a owl:Restriction ;
             owl:onProperty bfo:BFO_0000171 ;
-            owl:someValuesFrom presalt:CarbonateRock ],
+            owl:someValuesFrom presalt:Calcarenite ],
         [ a owl:Restriction ;
             owl:onProperty bfo:BFO_0000171 ;
-            owl:someValuesFrom presalt:Calcarenite ],
+            owl:someValuesFrom presalt:CarbonateRock ],
         presalt:Pore .
 
 presalt:LacustrineSystem a owl:Class ;
@@ -1460,10 +1460,10 @@ presalt:Laminite a owl:Class ;
     rdfs:comment "Laminite is a fine-laminated lacustrine carbonate rock that consists of thin parallel laminae and, in the Brazilian Pre-Salt, commonly derives from originally laminated clay-rich, probably stevensitic, deposits replaced by calcite or dolomite. It is typically composed mainly of calcite and dolomite, may preserve organic matter and minor siliciclastic grains between laminae, and can be variably affected by dolomitization, silicification, and dissolution porosity during diagenesis."@en ;
     rdfs:subClassOf [ a owl:Restriction ;
             owl:onProperty georeservoir:GEOCORE_0000017 ;
-            owl:someValuesFrom presalt:Dolomite ],
+            owl:someValuesFrom presalt:Calcite ],
         [ a owl:Restriction ;
             owl:onProperty georeservoir:GEOCORE_0000017 ;
-            owl:someValuesFrom presalt:Calcite ],
+            owl:someValuesFrom presalt:Dolomite ],
         presalt:LacustrineCarbonate .
 
 presalt:Lithofacies a owl:Class ;
@@ -1575,10 +1575,10 @@ presalt:Dolomitization a owl:Class ;
     rdfs:comment "Dolomitization is a diagenetic replacement process that transforms carbonate and Mg-clay constituents into dolomite, typically during early diagenesis in Brazilian pre-salt lacustrine carbonates. In these reservoirs, it commonly generates intercrystalline porosity and helps connect moldic and vugular pores, improving porosity and permeability, although pervasive dolomitization in some sag facies can reduce pore-throat size."@en ;
     rdfs:subClassOf [ a owl:Restriction ;
             owl:onProperty bfo:BFO_0000057 ;
-            owl:someValuesFrom presalt:Dolomite ],
+            owl:someValuesFrom presalt:MgClay ],
         [ a owl:Restriction ;
             owl:onProperty bfo:BFO_0000057 ;
-            owl:someValuesFrom presalt:MgClay ],
+            owl:someValuesFrom presalt:Dolomite ],
         presalt:Replacement .
 
 presalt:HydrocarbonReservoir a owl:Class ;
@@ -1777,13 +1777,13 @@ presalt:Dolomite a owl:Class ;
     rdfs:comment "Dolomite is a carbonate mineral that consists of calcium magnesium carbonate and commonly forms in Brazilian Pre-Salt lacustrine carbonates as a primary precipitate, a replacive diagenetic phase, or a pore-filling cement. In the Barra Velha and analogous pre-salt successions, it commonly occurs as rhombohedral, microcrystalline, lamellar, or saddle crystals, replacing calcite or Mg-clay and locally cementing pores, vugs, and fractures."@en ;
     rdfs:subClassOf [ a owl:Restriction ;
             owl:onProperty bfo:RO_0001000 ;
-            owl:someValuesFrom presalt:MgClay ],
+            owl:someValuesFrom presalt:Calcite ],
         [ a owl:Restriction ;
             owl:onProperty bfo:BFO_0000171 ;
             owl:someValuesFrom presalt:LacustrineCarbonate ],
         [ a owl:Restriction ;
             owl:onProperty bfo:RO_0001000 ;
-            owl:someValuesFrom presalt:Calcite ],
+            owl:someValuesFrom presalt:MgClay ],
         presalt:CarbonateMineral .
 
 presalt:Field a owl:Class ;
@@ -1877,13 +1877,13 @@ presalt:CarbonateRock a owl:Class ;
     rdfs:comment "Carbonate rock is a sedimentary rock that is composed predominantly of carbonate minerals and occurs as either particulate depositional fabric or biologically constructed fabric. In the Brazilian Pre-Salt, carbonate rocks are highly reactive and heterogeneous because syngenetic and diagenetic processes such as cementation, dissolution, dolomitization, and silicification can strongly modify their texture, mineralogy, and pore network, making them major reservoir rocks."@en ;
     rdfs:subClassOf [ a owl:Restriction ;
             owl:onProperty bfo:BFO_0000056 ;
-            owl:someValuesFrom presalt:Cementation ],
-        [ a owl:Restriction ;
-            owl:onProperty bfo:BFO_0000056 ;
             owl:someValuesFrom presalt:Dissolution ],
         [ a owl:Restriction ;
             owl:onProperty bfo:BFO_0000056 ;
             owl:someValuesFrom presalt:Dolomitization ],
+        [ a owl:Restriction ;
+            owl:onProperty bfo:BFO_0000056 ;
+            owl:someValuesFrom presalt:Cementation ],
         georeservoir:GEORES_0000032 .
 
 georeservoir:GEOCORE_0000004 a owl:Class ;

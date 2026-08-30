@@ -96,3 +96,29 @@ def test_approved_replay_emits_coherent_versioned_release(tmp_path, monkeypatch)
         "PARTIAL": 3,
         "NOT ANSWERABLE": 5,
     }
+    assert cq["baseline_summary"] == {
+        "FULL": 2,
+        "PARTIAL": 4,
+        "NOT ANSWERABLE": 4,
+    }
+    questions = {question["id"]: question for question in cq["questions"]}
+    assert questions["CQ3"]["inventory_count"] == 19
+    assert questions["CQ3"]["baseline_inventory_count"] == 21
+    assert questions["CQ3"]["baseline_answer_bindings"] == 1
+    assert questions["CQ3"]["answer_bindings"] == 0
+    assert questions["CQ4"]["inventory_count"] == 12
+    assert questions["CQ4"]["baseline_inventory_count"] == 12
+    assert all(
+        question["inventory_count"] > 0
+        for question in cq["questions"]
+        if question["mode"] == "relational"
+    )
+    assert [change["id"] for change in cq["verdict_changes"]] == ["CQ3"]
+    cq3_change = questions["CQ3"]["verdict_change"]
+    assert cq3_change["correction_ids"] == ["COH-011"]
+    assert cq3_change["underlying_axiom_retained"] is True
+    assert cq3_change["baseline_axiom_bindings"] == 1
+    assert cq3_change["retained_axiom_bindings"] == 1
+    assert questions["CQ5"]["baseline_answer_bindings"] == 43
+    assert questions["CQ5"]["answer_bindings"] == 35
+    assert questions["CQ5"]["verdict"] == "FULL"
