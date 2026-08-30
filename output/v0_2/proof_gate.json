@@ -1,0 +1,28 @@
+{
+  "version_info": [
+    "0.2"
+  ],
+  "version_iri": [
+    "https://w3id.org/presalt-onto/0.2"
+  ],
+  "versioned_artifact": true,
+  "coherent": true,
+  "unsatisfiable_named_classes": 0,
+  "deterministic_replay": true,
+  "provenance_complete": true,
+  "anti_overfit": true,
+  "frozen_0_1_unchanged": true,
+  "manifest_decisions": 57,
+  "graph_decisions": 16,
+  "all_graph_decisions_applied": true,
+  "all_defects_terminal": true,
+  "oops_recorded": true,
+  "hermit_recorded": true,
+  "class_closure_complete": true,
+  "ro_recorded": true,
+  "ro_clean_if_completed": true,
+  "disclosure_recorded": true,
+  "em_dash_free": true,
+  "release_status": "provisional",
+  "pass": true
+}

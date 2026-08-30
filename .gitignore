@@ -7,6 +7,8 @@ chroma_db*/
 output/*
 !output/final/
 !output/final/**
+!output/v0_2/
+!output/v0_2/**
 evaluation_study/output/
 .DS_Store
 inputs/

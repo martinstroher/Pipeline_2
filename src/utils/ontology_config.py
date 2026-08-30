@@ -1,5 +1,5 @@
 """
-Ontology Configuration Loader — single source of truth for upper-ontology
+Ontology Configuration Loader: single source of truth for upper-ontology
 scope, namespaces, and per-class metadata.
 
 Reads `ontology_config.yaml` (or path from env var `ONTOLOGY_CONFIG_PATH`)
@@ -14,8 +14,8 @@ Key accessors (consumer → call):
   - ontology_verifier prefixes → get_config().verifier_prefixes()
 
 Env vars:
-  ONTOLOGY_CONFIG_PATH       — config file path (default: ontology_config.yaml)
-  RELATION_PROVENANCE_TIERS  — comma-separated tier names (overrides YAML)
+  ONTOLOGY_CONFIG_PATH       : config file path (default: ontology_config.yaml)
+  RELATION_PROVENANCE_TIERS  : comma-separated tier names (overrides YAML)
 """
 
 from __future__ import annotations
@@ -118,6 +118,8 @@ class ProjectMeta:
     namespace: str
     prefix: str
     version: str
+    ontology_iri: str
+    version_iri: str | None
     long_description: str
 
 
@@ -158,6 +160,11 @@ class OntologyConfig:
     property_specializations_: tuple[PropertySpecialization, ...]
     non_distinguishing_metatypes_: frozenset[str]
     lateral_coherence_: LateralCoherenceConfig
+    correction_manifest_: Path | None
+    cq_answerability_: Path | None
+    release_artifact_name_: str
+    disclosure_template_: Path | None
+    anti_overfit_allowlist_: Path | None
     _source_path: Path = field(repr=False)
 
     # ─── Convenience accessors ────────────────────────────────────────
@@ -174,11 +181,20 @@ class OntologyConfig:
     def project_version(self) -> str:
         return self.project.version
 
+    def project_ontology_iri(self) -> str:
+        return self.project.ontology_iri
+
+    def project_version_iri(self) -> str | None:
+        return self.project.version_iri
+
     def project_description(self) -> str:
         return self.project.description
 
     def project_long_description(self) -> str:
         return self.project.long_description
+
+    def source_path(self) -> Path:
+        return self._source_path
 
     def upper_iris(self) -> dict[str, str]:
         """All classes across all ontologies, keyed by label → full IRI."""
@@ -217,7 +233,7 @@ class OntologyConfig:
     def llm_definitions_block(self, ontology_key: str, categorizer_only: bool = False) -> str:
         """Formatted 'Label: definition' block for LLM prompt injection.
 
-        Includes every class that contributes prompt context — i.e. those with
+        Includes every class that contributes prompt context, meaning those with
         either a metatype set (a valid category) OR an explicit `llm_definition`
         (top-level ancestors like 'entity'/'continuant'/'occurrent' that frame
         the hierarchy for the LLM but are not used as categories themselves).
@@ -225,7 +241,7 @@ class OntologyConfig:
         When `categorizer_only` is True (used by the Step-5 `categorization_block`),
         classes flagged `categorizer: false` are omitted so they are never offered
         as assignable categories. The default (False) keeps the full block so other
-        consumers — e.g. the expert-eval workbook — still see every definition.
+        consumers, such as the expert-eval workbook, still see every definition.
 
         For classes with no `llm_definition` set, falls back to skos:definition
         in the OWL file, then rdfs:comment, then the label itself.
@@ -264,15 +280,35 @@ class OntologyConfig:
 
     def owl_file_paths(self) -> list[Path]:
         """Ordered list of all OWL files in scope (classes + property-only)."""
-        return [onto.owl_path for onto in self.ontologies.values() if onto.owl_path.exists()]
+        paths = [onto.owl_path for onto in self.ontologies.values()]
+        self._require_owl_paths(paths)
+        return paths
 
     def owl_class_paths(self) -> list[Path]:
         """OWL files that contribute upper-level CLASSES (excludes property-only ontologies like RO)."""
-        return [
+        paths = [
             onto.owl_path
             for onto in self.ontologies.values()
-            if onto.classes and onto.owl_path.exists()
+            if onto.classes
         ]
+        self._require_owl_paths(paths)
+        return paths
+
+    def owl_property_paths(self) -> list[Path]:
+        """OWL files that supply properties but no configured classes."""
+        paths = [
+            onto.owl_path
+            for onto in self.ontologies.values()
+            if not onto.classes
+        ]
+        self._require_owl_paths(paths)
+        return paths
+
+    @staticmethod
+    def _require_owl_paths(paths: list[Path]) -> None:
+        missing = [str(path) for path in paths if not path.exists()]
+        if missing:
+            raise RuntimeError(f"Configured OWL files are missing: {missing}")
 
     def bfo_disjoint_pairs(self) -> list[tuple[str, str]]:
         """Full-IRI tuples for disjointness axioms, sourced from the BFO ontology entry."""
@@ -302,7 +338,7 @@ class OntologyConfig:
         """All property constraints whose provenance tier is active.
 
         Filtered against `active_provenance_tiers()`. Returns a new dict each
-        call (cheap — ≤ ~100 entries).
+        call (cheap, at most about 100 entries).
         """
         active = self.provenance_tiers_active
         return {
@@ -311,7 +347,7 @@ class OntologyConfig:
         }
 
     def all_relations(self) -> dict[str, PropertyConstraint]:
-        """All relations regardless of active tiers — used by the audit script."""
+        """All relations regardless of active tiers, used by the audit script."""
         return dict(self.relations)
 
     # ─── Property specialization & reclassifier tuning ────────────────
@@ -327,6 +363,21 @@ class OntologyConfig:
     def lateral_coherence(self) -> LateralCoherenceConfig:
         """Domain-agnostic parsimony/facet-coherence settings for validate."""
         return self.lateral_coherence_
+
+    def correction_manifest_path(self) -> Path | None:
+        return self.correction_manifest_
+
+    def cq_answerability_path(self) -> Path | None:
+        return self.cq_answerability_
+
+    def release_artifact_name(self) -> str:
+        return self.release_artifact_name_
+
+    def disclosure_template_path(self) -> Path | None:
+        return self.disclosure_template_
+
+    def anti_overfit_allowlist_path(self) -> Path | None:
+        return self.anti_overfit_allowlist_
 
     def disjoint_metatype_pairs(self) -> tuple[frozenset[str], ...]:
         """Upper-ontology disjoint pairs expressed as metatype-label frozensets.
@@ -649,6 +700,8 @@ def _build_config(raw: dict, source_path: Path) -> OntologyConfig:
         namespace=p["namespace"],
         prefix=p["prefix"],
         version=p.get("version", "0.1.0"),
+        ontology_iri=p.get("ontology_iri", f"{p['namespace']}{p['name']}"),
+        version_iri=p.get("version_iri"),
         long_description=p.get("long_description", "").strip(),
     )
 
@@ -690,7 +743,7 @@ def _build_config(raw: dict, source_path: Path) -> OntologyConfig:
             raise RuntimeError(f"waterfall references unknown ontology key '{key}'.")
         if not any(c.metatypes for c in onto.classes):
             raise RuntimeError(
-                f"waterfall ontology '{key}' has no class with `metatypes:` set — "
+                f"waterfall ontology '{key}' has no class with `metatypes:` set: "
                 "property-only ontologies cannot participate in classification."
             )
     waterfall = tuple(waterfall_raw)
@@ -722,6 +775,11 @@ def _build_config(raw: dict, source_path: Path) -> OntologyConfig:
     )
     non_distinguishing = frozenset(raw.get("non_distinguishing_metatypes", []) or [])
     lateral_coherence = _parse_lateral_coherence(raw.get("lateral_coherence"))
+    release = raw.get("release", {}) or {}
+
+    def _optional_release_path(key: str) -> Path | None:
+        value = str(release.get(key, "")).strip()
+        return (source_path.parent / value).resolve() if value else None
 
     cfg = OntologyConfig(
         project=project,
@@ -734,6 +792,13 @@ def _build_config(raw: dict, source_path: Path) -> OntologyConfig:
         property_specializations_=specializations,
         non_distinguishing_metatypes_=non_distinguishing,
         lateral_coherence_=lateral_coherence,
+        correction_manifest_=_optional_release_path("correction_manifest"),
+        cq_answerability_=_optional_release_path("cq_answerability"),
+        release_artifact_name_=str(
+            release.get("artifact_name", "ontology_release.ttl")
+        ).strip(),
+        disclosure_template_=_optional_release_path("disclosure_template"),
+        anti_overfit_allowlist_=_optional_release_path("anti_overfit_allowlist"),
         _source_path=source_path,
     )
 

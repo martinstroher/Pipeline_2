@@ -1,0 +1,19 @@
+{
+  "artifact": "output/final/presalt_ontology.ttl",
+  "baseline_commit": "bd2108ac5a0e4f582d79d79eca76d98e1a3d7785",
+  "artifact_git_blob_sha1": "071a3c2c93d98021281f742ed328d93c40a83db4",
+  "expected_sha256": "5b1c950609b5a8b2cd2e2ade78877f769f950c891eb26b84bba166956bd195bb",
+  "inputs": [
+    "evaluation_study/inputs/approved_run/validate_taxonomy.csv",
+    "evaluation_study/inputs/approved_run/validate_relations.csv",
+    "evaluation_study/inputs/approved_run/validate_instances.csv",
+    "evaluation_study/inputs/approved_run/validate_defined_classes.csv"
+  ],
+  "emitter": "src.modules.emit.owl_exporter.run_owl_export",
+  "frozen_triples": 1819,
+  "regenerated_triples": 1819,
+  "classes": 249,
+  "named_individuals": 59,
+  "graph_isomorphic": true,
+  "note": "Recorded before repair edits. Turtle byte hashes differ because blank-node identifiers are serialization-dependent."
+}

@@ -1,5 +1,5 @@
 """
-OWL Exporter — Step 7 of the PreSaltOntoLearn pipeline.
+OWL Exporter for ontology pipeline step 7.
 
 Converts taxonomy CSV to a valid OWL ontology in Turtle format using rdflib.
 
@@ -15,6 +15,8 @@ import os
 import re
 import ast
 import shutil
+import json
+import unicodedata
 from collections import defaultdict
 
 import pandas as pd
@@ -24,10 +26,15 @@ from rdflib import BNode, Graph, Namespace, Literal, URIRef, RDF, RDFS, OWL, XSD
 
 from src.utils import log
 from src.utils.ontology_config import get_config
+from src.modules.emit.correction_manifest import (
+    apply_correction_manifest,
+    load_correction_manifest,
+)
+from src.modules.emit.provenance import ProvenanceGraph, write_triple_provenance
 
 _CFG = get_config()
 
-# Namespaces — sourced from ontology_config.yaml. Edit the YAML to change.
+# Namespaces are sourced from ontology_config.yaml. Edit the YAML to change.
 ONTO_NS = Namespace(_CFG.project_namespace())
 BFO_NS = Namespace(_CFG.namespace_for("bfo"))
 GEOCORE_NS = Namespace(_CFG.namespace_for("geocore"))
@@ -42,9 +49,13 @@ _UPPER_IRIS_LOWER = {k.lower(): v for k, v in UPPER_IRIS.items()}
 # Set of IRI values for quick "is upper-level?" checks
 _UPPER_IRI_VALUES = set(UPPER_IRIS.values())
 
-# BFO disjointness pairs — used for conflict detection and axiom generation.
+# BFO disjointness pairs are used for conflict detection and axiom generation.
 # Sourced from ontology_config.yaml; expand to full IRI tuples for downstream use.
 _BFO_DISJOINT = _CFG.bfo_disjoint_pairs()
+
+
+def _display_path(path: str | os.PathLike) -> str:
+    return os.path.relpath(os.fspath(path), os.getcwd())
 
 
 def _is_upper_iri(iri: URIRef) -> bool:
@@ -77,7 +88,12 @@ def _term_to_iri(term: str) -> URIRef:
 
 def _mint_presalt_iri(term: str) -> URIRef:
     """Generate a local presalt: CamelCase IRI from a term string."""
-    local = re.sub(r"[^a-zA-Z0-9]", "_", term.strip().lower())
+    ascii_term = (
+        unicodedata.normalize("NFKD", term)
+        .encode("ascii", "ignore")
+        .decode("ascii")
+    )
+    local = re.sub(r"[^a-zA-Z0-9]", "_", ascii_term.strip().lower())
     local = re.sub(r"_+", "_", local).strip("_")
     parts = local.split("_")
     camel = "".join(p.capitalize() for p in parts if p)
@@ -107,7 +123,7 @@ def _title_case(label: str) -> str:
     (`Body of Rock`, `Pre-Salt Sequence`): capitalise each word and each
     hyphen-separated part, keep minor words lower-case (except the first), and
     leave acronyms / already-capitalised tokens untouched. Used only for class
-    and individual labels — never for object properties."""
+    and individual labels, never for object properties."""
     label = (label or "").strip()
     if not label:
         return label
@@ -261,7 +277,7 @@ def _detect_and_repair_disjointness(g: Graph, df: pd.DataFrame) -> list[dict]:
 
     for iteration in range(5):  # safety: max 5 repair passes
         dp = _build_direct_parents()
-        # Check ALL classes, not just presalt: — upper IRIs can also
+        # Check all classes. Upper IRIs can also
         # acquire taxonomy-derived edges that cross disjoint boundaries.
         all_classes = [
             str(s) for s in g.subjects(RDF.type, OWL.Class)
@@ -303,7 +319,7 @@ def _detect_and_repair_disjointness(g: Graph, df: pd.DataFrame) -> list[dict]:
                 elif iri_b in intended and iri_a not in intended:
                     keep_side, remove_side = iri_b, iri_a
                 else:
-                    # Category cannot disambiguate — it resolves to a *third*
+                    # Category cannot disambiguate because it resolves to a third
                     # branch disjoint with both conflict sides. This is the
                     # case-collision signature: two taxonomy rows that normalise
                     # to one IRI (an LLM-invented intermediate genus + a real
@@ -312,7 +328,7 @@ def _detect_and_repair_disjointness(g: Graph, df: pd.DataFrame) -> list[dict]:
                     # boundary. Fallback: if the class is a DIRECT subclass of
                     # exactly one of the two disjoint roots while reaching the
                     # other side only transitively (via a substantive published
-                    # genus), the direct bare-root edge is the artifact — drop it
+                    # genus), the direct bare-root edge is the artifact. Drop it
                     # and keep the genus. (This branch only runs where the repair
                     # previously gave up, so a currently-satisfiable class is
                     # never altered.)
@@ -324,14 +340,14 @@ def _detect_and_repair_disjointness(g: Graph, df: pd.DataFrame) -> list[dict]:
                         keep_side = iri_b if a_direct else iri_a
                         log.warn(
                             f"  Disjointness fallback: {_local_name(cls_str)} "
-                            f"— dropping direct upper-root parent "
+                            f"dropping direct upper-root parent "
                             f"{_local_name(remove_side)}; kept genus toward "
                             f"{_local_name(keep_side)} (category did not disambiguate)"
                         )
                     else:
                         log.warn(
                             f"  Disjointness conflict unresolved: {_local_name(cls_str)} "
-                            f"— category '{cat}' doesn't disambiguate"
+                            f"because category '{cat}' does not disambiguate"
                         )
                         continue
 
@@ -367,7 +383,7 @@ def _detect_and_repair_disjointness(g: Graph, df: pd.DataFrame) -> list[dict]:
 # ── Critic-driven emission helpers (added for the `validate` verb) ────────
 #
 # All IRIs are pulled from ontology_config at call time via cfg.upper_iris()
-# and cfg.all_relations() — no constants. If the config drops a relevant
+# and cfg.all_relations(), with no constants. If the config drops a relevant
 # class/property, the helper logs and skips rather than emitting bad RDF.
 
 def _emit_minted_properties(g: Graph, minted_csv: str) -> int:
@@ -384,7 +400,9 @@ def _emit_minted_properties(g: Graph, minted_csv: str) -> int:
     relations = _CFG.all_relations()
     upper = {k.lower(): v for k, v in _CFG.upper_iris().items()}
     n = 0
-    for _, r in df.iterrows():
+    for row_index, r in df.iterrows():
+        if hasattr(g, "set_source"):
+            g.set_source(f"input:{minted_csv}:row:{row_index + 2}")
         iri_str = str(r.get("IRI", "")).strip()
         name = str(r.get("Name", "")).strip()
         if not iri_str or not name:
@@ -394,7 +412,12 @@ def _emit_minted_properties(g: Graph, minted_csv: str) -> int:
         g.add((prop_uri, RDFS.label, Literal(name.replace("_", " "), lang="en")))
         justification = str(r.get("Justification", "")).strip()
         if justification:
-            g.add((prop_uri, RDFS.comment, Literal(f"[critic_minted] {justification}", lang="en")))
+            label = name.replace("_", " ")
+            g.add((
+                prop_uri,
+                RDFS.comment,
+                Literal(f"{label} is a generated object property.", lang="en"),
+            ))
         parent = str(r.get("ParentProperty", "")).strip()
         if parent and parent in relations:
             g.add((prop_uri, RDFS.subPropertyOf, URIRef(relations[parent].iri)))
@@ -410,7 +433,11 @@ def _emit_minted_properties(g: Graph, minted_csv: str) -> int:
     return n
 
 
-def _emit_named_individuals(g: Graph, instances_csv: str) -> int:
+def _emit_named_individuals(
+    g: Graph,
+    instances_csv: str,
+    nld_map: dict[str, str],
+) -> int:
     """Emit `<term> a owl:NamedIndividual, <target_class>` for each row in
     `validate_instances.csv` (columns: Term, Target_Class, Mint_Parent, …).
 
@@ -438,7 +465,9 @@ def _emit_named_individuals(g: Graph, instances_csv: str) -> int:
         return next((upper[c] for c in candidates if c in upper), None)
 
     n = 0
-    for _, r in df.iterrows():
+    for row_index, r in df.iterrows():
+        if hasattr(g, "set_source"):
+            g.set_source(f"input:{instances_csv}:row:{row_index + 2}")
         term = str(r.get("Term", "")).strip()
         target = str(r.get("Target_Class", "")).strip()
         if not term or not target:
@@ -453,21 +482,30 @@ def _emit_named_individuals(g: Graph, instances_csv: str) -> int:
                 target_label = target.split(":", 1)[-1] if ":" in target else target
                 type_iri = _mint_presalt_iri(target_label)
                 g.add((type_iri, RDF.type, OWL.Class))
-                g.add((type_iri, RDFS.label, Literal(_title_case(target_label), lang="en")))
+                target_public_label = _title_case(target_label)
+                g.add((type_iri, RDFS.label, Literal(target_public_label, lang="en")))
                 g.add((type_iri, RDFS.subClassOf, URIRef(mint_parent_iri)))
-                g.add((type_iri, RDFS.comment,
-                       Literal("[critic CONVERT_TO_INSTANCE minted target class]", lang="en")))
+                g.add((
+                    type_iri,
+                    RDFS.comment,
+                    Literal(
+                       f"{target_public_label} is a generated domain class.",
+                       lang="en",
+                    ),
+                ))
         if type_iri is None:
             log.warn(f"  validate_instances: cannot resolve target class '{target}' for '{term}' "
-                     f"(no usable Mint_Parent) — skipping")
+                     f"(no usable Mint_Parent), skipping")
             continue
         term_iri = _term_to_iri(term)
         g.add((term_iri, RDF.type, OWL.NamedIndividual))
         g.add((term_iri, RDF.type, type_iri))
-        g.add((term_iri, RDFS.label, Literal(_title_case(term), lang="en")))
-        reason = str(r.get("Reason", "")).strip()
-        if reason:
-            g.add((term_iri, RDFS.comment, Literal(f"[critic CONVERT_TO_INSTANCE] {reason}", lang="en")))
+        public_label = _title_case(term)
+        g.add((term_iri, RDFS.label, Literal(public_label, lang="en")))
+        public_comment = nld_map.get(term) or nld_map.get(term.lower())
+        if not public_comment or str(public_comment).startswith("ERROR"):
+            public_comment = f"{public_label} is a named individual."
+        g.add((term_iri, RDFS.comment, Literal(str(public_comment), lang="en")))
         n += 1
     return n
 
@@ -476,8 +514,8 @@ def _emit_defined_bearer_classes(g: Graph, defined_csv: str) -> int:
     """Emit `bearer owl:equivalentClass (genus ⊓ <prop> some <role>)` for each
     KEEP_AS_BEARER realizable bearer in ``defined_csv``.
 
-    This makes a role-fused term (e.g. "carbonate reservoir") a *defined* class —
-    "a carbonate rock that plays the reservoir role" — rather than a primitive
+    This makes a role-fused term a defined class that combines its genus and
+    role restriction, rather than a primitive
     rigid kind (the OntoClean mixin fix). The asserted `bearer ⊑ genus` is kept
     (browsable hierarchy + verifier anchoring); the loose role restriction is
     skipped in the relation loop so the role lives only inside this definition.
@@ -488,7 +526,9 @@ def _emit_defined_bearer_classes(g: Graph, defined_csv: str) -> int:
 
     df = read_csv(defined_csv)
     n = 0
-    for _, r in df.iterrows():
+    for row_index, r in df.iterrows():
+        if hasattr(g, "set_source"):
+            g.set_source(f"input:{defined_csv}:row:{row_index + 2}")
         bearer = str(r["Bearer"]).strip()
         genus = str(r["Genus"]).strip()
         filler = str(r["Filler"]).strip()
@@ -542,7 +582,9 @@ def _emit_domain_disjointness(g: Graph, disjointness_csv: str) -> int:
 
     df = read_csv(disjointness_csv)
     n = 0
-    for _, row in df.iterrows():
+    for row_index, row in df.iterrows():
+        if hasattr(g, "set_source"):
+            g.set_source(f"input:{disjointness_csv}:row:{row_index + 2}")
         members = _parse_members(row.get("members", ""))
         if len(members) < 2:
             continue
@@ -674,6 +716,9 @@ def run_owl_export(
     instances_csv: str | None = None,
     defined_csv: str | None = None,
     disjointness_csv: str | None = None,
+    correction_manifest: str | None = None,
+    correction_log_output: str | None = None,
+    provenance_output: str | None = None,
 ):
     """
     Export taxonomy to OWL Turtle format.
@@ -692,6 +737,9 @@ def run_owl_export(
                      Auto-derived from taxonomy_csv's dir if None.
         disjointness_csv: Optional path to validate_disjointness.csv. Emitted only
                   when `lateral_coherence.disjointness.enabled` is true.
+        correction_manifest: Optional static graph-correction manifest.
+        correction_log_output: Optional JSON record of applied corrections.
+        provenance_output: Optional CSV with one row per canonical RDF triple.
     """
     if output_path is None:
         base = os.path.splitext(taxonomy_csv)[0]
@@ -715,11 +763,10 @@ def run_owl_export(
         candidate = os.path.join(tax_dir, "validate_disjointness.csv")
         if os.path.exists(candidate):
             disjointness_csv = candidate
-
     df = read_csv(taxonomy_csv)
     log.info(f"OWL Export: {len(df)} taxonomy entries from {taxonomy_csv}")
 
-    # Load NLDs — primary source: NLD column in taxonomy CSV (added by taxonomy_builder)
+    # Load NLDs. The primary source is the taxonomy CSV NLD column.
     nld_map = {}
     if "NLD" in df.columns:
         for _, row in df.iterrows():
@@ -734,7 +781,7 @@ def run_owl_export(
             nld_map[row["Term"]] = row.get("NLD", "")
 
     # Build graph
-    g = Graph()
+    g = ProvenanceGraph()
     g.bind("owl", OWL)
     g.bind("rdf", RDF)
     g.bind("rdfs", RDFS)
@@ -743,8 +790,9 @@ def run_owl_export(
     g.bind(_CFG.prefix_for("geocore"), GEOCORE_NS)
     g.bind(_CFG.prefix_for("georeservoir"), GEORESERVOIR_NS)
 
-    # Ontology declaration — metadata sourced from ontology_config.yaml
-    onto_uri = ONTO_NS[_CFG.project_name()]
+    g.set_source(f"config:{_display_path(_CFG.source_path())}")
+    # Ontology declaration with metadata sourced from ontology_config.yaml
+    onto_uri = URIRef(_CFG.project_ontology_iri())
     g.add((onto_uri, RDF.type, OWL.Ontology))
     project_label = f"{_CFG.project_name()}: {_CFG.project_description()}".strip(": ").strip()
     g.add((onto_uri, RDFS.label, Literal(project_label)))
@@ -752,13 +800,17 @@ def run_owl_export(
     if long_desc:
         g.add((onto_uri, RDFS.comment, Literal(long_desc)))
     g.add((onto_uri, OWL.versionInfo, Literal(_CFG.project_version())))
+    version_iri = _CFG.project_version_iri()
+    if version_iri:
+        g.add((onto_uri, OWL.versionIRI, URIRef(version_iri)))
 
-    # Import declarations — only for ontologies with import_iri set in YAML
+    # Import declarations only for ontologies with import_iri set in YAML
     for onto_key in _CFG.ontologies.keys():
         import_iri = _CFG.import_iri_for(onto_key)
         if import_iri:
             g.add((onto_uri, OWL.imports, URIRef(import_iri)))
 
+    g.set_source("pipeline:src.modules.emit.owl_exporter")
     # Track individual IRIs (rdf:type entities) to handle differently in relations
     _individual_iris: set[str] = set()
 
@@ -766,7 +818,8 @@ def run_owl_export(
     _taxonomy_terms: set[str] = set(df["Term"].dropna().astype(str).str.strip())
 
     # Process taxonomy entries
-    for _, row in df.iterrows():
+    for row_index, row in df.iterrows():
+        g.set_source(f"input:{taxonomy_csv}:row:{row_index + 2}")
         term = row["Term"]
         parent = row["Parent_Term"]
         rel_type = row.get("Relationship_Type", "rdfs:subClassOf")
@@ -783,7 +836,7 @@ def run_owl_export(
             parent_str = str(parent).strip()
             # Validate parent exists in taxonomy or upper-ontology before minting IRI
             if parent_str not in _taxonomy_terms and parent_str.lower() not in _UPPER_IRIS_LOWER:
-                log.warn(f"  Phantom parent '{parent_str}' for '{term}' — treating as root class")
+                log.warn(f"  Phantom parent '{parent_str}' for '{term}', treating as root class")
                 has_parent = False
                 parent_iri = None
 
@@ -803,14 +856,14 @@ def run_owl_export(
                 g.add((term_iri, RDF.type, OWL.NamedIndividual))
                 g.add((term_iri, RDF.type, parent_iri))
             elif term_iri != parent_iri:
-                # Class — guard against self-referential subClassOf
+                # Class with a guard against self-referential subClassOf
                 g.add((term_iri, RDF.type, OWL.Class))
                 g.add((term_iri, RDFS.subClassOf, parent_iri))
             else:
-                # Self-reference detected (case collision) — declare as class only
+                # A case collision self-reference is declared as a class only.
                 g.add((term_iri, RDF.type, OWL.Class))
         else:
-            # Root node — try to anchor to upper-ontology via Category
+            # Try to anchor a root node to the upper ontology via Category.
             g.add((term_iri, RDF.type, OWL.Class))
             category = str(row.get("Category", "")).strip()
             if category and not _is_upper_iri(term_iri):
@@ -831,6 +884,7 @@ def run_owl_export(
             if str(parent_iri) not in _individual_iris:
                 g.add((parent_iri, RDF.type, OWL.Class))
 
+    g.set_source(f"config:{_display_path(_CFG.source_path())}:upper_backbone")
     # ── Upper-ontology backbone: add subClassOf chains + labels ──
     # Collect all upper-level IRIs referenced in subClassOf and rdf:type triples
     referenced_uppers = set()
@@ -851,7 +905,7 @@ def run_owl_export(
     n_restrictions = 0
     # Role restrictions that are folded into a defined-class definition
     # (owl:equivalentClass, emitted later) must NOT also be emitted here as loose
-    # subClassOf restrictions — that would double-encode the role.
+    # subClassOf restrictions because that would double-encode the role.
     _defined_skip: set[tuple[str, str, str]] = set()
     if defined_csv and os.path.exists(defined_csv):
         _dc = read_csv(defined_csv)
@@ -884,7 +938,8 @@ def run_owl_export(
         # Declare used object properties
         declared_props = set()
         _skipped_phantom_fillers: list[tuple[str, str, str]] = []
-        for _, rel in accepted.iterrows():
+        for row_index, rel in accepted.iterrows():
+            g.set_source(f"input:{relations_csv}:row:{row_index + 2}")
             prop_iri_str = rel.get("Property_IRI", "")
             prop_name = rel.get("Property", "")
             if prop_iri_str and prop_iri_str not in declared_props:
@@ -894,12 +949,13 @@ def run_owl_export(
                 declared_props.add(prop_iri_str)
 
         # Add existential restrictions: Class ⊑ ∃property.Filler
-        for _, rel in accepted.iterrows():
+        for row_index, rel in accepted.iterrows():
+            g.set_source(f"input:{relations_csv}:row:{row_index + 2}")
             term_str = str(rel["Term"]).strip()
             filler_str = str(rel["Filler"]).strip()
 
             # Skip if subject is not a known taxonomy term or upper-ontology IRI
-            # — avoids creating restrictions for terms only in relations CSV
+            # This avoids creating restrictions for terms only in relations CSV.
             if term_str not in _taxonomy_terms and term_str.lower() not in _UPPER_IRIS_LOWER:
                 continue
 
@@ -925,14 +981,14 @@ def run_owl_export(
                 continue
 
             # Declare filler as a class only if it's a known taxonomy term or
-            # upper-ontology IRI — avoids minting phantom orphan classes.
+            # upper-ontology IRI. This avoids minting phantom orphan classes.
             filler_is_individual = str(filler_iri) in _individual_iris
             filler_is_known = (
                 filler_str in _taxonomy_terms
                 or filler_str.lower() in _UPPER_IRIS_LOWER
             )
 
-            # Skip entire restriction if filler is unknown — referencing an
+            # Skip the entire restriction if the filler is unknown. Referencing an
             # unknown IRI in owl:someValuesFrom would create a phantom class
             # under owl:Thing in Protégé with no label, comment, or parent.
             if not filler_is_individual and not filler_is_known:
@@ -967,6 +1023,7 @@ def run_owl_export(
             if len(_skipped_phantom_fillers) > 10:
                 log.detail(f"  ... and {len(_skipped_phantom_fillers) - 10} more")
 
+    g.set_source(f"config:{_display_path(_CFG.source_path())}:upper_backbone")
     # ── Second backbone pass: pick up upper IRIs referenced in restrictions ──
     extra_uppers = set()
     for _, _, o in g.triples((None, OWL.someValuesFrom, None)):
@@ -977,20 +1034,17 @@ def run_owl_export(
     if n_extra:
         log.detail(f"Added {n_extra} extra backbone triples for restriction fillers")
 
-    # ── Disjointness conflict detection & repair ──
-    repairs = _detect_and_repair_disjointness(g, df)
-    if repairs:
-        log.info(f"Disjointness repairs: {len(repairs)} conflicting edges removed")
-
+    g.set_source("pipeline:src.modules.emit.owl_exporter:critic_outputs")
     # ── Critic-driven additions: minted properties, instances, companion axioms ──
     if minted_csv:
         n_minted = _emit_minted_properties(g, minted_csv)
         if n_minted:
             log.detail(f"Emitted {n_minted} critic-minted object properties from {minted_csv}")
     if instances_csv:
-        n_inst = _emit_named_individuals(g, instances_csv)
+        n_inst = _emit_named_individuals(g, instances_csv, nld_map)
         if n_inst:
             log.detail(f"Emitted {n_inst} CONVERT_TO_INSTANCE individuals from {instances_csv}")
+    g.set_source("pipeline:src.modules.emit.owl_exporter:companion_axioms")
     n_companion = _emit_companion_axioms(g)
     if n_companion:
         log.detail(f"Emitted {n_companion} BFO companion-axiom restrictions (Quality/Role descendants)")
@@ -998,6 +1052,7 @@ def run_owl_export(
         n_defined = _emit_defined_bearer_classes(g, defined_csv)
         if n_defined:
             log.detail(f"Emitted {n_defined} defined bearer classes (equivalentClass genus ⊓ role) from {defined_csv}")
+    g.set_source("pipeline:src.modules.emit.owl_exporter:domain_disjointness")
     lateral_cfg = _CFG.lateral_coherence()
     if disjointness_csv and lateral_cfg.emit_disjointness:
         java_available = bool(os.environ.get("JAVA_EXE") or shutil.which("java"))
@@ -1020,11 +1075,45 @@ def run_owl_export(
     if n_post:
         log.detail(f"Added {n_post} backbone triples for critic-introduced upper classes")
 
+    correction_log: list[dict] = []
+    if correction_manifest:
+        manifest = load_correction_manifest(correction_manifest)
+        if str(manifest["version"]) != _CFG.project_version():
+            raise ValueError(
+                "Correction manifest version does not match configured project version"
+            )
+        relation_iris = {
+            name: constraint.iri
+            for name, constraint in _CFG.all_relations().items()
+        }
+        correction_log = apply_correction_manifest(
+            g,
+            manifest,
+            _term_to_iri,
+            relation_iris,
+        )
+        log.info(
+            f"Applied {sum(row['graph_change'] for row in correction_log)} "
+            f"graph corrections from {correction_manifest}"
+        )
+        if correction_log_output:
+            os.makedirs(os.path.dirname(correction_log_output) or ".", exist_ok=True)
+            with open(correction_log_output, "w", encoding="utf-8") as handle:
+                json.dump(correction_log, handle, indent=2, ensure_ascii=False)
+
+    g.set_source("pipeline:src.modules.emit.owl_exporter:disjointness_repair")
+    # Run hierarchy repair after every graph addition and configured correction.
+    repairs = _detect_and_repair_disjointness(g, df)
+    if repairs:
+        log.info(f"Disjointness repairs: {len(repairs)} conflicting edges removed")
+
+    g.set_source(f"config:{_display_path(_CFG.source_path())}:bfo_disjoint_pairs")
     # ── BFO disjointness axioms ──
     for iri_a, iri_b in _BFO_DISJOINT:
         g.add((URIRef(iri_a), OWL.disjointWith, URIRef(iri_b)))
     log.detail(f"Added {len(_BFO_DISJOINT)} BFO disjointness axioms")
 
+    g.set_source(f"config:{_display_path(_CFG.source_path())}:property_labels")
     # ── Label every object property used in a restriction, so Protege shows a
     #    readable name even without resolving the BFO/RO imports ──
     n_prop_labels = _label_used_properties(g)
@@ -1035,6 +1124,26 @@ def run_owl_export(
     os.makedirs(os.path.dirname(output_path) or ".", exist_ok=True)
     g.serialize(destination=output_path, format="turtle")
 
+    if provenance_output:
+        input_sources = [
+            taxonomy_csv,
+            *([nld_csv] if nld_csv else []),
+            *([relations_csv] if relations_csv else []),
+            *([minted_csv] if minted_csv else []),
+            *([instances_csv] if instances_csv else []),
+            *([defined_csv] if defined_csv else []),
+            *([disjointness_csv] if disjointness_csv else []),
+        ]
+        write_triple_provenance(
+            g,
+            provenance_output,
+            config_source=_display_path(_CFG.source_path()),
+            manifest_source=(
+                _display_path(correction_manifest) if correction_manifest else None
+            ),
+            input_sources=[path for path in input_sources if path],
+        )
+
     # Stats
     n_classes = len(list(g.subjects(RDF.type, OWL.Class)))
     n_individuals = len(list(g.subjects(RDF.type, OWL.NamedIndividual)))
@@ -1044,7 +1153,7 @@ def run_owl_export(
     log.detail(f"Classes: {n_classes}, Individuals: {n_individuals}, Triples: {n_triples}")
     if n_restrictions > 0:
         log.detail(f"Existential restrictions: {n_restrictions}")
-    log.detail(f"Format: Turtle (.ttl) — open in Protege to verify")
+    log.detail("Format: Turtle (.ttl), open in Protege to verify")
 
     return output_path
 

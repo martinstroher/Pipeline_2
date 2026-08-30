@@ -1,0 +1,15 @@
+{
+  "scope": "added and untracked src content relative to bd2108ac5a0e4f582d79d79eca76d98e1a3d7785",
+  "untracked_src_files": [],
+  "term_sources": [
+    "domains/presalt/anti_overfit_terms.txt",
+    "evaluation_study/inputs/approved_run/validate_taxonomy.csv",
+    "evaluation_study/inputs/approved_run/validate_relations.csv",
+    "evaluation_study/inputs/approved_run/validate_instances.csv",
+    "evaluation_study/inputs/approved_run/validate_defined_classes.csv"
+  ],
+  "allowlist": "domains/presalt/corrections/anti_overfit_allowlist.txt",
+  "terms_checked": 284,
+  "matches": [],
+  "pass": true
+}
