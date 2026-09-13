@@ -22,3 +22,15 @@ A regeneration test produced an RDF graph isomorphic to this artifact with the
 same 1,819 triples, 249 classes, and 59 individuals. Turtle byte hashes differ
 because RDF blank-node identifiers are serialization-dependent; the SHA-256
 above identifies this exact approved serialization.
+
+Run the committed offline regression from the repository root:
+
+```bash
+python test/test_shared_relation_regeneration.py -v
+```
+
+It checks all frozen-input hashes, calls the exporter with the four approved
+CSV files, and compares the regenerated graph with this artifact using
+RDFLib graph isomorphism and a zero-added/zero-removed triple diff.
+Network connections are disabled during export and syntax/structure
+verification; OOPS! and HermiT are skipped. The approved file is never rewritten.

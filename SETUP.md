@@ -40,7 +40,10 @@ This creates `domains/mydomain/` from `domains/_template/`, with:
 - The 23 generic prompts copied from `domains/presalt/prompts/`
   (these are domain-agnostic — `<<block>>` markers resolve from your
   `prompt_blocks.yaml` at load time)
-- `resources/bfo-core.owl` (so the BFO-only template works out of the box)
+- `resources/bfo-core.owl` and `resources/ro-core.owl`
+- A reference to `domains/_shared/bfo_ro_relations.yaml`, which supplies 61
+  generic BFO/RO relations, their metatype groups, and parthood specialization
+  rules without copying them into each domain
 
 `<mydomain>` must be lowercase, 2-32 chars, letters/digits/underscores only.
 
@@ -63,8 +66,10 @@ later.
 ### 2b. `ontology_config.yaml` — `project:` section (REQUIRED)
 
 Set `name`, `namespace`, and `prefix` for your ontology. The default
-template ships with BFO only as the upper ontology, which is enough to
-run end-to-end. To layer in more (GeoCore, ChEBI, GO, …) see
+template uses BFO for categorization and already loads the shared BFO/RO
+relations. Add only your discipline-specific properties under `relations:`;
+the empty local mapping retains all 61 defaults. To layer in more class
+ontologies (GeoCore, ChEBI, GO, …) see
 [`domains/README.md`](domains/README.md) and the much larger
 [`domains/presalt/ontology_config.yaml`](domains/presalt/ontology_config.yaml)
 as a reference.
@@ -161,6 +166,7 @@ filenames have not changed, so skipping a phase costs nothing.
 
 ```
 domains/
+  _shared/         ← BFO/RO relation defaults reused by domain configs
   _template/       ← scaffold source (never edit at runtime)
   presalt/         ← reference domain (also useful as an example)
   mydomain/        ← your domain
@@ -169,7 +175,7 @@ domains/
     domain_filters.yaml
     competency_questions.txt
     prompts/       ← 17 generic prompts (auto-copied)
-    resources/     ← bfo-core.owl (auto-copied) + any extra OWL files
+    resources/     ← bfo-core.owl + ro-core.owl (auto-copied) + extra OWL files
 scripts/
   new_domain.py    ← the scaffold script
 ```

@@ -162,11 +162,18 @@ The file can be opened in **Protégé** for inspection, visualisation, and reaso
 
 ## Retargeting to another scientific domain
 
-The pipeline architecture is domain-agnostic. The Pre-Salt-specific knowledge lives under `domains/presalt/`; copy the folder, rewrite its contents, and the same 7-step pipeline runs on biomedicine, materials science, palaeoclimate, etc.
+The pipeline architecture is domain-agnostic. Start a new domain with
+`python scripts/new_domain.py <name>`. The template already loads 61 generic
+BFO/RO relation entries, their metatype groups, and parthood rules from a
+shared file. Only discipline-specific properties need to be authored:
+Pre-Salt keeps 10 such entries locally instead of repeating all 71
+(about 86% less relation-authoring work). Its resolved configuration and
+the approved GeoPreSalt 0.1 graph remain unchanged.
 
 | File / folder | Holds |
 |------|-------|
-| `domains/<name>/ontology_config.yaml` | Upper ontologies and their classes (BFO, GeoCore, GeoReservoir for Pre-Salt → e.g. BFO + ChEBI + OBI for biomedicine), the categorization waterfall, 71 relation property constraints with provenance, BFO disjoint pairs, Step 6d behaviour |
+| `domains/_shared/bfo_ro_relations.yaml` | 61 generic BFO/RO relation entries with provenance, metatype groups, and parthood specialization rules, shared by all opting-in domain configs |
+| `domains/<name>/ontology_config.yaml` | Upper ontologies/classes, categorization waterfall, a reference to shared relations plus local domain-specific properties, disjoint pairs, and Step 6d behaviour |
 | `domains/<name>/prompts/` | 14 production prompts (term extraction, NLD generation, categorization, taxonomy, focused validate critics, relations, CQ scoring …) |
 | `domains/<name>/resources/` | Reference OWL files for the upper ontologies (loaded by `owl_exporter.py` for the upper backbone) |
 | `domains/<name>/competency_questions.txt` | CQs used by Step 5b (mandatory) |

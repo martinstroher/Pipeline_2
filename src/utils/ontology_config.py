@@ -2,8 +2,9 @@
 Ontology Configuration Loader — single source of truth for upper-ontology
 scope, namespaces, and per-class metadata.
 
-Reads `ontology_config.yaml` (or path from env var `ONTOLOGY_CONFIG_PATH`)
-and exposes typed accessors to all pipeline consumers. Apply env-var
+Reads `ontology_config.yaml` (or path from env var `ONTOLOGY_CONFIG_PATH`),
+optionally loading shared relation defaults relative to that file, and
+exposes typed accessors to all pipeline consumers. Apply env-var
 overrides at load time so a single .env tweak changes pipeline behaviour.
 
 Key accessors (consumer → call):
@@ -431,6 +432,49 @@ def _resolve_config_path() -> Path:
     return cwd.resolve()  # fall through; loader will raise on missing file
 
 
+def _with_relation_defaults(raw: dict, source_path: Path) -> dict:
+    """Merge one safe-loaded relation fragment; no custom tags or nested imports.
+
+    Local groups and relations replace whole entries with the same name.
+    A local specialization list replaces the inherited list (including []).
+    Shared insertion order is retained, followed by new local entries.
+    Configs without ``relation_defaults`` retain their existing behavior.
+    """
+    if "relation_defaults" not in raw:
+        return raw
+    reference = raw["relation_defaults"]
+    if not isinstance(reference, str) or not reference.strip():
+        raise RuntimeError(f"{source_path}: relation_defaults must be a non-empty file path.")
+    path = (source_path.parent / reference).resolve()
+    try:
+        with path.open(encoding="utf-8") as handle:
+            defaults = yaml.safe_load(handle)
+    except (OSError, yaml.YAMLError) as exc:
+        raise RuntimeError(f"Cannot load relation_defaults from {path}: {exc}") from exc
+    allowed = {"metatype_groups", "relations", "property_specializations"}
+    if not isinstance(defaults, dict) or defaults.keys() - allowed:
+        raise RuntimeError(
+            f"{path}: relation_defaults must be a mapping containing only "
+            f"{sorted(allowed)}; nested imports are not supported."
+        )
+    merged = dict(raw)
+    for key in ("metatype_groups", "relations"):
+        inherited = defaults.get(key, {})
+        local = raw.get(key, {})
+        if not isinstance(inherited, dict) or not isinstance(local, dict):
+            raise RuntimeError(f"{source_path}: {key} must be a mapping in config and defaults.")
+        merged[key] = {**inherited, **local}
+    for document, path_label in ((defaults, path), (raw, source_path)):
+        if "property_specializations" in document and not isinstance(
+            document["property_specializations"], list
+        ):
+            raise RuntimeError(f"{path_label}: property_specializations must be a list.")
+    merged["property_specializations"] = raw.get(
+        "property_specializations", defaults.get("property_specializations", [])
+    )
+    return merged
+
+
 def _parse_classes(
     raw_classes: list[dict],
     namespace: str,
@@ -639,6 +683,7 @@ def _parse_lateral_coherence(raw: dict | None) -> LateralCoherenceConfig:
 
 
 def _build_config(raw: dict, source_path: Path) -> OntologyConfig:
+    raw = _with_relation_defaults(raw, source_path)
     repo_root = source_path.parent
 
     # project

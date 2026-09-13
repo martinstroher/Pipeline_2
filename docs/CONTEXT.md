@@ -228,14 +228,31 @@ The combination of taxonomy axioms and existential restrictions is the standard 
 
 The single source of truth for upper-ontology metadata, BFO disjoint pairs, relation property constraints, the categorization waterfall, and the critic-driven `validate` step's class budget. Loaded once at import time by `src/utils/ontology_config.py` (frozen dataclass + `lru_cache`-backed singleton). Default path: `domains/presalt/ontology_config.yaml`; override with `ONTOLOGY_CONFIG_PATH`. All modules read from `get_config()`; nothing else is hardcoded.
 
+The Pre-Salt and starter-template configs reference
+`domains/_shared/bfo_ro_relations.yaml`: 61 generic entries (44 BFO IRIs,
+17 RO IRIs), their metatype groups, and mereology specialization rules are
+defined once. Pre-Salt declares only its 10 GeoCore/GeoReservoir entries locally.
+The resolved Pre-Salt config, including relation order and critic-menu flags,
+is unchanged. Scaffolding copies BFO and RO reference OWL files and retains
+the shared-file reference.
+
+- **Robustness:** the optional `relation_defaults` file is resolved relative to
+  the active config and read with `yaml.safe_load`. Missing/malformed files,
+  unsupported fragment keys, and invalid section types raise `RuntimeError`.
+  Fragments cannot include other files. Local groups/relations replace whole
+  same-name entries; a local specialization list replaces the entire inherited
+  list. Omitted lists inherit, and `[]` disables specialization. Legacy configs
+  without defaults are unchanged. Domain prompt/resource paths stay local.
+
 ### Top-level keys
 - `project`: `namespace`, `prefix`, `version`, BFO `import_iri`
 - `waterfall`: ordered list of ontology keys (most-specific first) defining the Step 5 cascade. Rendered into the `{categories_block}` placeholder injected into the categorization prompt. Each entry must be a known ontology key with at least one metatype'd class.
 - `provenance_tiers_active`: ordered list of relation provenance tiers to honour (default: all four)
 - `ontologies`: per-ontology block (`bfo`, `geocore`, `georeservoir`, `ro`) with `display_name` (header used by `categorization_block()`), `namespace`, `prefix`, `owl` (file path), `import_iri`, `eval_tier`, and a `classes:` list (each class with `iri`, `label`, `metatypes`, `llm_definition`, optional `disjoint_pairs`, and optional `categorizer` — default `true`; set `categorizer: false` to keep a class as a relation/taxonomy target while excluding it from the Step-5 categorizer menu, as done for the BFO realizables role/disposition/function)
 - `verifier_prefixes`: maps `bfo`, `geo`, `presalt` → URI prefixes used by `ontology_verifier.py`
-- `metatype_groups`: 18 named groups (`CONTINUANT`, `OCCURRENT`, `MATERIAL`, `PROCESS`, …) that expand recursively to flat sets of literal BFO metatype labels — used as shorthand in `relations` `domain`/`range` lists
-- `relations`: 71 property constraints (RO + BFO 2020 + GeoCore/GeoReservoir authored + project-specific tightenings). Each entry has `iri`, `domain` (list of group names or literal metatype strings), `range`, `inverse`, `provenance`, `notes`
+- `relation_defaults`: optional path to a fragment containing only `metatype_groups`, `relations`, and `property_specializations`; shared entries load first, then local additions/overrides
+- `metatype_groups`: named groups (`CONTINUANT`, `OCCURRENT`, `MATERIAL`, `PROCESS`, …) that expand recursively to flat sets of literal BFO metatype labels — used as shorthand in `relations` `domain`/`range` lists
+- `relations`: local property constraints merged with defaults (71 resolved for Pre-Salt). Each entry has `iri`, `domain` (list of group names or literal metatype strings), `range`, `inverse`, `provenance`, `notes`, and optional `critic_menu`
 - `lateral_coherence`: domain-agnostic validate-step tuning for parsimony/facet-coherence auditing. Current supported knobs include `enabled`, `hints.enabled` (env override `LATERAL_HINTS_ENABLED`), conservative class-fate thresholds, relation-scope policy, and disabled-by-default domain disjointness emission settings. No domain vocabulary belongs here; the knobs control generic ontology-policy behavior.
 
 ### Provenance tiers
@@ -270,6 +287,12 @@ The audit script `python -m src.evaluation.property_constraints_audit` writes `o
 ### Parity test
 `test/test_ontology_config_parity.py` runs 26 checks asserting the YAML produces literals identical to the values modules previously hardcoded, plus the waterfall order and `categorization_block()` header order. Must pass after any YAML or loader change.
 
+`test/test_shared_relation_config.py` checks the pre-refactor ordered relation
+contract, template/scaffold inheritance, merge rules, failures, and env/cache
+behavior. `test/test_shared_relation_regeneration.py` exports the committed
+approved inputs without network access and requires graph isomorphism with
+the archived 1,819-triple GeoPreSalt 0.1 artifact, plus syntax/structure PASS.
+
 ---
 
 ## Prompt System — `domains/<name>/prompts/`
@@ -281,7 +304,7 @@ Prompts are end-to-end artifacts authored per domain. There is no load-time inte
 The active domain is derived from the directory containing the active `ontology_config.yaml`. See [domains/README.md](../domains/README.md) for the per-prompt runtime-placeholder contract and the full retargeting guide.
 
 ### Retargeting to a new domain
-1. Copy `domains/presalt/` to `domains/<your_domain>/` and edit `ontology_config.yaml` for your upper ontologies, waterfall, and relations
+1. Run `python scripts/new_domain.py <your_domain>` and edit `ontology_config.yaml` for your upper ontologies and waterfall; shared BFO/RO relations are pre-populated, so add only domain-specific properties
 2. Rewrite every prompt in `domains/<your_domain>/prompts/` with personas and calibration examples for your domain
 3. `$env:ONTOLOGY_CONFIG_PATH = "domains/<your_domain>/ontology_config.yaml"` and run the pipeline
 
@@ -291,10 +314,13 @@ The active domain is derived from the directory containing the active `ontology_
 
 ```
 pipeline.py               # Orchestrator + CLI (thin: _build_parser, _dispatch_subcommand, _run_refinement_pipeline, _clean_outputs, _check_stop helpers; includes --validate/--validate-relations/--validate-emit for rerunning the validate→emit tail from existing Step 6/6b outputs)
-domains/                  # Per-domain config + assets. Each subfolder is a complete retargetable bundle.
+domains/                  # Per-domain config + assets, plus shared defaults
   README.md               # Author guide: layout, activation, per-prompt runtime-placeholder contract
+  _shared/
+    bfo_ro_relations.yaml  # 61 generic BFO/RO entries, metatype groups, parthood rules
+  _template/              # Scaffold config references the shared defaults
   presalt/
-    ontology_config.yaml  # Single source of truth: waterfall, upper-ontology metadata, BFO disjoint pairs, 71 relations
+    ontology_config.yaml  # Waterfall, upper metadata, disjoint pairs, 10 local + 61 shared relations
     prompts/              # 14 production prompts (including focused validate stages)
     resources/            # Upper-ontology OWL files: bfo-core.owl, geocore-full.owl, geores-full.owl, ro-core.owl
     competency_questions.txt
@@ -317,7 +343,8 @@ output/
 chroma_db_1024/           # Cached ChromaDB vector index (created on first run)
 test/                     # Production-pipeline validation suite
   test_ontology_config_parity.py  # 26 checks — must pass after any YAML/loader change
-  regression_t1.py                # Deterministic 6d→7→7b regression (329 classes / 26 individuals / 3350 triples / 39 upper IRIs)
+  test_shared_relation_config.py  # Shared defaults, legacy compatibility, scaffold loading
+  test_shared_relation_regeneration.py  # Offline approved-input export: 1819 triples, graph-isomorphic
   run_e2e_test.py                 # End-to-end smoke test (Steps 0-7 with real LLM calls)
 ```
 

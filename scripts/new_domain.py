@@ -10,8 +10,9 @@ Creates `domains/<domain_name>/` populated with:
   * The 17 generic production prompts copied from `domains/presalt/prompts/`
     (these are domain-agnostic — `<<block>>` markers resolve from
     `prompt_blocks.yaml` at load time).
-  * The `bfo-core.owl` upper-ontology file copied from
-    `domains/presalt/resources/` so the template config works out of the box.
+  * The `bfo-core.owl` and `ro-core.owl` reference files copied from
+    `domains/presalt/resources/`. The config references the shared BFO/RO
+    relation registry in `domains/_shared/`; it is not duplicated.
 
 After running, edit the four user-facing files, set
 `ONTOLOGY_CONFIG_PATH=domains/<domain_name>/ontology_config.yaml` in your
@@ -43,6 +44,7 @@ _USER_EDIT_FILES = (
 _GENERIC_ASSETS = (
     ("prompts", "prompts"),
     ("resources/bfo-core.owl", "resources/bfo-core.owl"),
+    ("resources/ro-core.owl", "resources/ro-core.owl"),
 )
 
 _NAME_PATTERN = re.compile(r"^[a-z][a-z0-9_]{1,31}$")
