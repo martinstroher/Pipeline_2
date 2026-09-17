@@ -84,7 +84,7 @@ from tqdm import tqdm
 
 from src.utils import log
 from src.utils.csv_io import read_csv, write_csv
-from src.utils.llm_client import get_client, generate
+from src.utils.llm_client import get_client, generate, require_model
 from src.utils.ontology_config import get_config
 from src.utils.prompt_loader import load_prompt
 from src.utils.rag_setup import get_embedding_model
@@ -2311,6 +2311,7 @@ def run_critic(
 ) -> tuple[str, str | None]:
     from dotenv import load_dotenv
     load_dotenv()
+    model = require_model("LLM_GENERATION_MODEL")
     get_client()
 
     os.makedirs(output_dir, exist_ok=True)
@@ -2346,7 +2347,6 @@ def run_critic(
     completion_system, completion_template = load_prompt("critic_frame_completion.txt")
     rel_system, rel_template = load_prompt("critic_relations.txt")
     scope_system, scope_template = load_prompt("critic_relation_scope.txt")
-    model = os.environ.get("LLM_GENERATION_MODEL", "gemini-2.5-pro")
     temperature = float(os.environ.get("LLM_GENERATION_TEMPERATURE", 0))
 
     log.banner("validate", "Validate (taxonomy → worthiness → dedup → facets → relations/scope)")

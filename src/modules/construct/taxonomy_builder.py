@@ -25,7 +25,7 @@ from src.utils.csv_io import read_csv, write_csv
 from dotenv import load_dotenv
 from tqdm import tqdm
 
-from src.utils.llm_client import get_client, generate, parse_json_array
+from src.utils.llm_client import get_client, generate, parse_json_array, require_model
 from src.utils import log
 from src.utils.prompt_loader import load_prompt
 from src.utils.ontology_config import get_config
@@ -265,6 +265,7 @@ def run_taxonomy_builder(categorized_csv: str, output_path: str | None = None, h
         hints_csv: Optional path to specialization hints CSV (General_Term, Specific_Term)
     """
     load_dotenv()
+    MODEL_NAME = require_model("LLM_GENERATION_MODEL")
     get_client()
 
     if output_path is None:
@@ -283,7 +284,6 @@ def run_taxonomy_builder(categorized_csv: str, output_path: str | None = None, h
     ].copy()
     log.detail(f"{len(df_valid)} valid terms (excluding errors and NOT_CLASSIFIED)")
 
-    MODEL_NAME = os.environ.get("LLM_GENERATION_MODEL", "gemini-2.5-pro")
     MODEL_TEMPERATURE = float(os.environ.get("LLM_GENERATION_TEMPERATURE", 0))
 
     # Load optional specialization hints

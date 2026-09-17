@@ -66,7 +66,8 @@ PDFs  →  [Step 0]  →  Markdown files
 
 | Step | What happens (plain language) |
 |------|-------------------------------|
-| **0 — Ingest** | PDF papers are converted to plain-text Markdown. |
+| **Startup — Configuration** | Checks that every LLM stage selected for this run has an explicit Azure deployment name. Missing or blank names stop the run before conversion, retrieval, or cleanup; no model is chosen automatically. Standalone export/verification and help remain usable without model settings. |
+| **0 — Ingest** | PDF papers are converted to plain-text Markdown. Local inference telemetry is disabled before PDF/retrieval initialization to avoid a native background-worker shutdown failure; inference behavior is unchanged. |
 | **R — RAG Index** | All Markdown documents are chunked (1024-character windows) and indexed in a vector database (ChromaDB) and a keyword index (BM25). This index is queried by later steps to retrieve relevant passages. |
 | **1 — Extract** | An LLM reads each paper and outputs a deduplicated list of geological terms found in that text. |
 | **2 — Aggregate** | All term lists are merged, spelling variants are lemmatised (e.g. “dolomites” → “dolomite”), and the number of papers mentioning each term is counted. Since extraction deduplicates per paper, Frequency = document frequency. |
@@ -79,6 +80,10 @@ PDFs  →  [Step 0]  →  Markdown files
 | **validate — Critic** | Focused barriers run in order: taxonomy correctness with a single-axis IS-A guard; evidence-backed lean-core selection by the existing class-worthiness critic; conflict-safe within/cross-category reconciliation (cross-category candidates use in-memory BGE-M3 NLD similarity); facet/subsumption/singleton audit; corpus-attested frame-completion diagnostics; relation correctness; and independent relation-scope classification. Defined role/function/disposition bearers preserve their semantics, while corpus-attested atomic members of coherent scientific frames may remain despite shared CQ coverage. Deterministic repair preserves surviving ancestry and all uncertainty is audited. |
 | **7 — Export** | The taxonomy is serialised as an OWL/Turtle file with `rdfs:subClassOf` links, `rdfs:label`, `rdfs:comment` (the NLD), and `owl:imports` for the BFO upper ontology. Critic-minted properties and CONVERT_TO_INSTANCE individuals are emitted from the validate-step outputs, and BFO Quality/Role descendants receive companion `inheres_in some IndependentContinuant` / `realized_in some Process` restrictions. Role-fused bearers from the critic (e.g. "Carbonate Reservoir") are emitted as **defined classes** — `bearer ≡ genus ⊓ (has_role some MintedRole)` via `owl:equivalentClass` — so a term that names a kind playing a role is no longer asserted as a primitive rigid kind (the OntoClean mixin fix). Case-insensitive IRI matching, self-reference guards, and upper→upper triple suppression prevent duplicate/invalid OWL triples. Disjointness conflict detection automatically resolves presalt: classes that inherit from both sides of BFO disjoint pairs, using the term's Category to determine which parent to keep. |
 | **7b — Verify** | The exported ontology is verified post-hoc: RDFLib syntax parsing, structural analysis (orphan classes, missing labels/comments, self-references, upper-ontology anchoring), optionally OOPS! pitfall scanning via REST API, and optionally HermiT reasoner consistency checking (requires Java and owlready2). Results are saved as a JSON report. |
+
+Export and verification use the ontologies and project namespace declared by
+the active domain, so a BFO/RO starter does not need geology-specific ontology
+settings. This does not change the evaluated Pre-Salt graph.
 
 The validate step keeps generated NLD embeddings separate from the corpus RAG index. Core inclusion requires marginal CQ, relation, branch-anchor, shared-genus, reusable-defined-bearer, or coherent-frame value; technical validity alone is insufficient. Atomic frame membership does not protect modifier-heavy or contextual specializations. Cross-category reconciliation sends each term's top three BGE-M3 NLD neighbors to the LLM with no numeric score cutoff. Independent batches return to input order, competing mutations are not applied, and final audit flags reflect the materialized taxonomy. Frame completion is diagnostic by default, and only high-confidence generic class relations are emitted.
 
@@ -124,6 +129,10 @@ Not every term is a "type of thing" (OWL class). Some terms are **named entities
 
 ## Evaluation Study
 
+Live ablation conditions B/C/D require an explicit generation deployment before
+any outputs are created. Copying frozen condition A and running offline
+analysis do not require a model setting.
+
 The thesis ablation, statistics, expert workbooks, offline rehearsal, and usability-pilot methods are isolated from the production pipeline under [`evaluation_study/`](../evaluation_study/README.md). The study reads frozen pipeline artifacts but writes only to `evaluation_study/output/`. Expert workbooks use reviewed geological display text, a condition-independent reviewed definition for Category Correct, a short task banner on each sheet, and simplified direct judgments. Relation rows cover generic, corpus-context, and individual-fact scopes. Meaning Preservation presents factual before/after states for sampled exclusions and demotions without exposing formal critic jargon. Every expert receives the same sampled items, including both Taxonomy correctness and usefulness questions. A timing sheet measures actual burden during the human pilot.
 
 ---
@@ -162,11 +171,24 @@ The file can be opened in **Protégé** for inspection, visualisation, and reaso
 
 ## Retargeting to another scientific domain
 
-The pipeline architecture is domain-agnostic. The Pre-Salt-specific knowledge lives under `domains/presalt/`; copy the folder, rewrite its contents, and the same 7-step pipeline runs on biomedicine, materials science, palaeoclimate, etc.
+Create a starter with `python scripts/new_domain.py your_domain`, then edit its
+two YAML files for the intended subject. The generator checks all prompt text,
+caller fields, example output formats, and required resources before reporting
+success. It provides BFO categories, neutral examples, and 61 shared BFO/RO
+relation entries. Pre-Salt also uses those shared entries, retaining its 10
+geology-specific relations locally. The resolved configuration and frozen
+ontology remain unchanged.
+
+The runtime question list lives in the prompt blocks. The obsolete separate
+question/filter starter files are not copied. Re-run
+`python -m src.utils.domain_validation domains/your_domain` after editing.
+Passing these offline checks establishes structural compatibility, not domain
+correctness or a successful live-model run.
 
 | File / folder | Holds |
 |------|-------|
-| `domains/<name>/ontology_config.yaml` | Upper ontologies and their classes (BFO, GeoCore, GeoReservoir for Pre-Salt → e.g. BFO + ChEBI + OBI for biomedicine), the categorization waterfall, 71 relation property constraints with provenance, BFO disjoint pairs, Step 6d behaviour |
+| `domains/<name>/ontology_config.yaml` | Project metadata, upper ontologies and classes, categorization order, and local relation constraints. Both Pre-Salt and new starters inherit 61 shared BFO/RO entries; Pre-Salt adds 10 local geology entries. |
+| `domains/<name>/prompt_blocks.yaml` | Domain identity, personas, runtime question list, and worked examples. The new starter derives its property table from configured relation constraints. |
 | `domains/<name>/prompts/` | 14 production prompts (term extraction, NLD generation, categorization, taxonomy, focused validate critics, relations, CQ scoring …) |
 | `domains/<name>/resources/` | Reference OWL files for the upper ontologies (loaded by `owl_exporter.py` for the upper backbone) |
 | `domains/<name>/competency_questions.txt` | CQs used by Step 5b (mandatory) |

@@ -22,6 +22,9 @@ Block resolution rules:
 * Cycles raise ``RuntimeError``. Missing inner markers raise ``KeyError``
   naming the offending block. Missing outer markers in a prompt raise
   ``KeyError`` naming the block and the prompt filename.
+* ``<<config_relation_property_table>>`` is opt-in: it derives a property table
+  from active configured relations flagged ``critic_menu``. Literal blocks in
+  existing domains are unchanged.
 """
 
 from functools import lru_cache
@@ -30,7 +33,7 @@ import re
 
 import yaml
 
-from src.utils.ontology_config import get_config
+from src.utils.ontology_config import get_config, load_config
 
 _REPO_ROOT = Path(__file__).resolve().parents[2]
 _SEPARATOR = "[PROMPT_TEMPLATE]"
@@ -46,10 +49,11 @@ def _prompt_roots() -> list[Path]:
     return [domain_dir / "prompts"]
 
 
-def prompt_files() -> list[tuple[str, Path]]:
-    """Return [(filename, full_path), …] across all prompt roots, dedup'd by name."""
+def prompt_files(*, domain_dir: Path | None = None) -> list[tuple[str, Path]]:
+    """List active-domain prompts, or an explicit domain without changing caches."""
     seen: dict[str, Path] = {}
-    for root in _prompt_roots():
+    roots = [Path(domain_dir) / "prompts"] if domain_dir is not None else _prompt_roots()
+    for root in roots:
         if not root.exists():
             continue
         for entry in sorted(root.iterdir()):
@@ -114,26 +118,45 @@ def _interpolate_blocks(text: str, blocks: dict[str, str], filename: str) -> str
     return _BLOCK_MARKER.sub(sub, text)
 
 
-@lru_cache(maxsize=1)
-def _load_blocks_for_active_domain() -> dict[str, str]:
-    """Load and fully-resolve ``prompt_blocks.yaml`` for the active domain.
-
-    Cached for the process lifetime. Returns an empty dict if the file does
-    not exist — prompts that contain no ``<<key>>`` markers still load.
-    """
-    blocks_path = get_config()._source_path.parent / "prompt_blocks.yaml"
+def load_prompt_blocks(domain_dir: Path) -> dict[str, str]:
+    """Resolve one domain's text blocks without changing the active domain."""
+    blocks_path = Path(domain_dir) / "prompt_blocks.yaml"
     if not blocks_path.exists():
         return {}
-    with open(blocks_path, "r", encoding="utf-8") as f:
-        raw = yaml.safe_load(f) or {}
+    try:
+        with open(blocks_path, "r", encoding="utf-8") as f:
+            raw = yaml.safe_load(f) or {}
+    except yaml.YAMLError as exc:
+        raise ValueError(f"Invalid prompt-block YAML in {blocks_path}: {exc}") from exc
     if not isinstance(raw, dict):
         raise ValueError(
             f"prompt_blocks.yaml must be a mapping at the root: {blocks_path}"
         )
-    return _resolve_inner_markers(_flatten(raw))
+    blocks = _flatten(raw)
+    derived_key = "config_relation_property_table"
+    if any(f"<<{derived_key}>>" in value for value in blocks.values()):
+        if derived_key in blocks:
+            raise ValueError(f"{blocks_path}: {derived_key} is reserved for configured relations.")
+        cfg = load_config(Path(domain_dir) / "ontology_config.yaml")
+        rows = ["| Property | Subject metatypes | Filler metatypes |", "|---|---|---|"]
+        for name, constraint in cfg.property_constraints().items():
+            if constraint.critic_menu:
+                rows.append(
+                    f"| {name} | {', '.join(sorted(constraint.domain))} "
+                    f"| {', '.join(sorted(constraint.range))} |"
+                )
+        if len(rows) == 2:
+            raise ValueError(f"{blocks_path}: no active critic-menu relations for {derived_key}.")
+        blocks[derived_key] = "\n".join(rows)
+    return _resolve_inner_markers(blocks)
 
 
-def load_prompt(filename: str) -> tuple[str, str]:
+@lru_cache(maxsize=1)
+def _load_blocks_for_active_domain() -> dict[str, str]:
+    return load_prompt_blocks(get_config()._source_path.parent)
+
+
+def load_prompt(filename: str, *, domain_dir: Path | None = None) -> tuple[str, str]:
     """Load system instruction and prompt template from a prompt file.
 
     Resolves the file from the active domain prompt root and substitutes
@@ -143,15 +166,15 @@ def load_prompt(filename: str) -> tuple[str, str]:
     touched — callers inject those via ``str.format``.
     """
     path: Path | None = None
-    for root in _prompt_roots():
+    roots = [Path(domain_dir) / "prompts"] if domain_dir is not None else _prompt_roots()
+    for root in roots:
         candidate = root / filename
         if candidate.exists():
             path = candidate
             break
     if path is None:
-        roots = [str(r) for r in _prompt_roots()]
         raise FileNotFoundError(
-            f"Prompt '{filename}' not found in any prompt root: {roots}"
+            f"Prompt '{filename}' not found in any prompt root: {[str(r) for r in roots]}"
         )
     with open(path, "r", encoding="utf-8") as f:
         content = f.read()
@@ -159,7 +182,10 @@ def load_prompt(filename: str) -> tuple[str, str]:
     if _SEPARATOR not in content:
         raise ValueError(f"Prompt file {filename} missing {_SEPARATOR} separator")
 
-    blocks = _load_blocks_for_active_domain()
+    blocks = (
+        load_prompt_blocks(Path(domain_dir))
+        if domain_dir is not None else _load_blocks_for_active_domain()
+    )
     content = _interpolate_blocks(content, blocks, filename)
 
     system_part, prompt_part = content.split(_SEPARATOR, 1)

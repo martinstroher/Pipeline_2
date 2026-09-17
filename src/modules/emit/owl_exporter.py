@@ -29,9 +29,6 @@ _CFG = get_config()
 
 # Namespaces — sourced from ontology_config.yaml. Edit the YAML to change.
 ONTO_NS = Namespace(_CFG.project_namespace())
-BFO_NS = Namespace(_CFG.namespace_for("bfo"))
-GEOCORE_NS = Namespace(_CFG.namespace_for("geocore"))
-GEORESERVOIR_NS = Namespace(_CFG.namespace_for("georeservoir"))
 
 # Import the IRI mapping from taxonomy_builder
 from src.modules.construct.taxonomy_builder import UPPER_IRIS
@@ -739,9 +736,8 @@ def run_owl_export(
     g.bind("rdf", RDF)
     g.bind("rdfs", RDFS)
     g.bind(_CFG.project_prefix(), ONTO_NS)
-    g.bind(_CFG.prefix_for("bfo"), BFO_NS)
-    g.bind(_CFG.prefix_for("geocore"), GEOCORE_NS)
-    g.bind(_CFG.prefix_for("georeservoir"), GEORESERVOIR_NS)
+    for ontology in _CFG.ontologies.values():
+        g.bind(ontology.prefix, Namespace(ontology.namespace))
 
     # Ontology declaration — metadata sourced from ontology_config.yaml
     onto_uri = ONTO_NS[_CFG.project_name()]

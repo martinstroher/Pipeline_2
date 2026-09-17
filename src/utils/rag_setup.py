@@ -1,6 +1,11 @@
 import os
 import shutil
 from typing import List, Tuple
+
+from src.utils.onnx_runtime import configure_onnx_runtime
+
+configure_onnx_runtime()
+
 from langchain_community.document_loaders import DirectoryLoader, TextLoader
 from langchain_text_splitters import RecursiveCharacterTextSplitter, MarkdownHeaderTextSplitter
 from langchain_community.vectorstores import Chroma

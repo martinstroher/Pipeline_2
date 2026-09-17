@@ -29,7 +29,7 @@ from dotenv import load_dotenv
 load_dotenv()
 
 from src.modules.define.nld_generator import generate_nld
-from src.utils.llm_client import get_client, generate as llm_generate, parse_json_array
+from src.utils.llm_client import get_client, generate as llm_generate, parse_json_array, require_model
 from evaluation_study.paths import (
     ABLATION_OUTPUT,
     FILTERED_TERMS,
@@ -252,6 +252,7 @@ def run_condition_a(terms: list[str]) -> pd.DataFrame:
 
 def run_condition_b(terms: list[str]) -> pd.DataFrame:
     """No RAG: generate NLD with parametric knowledge only."""
+    require_model("LLM_GENERATION_MODEL")
     def _process(term):
         nld_json_str, _ = generate_nld(term, "No additional context available.")
         nld, _ = _parse_nld_response(nld_json_str)
@@ -379,6 +380,7 @@ def run_categorization(
         print(f"  Frozen Condition A categorization copied byte-for-byte from {source}.")
         return df
 
+    model_name = require_model("LLM_GENERATION_MODEL")
     cat_ckpt = Checkpoint(cat_csv)
     completed, cat_rows = cat_ckpt.load()
     if completed:
@@ -386,7 +388,6 @@ def run_categorization(
 
     is_raw_rag = condition == "D"
     sys_instr, prompt_tmpl = _build_categorizer_prompt(is_raw_rag=is_raw_rag)
-    model_name = os.environ.get("LLM_GENERATION_MODEL", "gpt-5.4")
     model_temp = float(os.environ.get("LLM_GENERATION_TEMPERATURE", 0))
 
     remaining = nld_df[~nld_df["Term"].isin(completed)]
@@ -469,7 +470,9 @@ def run_ablation(conditions: list[str] | None = None):
     if seed != EXPECTED_SEED:
         raise RuntimeError(f"Ablation requires LLM_SEED={EXPECTED_SEED} (got {seed})")
 
+    model_name = os.environ.get("LLM_GENERATION_MODEL", "").strip() or None
     if any(condition in conditions for condition in ("B", "C", "D")):
+        model_name = require_model("LLM_GENERATION_MODEL")
         get_client()
     os.makedirs(OUTPUT_DIR, exist_ok=True)
 
@@ -505,7 +508,7 @@ def run_ablation(conditions: list[str] | None = None):
         "status": "running",
         "started_utc": datetime.now(timezone.utc).isoformat(),
         "git_commit": _git_commit(),
-        "model": os.environ.get("LLM_GENERATION_MODEL", "gpt-5.4"),
+        "model": model_name,
         "reasoning_effort": reasoning_effort,
         "seed": seed,
         "batch_size": batch_size,

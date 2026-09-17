@@ -12,13 +12,6 @@ from dotenv import load_dotenv
 load_dotenv()
 
 from src.utils import log
-from src.modules.extract.term_extractor import run_llm_term_extraction
-from src.modules.extract import term_aggregator
-from src.modules.extract.term_filter import filter_top_terms
-from src.modules.define.nld_generator import run_nld_generation
-from src.modules.classify.category_assigner import run_term_categorization
-from src.utils.rag_setup import setup_rag, DOCS_DIR
-from src.utils.pdf_processor import process_folder as convert_pdfs
 
 
 def _clean_outputs() -> None:
@@ -28,6 +21,8 @@ def _clean_outputs() -> None:
     """
     import glob
     import shutil
+
+    from src.utils.rag_setup import DOCS_DIR
 
     log.banner("X", "Fresh Start — Cleaning Previous Run")
     output_dir = os.path.dirname(
@@ -110,16 +105,44 @@ def _check_stop(stop: str | None, step: str) -> bool:
     return False
 
 
-def _dispatch_subcommand(args, parser) -> bool:
-    """Run a one-shot production subcommand (--taxonomy, --validate, ...) and
-    return True if one fired. Returns False so the caller runs the standard
-    pipeline.
-    """
+def _required_model_settings(args) -> tuple[str, ...]:
+    """Select models for the steps that this invocation can reach."""
+    if args.taxonomy or args.validate:
+        return ("LLM_GENERATION_MODEL",)
+    if args.owl or args.verify:
+        return ()
+    if args.relations:
+        return ("LLM_GENERATION_MODEL",)
+
+    stop = _STEP_ALIASES.get(args.stop_after, args.stop_after)
+    if stop == "R" or (stop == "0" and not args.skip_pdf):
+        return ()
+    if not args.skip_extraction:
+        if stop in ("1", "2", "3"):
+            return ("LLM_EXTRACTION_MODEL",)
+        return ("LLM_EXTRACTION_MODEL", "LLM_GENERATION_MODEL")
+    return ("LLM_GENERATION_MODEL",)
+
+
+def _validate_startup(args, parser) -> None:
+    """Check model configuration before dispatch, cleanup, or runtime imports."""
     if args.validate_relations and not args.validate:
         parser.error("--validate-relations requires --validate")
     if args.validate_emit and not args.validate:
         parser.error("--validate-emit requires --validate")
 
+    required = _required_model_settings(args)
+    if required:
+        from src.utils.llm_client import validate_model_settings
+
+        try:
+            validate_model_settings(*required)
+        except RuntimeError as exc:
+            parser.error(str(exc))
+
+
+def _dispatch_subcommand(args, parser) -> bool:
+    """Run a one-shot production subcommand, or return False for a standard run."""
     if args.taxonomy:
         from src.modules.construct.taxonomy_builder import run_taxonomy_builder
         run_taxonomy_builder(args.taxonomy)
@@ -258,9 +281,18 @@ def _build_parser() -> argparse.ArgumentParser:
 def main():
     parser = _build_parser()
     args = parser.parse_args()
+    _validate_startup(args, parser)
 
     if _dispatch_subcommand(args, parser):
         return
+
+    from src.modules.extract.term_extractor import run_llm_term_extraction
+    from src.modules.extract import term_aggregator
+    from src.modules.extract.term_filter import filter_top_terms
+    from src.modules.define.nld_generator import run_nld_generation
+    from src.modules.classify.category_assigner import run_term_categorization
+    from src.utils.rag_setup import setup_rag, DOCS_DIR
+    from src.utils.pdf_processor import process_folder as convert_pdfs
 
     # --- Fresh start: clean all outputs and caches ---
     if args.fresh:

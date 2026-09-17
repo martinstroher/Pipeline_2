@@ -70,18 +70,21 @@ The ontology scope is defined by 10 competency questions (CQs) that specify what
 
 ### `src/utils/pdf_processor.py` — Step 0: Ingestion
 - **Tech**: `pymupdf4llm`
+- **Robustness:** Disables ONNX Runtime diagnostic telemetry before importing the PDF inference backend, avoiding its native telemetry-worker shutdown failure.
 - Converts binary PDFs into clean Markdown, preserving headers and structure.
 - Output: `inputs/*.md`
 
 ### `src/utils/rag_setup.py` — Step R: RAG Infrastructure
 - **Tech**: BGE-M3 dense embeddings (ChromaDB), BM25 sparse retrieval, BGE-Reranker-v2-m3 cross-encoder
+- **Robustness:** Uses the shared `onnx_runtime.configure_onnx_runtime()` initializer before importing retrieval dependencies, disabling native diagnostic telemetry without changing inference.
 - Hybrid retrieval: BM25 (k=20) + ChromaDB (k=20) fused with Reciprocal Rank Fusion (RRF, k=60), then cross-encoder reranks top-20 down to top-5.
 - Text splitter: `RecursiveCharacterTextSplitter` with `chunk_size=1024` **characters** (not tokens), `chunk_overlap=100`.
 - ChromaDB is cached to `chroma_db_{chunk_size}/` (e.g., `chroma_db_1024/`) on first run. BM25 is always rebuilt in-memory.
 - Provides retrieval context to Steps 4 (NLD generation) and 5 (categorization).
 
 ### `src/modules/term_extractor.py` — Step 1: Extraction
-- **Tech**: gpt-5.4 (Azure AI Foundry; default, configurable via `LLM_EXTRACTION_MODEL`)
+- **Tech**: Azure AI Foundry deployment from required `LLM_EXTRACTION_MODEL` (`gpt-5.4` in the example configuration).
+- **Robustness:** Rejects a missing or blank deployment name before reading papers; no model fallback.
 - Reads Markdown files and extracts candidate geological terms via a structured LLM prompt.
 - Output: `output/1_raw_llm_extraction.json`
 
@@ -101,11 +104,12 @@ The ontology scope is defined by 10 competency questions (CQs) that specify what
 - For each filtered term, retrieves the top-5 most relevant corpus chunks via hybrid search.
 - Generates an Aristotelian NLD ("X is a Y that Z") grounded in the retrieved context.
 - Few-shot examples and an English-language/polysemy instruction are included in the system prompt.
-- **Robustness:** Required environment variables (`FILTERED_TERMS_OUTPUT`, `CONSOLIDATED_LLM_RESULTS_WITH_NLDS`, `OUTPUT_FAILURE_FILE`) are validated at startup with clear error messages. JSON parse failures set `Context_Used = false` (boolean) rather than a string sentinel. All CSV reads use `utf-8-sig` encoding for BOM-safe interoperability.
+- **Robustness:** Required environment variables (`LLM_GENERATION_MODEL`, `FILTERED_TERMS_OUTPUT`, `CONSOLIDATED_LLM_RESULTS_WITH_NLDS`, `OUTPUT_FAILURE_FILE`) are validated at startup with clear error messages, before loading terms, checkpoints, or retrieval models. JSON parse failures set `Context_Used = false` (boolean) rather than a string sentinel. All CSV reads use `utf-8-sig` encoding for BOM-safe interoperability.
 - Output: `output/4_nld_generated_definitions.csv`
 
 ### `src/modules/classify/category_assigner.py` — Step 5: Ontology Classification
 - **Tech**: gpt-5.4 (Azure AI Foundry) + RAG retrieval
+- **Robustness:** Requires nonblank `LLM_GENERATION_MODEL` before reading inputs or starting batches; no model fallback.
 - Classifies each term+NLD into one of N upper-ontology categories using an N-tier waterfall driven by `cfg.waterfall_ontologies()`. For Pre-Salt the cascade is GeoReservoir → GeoCore → BFO, with `NOT_CLASSIFIED` as the documented fallback. The categories list and per-category definitions are injected into the prompt as the single `{categories_block}` placeholder rendered by `cfg.categorization_block()`; no category names are hardcoded in the module.
 - Waterfall priority ensures each term maps to the most domain-specific applicable namespace first. Reordering or extending the cascade is a YAML-only edit (`waterfall:` + a new `ontologies.<key>` block) — no Python change is required.
 - **Realizables are not assignable here.** The BFO realizables `role`, `disposition`, and `function` are flagged `categorizer: false` in `ontology_config.yaml`, so they are omitted from the `{categories_block}` menu and from `categories_for()`. Terms that bear a role/function are categorized as their material bearer (e.g. a rock body → `object`), and the realizable is introduced only later by the validate-step critic via `KEEP_AS_BEARER` minting + OntoClean bucketing. This preserves the critic's bearer-preservation mechanism, which a Step-5 role-typing would otherwise defeat. `quality` remains assignable at Step 5 (genuine qualities like porosity/permeability are reliable there; pseudo-qualities are handled by the critic's `DROP_AS_MIXIN`). The flag does **not** remove metatypes, so these classes stay valid relation domain/range targets, taxonomy parents, and critic REPARENT/mint targets.
@@ -118,11 +122,12 @@ The ontology scope is defined by 10 competency questions (CQs) that specify what
 - **Sub-step B — Synonym triage:** Groups terms sharing a head noun within the same category (≥50% word overlap). Sends clusters to the LLM for 3-way classification: SYNONYM (merge to canonical), SPECIALIZATION (keep both + emit parent-child hint), or DISTINCT (keep both). NLDs are included so the LLM judges meaning, not just surface form. SPECIALIZATION pairs are written to `5b_specialization_hints.csv` and passed to the taxonomy builder as parent-child constraints.
 - **Sub-step C — CQ scoring:** Each surviving term is scored against 10 competency questions in parallel batches of 5 (`CQ_BATCH_SIZE`). The LLM returns which CQs the term meaningfully contributes to. Checkpoint/resume via `5b_cq_matrix.csv`.
 - **Sub-step D — CQ filter:** Drops every term whose `CQ_Count < 1` (i.e. terms that didn't contribute to any of the 10 competency questions). Writes the kept terms to `classify_categories.csv` inside a `refined/` subfolder next to the Step 5 input (production: `output/refined/classify_categories.csv`; e2e test sandbox: `test/output_test/refined/classify_categories.csv`). All downstream verbs (construct → validate → emit) follow the same `refined/` directory so the entire post-classify pipeline is colocated and easy to clean. There is no threshold sweep — production targets T≥1.
-- **Robustness:** Output paths are rebased at function entry (`_rebase_paths(input_csv)`) so the test sandbox and production share one code path. CQ identifiers are validated against a fixed set (CQ1-CQ10). Batch size mismatches raise `ValueError`. JSON parse failures are logged and skipped. ThreadPoolExecutor parallelism is configurable via `MAX_CONCURRENT_CQ`.
+- **Robustness:** Requires nonblank `LLM_GENERATION_MODEL` before creating output directories. Output paths are rebased at function entry (`_rebase_paths(input_csv)`) so the test sandbox and production share one code path. CQ identifiers are validated against a fixed set (CQ1-CQ10). Batch size mismatches raise `ValueError`. JSON parse failures are logged and skipped. ThreadPoolExecutor parallelism is configurable via `MAX_CONCURRENT_CQ`.
 - Output: `<refined>/5b_cleanup_report.csv`, `<refined>/5b_cq_matrix.csv`, `<refined>/5b_specialization_hints.csv`, `<refined>/classify_categories.csv`
 
 ### `src/modules/construct/taxonomy_builder.py` — Step 6: Taxonomy Construction
 - **Tech**: gpt-5.4 (Azure AI Foundry)
+- **Robustness:** Requires nonblank `LLM_GENERATION_MODEL` before creating an API client or reading taxonomy inputs; no model fallback.
 - Builds a hierarchical taxonomy per ontology group (GeoReservoir, GeoCore, BFO) using NLDs for naming.
 - Accepts optional `hints_csv` parameter with pre-identified SPECIALIZATION pairs from Step 5b. When provided, these are injected into the prompt as parent-child constraints.
 - Processes terms in chunks of up to 150 per LLM call to avoid cross-chunk inconsistency.
@@ -141,10 +146,11 @@ The ontology scope is defined by 10 competency questions (CQs) that specify what
 - 3 few-shot examples guide extraction; confidence threshold filters weak relations (≥0.7).
 - Post-hoc property specialisation: generic `has_part`/`part_of` upgraded to BFO-precise `has_continuant_part`/`has_occurrent_part` based on subject/filler metatypes.
 - Filler source resolution: deterministic Python-side tagging (`domain_term` vs `external`).
-- **Robustness:** Checkpoint/resume with single flat CSV. Batch size mismatch raises `ValueError`. Unknown properties are rejected.
+- **Robustness:** Requires nonblank `LLM_GENERATION_MODEL` before reading inputs. Checkpoint/resume with single flat CSV. Batch size mismatch raises `ValueError`. Unknown properties are rejected.
 - Output: `output/refined/construct_relations.csv`
 
 ### `src/modules/validate/critic.py` — validate: Focused Staged Critics per Category
+- **Robustness:** Requires nonblank `LLM_GENERATION_MODEL` before creating an API client, output directories, or response archives; no model fallback.
 - **Tech**: gpt-5.4. Focused calls run in barriers: taxonomy correctness → lean-core worthiness → local/global term reconciliation → facet/frame audit + corpus attestation diagnostics → relation correctness → relation scope. Category work and independent global reconciliation batches run up to `MAX_CONCURRENT_CRITIC` calls in parallel; global results are restored to input order before application. Dependency barriers remain sequential. Standard NLD/targeted relation generation for frame candidates runs only when `frame_completion.auto_add` is explicitly enabled.
 - **Evidence bundle:** `validate_evidence_bundle.csv` joins frequency/document coverage and CQ matches to taxonomy rows before criticism, so centrality is evidence-based rather than guessed.
 - **Focused lateral stages:** `critic_class_worthiness.txt` is the sole owner of core inclusion and decides primitive/defined/demote/exclude from comparative branch evidence. A genuine technical kind stays only when it adds marginal CQ, generic-relation, branch-anchor, shared-genus, reusable-defined-bearer, or coherent-frame value. Candidate payloads include accepted relation connectivity and any taxonomy-stage bearer definition. Complete role/function/disposition bearers retain defined-class semantics unless they are stacked contextual specializations; quality-based analytical groupings remain demotable. Atomic corpus-attested members of small same-axis scientific frames may remain even when siblings share the same CQ. `critic_taxonomy_dedup.txt` reconciles local survivors plus BGE-M3-shortlisted cross-category NLD pairs; it does not override prior core exclusions. `critic_facet_frames.txt` receives candidate-parent NLD/ancestry/category/metatype context and audits hierarchy only. Relation critics receive rich subject/filler contexts.
@@ -235,7 +241,8 @@ The single source of truth for upper-ontology metadata, BFO disjoint pairs, rela
 - `ontologies`: per-ontology block (`bfo`, `geocore`, `georeservoir`, `ro`) with `display_name` (header used by `categorization_block()`), `namespace`, `prefix`, `owl` (file path), `import_iri`, `eval_tier`, and a `classes:` list (each class with `iri`, `label`, `metatypes`, `llm_definition`, optional `disjoint_pairs`, and optional `categorizer` — default `true`; set `categorizer: false` to keep a class as a relation/taxonomy target while excluding it from the Step-5 categorizer menu, as done for the BFO realizables role/disposition/function)
 - `verifier_prefixes`: maps `bfo`, `geo`, `presalt` → URI prefixes used by `ontology_verifier.py`
 - `metatype_groups`: 18 named groups (`CONTINUANT`, `OCCURRENT`, `MATERIAL`, `PROCESS`, …) that expand recursively to flat sets of literal BFO metatype labels — used as shorthand in `relations` `domain`/`range` lists
-- `relations`: 71 property constraints (RO + BFO 2020 + GeoCore/GeoReservoir authored + project-specific tightenings). Each entry has `iri`, `domain` (list of group names or literal metatype strings), `range`, `inverse`, `provenance`, `notes`
+- `relation_defaults`: one shared BFO/RO fragment with 61 property constraints, metatype groups, and specialization rules.
+- `relations`: 10 local geology constraints for Pre-Salt; together with shared defaults these resolve to the original 71-entry registry. Each entry has `iri`, `domain` (list of group names or literal metatype strings), `range`, `inverse`, `provenance`, `notes`
 - `lateral_coherence`: domain-agnostic validate-step tuning for parsimony/facet-coherence auditing. Current supported knobs include `enabled`, `hints.enabled` (env override `LATERAL_HINTS_ENABLED`), conservative class-fate thresholds, relation-scope policy, and disabled-by-default domain disjointness emission settings. No domain vocabulary belongs here; the knobs control generic ontology-policy behavior.
 
 ### Provenance tiers
@@ -274,27 +281,100 @@ The audit script `python -m src.evaluation.property_constraints_audit` writes `o
 
 ## Prompt System — `domains/<name>/prompts/`
 
-Prompts are end-to-end artifacts authored per domain. There is no load-time interpolation (the previous `<<persona>>`/`<<name>>`/`<<short_name>>` machinery was removed in Phase 6.5). Each prompt ships with its persona inlined; runtime data is injected by the caller via `str.format(**vars)`.
+Prompts resolve `<<block_name>>` markers at load time from the domain's
+`prompt_blocks.yaml`. Nested keys flatten with underscores; blocks can reference
+other blocks, with missing names and cycles rejected. Callers then fill the
+prompt body's `{runtime_fields}` with `str.format(**vars)`. System instructions
+are not formatted again.
 
 `src/utils/prompt_loader.py` resolves each filename from `<active-domain>/prompts/`.
+An explicit `domain_dir` loads a different domain without modifying the active
+configuration or prompt caches. The starter's opt-in
+`<<config_relation_property_table>>` block derives its table from active
+relations with `critic_menu: true`; existing literal Pre-Salt blocks are unchanged.
 
 The active domain is derived from the directory containing the active `ontology_config.yaml`. See [domains/README.md](../domains/README.md) for the per-prompt runtime-placeholder contract and the full retargeting guide.
 
 ### Retargeting to a new domain
-1. Copy `domains/presalt/` to `domains/<your_domain>/` and edit `ontology_config.yaml` for your upper ontologies, waterfall, and relations
-2. Rewrite every prompt in `domains/<your_domain>/prompts/` with personas and calibration examples for your domain
-3. `$env:ONTOLOGY_CONFIG_PATH = "domains/<your_domain>/ontology_config.yaml"` and run the pipeline
+1. Run `python scripts/new_domain.py your_domain`. The generator checks a staged folder before creating the final domain.
+2. Edit project/ontology metadata in `ontology_config.yaml` and identity, examples, and questions in `prompt_blocks.yaml`.
+3. Run `python -m src.utils.domain_validation domains/your_domain`, then set `ONTOLOGY_CONFIG_PATH` and isolated run paths as described in `SETUP.md`.
+
+### `src/utils/domain_validation.py` — Domain starter validation
+- Checks all current production prompt files, nonblank required blocks, exact caller-field sets, and formatting.
+- Checks extraction/NLD/category/relation/question example schemas, configured categories/properties, and matching CQ identifiers.
+- Questions are sourced from `examples.cq_questions`; the new starter has no duplicate question text file or unused filter configuration.
+- Checks declared ontology resources and active relation constraints. It makes no LLM or service calls and does not establish scientific adequacy.
+- **Robustness:** Missing required files, malformed YAML, missing/cyclic blocks, mismatched fields, and invalid examples prevent scaffold publication; staging is cleaned on failure. Existing target directories are refused.
+
+### Shared relation defaults
+- `relation_defaults` safely loads one fragment relative to the domain configuration. It admits only relation entries, metatype groups, and specialization rules; nested imports are rejected.
+- Local groups/relations replace entire same-name entries. An explicit specialization list replaces the inherited list; omission retains it. Provenance filtering follows the merge.
+- Pre-Salt and new domains inherit 61 generic entries from `domains/_shared/bfo_ro_relations.yaml`, consolidating PR #3 at `e6e8d4a75a04353d5b02f4e3bf9f40ab409056c8`. Pre-Salt keeps 10 geology entries locally and resolves to the same ordered 71-entry registry. Its YAML representation changes; resolved configuration, rendered prompts, frozen inputs, and regenerated graph are preserved.
+- `load_config(path)` validates another domain without changing the singleton. Missing files and malformed/non-mapping YAML produce explicit errors.
+- Export binds configured ontology namespaces; verification derives the project namespace and accepts configured upper-ontology prefixes, retaining legacy BFO/Geo prefix recognition. BFO/RO starters no longer require GeoCore/GeoReservoir definitions or a `presalt` prefix alias.
 
 ---
+
+## Runtime Environment
+
+- **Model configuration:** `pipeline.py` checks deployment names needed by the
+  selected steps before runtime imports, subcommand dispatch, cleanup, PDF
+  conversion, or retrieval. A missing/empty/whitespace-only setting exits the
+  CLI with an error listing missing names. Full runs need extraction and
+  generation names; extraction-only needs extraction; generation-only commands
+  need generation. Help, standalone export/verification, and early stops before
+  extraction do not require model settings.
+- `src/utils/llm_client.py` owns shared `validate_model_settings` and
+  `require_model` helpers. Direct LLM stage entry points use the same checks.
+  `generate()` requires the generation setting unless passed an explicit,
+  nonblank deployment name, and validates it before creating a client. No
+  model name is supplied automatically; other request defaults are unchanged.
+- Live ablation conditions B/C/D also require a generation deployment before
+  output creation. Frozen condition-A copying remains offline; its manifest
+  records the configured model or `null` when none is configured.
+- `pyproject.toml` declares the base dependencies and optional `test` and
+  `reasoner` groups. The base keeps the existing evaluation/statistics tooling
+  and explicitly includes the verifier's `requests` dependency.
+- `.python-version` selects CPython 3.12.14; `uv.lock` fixes package versions,
+  source hashes, and platform selections. The pinned installer is uv 0.12.12.
+  This is a local environment definition, not an ontology release or a
+  reconstruction of the historical evaluated environment.
+- Initial targets are macOS Apple Silicon and Ubuntu 24.04/Linux x86-64.
+  Linux selects CPU PyTorch through an explicit package index. Other CPU
+  architectures, Windows, and CUDA are not part of this profile.
+- `en_core_web_sm` 3.8.0 is installed from its fixed model wheel. The BGE model
+  names and Azure generation behavior are unchanged; their remote model
+  revisions are not fixed by the dependency lock.
+- `uv sync --locked` installs the base; add `--group test` and/or
+  `--group reasoner` to retain those optional groups. Hash-pinned
+  `requirements*.txt` files are generated pip exports. Pip cannot retain uv's
+  per-package index selection or build constraints; prefer uv.
+- `test/test_runtime_environment.py` denies network connections and checks
+  runtime imports, spaCy, a mocked Azure request, synthetic PDF conversion,
+  retrieval with test doubles, and repeatable graph export/verification in
+  temporary directories. It does not run BGE weights, live LLMs, OOPS!, or Java.
+- Local runtime checks pass on macOS. Linux dependency resolution succeeds,
+  but Linux execution and Java/HermiT remain untested in this environment.
+  `owlready2` may require source-build tools and always needs Java for HermiT.
+  Existing configuration and prompt parity checks cover narrower contracts,
+  not release readiness.
 
 ## Directory Structure
 
 ```
 pipeline.py               # Orchestrator + CLI (thin: _build_parser, _dispatch_subcommand, _run_refinement_pipeline, _clean_outputs, _check_stop helpers; includes --validate/--validate-relations/--validate-emit for rerunning the validate→emit tail from existing Step 6/6b outputs)
-domains/                  # Per-domain config + assets. Each subfolder is a complete retargetable bundle.
+docs/geopresalt_0_1_release_notes.md # Accepted research-release limitations and frozen artifact identity
+pyproject.toml            # Runtime dependencies, optional groups, platform and build settings
+uv.lock                   # Exact package versions and source hashes
+.python-version           # CPython 3.12.14
+requirements*.txt         # Generated base/test/reasoner pip exports
+domains/                  # Domain bundles, shared relation defaults, and starter source
+  _shared/bfo_ro_relations.yaml  # 61 generic relation defaults used by Pre-Salt and new domains
+  _template/             # Checked starter: two YAML configuration files and README
   README.md               # Author guide: layout, activation, per-prompt runtime-placeholder contract
   presalt/
-    ontology_config.yaml  # Single source of truth: waterfall, upper-ontology metadata, BFO disjoint pairs, 71 relations
+    ontology_config.yaml  # Waterfall, upper ontologies, BFO disjoint pairs, 10 local + 61 shared relations
     prompts/              # 14 production prompts (including focused validate stages)
     resources/            # Upper-ontology OWL files: bfo-core.owl, geocore-full.owl, geores-full.owl, ro-core.owl
     competency_questions.txt
@@ -304,7 +384,7 @@ evaluation_study/         # Standalone thesis evaluation package; see its README
   test/                   # Study tests, instruction snapshot, and rehearsal regression
 src/
   modules/                # Steps 1-7 (extraction → OWL export)
-  utils/                  # ontology_config loader, csv_io, checkpoint, RAG setup, PDF conversion, logging, LLM client, relation validator, production prompt loader
+  utils/                  # ontology_config loader, domain_validation, onnx_runtime initialization, csv_io, checkpoint, RAG setup, PDF conversion, logging, LLM client, relation validator, production prompt loader
   evaluation/             # Pipeline-internal property-constraints audit only
 inputs/                   # Source PDFs + generated .md files
 output/
@@ -316,6 +396,11 @@ output/
   property_constraints_audit.csv  # Generated by src.evaluation.property_constraints_audit
 chroma_db_1024/           # Cached ChromaDB vector index (created on first run)
 test/                     # Production-pipeline validation suite
+  test_runtime_environment.py    # Offline dependency smoke tests; synthetic data and temporary outputs
+  test_model_configuration.py    # Missing/blank deployments, startup ordering, and offline CLI exemptions
+  test_new_domain.py             # Complete temporary scaffolds, rejection paths and BFO/RO export checks
+  test_shared_relation_config.py # Ordered resolved-configuration contract and defaults semantics
+  test_shared_relation_regeneration.py # Frozen 0.1 hashes and offline graph equality
   test_ontology_config_parity.py  # 26 checks — must pass after any YAML/loader change
   regression_t1.py                # Deterministic 6d→7→7b regression (329 classes / 26 individuals / 3350 triples / 39 upper IRIs)
   run_e2e_test.py                 # End-to-end smoke test (Steps 0-7 with real LLM calls)

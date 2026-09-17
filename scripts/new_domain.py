@@ -4,16 +4,15 @@ Usage:
     python scripts/new_domain.py <domain_name>
 
 Creates `domains/<domain_name>/` populated with:
-  * The four user-edit files from `domains/_template/`
-    (`ontology_config.yaml`, `prompt_blocks.yaml`, `domain_filters.yaml`,
-    `competency_questions.txt`).
-  * The 17 generic production prompts copied from `domains/presalt/prompts/`
+  * The ontology configuration, prompt blocks, and README from `domains/_template/`.
+  * The production prompts copied from `domains/presalt/prompts/`
     (these are domain-agnostic — `<<block>>` markers resolve from
     `prompt_blocks.yaml` at load time).
-  * The `bfo-core.owl` upper-ontology file copied from
-    `domains/presalt/resources/` so the template config works out of the box.
+  * The saved BFO and RO resources, with generic relation constraints inherited
+    from `domains/_shared/bfo_ro_relations.yaml`.
 
-After running, edit the four user-facing files, set
+The staged folder must pass offline structural validation before publication.
+After running, edit the two configuration files, set
 `ONTOLOGY_CONFIG_PATH=domains/<domain_name>/ontology_config.yaml` in your
 `.env`, and follow SETUP.md.
 """
@@ -24,9 +23,15 @@ import argparse
 import re
 import shutil
 import sys
+import tempfile
 from pathlib import Path
 
 _REPO_ROOT = Path(__file__).resolve().parents[1]
+if str(_REPO_ROOT) not in sys.path:
+    sys.path.insert(0, str(_REPO_ROOT))
+
+from src.utils.domain_validation import validate_domain
+
 _TEMPLATE_DIR = _REPO_ROOT / "domains" / "_template"
 _PRESALT_DIR = _REPO_ROOT / "domains" / "presalt"
 
@@ -34,8 +39,6 @@ _PRESALT_DIR = _REPO_ROOT / "domains" / "presalt"
 _USER_EDIT_FILES = (
     "ontology_config.yaml",
     "prompt_blocks.yaml",
-    "domain_filters.yaml",
-    "competency_questions.txt",
     "README.md",
 )
 
@@ -43,6 +46,7 @@ _USER_EDIT_FILES = (
 _GENERIC_ASSETS = (
     ("prompts", "prompts"),
     ("resources/bfo-core.owl", "resources/bfo-core.owl"),
+    ("resources/ro-core.owl", "resources/ro-core.owl"),
 )
 
 _NAME_PATTERN = re.compile(r"^[a-z][a-z0-9_]{1,31}$")
@@ -77,12 +81,11 @@ def _check_preconditions(target: Path) -> None:
 
 
 def _copy_user_files(target: Path) -> list[str]:
-    target.mkdir(parents=True)
     copied: list[str] = []
     for fname in _USER_EDIT_FILES:
         src = _TEMPLATE_DIR / fname
-        if not src.exists():
-            continue  # README.md is optional
+        if not src.is_file():
+            raise FileNotFoundError(f"Required starter file missing: {src}")
         shutil.copy2(src, target / fname)
         copied.append(fname)
     return copied
@@ -94,8 +97,7 @@ def _copy_generic_assets(target: Path) -> list[str]:
         src = _PRESALT_DIR / src_rel
         dst = target / dst_rel
         if not src.exists():
-            print(f"  warning: source missing, skipped: {src}", file=sys.stderr)
-            continue
+            raise FileNotFoundError(f"Required starter asset missing: {src}")
         dst.parent.mkdir(parents=True, exist_ok=True)
         if src.is_dir():
             shutil.copytree(src, dst)
@@ -111,13 +113,13 @@ def _print_next_steps(name: str, target: Path) -> None:
     print(f"  Created: {rel}")
     print()
     print("  Next steps:")
-    print(f"    1. Edit {rel}/prompt_blocks.yaml (Section A — domain identity).")
+    print(f"    1. Edit {rel}/prompt_blocks.yaml (identity, questions, and examples).")
     print(f"    2. Edit {rel}/ontology_config.yaml (project.name, namespace, prefix).")
-    print(f"    3. Edit {rel}/competency_questions.txt (5–10 questions).")
+    print(f"    3. Check: python -m src.utils.domain_validation {rel.as_posix()}")
     print(f"    4. Activate the domain by adding this line to your .env:")
     print(f"         ONTOLOGY_CONFIG_PATH={rel.as_posix()}/ontology_config.yaml")
-    print(f"    5. Drop one source document into inputs/ and smoke-test:")
-    print(f"         python pipeline.py --skip-pdf --stop-after extract")
+    print("    5. Follow SETUP.md for isolated input/output paths and a live smoke test.")
+    print("       Customize the neutral examples before making billable model calls.")
     print()
     print("  See SETUP.md at the repo root for the full walk-through.")
 
@@ -134,12 +136,20 @@ def main(argv: list[str] | None = None) -> int:
 
     _validate_name(args.name)
     target = _REPO_ROOT / "domains" / args.name
-    _check_preconditions(target)
+    try:
+        _check_preconditions(target)
+        with tempfile.TemporaryDirectory(prefix=".new-domain-", dir=target.parent) as directory:
+            staging = Path(directory)
+            user_files = _copy_user_files(staging)
+            generic_files = _copy_generic_assets(staging)
+            report = validate_domain(staging)
+            if target.exists():
+                raise FileExistsError(f"Target already exists: {target}")
+            staging.rename(target)
+    except (OSError, KeyError, ValueError, RuntimeError) as exc:
+        parser.error(str(exc))
 
-    print(f"Scaffolding domain '{args.name}'...")
-    user_files = _copy_user_files(target)
-    generic_files = _copy_generic_assets(target)
-
+    print(f"  Structural checks passed: {report}")
     print(f"  Copied {len(user_files)} user-edit file(s) from _template/")
     print(f"  Copied {len(generic_files)} generic asset(s) from presalt/")
 

@@ -8,16 +8,16 @@ import pandas as pd
 from src.utils.csv_io import read_csv, write_csv
 from tqdm import tqdm
 
-from src.utils.llm_client import generate, parse_json_array
+from src.utils.llm_client import generate, parse_json_array, require_model
 from src.utils import log
 from src.utils.prompt_loader import load_prompt
 from src.utils.ontology_config import get_config
 
 
 def run_term_categorization():
+    MODEL_NAME = require_model("LLM_GENERATION_MODEL")
     BATCH_SIZE = int(os.environ.get("BATCH_SIZE", 1))
     MAX_WORKERS = int(os.environ.get("MAX_CONCURRENT_CATEGORIZE", 5))
-    MODEL_NAME = os.environ.get("LLM_GENERATION_MODEL", "gemini-2.5-pro")
     MODEL_TEMPERATURE = float(os.environ.get("LLM_GENERATION_TEMPERATURE", 0))
     INPUT_FILE_PATH = os.environ["CONSOLIDATED_LLM_RESULTS_WITH_NLDS"]
     OUTPUT_FILE_PATH = os.environ["CATEGORIZED_LLM_TERMS"]

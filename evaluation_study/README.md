@@ -24,6 +24,13 @@ embedded JSON examples remain literal and are covered by the offline test suite.
 
 Run from repository root:
 
+Live ablation conditions B/C/D require nonblank `LLM_GENERATION_MODEL` and Azure
+credentials. Missing model configuration stops the run before output creation;
+the study does not supply a default deployment. Copying frozen condition A,
+statistics, workbook generation, and offline rehearsal remain model-free.
+For an A-only ablation, the experiment manifest records the configured model
+name or `null` if none is configured; it does not invent a model identity.
+
 ```bash
 python -m evaluation_study.cli ablation
 python -m evaluation_study.cli layer1

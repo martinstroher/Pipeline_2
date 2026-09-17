@@ -19,7 +19,7 @@ from concurrent.futures import ThreadPoolExecutor, as_completed
 from tqdm import tqdm
 
 from src.utils import log
-from src.utils.llm_client import generate
+from src.utils.llm_client import generate, validate_model_settings
 from src.utils.prompt_loader import load_prompt
 from src.utils.rag_setup import get_relevant_documents, load_vector_store
 
@@ -56,6 +56,7 @@ def generate_nld(term: str, context: str) -> tuple[str, str]:
 
 def run_nld_generation(vector_store=None, bm25_retriever=None):
     """Run NLD generation for all filtered terms with concurrent processing."""
+    validate_model_settings("LLM_GENERATION_MODEL")
     input_file = os.environ.get("FILTERED_TERMS_OUTPUT")
     output_file = os.environ.get("CONSOLIDATED_LLM_RESULTS_WITH_NLDS")
     failure_file = os.environ.get("OUTPUT_FAILURE_FILE")
