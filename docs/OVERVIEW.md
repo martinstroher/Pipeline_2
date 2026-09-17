@@ -163,7 +163,6 @@ The file can be opened in **Protégé** for inspection, visualisation, and reaso
 | File | Purpose |
 |------|---------|
 | `README.md` | Technical quick-start and CLI reference |
-| `docs/CONTEXT.md` | Full architecture reference with Mermaid diagram and per-module descriptions |
 | `docs/OVERVIEW.md` | This file — plain-language project summary |
 | `pipeline.py` | Main entry point (`python pipeline.py --help`) |
 

@@ -1,6 +1,6 @@
 # Research Brief — Validating an LLM-Generated BFO-Aligned Domain Ontology
 
-> Purpose: give an external research agent enough context to recommend the **best validation approach** for our specific situation. The brief is deliberately short. Detail lives in `docs/CONTEXT.md` and `docs/OVERVIEW.md`.
+> Purpose: give an external research agent enough context to recommend the **best validation approach** for our specific situation. The brief is deliberately short. Current setup and pipeline references are `README.md` and `docs/OVERVIEW.md`.
 
 ---
 
@@ -91,7 +91,7 @@ Specifically we'd like the agent to opine on:
 
 - The current critic prompt (weak): [domains/presalt/prompts/critic.txt](../domains/presalt/prompts/critic.txt)
 - The dormant OntoClean v1 prompts (June 5 build, Pre-Salt examples hardcoded) are archived under `evaluation_study/prompts/archive/`.
-- The full architecture: [docs/CONTEXT.md](CONTEXT.md)
+- Current setup and CLI reference: [README.md](../README.md)
 - Pipeline + evaluation summary: [docs/OVERVIEW.md](OVERVIEW.md)
 - Ablation/evaluation strategy: [docs/thesis_evaluation_strategy.md](thesis_evaluation_strategy.md)
 - Historical comparison: `iteracao_1.ttl` had 288 classes and `iteracao_2.ttl` had 352; both snapshots were removed after the final approved artifact was archived.

@@ -741,7 +741,6 @@ The ablation analysis compares:
 | `src/modules/owl_exporter.py` | Add `relations_csv` + `exclude_relations` params, restriction generation |
 | `src/modules/ontology_verifier.py` | Add Layer 4 reasoner, `skip_reasoner` param |
 | `requirements.txt` | Add `owlready2` |
-| `docs/CONTEXT.md` | Add Step 6b/7c descriptions |
 | `docs/OVERVIEW.md` | Update pipeline table |
 | `README.md` | Add new CLI flags, update project structure |
 
@@ -772,6 +771,6 @@ The ablation analysis compares:
 3. **`ontology_verifier.py`** — Add Layer 4 reasoner (test with known-good/bad TTL)
 4. **`pipeline.py`** — Wire everything together + self-correction loop
 5. **`requirements.txt`** — Add owlready2
-6. **Docs** — Update CONTEXT.md, OVERVIEW.md, README.md
+6. **Docs** — Update OVERVIEW.md and README.md
 7. **E2E test** — Update `test/run_e2e_test.py` with Step 6b test data
 8. **Ablation** — Extend `ablation_study.py` Phase 3

@@ -18,26 +18,26 @@
 
 | What changed | Update these files |
 |---|---|
-| Module behaviour (Steps 0-7) | `docs/CONTEXT.md` (module description), `docs/OVERVIEW.md` (pipeline table) |
+| Module behaviour (Steps 0-7) | `docs/OVERVIEW.md` (pipeline table), `README.md` when configuration or usage changes |
 | CLI flags or workflow | `README.md` (CLI table, ablation workflow) |
-| Evaluation method (ablation, expert eval, analysis) | `docs/OVERVIEW.md` (evaluation section), `docs/CONTEXT.md` (evaluation architecture), `README.md` (project structure) |
-| New robustness guard or validation | `docs/CONTEXT.md` (module's bullet list) |
+| Evaluation method (ablation, expert eval, analysis) | `docs/OVERVIEW.md` (evaluation section), `evaluation_study/README.md` (study reference), `README.md` (project structure) |
+| New robustness guard or validation | `README.md` (relevant configuration/usage section), `docs/OVERVIEW.md` when pipeline behaviour changes |
 | Environment variables | `README.md` (configuration section), `.env.example` if it exists |
-| Project structure (new/renamed files) | `README.md` (project structure tree), `docs/CONTEXT.md` (directory structure) |
+| Project structure (new/renamed files) | `README.md` (project structure tree) and the relevant package README |
 
 ### Documentation locations
 
 - **`README.md`** — Technical quick-start, CLI reference, project structure tree. Audience: developers running the code.
 - **`docs/OVERVIEW.md`** — Plain-language project summary, pipeline table, evaluation framework. Audience: supervisors, committee members, collaborators.
-- **`docs/CONTEXT.md`** — Full architecture reference, per-module descriptions, Mermaid diagram, evaluation architecture. Audience: AI assistants and developers understanding the codebase.
+- **`SETUP.md`** — New-domain setup walkthrough. Audience: developers adapting the pipeline.
+- **`domains/README.md`** — Domain configuration and prompt contracts. Audience: domain authors.
 
 ### Style rules
 
 - Keep descriptions factual and concise — no marketing language.
 - Use present tense ("detects cycles", not "will detect cycles").
-- Module descriptions in `CONTEXT.md` use bullet-point lists under `### module_name.py — Step N: Name` headers.
 - `OVERVIEW.md` pipeline table uses `| **N — Name** | Plain-language description |` format.
-- When adding robustness guards, add a `**Robustness:**` or `**Robustness guards:**` bullet under the relevant module in `CONTEXT.md`.
+- Describe new robustness guards next to the relevant configuration or command in `README.md`.
 
 ---
 
@@ -148,7 +148,7 @@ When helping write or review thesis text:
 - **Upper ontology references:** BFO (Basic Formal Ontology, Smith et al. 2015), GeoCore (Abel et al. 2015), GeoReservoir (Abel et al. — extension of GeoCore for petroleum).
 - **Evaluation methodology references:** NeOn methodology (Suárez-Figueroa et al. 2012) for separating domain vs. formal evaluation; OntoClean (Guarino & Welty 2009) for meta-property validation.
 - **Statistical reporting:** Always report test statistic, degrees of freedom, p-value, and effect size (e.g., "χ²(3) = 12.4, p = .006, W = 0.31").
-- **Figures:** When generating pipeline diagrams, use the Mermaid syntax from `docs/CONTEXT.md` as the canonical source.
+- **Figures:** When generating pipeline diagrams, follow the current implementation in `pipeline.py` and the pipeline table in `docs/OVERVIEW.md`.
 
 ---
 

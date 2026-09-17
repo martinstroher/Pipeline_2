@@ -2,8 +2,8 @@
 
 This is the practical walk-through for someone setting up the pipeline
 **from scratch** on a new domain (i.e. not Pre-Salt geology). It is
-deliberately short — the deep reference lives in [`README.md`](README.md)
-and [`docs/CONTEXT.md`](docs/CONTEXT.md).
+deliberately short — the CLI reference lives in [`README.md`](README.md),
+and the pipeline summary is in [`docs/OVERVIEW.md`](docs/OVERVIEW.md).
 
 Pre-Salt is the default domain. All users still need the runtime and Azure
 configuration in [`README.md`](README.md); Pre-Salt users can skip scaffolding
@@ -238,6 +238,5 @@ scripts/
   new_domain.py    ← the scaffold script
 ```
 
-For the deep architecture reference, see [`docs/CONTEXT.md`](docs/CONTEXT.md).
 For the per-module summary and the evaluation framework, see
 [`docs/OVERVIEW.md`](docs/OVERVIEW.md).
