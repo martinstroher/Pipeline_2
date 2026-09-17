@@ -26,9 +26,6 @@ domain:
   # Slightly longer descriptive phrase. Used in deep-expertise personas.
   scope: "the carbonate reservoirs of the Brazilian Pre-Salt"
 
-  # Short label used wherever the prompt text needs a brief domain reference.
-  short_name: "Pre-Salt"
-
   # Upper-ontology stack (most specific → most generic) used in expert
   # personas and methodology prose. Keep in sync with `ontology_config.yaml`.
   upper_stack: "BFO, GeoCore, GeoReservoir"
