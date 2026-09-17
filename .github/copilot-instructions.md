@@ -133,7 +133,7 @@
 - RAG configuration is fixed: chunk_size=1024, search_k=20, rerank_k=5 (arbitrarily set — the thesis focus is on NLD/RAG ablation, not RAG hyperparameter optimisation).
 - Embedding model: `BAAI/bge-m3` (local, fixed weights — chosen over API models for reproducibility).
 - Reranker: `BAAI/bge-reranker-v2-m3` (cross-encoder).
-- All model choices and hyperparameters are documented in `docs/thesis_model_selection.md`.
+- All model choices and hyperparameters (temperature, seed, RAG parameters, embedding and reranker models) are recorded in this section and in `README.md`.
 - Never use API-based embeddings (e.g., `text-embedding-004`) — weights may change silently, breaking reproducibility.
 
 ---
