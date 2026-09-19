@@ -1,10 +1,11 @@
 # =========================================================================
-# Ontology configuration — minimal template (BFO only)
+# Ontology configuration — BFO categories with shared BFO/RO relations
 # =========================================================================
 # Single source of truth for ontology scope, namespaces, and per-class
 # metadata. Edit this file (NOT Python code) to retarget the pipeline.
 #
-# This template ships with BFO as the only upper ontology. To layer in
+# This template uses BFO categories and shared generic BFO/RO relations.
+# To layer in
 # more (e.g. GeoCore, GeoReservoir, OBO Foundry ontologies), copy the
 # `bfo:` block under `ontologies:`, point it at your OWL file under
 # `resources/`, list its classes, and add its key to `waterfall:` in
@@ -33,9 +34,7 @@ project:
     PreSaltOntoLearn pipeline.
 
 # -------------------------------------------------------------------------
-# Relation provenance tiers active at runtime. Empty `relations:` block
-# below means none of these tiers actually fire, but the loader still
-# validates the list — keep it complete.
+# Relation provenance tiers active at runtime, including shared defaults.
 # -------------------------------------------------------------------------
 provenance_tiers_active:
   - owl_axiom
@@ -63,7 +62,7 @@ ontologies:
 
   bfo:
     display_name: "BFO"
-    # Path relative to the repo root. The scaffold script copies
+    # Path relative to this configuration. The scaffold script copies
     # bfo-core.owl from domains/presalt/resources/ into resources/ for you.
     owl: "resources/bfo-core.owl"
     namespace: "http://purl.obolibrary.org/obo/"
@@ -113,6 +112,15 @@ ontologies:
         metatypes: ["Function", "SpecificallyDependentContinuant"]
         llm_definition: "A function is a disposition that exists because the bearer is of a kind that, in being of that kind, has the disposition."
 
+  # Supplies relation axioms, not categorization choices.
+  ro:
+    owl: "resources/ro-core.owl"
+    namespace: "http://purl.obolibrary.org/obo/"
+    prefix: "obo"
+    eval_tier: "ro"
+    import_iri: null
+    classes: []
+
 # -------------------------------------------------------------------------
 # Verifier prefixes — used by Step 7b to recognise "upper-ontology" IRIs.
 # Add any ontology you list above whose IRIs use a non-default prefix.
@@ -121,40 +129,27 @@ verifier_prefixes:
   bfo: "http://purl.obolibrary.org/obo/"
 
 # -------------------------------------------------------------------------
-# Metatype groups — recursive shorthand used by relations:.
-# These are the universal BFO branches. Add custom groups here if you
-# extend `relations:` with discipline-specific properties.
+# Shared defaults resolve relative to this file, not the working directory.
+# Keep domains/_shared/ alongside the domain when relocating it.
+# Local groups/relations replace whole same-name entries.
 # -------------------------------------------------------------------------
-metatype_groups:
-  CONTINUANT: ["IndependentContinuant", "SpecificallyDependentContinuant", "GenericallyDependentContinuant"]
-  OCCURRENT: ["Occurrent", "Process", "ProcessBoundary", "TemporalRegion"]
-  MATERIAL: ["MaterialEntity"]
-  IMMATERIAL: ["ImmaterialEntity", "Site"]
-  QUALITY: ["Quality", "SpecificallyDependentContinuant"]
-  ANY: ["IndependentContinuant", "SpecificallyDependentContinuant", "GenericallyDependentContinuant",
-        "Occurrent", "Process", "ProcessBoundary", "TemporalRegion",
-        "MaterialEntity", "ImmaterialEntity", "Site",
-        "Quality", "Role", "Disposition", "Function"]
+relation_defaults: "../_shared/bfo_ro_relations.yaml"
+metatype_groups: {}
 
 # -------------------------------------------------------------------------
-# Relations — BFO property registry with domain/range constraints.
-# Empty by default. When you want Step-6b relation extraction to validate
-# extracted triples, add entries here. See domains/presalt/ontology_config.yaml
-# for the 71-entry reference set you can copy from.
+# Add domain-specific properties here. An empty local mapping retains the
+# 61 shared entries. Each new entry requires explicit provenance.
 # -------------------------------------------------------------------------
 relations: {}
 
 # -------------------------------------------------------------------------
-# Property specialisations — rules that auto-rewrite generic properties
-# (e.g. has_part) to more specific ones (e.g. has_continuant_part) based
-# on the metatypes of subject/filler. Empty until you add relations:.
+# Mereology specialization is inherited. Omit this key to retain it;
+# an explicit list replaces all inherited rules, and [] disables them.
 # -------------------------------------------------------------------------
-property_specializations: []
+# property_specializations: []
 
 # -------------------------------------------------------------------------
-# Reclassifier (Step 6d) tuning. Metatypes shared across many classes
-# carry little discriminative signal and are excluded from "evidence"
-# scoring when deciding whether to re-parent a term.
+# Metatypes shared across many classes carry little discriminative signal.
 # -------------------------------------------------------------------------
 non_distinguishing_metatypes:
   - Entity

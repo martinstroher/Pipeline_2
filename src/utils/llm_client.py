@@ -5,13 +5,14 @@ Configuration via environment variables:
   AZURE_OPENAI_API_KEY   — API key for the Foundry resource
   AZURE_OPENAI_ENDPOINT  — resource host, e.g. https://<resource>.openai.azure.com
                            (the client appends /openai/v1/)
-  LLM_GENERATION_MODEL   — Azure *deployment* name (e.g. gpt-5.4), NOT the bare model id
+  LLM_GENERATION_MODEL   — required Azure *deployment* name, with no default
+  LLM_EXTRACTION_MODEL   — required Azure deployment name for extraction, with no default
   LLM_REASONING_EFFORT   — none|minimal|low|medium|high  (default: high)
   LLM_MAX_OUTPUT_TOKENS  — max_completion_tokens ceiling (default: 32000; covers reasoning + visible)
   LLM_SEED               — best-effort determinism seed (default: 42)
 
 Notes on GPT-5.x reasoning models:
-  - `temperature` is NOT supported and is IGNORED (accepted only for backward compatibility).
+  - `temperature` is accepted but ignored; GPT-5.x reasoning models reject it.
   - `max_completion_tokens` bounds reasoning + visible tokens; if too low the visible
     content can come back empty (finish_reason == "length"). Keep it generous.
   - Determinism is best-effort (pinned deployment version + seed); not bit-reproducible.
@@ -47,6 +48,23 @@ _RETRYABLE_STATUS_CODES = {500, 502, 503, 504}
 # Per-call usage logging (token counts incl. reasoning tokens) for cost tracking.
 _USAGE_LOG = os.environ.get("LLM_USAGE_LOG", "output/usage_log.csv")
 _usage_lock = threading.Lock()
+
+
+def validate_model_settings(*names: str) -> None:
+    """Reject missing or blank deployment names without creating an API client."""
+    missing = [name for name in names if not os.environ.get(name, "").strip()]
+    if missing:
+        raise RuntimeError(
+            f"Missing model configuration: {', '.join(missing)}. "
+            "Set non-empty Azure deployment names in .env or the environment; "
+            "there is no default model."
+        )
+
+
+def require_model(name: str) -> str:
+    """Return an explicitly configured Azure deployment name."""
+    validate_model_settings(name)
+    return os.environ[name].strip()
 
 
 def get_client() -> OpenAI:
@@ -105,12 +123,14 @@ def generate(
 ) -> str:
     """One-shot chat completion via Azure OpenAI. Returns the message content string.
 
-    Preserves the previous Gemini wrapper's signature so call sites are unchanged.
-    `temperature` is accepted for backward compatibility but IGNORED — GPT-5.x
-    reasoning models reject it. Reads model/effort/limits from env when not given.
+    `temperature` is accepted but ignored. Model, reasoning effort, and token
+    limits use configured defaults when not supplied.
     """
+    if model is None:
+        model = require_model("LLM_GENERATION_MODEL")
+    elif not model.strip():
+        raise RuntimeError("The explicit model must be a non-empty Azure deployment name.")
     client = get_client()
-    model = model or os.environ.get("LLM_GENERATION_MODEL", "gpt-5.4")
     effort = reasoning_effort or os.environ.get("LLM_REASONING_EFFORT", "high")
     max_out = int(os.environ.get("LLM_MAX_OUTPUT_TOKENS", 32000))
     seed = int(os.environ.get("LLM_SEED", 42))

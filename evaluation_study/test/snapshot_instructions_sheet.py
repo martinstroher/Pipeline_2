@@ -1,5 +1,4 @@
-"""Snapshot the build_instructions_sheet() output for regression-locking the
-Phase 4 externalization. Writes test/fixtures/instructions_baseline.json.
+"""Write instruction rows to test/fixtures/instructions_baseline.json.
 """
 import json
 import os

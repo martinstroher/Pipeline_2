@@ -7,12 +7,12 @@ from tqdm import tqdm
 
 from src.utils import log
 from src.utils.csv_io import write_csv
-from src.utils.llm_client import generate, parse_json_array
+from src.utils.llm_client import generate, parse_json_array, require_model
 from src.utils.prompt_loader import load_prompt
 
 
 def run_llm_term_extraction():
-    LLM_MODEL_NAME = os.environ.get("LLM_EXTRACTION_MODEL", "gemini-2.5-pro")
+    LLM_MODEL_NAME = require_model("LLM_EXTRACTION_MODEL")
     LLM_MODEL_TEMPERATURE = float(os.environ.get("LLM_EXTRACTION_TEMPERATURE", 0.0))
     LLM_INPUT_DIR = os.environ["LLM_INPUT_DIR"]
     LLM_OUTPUT_FILE = os.environ["LLM_OUTPUT_FILE"]

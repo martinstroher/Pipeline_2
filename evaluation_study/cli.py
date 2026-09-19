@@ -38,6 +38,11 @@ def _build_parser() -> argparse.ArgumentParser:
     rehearsal.add_argument("--overwrite", action="store_true")
     rehearsal.add_argument("--experts", type=int, default=3)
     rehearsal.add_argument("--bootstrap-iterations", type=int, default=5000)
+    rehearsal.add_argument(
+        "--a-nld",
+        default=None,
+        help="Authorized private Condition A CSV containing the Context column",
+    )
 
     relations = subparsers.add_parser("relation-analysis", help="Analyze relation output")
     relations.add_argument("relations_csv", nargs="?", default=None)
@@ -72,10 +77,14 @@ def main() -> int:
     elif args.command == "rehearsal":
         from evaluation_study.offline_rehearsal import run_offline_rehearsal
 
+        kwargs = {}
+        if args.a_nld:
+            kwargs["a_nld_path"] = args.a_nld
         run_offline_rehearsal(
             overwrite=args.overwrite,
             bootstrap_iterations=args.bootstrap_iterations,
             n_experts=args.experts,
+            **kwargs,
         )
     elif args.command == "relation-analysis":
         from evaluation_study.relation_analysis import run_relation_analysis

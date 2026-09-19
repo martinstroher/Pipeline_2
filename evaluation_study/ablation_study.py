@@ -29,7 +29,7 @@ from dotenv import load_dotenv
 load_dotenv()
 
 from src.modules.define.nld_generator import generate_nld
-from src.utils.llm_client import get_client, generate as llm_generate, parse_json_array
+from src.utils.llm_client import get_client, generate as llm_generate, parse_json_array, require_model
 from evaluation_study.paths import (
     ABLATION_OUTPUT,
     FILTERED_TERMS,
@@ -131,7 +131,7 @@ def _git_commit() -> str:
 
 def _validate_nld_output(df: pd.DataFrame, terms: list[str], label: str) -> None:
     _validate_term_set(df, terms, label)
-    missing = {"NLD", "Context_Used", "Context"} - set(df.columns)
+    missing = {"NLD", "Context_Used"} - set(df.columns)
     if missing:
         raise ValueError(f"{label}: missing columns {sorted(missing)}")
     errors = df["NLD"].fillna("").astype(str).str.startswith("ERROR")
@@ -242,7 +242,7 @@ def run_condition_a(terms: list[str]) -> pd.DataFrame:
     )
     df = _copy_frozen_artifact(source, _nld_path("A"))
     _validate_term_set(df, terms, "Condition A NLD")
-    required = {"NLD", "Context_Used", "Context"}
+    required = {"NLD", "Context_Used"}
     missing = required - set(df.columns)
     if missing:
         raise ValueError(f"Condition A NLD: missing columns {sorted(missing)}")
@@ -252,6 +252,7 @@ def run_condition_a(terms: list[str]) -> pd.DataFrame:
 
 def run_condition_b(terms: list[str]) -> pd.DataFrame:
     """No RAG: generate NLD with parametric knowledge only."""
+    require_model("LLM_GENERATION_MODEL")
     def _process(term):
         nld_json_str, _ = generate_nld(term, "No additional context available.")
         nld, _ = _parse_nld_response(nld_json_str)
@@ -276,7 +277,11 @@ def run_condition_d(terms: list[str], condition_a: pd.DataFrame) -> pd.DataFrame
     """Raw RAG: reuse the exact stored chunks supplied to frozen A."""
     _validate_term_set(condition_a, terms, "Condition A NLD source for D")
     if "Context" not in condition_a.columns:
-        raise ValueError("Condition A NLD source for D: missing Context column")
+        raise ValueError(
+            "Condition D requires the private full-context Condition A CSV. "
+            "The public frozen file intentionally excludes retrieved article passages; "
+            "set ABLATION_FROZEN_A_NLD to an authorized private copy."
+        )
     if condition_a["Context"].isna().any():
         missing_terms = condition_a.loc[condition_a["Context"].isna(), "Term"].tolist()
         raise ValueError(
@@ -379,6 +384,7 @@ def run_categorization(
         print(f"  Frozen Condition A categorization copied byte-for-byte from {source}.")
         return df
 
+    model_name = require_model("LLM_GENERATION_MODEL")
     cat_ckpt = Checkpoint(cat_csv)
     completed, cat_rows = cat_ckpt.load()
     if completed:
@@ -386,7 +392,6 @@ def run_categorization(
 
     is_raw_rag = condition == "D"
     sys_instr, prompt_tmpl = _build_categorizer_prompt(is_raw_rag=is_raw_rag)
-    model_name = os.environ.get("LLM_GENERATION_MODEL", "gpt-5.4")
     model_temp = float(os.environ.get("LLM_GENERATION_TEMPERATURE", 0))
 
     remaining = nld_df[~nld_df["Term"].isin(completed)]
@@ -469,7 +474,9 @@ def run_ablation(conditions: list[str] | None = None):
     if seed != EXPECTED_SEED:
         raise RuntimeError(f"Ablation requires LLM_SEED={EXPECTED_SEED} (got {seed})")
 
+    model_name = os.environ.get("LLM_GENERATION_MODEL", "").strip() or None
     if any(condition in conditions for condition in ("B", "C", "D")):
+        model_name = require_model("LLM_GENERATION_MODEL")
         get_client()
     os.makedirs(OUTPUT_DIR, exist_ok=True)
 
@@ -505,7 +512,7 @@ def run_ablation(conditions: list[str] | None = None):
         "status": "running",
         "started_utc": datetime.now(timezone.utc).isoformat(),
         "git_commit": _git_commit(),
-        "model": os.environ.get("LLM_GENERATION_MODEL", "gpt-5.4"),
+        "model": model_name,
         "reasoning_effort": reasoning_effort,
         "seed": seed,
         "batch_size": batch_size,
@@ -525,7 +532,10 @@ def run_ablation(conditions: list[str] | None = None):
             "category_source": frozen_cat_source,
             "category_source_sha256": _sha256_file(frozen_cat_source),
         },
-        "condition_d_context_source": "Condition A Context column; no retrieval",
+        "condition_d_context_source": (
+            "Condition A Context column when an authorized private full-context "
+            "source is supplied; no retrieval"
+        ),
         "conditions_requested": conditions,
         "condition_artifacts": {},
     }

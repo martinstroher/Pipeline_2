@@ -29,7 +29,7 @@ from concurrent.futures import ThreadPoolExecutor, as_completed
 from tqdm import tqdm
 
 from src.utils import log
-from src.utils.llm_client import generate, parse_json_array
+from src.utils.llm_client import generate, parse_json_array, validate_model_settings
 from src.utils.prompt_loader import load_prompt
 
 # ---------------------------------------------------------------------------
@@ -427,6 +427,7 @@ def run_cq_refinement(
     Returns:
         Path to the filtered categorized CSV (terms with CQ_Count >= MIN_CQ_COUNT).
     """
+    validate_model_settings("LLM_GENERATION_MODEL")
     if categorized_csv is None:
         categorized_csv = os.environ.get("CATEGORIZED_LLM_TERMS")
         if not categorized_csv:

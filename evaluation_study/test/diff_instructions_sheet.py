@@ -1,5 +1,5 @@
 """Compare build_instructions_sheet() output against the locked baseline.
-PASS only if every row is byte-equal. Run after Phase 4 externalization.
+PASS only if every row is byte-equal to the saved baseline.
 """
 import json
 import sys

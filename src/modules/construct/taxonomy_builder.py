@@ -1,8 +1,7 @@
 """
 Taxonomy Builder — Step 6 of the PreSaltOntoLearn pipeline.
 
-Takes the winning condition's categorized output (flat: Term -> Category)
-and builds IS-A hierarchies WITHIN each category using LLM group reasoning.
+Builds IS-A hierarchies within each category from categorized terms.
 
 Key design decisions:
   - Processes all terms in a category GROUP (not one-by-one) for tree consistency
@@ -25,7 +24,7 @@ from src.utils.csv_io import read_csv, write_csv
 from dotenv import load_dotenv
 from tqdm import tqdm
 
-from src.utils.llm_client import get_client, generate, parse_json_array
+from src.utils.llm_client import get_client, generate, parse_json_array, require_model
 from src.utils import log
 from src.utils.prompt_loader import load_prompt
 from src.utils.ontology_config import get_config
@@ -52,8 +51,8 @@ def build_taxonomy_for_group(
     Args:
         category: The ontology category (e.g., "Sedimentary Rock")
         terms_with_nlds: List of {"term": ..., "nld": ...}
-        model_name: Gemini model name
-        model_temperature: Temperature for generation
+        model_name: Azure deployment name
+        model_temperature: Accepted temperature argument; ignored by the shared client
         hints: Optional list of {"general": ..., "specific": ...} specialization hints
 
     Returns:
@@ -83,8 +82,6 @@ def build_taxonomy_for_group(
         upper_vocab=upper_vocab,
         terms_json=json.dumps(terms_with_nlds, indent=2),
     )
-    # Append hints after the formatted prompt (before the output format section won't work
-    # since format() already resolved placeholders, so append at the end of terms_json area)
     if hints_section:
         prompt = prompt + hints_section
 
@@ -265,6 +262,7 @@ def run_taxonomy_builder(categorized_csv: str, output_path: str | None = None, h
         hints_csv: Optional path to specialization hints CSV (General_Term, Specific_Term)
     """
     load_dotenv()
+    MODEL_NAME = require_model("LLM_GENERATION_MODEL")
     get_client()
 
     if output_path is None:
@@ -283,7 +281,6 @@ def run_taxonomy_builder(categorized_csv: str, output_path: str | None = None, h
     ].copy()
     log.detail(f"{len(df_valid)} valid terms (excluding errors and NOT_CLASSIFIED)")
 
-    MODEL_NAME = os.environ.get("LLM_GENERATION_MODEL", "gemini-2.5-pro")
     MODEL_TEMPERATURE = float(os.environ.get("LLM_GENERATION_TEMPERATURE", 0))
 
     # Load optional specialization hints

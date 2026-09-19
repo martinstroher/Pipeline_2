@@ -1,8 +1,5 @@
 """Public entry point for modular Layer 2 expert analysis.
 
-The executable path delegates to ``evaluation_study.expert_eval_analysis``.
-Legacy analysis helpers remain available for historical workbook compatibility.
-
 Statistical tests:
   Term Relevance:    Descriptive stats, ICC (inter-annotator agreement)
   NLD Quality:       Wilcoxon signed-rank (A vs B), sign test on preference, weighted kappa

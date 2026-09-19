@@ -29,9 +29,6 @@ _CFG = get_config()
 
 # Namespaces — sourced from ontology_config.yaml. Edit the YAML to change.
 ONTO_NS = Namespace(_CFG.project_namespace())
-BFO_NS = Namespace(_CFG.namespace_for("bfo"))
-GEOCORE_NS = Namespace(_CFG.namespace_for("geocore"))
-GEORESERVOIR_NS = Namespace(_CFG.namespace_for("georeservoir"))
 
 # Import the IRI mapping from taxonomy_builder
 from src.modules.construct.taxonomy_builder import UPPER_IRIS
@@ -303,19 +300,10 @@ def _detect_and_repair_disjointness(g: Graph, df: pd.DataFrame) -> list[dict]:
                 elif iri_b in intended and iri_a not in intended:
                     keep_side, remove_side = iri_b, iri_a
                 else:
-                    # Category cannot disambiguate — it resolves to a *third*
-                    # branch disjoint with both conflict sides. This is the
-                    # case-collision signature: two taxonomy rows that normalise
-                    # to one IRI (an LLM-invented intermediate genus + a real
-                    # term whose critic reparent points at a bare BFO metatype
-                    # root) have their parents silently unioned across a disjoint
-                    # boundary. Fallback: if the class is a DIRECT subclass of
-                    # exactly one of the two disjoint roots while reaching the
-                    # other side only transitively (via a substantive published
-                    # genus), the direct bare-root edge is the artifact — drop it
-                    # and keep the genus. (This branch only runs where the repair
-                    # previously gave up, so a currently-satisfiable class is
-                    # never altered.)
+                    # If category information cannot disambiguate and exactly
+                    # one disjoint root is a direct parent, remove edges
+                    # exclusive to that side and retain the inherited genus on
+                    # the other side.
                     direct_parents = dp.get(cls_str, set())
                     a_direct = iri_a in direct_parents
                     b_direct = iri_b in direct_parents
@@ -727,7 +715,7 @@ def run_owl_export(
             if nld_val and not pd.isna(nld_val):
                 nld_map[str(row["Term"])] = str(nld_val)
 
-    # Optional separate NLD CSV (fallback / override for backward compatibility)
+    # Optional NLD CSV; matching definitions override taxonomy definitions.
     if nld_csv and os.path.exists(nld_csv):
         nld_df = read_csv(nld_csv)
         for _, row in nld_df.iterrows():
@@ -739,9 +727,8 @@ def run_owl_export(
     g.bind("rdf", RDF)
     g.bind("rdfs", RDFS)
     g.bind(_CFG.project_prefix(), ONTO_NS)
-    g.bind(_CFG.prefix_for("bfo"), BFO_NS)
-    g.bind(_CFG.prefix_for("geocore"), GEOCORE_NS)
-    g.bind(_CFG.prefix_for("georeservoir"), GEORESERVOIR_NS)
+    for ontology in _CFG.ontologies.values():
+        g.bind(ontology.prefix, Namespace(ontology.namespace))
 
     # Ontology declaration — metadata sourced from ontology_config.yaml
     onto_uri = ONTO_NS[_CFG.project_name()]

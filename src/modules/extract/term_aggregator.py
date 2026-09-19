@@ -38,7 +38,10 @@ def run_term_aggregation():
     try:
         nlp = spacy.load("en_core_web_sm")
     except OSError:
-        raise RuntimeError("spaCy model 'en_core_web_sm' not found. Run: python -m spacy download en_core_web_sm")
+        raise RuntimeError(
+            "spaCy model 'en_core_web_sm' is missing. Restore the pinned "
+            "environment using the README installation instructions."
+        )
 
     raw_terms_list = load_terms_from_csv(INPUT_FILE_PATH)
 

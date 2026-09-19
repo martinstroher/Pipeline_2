@@ -1,6 +1,11 @@
 import os
 import shutil
 from typing import List, Tuple
+
+from src.utils.onnx_runtime import configure_onnx_runtime
+
+configure_onnx_runtime()
+
 from langchain_community.document_loaders import DirectoryLoader, TextLoader
 from langchain_text_splitters import RecursiveCharacterTextSplitter, MarkdownHeaderTextSplitter
 from langchain_community.vectorstores import Chroma
@@ -12,14 +17,16 @@ from sentence_transformers import CrossEncoder
 from src.utils import log
 
 DOCS_DIR = os.environ.get("DOCS_DIR", "inputs/")
-# Dynamic DB Persistence: We will append parameters to this path if needed, but defaults here.
+# Retrieval-cache prefix; chunk size is appended.
 CHROMA_DB_DIR = os.environ.get("CHROMA_DB_DIR", "chroma_db")
 
 # --- MODEL CONFIGURATION (BGE-M3 SUITE) ---
 # BGE-M3: State-of-the-art Multilingual, Long Context (8192)
 EMBED_MODEL = "BAAI/bge-m3"
+EMBED_MODEL_REVISION = "5617a9f61b028005a4858fdac845db406aefb181"
 # BGE-Reranker-v2-m3: Matches the embedding model distribution
 RERANK_MODEL = "BAAI/bge-reranker-v2-m3"
+RERANK_MODEL_REVISION = "953dc6f6f85a1b2dbfca4c34a2796e7dde08d41e"
 
 # Default params (configurable via environment)
 DEFAULT_SEARCH_K = int(os.environ.get("RAG_SEARCH_K", 20))
@@ -40,7 +47,11 @@ def get_embedding_model() -> HuggingFaceEmbeddings:
     if _EMBEDDINGS is None:
         _EMBEDDINGS = HuggingFaceEmbeddings(
             model_name=EMBED_MODEL,
-            model_kwargs={'device': 'cpu', 'trust_remote_code': True},
+            model_kwargs={
+                "device": "cpu",
+                "revision": EMBED_MODEL_REVISION,
+                "trust_remote_code": False,
+            },
             encode_kwargs={'normalize_embeddings': True},
         )
     return _EMBEDDINGS
@@ -84,7 +95,7 @@ def split_documents(documents: List, chunk_size: int = 1024, chunk_overlap: int 
     return final_splits
 
 def get_chroma_path(chunk_size: int) -> str:
-    """Returns a unique DB path for a specific chunk size to avoid collisions during Grid Search."""
+    """Return the cache path for this chunk size."""
     return f"{CHROMA_DB_DIR}_{chunk_size}"
 
 def create_vector_store(documents: List, chunk_size: int) -> Chroma:
@@ -108,11 +119,7 @@ def load_vector_store(chunk_size: int = 1024) -> Chroma:
     return vector_store
 
 def get_bm25_retriever(docs_list: List = None):
-    """
-    Singleton for BM25. 
-    Note: BM25 depends on the splits. Ideally, we should rebuild it if splits change.
-    For Grid Search, we will probably re-initialize this per run.
-    """
+    """Build and cache BM25 when documents are supplied; otherwise return it."""
     global _BM25_RETRIEVER
     if docs_list:
         _BM25_RETRIEVER = BM25Retriever.from_documents(docs_list, k=DEFAULT_SEARCH_K)
@@ -122,7 +129,11 @@ def get_cross_encoder():
     global _CROSS_ENCODER
     if _CROSS_ENCODER is None:
         log.info(f"Loading re-ranker: {RERANK_MODEL}...")
-        _CROSS_ENCODER = CrossEncoder(RERANK_MODEL, trust_remote_code=True)
+        _CROSS_ENCODER = CrossEncoder(
+            RERANK_MODEL,
+            revision=RERANK_MODEL_REVISION,
+            trust_remote_code=False,
+        )
     return _CROSS_ENCODER
 
 def get_relevant_documents(

@@ -16,7 +16,17 @@
     "approved_run/validate_relations.csv": "3317f07a8dd2000ff5599790709cbc5980dbe7bcb8ff0a018cf38078519f755e",
     "approved_run/validate_taxonomy.csv": "032cc676ecff60622f45b1435fe807af77d85a2ee7946c1d0d8b89eef6320f9c",
     "frozen_a/classify_categories.csv": "d988dc9cda4590f601e9f564c0ecf16f3debbb7da4fa7805bef2db97abba7a83",
-    "frozen_a/define_nld.csv": "7fb497c2b63c3293a95ac4bb69028bc1f656cc5c89e26da9e8a1277626374deb",
+    "frozen_a/define_nld.csv": "50ea533448d16dd5e23d4ac92ad7d9b9a1e1d4e28f2ea54dd1a65139d591e31a",
     "frozen_a/extract_filtered.csv": "9c73f318fda05ba1ac2f59539a5a129e41f32234dfdbd5f8f88e16b40e16e86b"
+  },
+  "public_redactions": {
+    "frozen_a/define_nld.csv": {
+      "removed_columns": [
+        "Context"
+      ],
+      "original_sha256": "7fb497c2b63c3293a95ac4bb69028bc1f656cc5c89e26da9e8a1277626374deb",
+      "reason": "Retrieved article passages are not redistributed in the public repository.",
+      "effect": "Terms, generated NLDs, and Context_Used flags remain public. Exact replay of Condition D requires the private original full-context CSV."
+    }
   }
 }

@@ -157,7 +157,7 @@ def load_study_inputs(
     terms_path: str,
     expected_term_count: int = 407,
 ) -> StudyInputs:
-    """Load and validate the complete ablation and approved ontology artifacts."""
+    """Load and validate the complete ablation and frozen ontology artifacts."""
     terms = _read_required(terms_path, "Filtered terms")
     _require_columns(terms, {"Readable_Term", "Frequency"}, "Filtered terms")
     if terms["Readable_Term"].astype(str).duplicated().any():
@@ -416,7 +416,7 @@ def _category_descriptions() -> dict[str, str]:
 
 
 def build_term_glosses(nld: pd.DataFrame) -> dict[str, str]:
-    """Return shared context only for terms found ambiguous in the pilot."""
+    """Return glosses for configured ambiguous terms."""
     _require_columns(nld, {"Term", "NLD"}, "NLD gloss source")
     registry = get_display_registry()
     nld_lookup = _lookup_by_term(nld, "NLD", "NLD gloss source")
@@ -512,7 +512,7 @@ def build_category_guide() -> pd.DataFrame:
 
 
 def build_timing_sheet() -> pd.DataFrame:
-    """Collect actual completion time by module during the human pilot."""
+    """Collect actual completion time by workbook module."""
     modules = [
         "Representation",
         "Category Correct and Taxonomy",
@@ -654,7 +654,7 @@ def select_final_ontology_items(
         observed = {name: len(frame) for name, frame in populations.items()}
         if observed != APPROVED_POPULATIONS:
             raise ValueError(
-                f"Approved ontology populations changed: expected {APPROVED_POPULATIONS}, observed {observed}"
+                f"Frozen ontology populations changed: expected {APPROVED_POPULATIONS}, observed {observed}"
             )
 
     samples = {

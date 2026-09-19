@@ -1,7 +1,8 @@
 """Ontology critic — the `validate` verb.
 
-Per category, focused LLM calls run in sequence so each is informed by the
-previous:
+Validation runs category-local taxonomy, worthiness, and deduplication calls,
+then global reconciliation, facet/frame analysis, relation correction, and
+relation-scope classification:
 
   1. **Taxonomy critic (Stage 1, per-term, CHUNKED).** Judges the IS-A rows
      (KEEP / REPARENT / DROP_AS_MIXIN / DROP_AS_REDUNDANT / CONVERT_TO_INSTANCE)
@@ -33,9 +34,9 @@ previous:
       correctness (KEEP / DROP / FIX), then independently classifies scope as
       generic, corpus-context, or individual-fact.
 
-Categories run in parallel on the worker pool; the calls above are sequential
-within a category. A completeness guard re-asks the model for any input ids it
-forgot in stages 1 and 3, so large categories are not silently under-reviewed.
+Category-local work runs in parallel. Completeness checks re-ask the taxonomy
+and relation critics for omitted input ids so large categories are not silently
+under-reviewed.
 
 I/O contract:
     run_critic(taxonomy_csv, output_dir, *, relations_csv=None)
@@ -57,7 +58,7 @@ Outputs written to `output_dir`:
     validate_responses_archive/{ts}.jsonl — raw LLM responses, tagged by call
 
 Safety guards:
-    - Default temperature 0 (deterministic).
+    - The shared client ignores temperature; live-model repeatability is best-effort.
     - Completeness guard: any input id the model omits is re-asked once; rows
       still missing fall back to implicit KEEP.
     - After taxonomy edits, any relation whose Filler was DROPped is dropped
@@ -84,7 +85,7 @@ from tqdm import tqdm
 
 from src.utils import log
 from src.utils.csv_io import read_csv, write_csv
-from src.utils.llm_client import get_client, generate
+from src.utils.llm_client import get_client, generate, require_model
 from src.utils.ontology_config import get_config
 from src.utils.prompt_loader import load_prompt
 from src.utils.rag_setup import get_embedding_model
@@ -686,8 +687,7 @@ def _build_taxonomy_decisions(
 
 
 def _probe_cols(edit: dict | None) -> dict:
-    """Extract the Option-E probe trace + OntoClean signs from a taxonomy edit
-    for the audit log."""
+    """Extract taxonomy probes and OntoClean signs for the audit log."""
     if not isinstance(edit, dict):
         return {"probe1_genus_ok": "", "probe2_bucket": "", "probe3_rewrite": "",
                 "rigidity": "", "identity": "", "dependence": "", "carried_by": "",
@@ -2311,6 +2311,7 @@ def run_critic(
 ) -> tuple[str, str | None]:
     from dotenv import load_dotenv
     load_dotenv()
+    model = require_model("LLM_GENERATION_MODEL")
     get_client()
 
     os.makedirs(output_dir, exist_ok=True)
@@ -2346,7 +2347,6 @@ def run_critic(
     completion_system, completion_template = load_prompt("critic_frame_completion.txt")
     rel_system, rel_template = load_prompt("critic_relations.txt")
     scope_system, scope_template = load_prompt("critic_relation_scope.txt")
-    model = os.environ.get("LLM_GENERATION_MODEL", "gemini-2.5-pro")
     temperature = float(os.environ.get("LLM_GENERATION_TEMPERATURE", 0))
 
     log.banner("validate", "Validate (taxonomy → worthiness → dedup → facets → relations/scope)")

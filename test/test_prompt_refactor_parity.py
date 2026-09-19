@@ -1,13 +1,6 @@
 """
-Parity test — verifies the prompt loader + prompt_blocks.yaml refactor
-preserves semantic intent and does not introduce unresolved markers.
-
-Three checks:
-1. Loader produces no unresolved ``<<...>>`` markers in any prompt.
-2. Every refactored prompt diffs by < 25 changed lines vs. its pre-refactor
-   snapshot in ``test/fixtures/prompts_pre_refactor/``.
-3. Runtime placeholders ({batch_size}, {chunk_text}, {category}, etc.)
-   that existed in the pre-refactor snapshot still exist after loading.
+Checks unresolved block markers, saved runtime placeholders, and prompt drift
+against the saved snapshots.
 
 Run:
     python test/test_prompt_refactor_parity.py
@@ -74,7 +67,7 @@ def _check_runtime_placeholders(name: str, original: str, refactored: str) -> No
     missing = orig - new
     if missing:
         _FAILED.append(
-            f"[FAIL] {name}: runtime placeholders dropped after refactor: {sorted(missing)}"
+            f"[FAIL] {name}: missing saved runtime placeholders: {sorted(missing)}"
         )
     else:
         kept = sorted(orig) or "(none)"
@@ -83,7 +76,7 @@ def _check_runtime_placeholders(name: str, original: str, refactored: str) -> No
 
 def main() -> int:
     snapshots = sorted(SNAPSHOT.glob("*.txt"))
-    print(f"Checking {len(snapshots)} prompts against pre-refactor snapshots\n")
+    print(f"Checking {len(snapshots)} prompts against saved snapshots\n")
     for snap in snapshots:
         original = snap.read_text(encoding="utf-8")
         orig_sys, orig_body = _split(original)

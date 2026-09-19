@@ -132,7 +132,13 @@ def _load_source_inputs(
     nld_a = read_csv(a_nld_path)
     cat_a = read_csv(a_category_path)
     _require_columns(terms, {"Readable_Term", "Frequency"}, "Filtered terms")
-    _require_columns(nld_a, {"Term", "NLD", "Context_Used", "Context"}, "Frozen A NLD")
+    _require_columns(nld_a, {"Term", "NLD", "Context_Used"}, "Frozen A NLD")
+    if "Context" not in nld_a.columns:
+        raise ValueError(
+            "Offline rehearsal requires an authorized private Condition A CSV "
+            "containing the Context column. The public frozen file intentionally "
+            "excludes retrieved article passages; pass it with --a-nld."
+        )
     _require_columns(cat_a, {"Term", "Category", "Reasoning", "NLD"}, "Frozen A categories")
 
     if len(terms) != EXPECTED_TERM_COUNT:

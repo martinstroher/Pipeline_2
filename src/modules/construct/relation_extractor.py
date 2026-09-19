@@ -10,10 +10,10 @@ Output: construct_relations.csv (Term, Category, Property, Property_IRI,
         Filler, Filler_Source, Confidence, Evidence, Validation_Status,
         Validation_Reason)
 
-Design decisions (from 5-subagent consensus):
-  - 16 Tier 1 properties offered to the LLM (covers >95% of geological NLDs)
-  - Flat sequential batches of 10 terms
-  - 2-level confidence: 1.0 (explicit) or 0.8 (implied); <0.8 = don't extract
+Implementation:
+  - The active domain configuration defines the properties offered to the LLM.
+  - Flat sequential batches default to 10 terms.
+  - Prompt examples use 1.0 for explicit and 0.8 for implied statements.
   - Post-hoc property specialization: LLM emits a generic property (e.g.,
     has_part); Python upgrades it to the upper-ontology-specific variant
     (e.g., has_continuant_part) using rules declared under
@@ -33,7 +33,7 @@ from src.utils.checkpoint import Checkpoint
 from tqdm import tqdm
 
 from src.utils import log
-from src.utils.llm_client import generate, parse_json_array
+from src.utils.llm_client import generate, parse_json_array, validate_model_settings
 from src.utils.ontology_config import get_config
 from src.utils.prompt_loader import load_prompt
 from src.utils.relation_validator import (
@@ -219,6 +219,7 @@ def run_relation_extraction(
         categorized_csv: Path to classify_categories.csv
         output_path: Output path for construct_relations.csv
     """
+    validate_model_settings("LLM_GENERATION_MODEL")
     if categorized_csv is None:
         categorized_csv = os.environ.get("CATEGORIZED_LLM_TERMS")
         if not categorized_csv:

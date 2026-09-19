@@ -31,9 +31,13 @@ from src.utils.ontology_config import get_config
 # Known upper-ontology IRI prefixes — sourced from ontology_config.yaml
 _CFG = get_config()
 _VERIFIER_PREFIXES = _CFG.verifier_prefixes
-_BFO_PREFIX = _VERIFIER_PREFIXES["bfo"]
-_GEO_PREFIX = _VERIFIER_PREFIXES["geo"]
-_ONTO_PREFIX = _VERIFIER_PREFIXES["presalt"]
+_BFO_PREFIX = _VERIFIER_PREFIXES.get("bfo", _CFG.namespace_for("bfo"))
+_GEO_PREFIX = _VERIFIER_PREFIXES.get("geo")
+_ONTO_PREFIX = _CFG.project_namespace()
+_UPPER_PREFIXES = tuple(dict.fromkeys(
+    [ontology.namespace for ontology in _CFG.ontologies.values()]
+    + [prefix for prefix in (_BFO_PREFIX, _GEO_PREFIX) if prefix]
+))
 
 # OOPS! configuration (set OOPS_URL to enable, e.g. https://oops.linkeddata.es/rest
 # or http://localhost:8080/OOPS/rest for Docker: docker run -p 8080:8080 mpovedavillalon/oops:v1)
@@ -127,11 +131,11 @@ def _verify_structure(ttl_path: str) -> dict:
     upper_iris_used = set()
     for _, _, o in g.triples((None, RDFS.subClassOf, None)):
         o_str = str(o)
-        if o_str.startswith(_BFO_PREFIX) or o_str.startswith(_GEO_PREFIX):
+        if o_str.startswith(_UPPER_PREFIXES):
             upper_iris_used.add(o_str)
     for _, _, o in g.triples((None, RDF.type, None)):
         o_str = str(o)
-        if o_str.startswith(_BFO_PREFIX) or o_str.startswith(_GEO_PREFIX):
+        if o_str.startswith(_UPPER_PREFIXES):
             upper_iris_used.add(o_str)
 
     # Summary counts

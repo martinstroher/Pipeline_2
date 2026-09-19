@@ -8,6 +8,10 @@ preserving headers and structure for downstream RAG indexing.
 import os
 import pathlib
 
+from src.utils.onnx_runtime import configure_onnx_runtime
+
+configure_onnx_runtime()
+
 import pymupdf4llm
 
 from src.utils import log

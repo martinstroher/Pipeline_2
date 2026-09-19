@@ -1,123 +1,127 @@
-# Authoring a Domain — PreSaltOntoLearn
+# Authoring a domain
 
-The PreSaltOntoLearn pipeline is retargetable. The Python code in `src/` does not
-contain any domain-specific text (no personas, no calibration examples, no upper-
-ontology IRIs, no Likert anchors). Everything that distinguishes Pre-Salt geology
-from another scientific domain lives under this `domains/` tree.
+From the repository root:
 
-To create a new domain, copy `presalt/` to `<your_domain>/`, edit the two artifacts
-described below, and point the loaders at the new path via env vars.
-
-## Layout (per domain)
-
-```
-domains/<your_domain>/
-├── ontology_config.yaml          # Upper-ontology metadata + relation constraints + waterfall
-├── prompts/                      # 8 production-pipeline prompts
-│   ├── term_extraction.txt
-│   ├── nld_generation.txt
-│   ├── term_categorization.txt
-│   ├── taxonomy_building.txt
-│   ├── relation_extraction.txt
-│   ├── critic_taxonomy.txt
-│   ├── critic_taxonomy_dedup.txt
-│   ├── critic_relations.txt
-│   ├── cq_scoring.txt
-│   └── cq_synonym_triage.txt
-├── bfo-core.ttl                  # Upper ontologies imported by Step 7
-├── geocore-full.ttl
-├── geores-full.ttl
-├── ro-core.ttl
-└── competency_questions.txt      # CQs evaluated by the CQ pipeline step
+```bash
+python scripts/new_domain.py your_domain
 ```
 
-Two more artifacts sit outside the domain because they describe cross-domain studies:
+The generator copies the starter configuration, current production prompts,
+and saved BFO/RO resources into a temporary sibling folder. It checks the
+complete result before moving it to `domains/your_domain/`. Missing files,
+invalid blocks, incompatible examples, and existing target directories cause
+an error instead of a success message.
 
-- `evaluation_study/prompts/ablation_categorization_rag.txt` — standalone Condition-D raw-context prompt
-- `evaluation_study/config/expert_eval.yaml` — standalone expert-workbook instructions
+## Layout
 
-## Activation
-
-```powershell
-$env:ONTOLOGY_CONFIG_PATH = "domains/your_domain/ontology_config.yaml"
-# Study configuration is documented separately in evaluation_study/README.md.
+```text
+domains/
+  _shared/bfo_ro_relations.yaml   # Generic relation constraints; retained beside domains
+  your_domain/
+    README.md
+    ontology_config.yaml         # Project metadata, category vocabulary, local relations
+    prompt_blocks.yaml           # Identity, personas, questions, worked examples
+    prompts/                     # Current production prompt files
+    resources/
+      bfo-core.owl
+      ro-core.owl
 ```
 
-`ontology_config.py` derives the prompt root from the directory containing the
-active `ontology_config.yaml`, so prompts are found automatically.
+Edit the two YAML files, then check and activate the domain:
 
-## Prompt format
-
-Each `.txt` file has two sections separated by `[PROMPT_TEMPLATE]`:
-
-```
-[SYSTEM_INSTRUCTION]
-You are <persona for this prompt>.
-<any standing instructions / constraints / output format>.
-
-[PROMPT_TEMPLATE]
-<task body with {runtime_placeholders} that the caller fills via str.format>
+```bash
+python -m src.utils.domain_validation domains/your_domain
 ```
 
-There is no load-time interpolation. The system instruction and template are read
-verbatim. The caller substitutes `{name}` placeholders with `str.format(**vars)` at
-call time.
+```dotenv
+ONTOLOGY_CONFIG_PATH=domains/your_domain/ontology_config.yaml
+```
 
-## Runtime placeholders per prompt
+See [SETUP.md](../SETUP.md) for model settings, isolated inputs/outputs, and
+live-run costs. The neutral examples demonstrate formats, not scientific
+adequacy. Review and replace them for the intended subject before using an LLM.
 
-| Prompt | Placeholders the caller injects |
+## Text substitution and questions
+
+Each prompt has `[SYSTEM_INSTRUCTION]` and `[PROMPT_TEMPLATE]` sections.
+At load time, `<<name>>` markers resolve from `prompt_blocks.yaml`; nested
+keys flatten with underscores (`personas.scope_auditor` becomes
+`<<personas_scope_auditor>>`). Block values can reference other blocks.
+Missing names and cycles are errors.
+
+At call time, the caller fills `{name}` fields in the prompt body using
+`str.format()`. JSON examples in that body need doubled braces. System text
+is not formatted again; system-only worked examples can use ordinary JSON.
+
+The runtime question list is `examples.cq_questions`; its identifiers must
+match `examples.cq_identifiers` and fall within CQ1 through CQ10. The scorer
+returns an array of objects containing `term`, `relevant_cqs`, and `reasoning`.
+
+`<<config_relation_property_table>>` is an opt-in, derived block. It builds
+the extraction property table from active configured relations whose
+`critic_menu` flag is true. The starter references it from
+`examples.relation_property_table`; existing literal tables are unchanged.
+
+## Runtime fields
+
+The checker verifies these interfaces against the copied prompt bodies:
+
+| Prompt | Fields supplied by its caller |
 |---|---|
-| `term_extraction.txt` | `{chunk_text}` |
-| `nld_generation.txt` | `{term}`, `{context}` |
-| `term_categorization.txt` | `{categories_block}`, `{json_batch}` |
-| `taxonomy_building.txt` | `{category}`, `{upper_vocab}`, `{terms_json}` |
-| `relation_extraction.txt` | `{known_terms}`, `{json_batch}`, `{batch_size}` |
-| `critic_taxonomy.txt` | `{category}`, `{terms_json}`, `{relations_context_json}`, `{parent_context_json}`, `{target_classes_json}` |
-| `critic_taxonomy_dedup.txt` | `{category}`, `{survivors_json}` |
-| `critic_relations.txt` | `{category}`, `{relations_json}`, `{relations_menu_json}`, `{previously_minted_json}`, `{taxonomy_context_json}`, `{taxonomy_decisions_json}` |
-| `cq_scoring.txt` | `{batch_size}`, `{terms_json}` |
-| `cq_synonym_triage.txt` | `{clusters_json}` |
+| `term_extraction.txt` | `chunk_text` |
+| `nld_generation.txt` | `term`, `context` |
+| `term_categorization.txt` | `categories_block`, `json_batch` |
+| `taxonomy_building.txt` | `category`, `upper_vocab`, `terms_json` |
+| `relation_extraction.txt` | `known_terms`, `json_batch`, `batch_size` |
+| `cq_scoring.txt` | `batch_size`, `terms_json` |
+| `cq_synonym_triage.txt` | `clusters_json` |
+| `critic_taxonomy.txt` | `category`, `terms_json`, `relations_context_json`, `parent_context_json`, `target_classes_json`, `weak_observations_json` |
+| `critic_taxonomy_dedup.txt` | `survivors_json`, `cross_candidates_json` |
+| `critic_class_worthiness.txt` | `category`, `candidates_json`, `existing_classes_json`, `properties_json`, `relations_context_json`, `sibling_context_json`, `weak_observations_json` |
+| `critic_facet_frames.txt` | `category`, `survivors_json`, `existing_classes_json`, `target_context_json`, `max_candidates` |
+| `critic_frame_completion.txt` | `candidates_json` |
+| `critic_relation_scope.txt` | `category`, `relations_json`, `taxonomy_context_json`, `taxonomy_decisions_json` |
+| `critic_relations.txt` | `category`, `relations_json`, `relations_menu_json`, `previously_minted_json`, `taxonomy_context_json`, `taxonomy_decisions_json` |
 
-`{categories_block}` is rendered by `OntologyConfig.categorization_block()` from
-the `waterfall:` list in `ontology_config.yaml` — one `### <DisplayName> Categories:`
-section per ontology in priority order.
+When adding a production prompt or changing its caller fields, update the
+checker contract and its tests in the same patch. Extra custom prompt files
+need an explicit contract before this checker accepts them.
 
-## Expected JSON response
+## Shared relation configuration
 
-The prompt body itself documents the expected schema (object keys, value types,
-batch order). Callers validate:
+The starter has BFO categorization and a class-free RO property supplier.
+Its `relation_defaults: "../_shared/bfo_ro_relations.yaml"` imports 61 generic
+BFO/RO entries, their groups, critic-menu flags, and mereology rules.
+Pre-Salt and new domains reference the shared registry. Pre-Salt adds 10
+geology-specific entries, producing an ordered 71-entry registry.
 
-1. The response parses as JSON.
-2. For batch prompts, the response is a JSON array whose length matches the input
-   batch size. Mismatches raise `ValueError`.
+The shared fragment is safe-loaded YAML, not a custom YAML include tag.
+It can contain only `metatype_groups`, `relations`, and
+`property_specializations`. Nested imports are rejected. Paths resolve
+relative to the domain configuration.
 
-Keep this contract in mind when rewriting prompts: change the schema and the
-caller will reject the response.
+Local groups and relations replace entire same-name entries; other inherited
+entries and their order are retained. A local specialization list replaces
+the inherited list, including `[]`. Omit the key to inherit specialization.
+Provenance-tier filtering applies after merging. New constraints still require
+explicit provenance and the existing configuration parity/audit discipline.
 
-## `ontology_config.yaml` contract
+Export binds the ontologies declared in the active configuration, and
+verification uses its project namespace and upper-ontology prefixes. A
+BFO-grounded starter does not need dummy geology ontologies or prefixes.
 
-See `.github/copilot-instructions.md` for the field-by-field spec. Key rules:
+## Offline checks
 
-- `waterfall:` lists ontology keys in cascade priority (most-specific first). Each
-  key must have at least one class with `metatype:` set.
-- Each ontology entry needs `display_name:`, `prefix:`, `iri:`, and a `classes:`
-  list. Classes used in categorization need `metatype:` (e.g., `MaterialEntity`).
-- `relations:` is the 71-entry property-constraint registry. Each entry needs
-  explicit `provenance ∈ {owl_axiom, bfo_shape_axiom, ro_release, critic_minted}`.
-
-## Validation gates
-
-After any change to a production prompt or `ontology_config.yaml`:
-
-```powershell
-python test/test_ontology_config_parity.py    # 26 checks; must show "=== PARITY PASSED ==="
-python test/test_prompt_refactor_parity.py    # active prompts resolve without drift or missing placeholders
-python test/regression_t1.py                  # deterministic 6d→7→7b regression
+```bash
+python -m pytest -q test/test_new_domain.py
+python -m unittest discover -s test -p 'test_shared_relation*.py' -v
+python test/test_ontology_config_parity.py
+python test/test_prompt_refactor_parity.py
 ```
 
-For changes that touch live LLM behavior, run the e2e smoke test on one paper
-before launching a production run:
-
-```powershell
-python test/run_e2e_test.py
-```
+The new-domain tests create isolated temporary folders and exercise generation,
+failure cleanup, JSON examples, shared defaults, relation validation, export,
+and syntax/structure verification with network access denied. The parity
+scripts protect the existing Pre-Salt configuration and saved prompt behavior.
+None of these checks establishes geological correctness or exercises a live
+model, OOPS!, or Java reasoning.
