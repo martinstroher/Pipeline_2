@@ -16,8 +16,8 @@
 # =============================================================================
 
 # ─── A. Domain identity ──────────────────────────────────────────────────────
-# These five fields are the only mandatory edits when adopting a new domain.
-# Everything else in this file references them.
+# Set the domain identity, then adapt the worked examples and competency
+# questions.
 domain:
   # Full noun phrase used in personas and titles.
   # e.g. "Pre-Salt petroleum geology", "Alzheimer pathway", "EU contract law"

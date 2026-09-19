@@ -1,8 +1,7 @@
 """
 Taxonomy Builder — Step 6 of the PreSaltOntoLearn pipeline.
 
-Takes the winning condition's categorized output (flat: Term -> Category)
-and builds IS-A hierarchies WITHIN each category using LLM group reasoning.
+Builds IS-A hierarchies within each category from categorized terms.
 
 Key design decisions:
   - Processes all terms in a category GROUP (not one-by-one) for tree consistency
@@ -52,8 +51,8 @@ def build_taxonomy_for_group(
     Args:
         category: The ontology category (e.g., "Sedimentary Rock")
         terms_with_nlds: List of {"term": ..., "nld": ...}
-        model_name: Gemini model name
-        model_temperature: Temperature for generation
+        model_name: Azure deployment name
+        model_temperature: Accepted temperature argument; ignored by the shared client
         hints: Optional list of {"general": ..., "specific": ...} specialization hints
 
     Returns:
@@ -83,8 +82,6 @@ def build_taxonomy_for_group(
         upper_vocab=upper_vocab,
         terms_json=json.dumps(terms_with_nlds, indent=2),
     )
-    # Append hints after the formatted prompt (before the output format section won't work
-    # since format() already resolved placeholders, so append at the end of terms_json area)
     if hints_section:
         prompt = prompt + hints_section
 

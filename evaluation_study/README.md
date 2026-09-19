@@ -6,19 +6,12 @@ The production ontology pipeline remains at repository root. This package reads 
 
 ## Corpus identity
 
-The study source list is published without article files or article passages:
-
-- [`corpus_bibliography.csv`](corpus_bibliography.csv) maps all 82 recovered
-  source filenames to title, authors, year, venue, DOI, verification source,
-  confidence, and uncertainty notes.
-- [`corpus_dois.txt`](corpus_dois.txt) lists 76 unique confirmed DOIs. Two
-  duplicate-publication groups account for 78 source rows with confirmed DOIs.
-  Four conference/report sources are retained under `NO CONFIRMED DOI` rather
-  than being assigned a related publication’s DOI.
-
-The inventory identifies the historical corpus; it does not grant article
-redistribution rights or retrospectively reconstruct missing document hashes
-and per-document extraction records.
+The study source list is published without article files or article passages.
+[`corpus_bibliography.csv`](corpus_bibliography.csv) contains the unique
+article titles and authors represented in the historical corpus. It identifies
+the publications at a human-readable level; it does not grant article
+redistribution rights or reconstruct missing document hashes and
+per-document extraction records.
 
 ## Pipeline Inputs
 
@@ -27,7 +20,7 @@ and per-document extraction records.
 | Filtered 407-term set | `inputs/frozen_a/extract_filtered.csv` |
 | Frozen Condition-A terms, NLDs, and context-use flags | `inputs/frozen_a/define_nld.csv` |
 | Frozen Condition-A categories | `inputs/frozen_a/classify_categories.csv` |
-| Frozen construction artifacts (legacy path name) | `inputs/approved_run/` |
+| Frozen construction artifacts | `inputs/approved_run/` |
 | Frozen evaluated ontology | `../output/final/presalt_ontology.ttl` |
 
 The study never modifies these inputs. They are frozen copies, so root pipeline
@@ -45,9 +38,6 @@ ABLATION_FROZEN_A_NLD=/private/define_nld_with_context.csv \
 python -m evaluation_study.cli rehearsal \
   --a-nld /private/define_nld_with_context.csv --overwrite
 ```
-
-Categorizer prompts are rendered by replacing only the explicit batch marker;
-embedded JSON examples remain literal and are covered by the offline test suite.
 
 ## Commands
 
@@ -73,7 +63,7 @@ python -m evaluation_study.cli rehearsal --a-nld /private/define_nld_with_contex
 
 Within this package, only files in `output/ablation/expert_workbooks/` are distributable. Keep `output/ablation/private/` inaccessible to experts.
 
-## Expert Workbook vNext
+## Expert workbooks
 
 The default design generates three independently ordered workbooks. Every expert receives every sampled item; only row order and blinded Definition 1/Definition 2 order differ.
 
@@ -110,7 +100,6 @@ evaluation_study/
   config/display_text.yaml  # Plain-language ontology labels and definitions
   prompts/                  # Study-only prompt variants
   test/                     # Study tests and snapshots
-  docs/                     # Evaluation methods and usability reports
   output/                   # Ignored generated study artifacts
 ```
 

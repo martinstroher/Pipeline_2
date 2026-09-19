@@ -17,7 +17,7 @@ from sentence_transformers import CrossEncoder
 from src.utils import log
 
 DOCS_DIR = os.environ.get("DOCS_DIR", "inputs/")
-# Dynamic DB Persistence: We will append parameters to this path if needed, but defaults here.
+# Retrieval-cache prefix; chunk size is appended.
 CHROMA_DB_DIR = os.environ.get("CHROMA_DB_DIR", "chroma_db")
 
 # --- MODEL CONFIGURATION (BGE-M3 SUITE) ---
@@ -95,7 +95,7 @@ def split_documents(documents: List, chunk_size: int = 1024, chunk_overlap: int 
     return final_splits
 
 def get_chroma_path(chunk_size: int) -> str:
-    """Returns a unique DB path for a specific chunk size to avoid collisions during Grid Search."""
+    """Return the cache path for this chunk size."""
     return f"{CHROMA_DB_DIR}_{chunk_size}"
 
 def create_vector_store(documents: List, chunk_size: int) -> Chroma:
@@ -119,11 +119,7 @@ def load_vector_store(chunk_size: int = 1024) -> Chroma:
     return vector_store
 
 def get_bm25_retriever(docs_list: List = None):
-    """
-    Singleton for BM25. 
-    Note: BM25 depends on the splits. Ideally, we should rebuild it if splits change.
-    For Grid Search, we will probably re-initialize this per run.
-    """
+    """Build and cache BM25 when documents are supplied; otherwise return it."""
     global _BM25_RETRIEVER
     if docs_list:
         _BM25_RETRIEVER = BM25Retriever.from_documents(docs_list, k=DEFAULT_SEARCH_K)

@@ -94,11 +94,7 @@ def _resolve_stop_alias(stop: str | None) -> str | None:
 
 
 def _check_stop(stop: str | None, step: str) -> bool:
-    """If `stop` matches `step`, log success and return True so caller can return.
-
-    Used to dedupe the repeating `if _stop == "X": log.success(...); return`
-    pattern after every pipeline step.
-    """
+    """Log and return True when this step is the requested stopping point."""
     if stop == step:
         log.success(f"\nStopped after Step {step} (--stop-after {step}).")
         return True
@@ -189,7 +185,7 @@ def _dispatch_subcommand(args, parser) -> bool:
 
 
 def _build_parser() -> argparse.ArgumentParser:
-    """Build the CLI parser. Kept separate so main() stays focused on flow."""
+    """Build the CLI parser."""
     parser = argparse.ArgumentParser(description="PreSaltOntoLearn Pipeline")
     parser.add_argument(
         "--taxonomy",
@@ -360,8 +356,8 @@ def main():
         log.info("Step 6b: Relation extraction skipped (--skip-relations)")
     if _check_stop(_stop, "6b"): return
 
-    # Step validate: three-stage critic per category (taxonomy → dedup → relations)
-    log.banner("validate", "Validate (taxonomy + dedup + relation critic per category)")
+    # Run ontology validation.
+    log.banner("validate", "Validate Ontology")
     from src.modules.validate.critic import run_critic
     tax_csv = (
         os.path.splitext(cat_csv)[0]

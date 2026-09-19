@@ -12,7 +12,7 @@ Configuration via environment variables:
   LLM_SEED               — best-effort determinism seed (default: 42)
 
 Notes on GPT-5.x reasoning models:
-  - `temperature` is NOT supported and is IGNORED (accepted only for backward compatibility).
+  - `temperature` is accepted but ignored; GPT-5.x reasoning models reject it.
   - `max_completion_tokens` bounds reasoning + visible tokens; if too low the visible
     content can come back empty (finish_reason == "length"). Keep it generous.
   - Determinism is best-effort (pinned deployment version + seed); not bit-reproducible.
@@ -123,9 +123,8 @@ def generate(
 ) -> str:
     """One-shot chat completion via Azure OpenAI. Returns the message content string.
 
-    Preserves the previous Gemini wrapper's signature so call sites are unchanged.
-    `temperature` is accepted for backward compatibility but IGNORED — GPT-5.x
-    reasoning models reject it. Reads model/effort/limits from env when not given.
+    `temperature` is accepted but ignored. Model, reasoning effort, and token
+    limits use configured defaults when not supplied.
     """
     if model is None:
         model = require_model("LLM_GENERATION_MODEL")

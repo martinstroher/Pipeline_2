@@ -1,10 +1,6 @@
 """
-Parity test — verifies ontology_config.yaml produces dicts/sets that are
-1:1 identical to the legacy hardcoded literals BEFORE migration.
-
-This is the safety net for Phase 2 migration. It MUST pass after Phase 1
-and after every Phase 2 step. If it fails, the YAML drifted from the
-literals — fix the YAML, do not adjust the test.
+Checks ontology configuration/consumer parity and required configuration
+contracts. Investigate failures without weakening the assertions.
 
 Run:
     python test/test_ontology_config_parity.py
@@ -90,7 +86,6 @@ def main() -> int:
     _assert_eq("verifier project prefix", _ONTO_PREFIX, vp.get("presalt"))
 
     # ── LLM definitions block sanity check ──
-    # The .txt files were the legacy source; they are now deleted (YAML is canonical).
     # Verify the YAML produces non-empty definition blocks for every ontology key
     # and that every category has its own definition line.
     for ontology_key in ("georeservoir", "geocore", "bfo"):
@@ -107,7 +102,7 @@ def main() -> int:
         else:
             print(f"[OK]   {ontology_key} definitions complete ({len(config_labels)} lines, {len(expected_labels)} categories)")
 
-    # ── Phase 3: relations / property-constraints sanity ──
+    # ── Relations / property-constraints sanity ──
     from src.utils.relation_validator import PROPERTY_CONSTRAINTS
     all_rels = cfg.all_relations()
     active_rels = cfg.property_constraints()
@@ -133,7 +128,7 @@ def main() -> int:
     else:
         print(f"[OK]   metatype_groups expanded (CONTINUANT={len(cont_set)}, OCCURRENT={len(occ_set)})")
 
-    # ── Phase 6.3: waterfall + categories_block accessors ──
+    # ── Waterfall + categories_block accessors ──
     _assert_eq(
         "waterfall_ontologies() order",
         ["georeservoir", "geocore", "bfo"],
@@ -159,7 +154,7 @@ def main() -> int:
         else:
             print(f"[OK]   categorization_block: 3 ordered headers, {len(block.splitlines())} lines")
 
-    # ── Phase 6.9: property_specializations + reclassifier-tuning accessors ──
+    # ── Property specializations + metatype settings ──
     specs = cfg.property_specializations()
     # Every spec.generic and spec.rules[*].specialize_to must exist in relations:
     rel_names = set(cfg.all_relations().keys())

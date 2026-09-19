@@ -5,8 +5,6 @@
 GeoPreSalt 0.1 is the frozen ontology produced and evaluated in the research
 study. It is retained with known limitations, not presented as a logically
 coherent or independently validated ontology for general application use.
-The pipeline maintenance changes improve installation, configuration checks,
-and new-domain setup without changing this evaluated artifact.
 
 The artifact is `output/final/presalt_ontology.ttl`, with SHA-256:
 
@@ -50,7 +48,7 @@ included axioms. Overall ontology consistency does not establish that every
 class is usable. A complete RO-inclusive satisfiability result is not
 established; the narrower result must not be described as a full-import pass.
 These findings are carried forward from that assessment, not from a new
-reasoner run under the dependency lock in this maintenance change.
+reasoner run under the current dependency lock.
 
 Existing expert judgments concern sampled material and do not establish the
 correctness of every class or relation. Query results and structural checks
@@ -77,11 +75,8 @@ verification. OOPS! and HermiT are skipped. Passing this regression preserves
 the known defects as well as the evaluated content; it is not a repair or a
 new scientific evaluation.
 
-The maintenance environment is checked locally on macOS Apple Silicon.
+The locked environment is checked locally on macOS Apple Silicon.
 Linux dependency resolution is available, but Linux execution, live-model
 runs, and Java reasoning under this lock remain unverified. Model deployment
 versions and retrieved-model snapshots must be recorded separately for a
 new study run; the Python lock does not make LLM results bit-reproducible.
-
-GeoPreSalt 0.2 repairs and the guided proposal/approval workflow are separate
-work and are not included in this release preparation.

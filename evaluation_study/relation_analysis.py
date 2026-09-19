@@ -7,9 +7,7 @@ Produces two outputs:
      (columns: Term, Property, Filler, Evidence, Correct, Notes)
 
 Usage:
-  python pipeline.py --relation-analysis [construct_relations.csv]
-  # or directly:
-    python -m evaluation_study.cli relation-analysis evaluation_study/inputs/approved_run/validate_relations.csv
+  python -m evaluation_study.cli relation-analysis evaluation_study/inputs/approved_run/validate_relations.csv
 """
 
 import os

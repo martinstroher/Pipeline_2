@@ -2,10 +2,8 @@
 # PreSaltOntoLearn — Ontology Configuration
 # =========================================================================
 # Single source of truth for upper-ontology scope, namespaces, and per-class
-# metadata. Every consumer (taxonomy_builder, relation_validator,
-# owl_exporter, ontology_verifier, and term_categorizer read this file via
-# src/utils/ontology_config.py. The standalone evaluation study reads it as a
-# frozen pipeline input.
+# metadata. Pipeline and study consumers load this configuration through
+# `src/utils/ontology_config.py`.
 #
 # To add a class to the pipeline's scope: append an entry under the right
 # ontology's `classes:` list. To change a namespace or import IRI: edit the
@@ -13,7 +11,7 @@
 # Changes apply on next pipeline run — no Python edits required.
 #
 # Env var overrides:
-#   ONTOLOGY_CONFIG_PATH        — path to this file (default: ontology_config.yaml)
+#   ONTOLOGY_CONFIG_PATH        — path to this file
 #   RELATION_PROVENANCE_TIERS   — comma-separated tier names (default: all)
 #                                  e.g. "owl_axiom,bfo_shape_axiom,ro_release"
 # =========================================================================

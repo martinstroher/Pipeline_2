@@ -416,7 +416,7 @@ def _category_descriptions() -> dict[str, str]:
 
 
 def build_term_glosses(nld: pd.DataFrame) -> dict[str, str]:
-    """Return shared context only for terms found ambiguous in the pilot."""
+    """Return glosses for configured ambiguous terms."""
     _require_columns(nld, {"Term", "NLD"}, "NLD gloss source")
     registry = get_display_registry()
     nld_lookup = _lookup_by_term(nld, "NLD", "NLD gloss source")
@@ -512,7 +512,7 @@ def build_category_guide() -> pd.DataFrame:
 
 
 def build_timing_sheet() -> pd.DataFrame:
-    """Collect actual completion time by module during the human pilot."""
+    """Collect actual completion time by workbook module."""
     modules = [
         "Representation",
         "Category Correct and Taxonomy",

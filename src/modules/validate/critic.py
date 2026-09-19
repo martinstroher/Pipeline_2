@@ -1,7 +1,8 @@
 """Ontology critic — the `validate` verb.
 
-Per category, focused LLM calls run in sequence so each is informed by the
-previous:
+Validation runs category-local taxonomy, worthiness, and deduplication calls,
+then global reconciliation, facet/frame analysis, relation correction, and
+relation-scope classification:
 
   1. **Taxonomy critic (Stage 1, per-term, CHUNKED).** Judges the IS-A rows
      (KEEP / REPARENT / DROP_AS_MIXIN / DROP_AS_REDUNDANT / CONVERT_TO_INSTANCE)
@@ -33,9 +34,9 @@ previous:
       correctness (KEEP / DROP / FIX), then independently classifies scope as
       generic, corpus-context, or individual-fact.
 
-Categories run in parallel on the worker pool; the calls above are sequential
-within a category. A completeness guard re-asks the model for any input ids it
-forgot in stages 1 and 3, so large categories are not silently under-reviewed.
+Category-local work runs in parallel. Completeness checks re-ask the taxonomy
+and relation critics for omitted input ids so large categories are not silently
+under-reviewed.
 
 I/O contract:
     run_critic(taxonomy_csv, output_dir, *, relations_csv=None)
@@ -57,7 +58,7 @@ Outputs written to `output_dir`:
     validate_responses_archive/{ts}.jsonl — raw LLM responses, tagged by call
 
 Safety guards:
-    - Default temperature 0 (deterministic).
+    - The shared client ignores temperature; live-model repeatability is best-effort.
     - Completeness guard: any input id the model omits is re-asked once; rows
       still missing fall back to implicit KEEP.
     - After taxonomy edits, any relation whose Filler was DROPped is dropped
@@ -686,8 +687,7 @@ def _build_taxonomy_decisions(
 
 
 def _probe_cols(edit: dict | None) -> dict:
-    """Extract the Option-E probe trace + OntoClean signs from a taxonomy edit
-    for the audit log."""
+    """Extract taxonomy probes and OntoClean signs for the audit log."""
     if not isinstance(edit, dict):
         return {"probe1_genus_ok": "", "probe2_bucket": "", "probe3_rewrite": "",
                 "rigidity": "", "identity": "", "dependence": "", "carried_by": "",

@@ -6,15 +6,15 @@ An LLM-driven ontology learning pipeline for Brazilian Pre-Salt petroleum geolog
 
 ## Research release: GeoPreSalt 0.1
 
-This maintenance work retains the **frozen, evaluated GeoPreSalt 0.1** as a
-research artifact. It does not repair or claim logical coherence of that
+This repository preserves the **frozen, evaluated GeoPreSalt 0.1** research
+artifact. It does not claim logical coherence of that
 ontology. Reasoning with the saved BFO, GeoCore, and GeoReservoir files found
 13 unsatisfiable named classes; a complete RO-inclusive result is not
 established. These limitations are accepted for the research release and are
 documented in [the release notes](docs/geopresalt_0_1_release_notes.md).
 
 The committed offline regression checks every frozen-input hash and reproduces
-the same 1,819-triple RDF graph without rewriting the approved Turtle file:
+the same 1,819-triple RDF graph without rewriting the frozen Turtle file:
 
 ```bash
 python test/test_shared_relation_regeneration.py -v
@@ -22,8 +22,7 @@ python test/test_shared_relation_regeneration.py -v
 
 Graph equality is not byte equality: RDF blank-node identifiers may differ
 between regenerated serializations. The original artifact's SHA-256 remains
-unchanged. No GeoPreSalt 0.2 repair or guided human-correction workflow is
-included in this maintenance change.
+unchanged.
 
 ## Quick Start
 
@@ -45,8 +44,7 @@ source .venv/bin/activate
 `uv` creates the project-local `.venv` and downloads the requested Python
 version if it is not installed. `.python-version` pins Python; `uv.lock` pins
 Python packages and their source hashes for both target platforms.
-`pyproject.toml` is the dependency source of truth, not a publishable Python
-package or an ontology release declaration. Windows, Intel Macs, ARM Linux,
+`pyproject.toml` defines the dependencies. Windows, Intel Macs, ARM Linux,
 and GPU/CUDA environments are outside this initial profile. Linux uses the
 CPU build of PyTorch; the pipeline's embedding model already runs on CPU.
 
@@ -60,9 +58,7 @@ run. This environment is not a reconstruction of the historical GeoPreSalt
 0.1 environment.
 
 Local PDF/retrieval initialization disables ONNX Runtime diagnostic telemetry
-before creating inference sessions. This avoids its background telemetry worker,
-which caused a macOS shutdown crash during validation; it does not change model
-selection or inference outputs.
+before creating inference sessions.
 
 **Optional groups** (run from the repository root):
 ```bash
@@ -72,8 +68,8 @@ selection or inference outputs.
 ```
 The `test` group adds pytest and mock HTTP transport support; `reasoner` adds
 `owlready2`. Java and OOPS! remain separate services/tools. Sync is exact:
-include every optional group you want to retain. The original evaluation and
-statistics dependencies remain in the base environment.
+include every optional group you want to retain. Evaluation and statistics
+dependencies are included in the base environment.
 
 For an existing **Python 3.12.14** virtual environment, generated pip
 requirements are also available:
@@ -100,7 +96,7 @@ cp .env.example .env
 Do not overwrite an existing `.env`. Keep the input/output settings from the
 example: several modules require them even before a pipeline step starts.
 The endpoint is the resource host, without `/openai/v1/`; the client appends
-that suffix. Gemini/Vertex credentials are not used by the current client.
+that suffix.
 The example selects `gpt-5.4` for both model variables; **there is no model
 fallback**. Before loading pipeline modules, converting PDFs, building
 retrieval indexes, or running `--fresh` cleanup, startup rejects missing, empty,
@@ -124,7 +120,7 @@ client; repeatability of live model calls is best-effort, not exact.
 | `CHROMA_DB_DIR` | Retrieval-cache prefix (default: `chroma_db`; the chunk size is appended). Use a separate prefix for each corpus. |
 | `LLM_USAGE_LOG` | Token-usage CSV (default: `output/usage_log.csv`). Override when isolating a run. |
 | `EXTRACTION_WORKERS` | Number of parallel workers for Step 1 extraction (default: `5`) |
-| `MINIMUM_FREQUENCY_FILTER` | Minimum document frequency for Step 3 filtering — number of distinct papers a term must appear in (default: `5`; ~6% of an 82-paper corpus after the gpt-5.4 extraction migration) |
+| `MINIMUM_FREQUENCY_FILTER` | Minimum frequency for Step 3 filtering (default: `5`; ~6% of the 82-document study corpus) |
 | `ONTOLOGY_CONFIG_PATH` | Path to the ontology YAML (default: `domains/presalt/ontology_config.yaml`) — single source of truth for upper ontologies, relations, and the critic's class budget. Swap to retarget the pipeline to another domain. |
 | `RELATION_PROVENANCE_TIERS` | Comma-separated subset of `{owl_axiom, bfo_shape_axiom, ro_release, critic_minted}` controlling which property constraints are active (default: all four) |
 | `LATERAL_HINTS_ENABLED` | Overrides `lateral_coherence.hints.enabled` in `ontology_config.yaml` (`true`/`false`). Weak observations are auxiliary context for the taxonomy critic only; they never directly edit the ontology. |
@@ -183,7 +179,7 @@ python -m src.utils.domain_validation domains/your_domain
 Generation checks a staged folder before reporting success. The starter has
 all text blocks for the current production prompts, current question-scoring
 examples, BFO categories, and 61 shared BFO/RO relation entries. Questions live
-in the prompt blocks; obsolete filter/question files are not copied.
+in the prompt blocks.
 The property menu derives from the active configuration, and export/verification
 do not require geology ontologies. These are structural checks, not a live
 end-to-end run or approval of the new domain's meaning.
@@ -256,10 +252,9 @@ generated NLDs, and context-use flags but excludes retrieved article passages.
 Exact Condition-D replay requires the authorized private full-context research
 record and is not a goal of this public release.
 
-The public study package includes an
-[82-source bibliography](evaluation_study/corpus_bibliography.csv) and a
-[plain-text DOI inventory](evaluation_study/corpus_dois.txt), without
-redistributing the source papers.
+The public study package includes a
+[corpus bibliography](evaluation_study/corpus_bibliography.csv) containing
+article titles and authors, without redistributing the source papers.
 
 ---
 
@@ -286,8 +281,7 @@ Model-configuration tests also check startup failures before dispatch/cleanup,
 direct stage calls, reachable-step requirements, and credential-free CLI help
 and offline verification.
 The separate prompt checks cover block substitution and seven saved snapshots.
-The obsolete tests for the removed `src.validate` package are not included;
-ordinary `python -m pytest` collects the supported test suite.
+Run `python -m pytest` to collect the supported test suite.
 
 The end-to-end smoke test is **live and billable**, not an offline unit test:
 ```bash

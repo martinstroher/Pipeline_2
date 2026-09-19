@@ -69,10 +69,8 @@ universal ontology-learning thresholds.
 
 The public
 [corpus bibliography](../evaluation_study/corpus_bibliography.csv)
-accounts for all 82 recovered source filenames: 78 rows have confirmed DOIs,
-representing 76 unique publications because two sources were duplicated.
-Four sources remain explicitly marked as having no confirmed DOI. Article
-files and retrieved passages are not redistributed.
+lists the unique article titles and authors represented in the historical
+corpus. Article files and retrieved passages are not redistributed.
 
 ## Natural Language Definitions
 

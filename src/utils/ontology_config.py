@@ -15,7 +15,7 @@ Key accessors (consumer → call):
   - ontology_verifier prefixes → get_config().verifier_prefixes()
 
 Env vars:
-  ONTOLOGY_CONFIG_PATH       — config file path (default: ontology_config.yaml)
+  ONTOLOGY_CONFIG_PATH       — config file path (default: domains/presalt/ontology_config.yaml)
   RELATION_PROVENANCE_TIERS  — comma-separated tier names (overrides YAML)
 """
 
@@ -315,14 +315,14 @@ class OntologyConfig:
         """All relations regardless of active tiers — used by the audit script."""
         return dict(self.relations)
 
-    # ─── Property specialization & reclassifier tuning ────────────────
+    # ─── Property specialization and metatype settings ────────────────
 
     def property_specializations(self) -> tuple[PropertySpecialization, ...]:
         """Generic-property dispatch rules (consumed by relation_extractor)."""
         return self.property_specializations_
 
     def non_distinguishing_metatypes(self) -> frozenset[str]:
-        """Metatypes too generic to count as classification evidence in Step 6d."""
+        """Return configured metatypes that carry little distinguishing signal."""
         return self.non_distinguishing_metatypes_
 
     def lateral_coherence(self) -> LateralCoherenceConfig:
@@ -757,7 +757,7 @@ def _build_config(raw: dict, source_path: Path) -> OntologyConfig:
     metatype_groups = _expand_metatype_groups(raw.get("metatype_groups", {}) or {})
     relations = _parse_relations(raw.get("relations", {}) or {}, metatype_groups)
 
-    # property specializations + reclassifier tuning
+    # property specializations + metatype settings
     specializations = _parse_property_specializations(
         raw.get("property_specializations", []) or [],
         metatype_groups,
@@ -810,7 +810,7 @@ def load_config(path: str | Path) -> OntologyConfig:
     if not path.exists():
         raise RuntimeError(
             f"ontology_config.yaml not found at {path}. "
-            f"Set ONTOLOGY_CONFIG_PATH env var or place the file at repo root."
+            "Set ONTOLOGY_CONFIG_PATH to an existing domain configuration."
         )
     try:
         with open(path, "r", encoding="utf-8") as fh:

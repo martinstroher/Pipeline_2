@@ -49,8 +49,8 @@ caller placeholders, question identifiers, and example JSON shapes. It makes
 no model calls and does not validate scientific meaning.
 
 The supplied examples are neutral demonstrations, not a reviewed ontology.
-Customize them before a live run. The obsolete filter configuration is not
-included: the production critic uses ontology configuration and critic prompts.
+Customize them before a live run. The production critic uses ontology
+configuration and critic prompts.
 Keep `domains/_shared/` beside your domain when moving it.
 
 Set `ONTOLOGY_CONFIG_PATH=domains/your_domain/ontology_config.yaml` in `.env`.

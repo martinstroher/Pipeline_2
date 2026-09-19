@@ -149,9 +149,7 @@ relations: {}
 # property_specializations: []
 
 # -------------------------------------------------------------------------
-# Reclassifier (Step 6d) tuning. Metatypes shared across many classes
-# carry little discriminative signal and are excluded from "evidence"
-# scoring when deciding whether to re-parent a term.
+# Metatypes shared across many classes carry little discriminative signal.
 # -------------------------------------------------------------------------
 non_distinguishing_metatypes:
   - Entity

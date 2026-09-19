@@ -9,8 +9,8 @@
 # here. Authors retargeting the pipeline rewrite this file to swap anchors
 # and project name.
 #
-# Load order: src/utils/study_config.py reads this file and exposes
-# `get_study_config().instruction_rows` to the workbook generator.
+# `evaluation_study/study_config.py` loads these instructions for the workbook
+# generator.
 
 sheet_instructions:
   Category_Guide: "Optional reference: consult this sheet only when a proposed category is unfamiliar. You do not need to read or memorize the full list."

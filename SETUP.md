@@ -44,9 +44,8 @@ The example selects `gpt-5.4` for both model variables. There is no fallback:
 startup rejects missing or blank names needed by the selected steps before
 conversion, retrieval, or cleanup. Extraction uses `LLM_EXTRACTION_MODEL`;
 the other LLM stages use `LLM_GENERATION_MODEL`. Standalone export/verification
-and help do not need either. The client always uses Azure; Gemini/Vertex
-credentials do not configure it. Keep all required input/output variables
-from the example.
+and help do not need either. Keep all required input/output variables from the
+example.
 
 ---
 
@@ -111,8 +110,8 @@ identifiers with a reason, not numeric per-question scores.
 CQ refinement is mandatory in the standard pipeline; there is no `--refine`
 flag. Customize the demonstration questions before a live run.
 
-The obsolete `domain_filters.yaml` is no longer copied. Production validation
-uses the active ontology configuration and `critic_*.txt` prompts.
+Production validation uses the active ontology configuration and
+`critic_*.txt` prompts.
 
 ---
 

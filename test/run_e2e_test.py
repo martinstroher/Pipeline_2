@@ -150,7 +150,7 @@ def run_test():
     # Generate test markdown content (written directly with ## headers for RAG chunking)
     generate_test_content(inputs_dir)
 
-    # 3. Clean previous test outputs and intermediary files (Python-native: rm -rf silently fails on Windows)
+    # 3. Clear previous test outputs and intermediary files.
     if os.path.exists(output_dir):
         shutil.rmtree(output_dir)
     os.makedirs(output_dir)

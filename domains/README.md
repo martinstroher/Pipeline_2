@@ -52,13 +52,10 @@ Missing names and cycles are errors.
 At call time, the caller fills `{name}` fields in the prompt body using
 `str.format()`. JSON examples in that body need doubled braces. System text
 is not formatted again; system-only worked examples can use ordinary JSON.
-The existing Pre-Salt text remains unchanged.
 
 The runtime question list is `examples.cq_questions`; its identifiers must
 match `examples.cq_identifiers` and fall within CQ1 through CQ10. The scorer
 returns an array of objects containing `term`, `relevant_cqs`, and `reasoning`.
-New domains do not contain a second question text file or the unused legacy
-filter configuration.
 
 `<<config_relation_property_table>>` is an opt-in, derived block. It builds
 the extraction property table from active configured relations whose
@@ -95,11 +92,8 @@ need an explicit contract before this checker accepts them.
 The starter has BFO categorization and a class-free RO property supplier.
 Its `relation_defaults: "../_shared/bfo_ro_relations.yaml"` imports 61 generic
 BFO/RO entries, their groups, critic-menu flags, and mereology rules.
-These are reused from PR #3 at `e6e8d4a75a04353d5b02f4e3bf9f40ab409056c8`.
-This change consolidates that refactor: Pre-Salt and new domains both reference
-the shared file. Pre-Salt keeps only its 10 geology-specific entries locally
-and still resolves to the same ordered 71-entry registry. Its configuration's
-text changes, but resolved constraints, prompts, and regenerated ontology do not.
+Pre-Salt and new domains reference the shared registry. Pre-Salt adds 10
+geology-specific entries, producing an ordered 71-entry registry.
 
 The shared fragment is safe-loaded YAML, not a custom YAML include tag.
 It can contain only `metatype_groups`, `relations`, and
