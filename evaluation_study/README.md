@@ -4,18 +4,47 @@ Standalone thesis-study package for the A/B/C/D ablation, automated statistics, 
 
 The production ontology pipeline remains at repository root. This package reads frozen pipeline artifacts but writes only under `evaluation_study/output/`.
 
+## Corpus identity
+
+The study source list is published without article files or article passages:
+
+- [`corpus_bibliography.csv`](corpus_bibliography.csv) maps all 82 recovered
+  source filenames to title, authors, year, venue, DOI, verification source,
+  confidence, and uncertainty notes.
+- [`corpus_dois.txt`](corpus_dois.txt) lists 76 unique confirmed DOIs. Two
+  duplicate-publication groups account for 78 source rows with confirmed DOIs.
+  Four conference/report sources are retained under `NO CONFIRMED DOI` rather
+  than being assigned a related publication’s DOI.
+
+The inventory identifies the historical corpus; it does not grant article
+redistribution rights or retrospectively reconstruct missing document hashes
+and per-document extraction records.
+
 ## Pipeline Inputs
 
 | Artifact | Default path |
 |---|---|
 | Filtered 407-term set | `inputs/frozen_a/extract_filtered.csv` |
-| Frozen Condition-A NLDs and contexts | `inputs/frozen_a/define_nld.csv` |
+| Frozen Condition-A terms, NLDs, and context-use flags | `inputs/frozen_a/define_nld.csv` |
 | Frozen Condition-A categories | `inputs/frozen_a/classify_categories.csv` |
-| Approved validate artifacts | `inputs/approved_run/` |
-| Final approved ontology | `../output/final/presalt_ontology.ttl` |
+| Frozen construction artifacts (legacy path name) | `inputs/approved_run/` |
+| Frozen evaluated ontology | `../output/final/presalt_ontology.ttl` |
 
 The study never modifies these inputs. They are frozen copies, so root pipeline
 outputs can be cleaned without breaking study reproducibility.
+
+The public Condition-A CSV excludes the raw `Context` column because it
+contained retrieved article passages. Its original full-context SHA-256 and
+the public redaction are recorded in `inputs/manifest.json`. Public A/B/C
+analysis remains possible. Exact Condition-D replay and the full offline
+rehearsal require an authorized private copy of the original CSV:
+
+```bash
+ABLATION_FROZEN_A_NLD=/private/define_nld_with_context.csv \
+  python -m evaluation_study.cli ablation
+python -m evaluation_study.cli rehearsal \
+  --a-nld /private/define_nld_with_context.csv --overwrite
+```
 
 Categorizer prompts are rendered by replacing only the explicit batch marker;
 embedded JSON examples remain literal and are covered by the offline test suite.
@@ -38,7 +67,8 @@ python -m evaluation_study.cli expert-workbooks
 python -m evaluation_study.cli layer2 \
   evaluation_study/output/ablation/expert_workbooks/*.xlsx \
   --key evaluation_study/output/ablation/private/blinding_key_42.csv
-python -m evaluation_study.cli rehearsal --overwrite
+# Requires --a-nld with the authorized private full-context CSV:
+python -m evaluation_study.cli rehearsal --a-nld /private/define_nld_with_context.csv --overwrite
 ```
 
 Within this package, only files in `output/ablation/expert_workbooks/` are distributable. Keep `output/ablation/private/` inaccessible to experts.
@@ -62,6 +92,13 @@ Visible sheets use plain geological language:
 
 Formal identifiers and source metadata remain in the private key. The display text is curated in `config/display_text.yaml`; workbook generation makes no LLM call.
 Set `EXPERT_REFERENCE_DEFINITIONS` (or pass `--reference-definitions`) to the approved CSV/XLSX. Its hash is recorded in the workbook manifest. Synthetic rehearsal explicitly bypasses the approval gate and uses A-derived preview definitions.
+
+For inferential representation comparisons, `Unsure` is missing data.
+A/B contrasts use only expert-term rows containing both ratings. The
+four-condition correctness test uses only expert-term rows with decisive
+ratings in all four conditions before aggregating to the term level.
+Condition-specific descriptive summaries continue to report their available
+ratings and Unsure rates.
 
 ## Layout
 

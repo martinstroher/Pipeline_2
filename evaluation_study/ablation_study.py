@@ -131,7 +131,7 @@ def _git_commit() -> str:
 
 def _validate_nld_output(df: pd.DataFrame, terms: list[str], label: str) -> None:
     _validate_term_set(df, terms, label)
-    missing = {"NLD", "Context_Used", "Context"} - set(df.columns)
+    missing = {"NLD", "Context_Used"} - set(df.columns)
     if missing:
         raise ValueError(f"{label}: missing columns {sorted(missing)}")
     errors = df["NLD"].fillna("").astype(str).str.startswith("ERROR")
@@ -242,7 +242,7 @@ def run_condition_a(terms: list[str]) -> pd.DataFrame:
     )
     df = _copy_frozen_artifact(source, _nld_path("A"))
     _validate_term_set(df, terms, "Condition A NLD")
-    required = {"NLD", "Context_Used", "Context"}
+    required = {"NLD", "Context_Used"}
     missing = required - set(df.columns)
     if missing:
         raise ValueError(f"Condition A NLD: missing columns {sorted(missing)}")
@@ -277,7 +277,11 @@ def run_condition_d(terms: list[str], condition_a: pd.DataFrame) -> pd.DataFrame
     """Raw RAG: reuse the exact stored chunks supplied to frozen A."""
     _validate_term_set(condition_a, terms, "Condition A NLD source for D")
     if "Context" not in condition_a.columns:
-        raise ValueError("Condition A NLD source for D: missing Context column")
+        raise ValueError(
+            "Condition D requires the private full-context Condition A CSV. "
+            "The public frozen file intentionally excludes retrieved article passages; "
+            "set ABLATION_FROZEN_A_NLD to an authorized private copy."
+        )
     if condition_a["Context"].isna().any():
         missing_terms = condition_a.loc[condition_a["Context"].isna(), "Term"].tolist()
         raise ValueError(
@@ -528,7 +532,10 @@ def run_ablation(conditions: list[str] | None = None):
             "category_source": frozen_cat_source,
             "category_source_sha256": _sha256_file(frozen_cat_source),
         },
-        "condition_d_context_source": "Condition A Context column; no retrieval",
+        "condition_d_context_source": (
+            "Condition A Context column when an authorized private full-context "
+            "source is supplied; no retrieval"
+        ),
         "conditions_requested": conditions,
         "condition_artifacts": {},
     }

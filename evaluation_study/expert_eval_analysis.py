@@ -596,11 +596,16 @@ def analyze_representation(
     """Analyze relevance and A/B NLD quality using terms as independent units."""
     item_means = representation.groupby("Term").agg(
         Relevance=("Relevance", "mean"),
-        Quality_A=("Quality_A", "mean"),
-        Quality_B=("Quality_B", "mean"),
         Preference_Sum=("Preference_A", lambda values: values.sum(min_count=1)),
     ).reset_index()
-    quality_items = item_means.dropna(subset=["Quality_A", "Quality_B"])
+    matched_quality = representation.dropna(
+        subset=["Quality_A", "Quality_B"]
+    ).copy()
+    quality_items = matched_quality.groupby("Term").agg(
+        Quality_A=("Quality_A", "mean"),
+        Quality_B=("Quality_B", "mean"),
+        Matched_Experts=("Expert", "nunique"),
+    ).reset_index()
     differences = (
         quality_items["Quality_A"] - quality_items["Quality_B"]
     ).to_numpy(dtype=float)
@@ -624,9 +629,13 @@ def analyze_representation(
 
     quality_results = {
         "unit_of_analysis": "term-level mean across experts",
+        "missingness_policy": (
+            "A/B quality contrasts use only expert-term rows with both ratings"
+        ),
         "n_terms": len(quality_items),
         "n_terms_sampled": len(item_means),
         "n_terms_excluded_all_unsure": len(item_means) - len(quality_items),
+        "n_matched_expert_term_ratings": int(len(matched_quality)),
         "quality_A_mean": (
             round(float(quality_items["Quality_A"].mean()), 4)
             if len(quality_items)
@@ -718,11 +727,20 @@ def analyze_categories(
             partial=True,
         )
 
-    item_scores = category.groupby(["Term", "Condition"])["Correct_Score"].mean().reset_index()
-    wide_all = item_scores.pivot(index="Term", columns="Condition", values="Correct_Score")
-    wide_all = wide_all.reindex(columns=list(conditions))
-    wide = wide_all.dropna()
-    excluded_terms = len(wide_all) - len(wide)
+    expert_scores = (
+        category.groupby(["Term", "Expert", "Condition"])["Correct_Score"]
+        .mean()
+        .reset_index()
+    )
+    expert_wide = expert_scores.pivot(
+        index=["Term", "Expert"],
+        columns="Condition",
+        values="Correct_Score",
+    ).reindex(columns=list(conditions))
+    complete_expert_wide = expert_wide.dropna()
+    wide = complete_expert_wide.groupby(level="Term").mean()
+    total_terms = int(category["Term"].nunique())
+    excluded_terms = total_terms - len(wide)
     if len(wide) < 2:
         statistic, p_value, kendalls_w = 0.0, 1.0, 0.0
         omnibus = {
@@ -733,9 +751,13 @@ def analyze_categories(
             "p_value": p_value,
             "kendalls_w": kendalls_w,
             "n_complete_terms": len(wide),
-            "n_total_terms": len(wide_all),
+            "n_total_terms": total_terms,
             "n_excluded_incomplete_or_unsure": excluded_terms,
-            "unit_of_analysis": "term-condition mean across experts",
+            "n_complete_expert_term_sets": int(len(complete_expert_wide)),
+            "unit_of_analysis": (
+                "term-condition mean across experts with decisive ratings "
+                "in all four conditions"
+            ),
         }
     else:
         no_within_term_differences = wide.eq(wide["A"], axis=0).all().all()
@@ -757,9 +779,13 @@ def analyze_categories(
             "p_value": p_value,
             "kendalls_w": round(float(kendalls_w), 4),
             "n_complete_terms": len(wide),
-            "n_total_terms": len(wide_all),
+            "n_total_terms": total_terms,
             "n_excluded_incomplete_or_unsure": excluded_terms,
-            "unit_of_analysis": "term-condition mean across experts",
+            "n_complete_expert_term_sets": int(len(complete_expert_wide)),
+            "unit_of_analysis": (
+                "term-condition mean across experts with decisive ratings "
+                "in all four conditions"
+            ),
         }
 
     posthoc = []

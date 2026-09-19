@@ -17,6 +17,14 @@ The artifact is `output/final/presalt_ontology.ttl`, with SHA-256:
 The ten frozen input files and their hashes are recorded in
 `evaluation_study/inputs/manifest.json`.
 
+The public `frozen_a/define_nld.csv` removes the raw retrieved `Context`
+column to avoid redistributing article passages. The manifest records both
+the original private-file hash and the sanitized public-file hash. Terms,
+generated NLDs, and `Context_Used` flags remain available. Exact Condition-D
+replay requires the authorized private research record; this public release
+prioritizes the evaluated outputs and ontology artifact rather than full
+ablation replay.
+
 ## Known logical limitations
 
 The read-only assessment on 16 September 2026 used the saved BFO, GeoCore, and

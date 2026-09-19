@@ -18,20 +18,23 @@ if str(REPO_ROOT) not in sys.path:
     sys.path.insert(0, str(REPO_ROOT))
 
 from evaluation_study.offline_rehearsal import (  # noqa: E402
+    DEFAULT_A_NLD_PATH,
     PROVENANCE,
     _genericise_definition,
     _sha256_file,
     run_offline_rehearsal,
 )
+from src.utils.csv_io import read_csv, write_csv  # noqa: E402
 from evaluation_study.expert_eval_workbook import (  # noqa: E402
     DATA_HEADER_ROW,
     DATA_START_ROW,
 )
 
 
-def _run(path: Path) -> dict:
+def _run(path: Path, a_nld_path: Path) -> dict:
     return run_offline_rehearsal(
         output_dir=str(path),
+        a_nld_path=str(a_nld_path),
         bootstrap_iterations=100,
         overwrite=False,
     )
@@ -47,8 +50,15 @@ def main() -> int:
 
     with tempfile.TemporaryDirectory() as directory:
         root = Path(directory)
-        first = Path(_run(root / "first_rehearsal")["output_dir"])
-        second = Path(_run(root / "second_rehearsal")["output_dir"])
+        private_a = root / "private_a_with_synthetic_context.csv"
+        private_frame = read_csv(DEFAULT_A_NLD_PATH)
+        private_frame["Context"] = [
+            f"Synthetic private rehearsal context for {term}."
+            for term in private_frame["Term"]
+        ]
+        write_csv(private_frame, private_a)
+        first = Path(_run(root / "first_rehearsal", private_a)["output_dir"])
+        second = Path(_run(root / "second_rehearsal", private_a)["output_dir"])
 
         deterministic_files = [
             "nld_B.csv",

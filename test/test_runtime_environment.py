@@ -180,6 +180,30 @@ def test_retrieval_cache_and_reranking_without_model_downloads(monkeypatch, tmp_
     assert results[0][1] == 1.0
 
 
+def test_retrieval_models_use_pinned_standard_code(monkeypatch):
+    from src.utils import rag_setup
+
+    embeddings = Mock()
+    reranker = Mock()
+    monkeypatch.setattr(rag_setup, "HuggingFaceEmbeddings", embeddings)
+    monkeypatch.setattr(rag_setup, "CrossEncoder", reranker)
+    monkeypatch.setattr(rag_setup, "_EMBEDDINGS", None)
+    monkeypatch.setattr(rag_setup, "_CROSS_ENCODER", None)
+
+    rag_setup.get_embedding_model()
+    rag_setup.get_cross_encoder()
+
+    assert embeddings.call_args.kwargs["model_kwargs"] == {
+        "device": "cpu",
+        "revision": rag_setup.EMBED_MODEL_REVISION,
+        "trust_remote_code": False,
+    }
+    assert reranker.call_args.kwargs == {
+        "revision": rag_setup.RERANK_MODEL_REVISION,
+        "trust_remote_code": False,
+    }
+
+
 def test_repeatable_export_and_offline_verification(tmp_path):
     import pandas as pd
     from rdflib import Graph, Literal, OWL, RDF, RDFS, URIRef

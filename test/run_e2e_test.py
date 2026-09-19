@@ -94,6 +94,20 @@ def validate_csv(filepath, expected_columns, min_rows=1, label=""):
     return len(errors) == 0
 
 
+def validate_csv_artifacts(artifacts):
+    """Validate a mapping of labelled CSV artifact contracts."""
+    all_passed = True
+    for label, (path, columns, min_rows) in artifacts.items():
+        ok = validate_csv(
+            path,
+            columns,
+            min_rows=min_rows,
+            label=f"validate {label}",
+        )
+        all_passed = all_passed and ok
+    return all_passed
+
+
 def run_test():
     # 1. Read existing env (to keep PATH, etc.)
     load_dotenv(os.path.join(os.path.dirname(__file__), "../.env"))
@@ -396,14 +410,7 @@ def run_test():
         print("  [WARN] Step 6b (relations): file missing — relation extraction may have been skipped")
 
     # --- validate: lateral-coherence artifacts ---
-    for label, (path, columns, min_rows) in lateral_artifacts.items():
-        ok, rows, errors = validate_csv(path, columns, min_rows=min_rows, label=f"validate {label}")
-        if ok:
-            print(f"  [OK]   validate {label}: {len(rows)} rows")
-        else:
-            for error in errors:
-                print(f"  [FAIL] validate {label}: {error}")
-        all_passed = all_passed and ok
+    all_passed = validate_csv_artifacts(lateral_artifacts) and all_passed
 
     summary_path = os.path.join(refined_dir_abs, "validate_lateral_coherence_summary.json")
     if os.path.exists(summary_path):

@@ -182,6 +182,10 @@ Extraction makes live, billable LLM calls; definition and classification calls
 have not started. Cost depends on the document and Azure deployment.
 Inspect `output/mydomain_smoke/extract_filtered.csv` before continuing.
 
+The root `inputs/` folder contains tracked synthetic examples showing the
+expected location and format. They contain no source-paper text. Remove them
+before a real run; user-supplied corpus files are ignored by Git.
+
 Then run the full pipeline:
 
 ```powershell

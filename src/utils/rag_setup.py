@@ -23,8 +23,10 @@ CHROMA_DB_DIR = os.environ.get("CHROMA_DB_DIR", "chroma_db")
 # --- MODEL CONFIGURATION (BGE-M3 SUITE) ---
 # BGE-M3: State-of-the-art Multilingual, Long Context (8192)
 EMBED_MODEL = "BAAI/bge-m3"
+EMBED_MODEL_REVISION = "5617a9f61b028005a4858fdac845db406aefb181"
 # BGE-Reranker-v2-m3: Matches the embedding model distribution
 RERANK_MODEL = "BAAI/bge-reranker-v2-m3"
+RERANK_MODEL_REVISION = "953dc6f6f85a1b2dbfca4c34a2796e7dde08d41e"
 
 # Default params (configurable via environment)
 DEFAULT_SEARCH_K = int(os.environ.get("RAG_SEARCH_K", 20))
@@ -45,7 +47,11 @@ def get_embedding_model() -> HuggingFaceEmbeddings:
     if _EMBEDDINGS is None:
         _EMBEDDINGS = HuggingFaceEmbeddings(
             model_name=EMBED_MODEL,
-            model_kwargs={'device': 'cpu', 'trust_remote_code': True},
+            model_kwargs={
+                "device": "cpu",
+                "revision": EMBED_MODEL_REVISION,
+                "trust_remote_code": False,
+            },
             encode_kwargs={'normalize_embeddings': True},
         )
     return _EMBEDDINGS
@@ -127,7 +133,11 @@ def get_cross_encoder():
     global _CROSS_ENCODER
     if _CROSS_ENCODER is None:
         log.info(f"Loading re-ranker: {RERANK_MODEL}...")
-        _CROSS_ENCODER = CrossEncoder(RERANK_MODEL, trust_remote_code=True)
+        _CROSS_ENCODER = CrossEncoder(
+            RERANK_MODEL,
+            revision=RERANK_MODEL_REVISION,
+            trust_remote_code=False,
+        )
     return _CROSS_ENCODER
 
 def get_relevant_documents(

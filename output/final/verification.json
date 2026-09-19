@@ -1,6 +1,6 @@
 {
   "artifact": "presalt_ontology.ttl",
-  "status": "APPROVED",
+  "status": "FROZEN_RESEARCH_ARTIFACT",
   "source_run": "production_validate_balanced_high_20260712T230038Z",
   "source_commit": "4455759",
   "policy": "balanced-core",

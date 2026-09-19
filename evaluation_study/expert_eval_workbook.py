@@ -157,7 +157,7 @@ def load_study_inputs(
     terms_path: str,
     expected_term_count: int = 407,
 ) -> StudyInputs:
-    """Load and validate the complete ablation and approved ontology artifacts."""
+    """Load and validate the complete ablation and frozen ontology artifacts."""
     terms = _read_required(terms_path, "Filtered terms")
     _require_columns(terms, {"Readable_Term", "Frequency"}, "Filtered terms")
     if terms["Readable_Term"].astype(str).duplicated().any():
@@ -654,7 +654,7 @@ def select_final_ontology_items(
         observed = {name: len(frame) for name, frame in populations.items()}
         if observed != APPROVED_POPULATIONS:
             raise ValueError(
-                f"Approved ontology populations changed: expected {APPROVED_POPULATIONS}, observed {observed}"
+                f"Frozen ontology populations changed: expected {APPROVED_POPULATIONS}, observed {observed}"
             )
 
     samples = {

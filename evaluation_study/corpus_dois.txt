@@ -1,0 +1,93 @@
+# PreSaltOntoLearn study corpus DOI inventory
+# Source-document rows: 82
+# Rows with a confirmed DOI: 78
+# Unique confirmed DOIs: 76
+# Sources without a confirmed DOI: 4
+#
+# One normalized, lowercase DOI per confirmed unique publication:
+10.1016/j.jsames.2022.103842
+10.1016/j.jsames.2025.105661
+10.1016/j.jsames.2024.104863
+10.1111/bre.12820
+10.1016/j.marpetgeo.2025.107384
+10.1016/j.marpetgeo.2023.106607
+10.1016/j.jsames.2021.103202
+10.1306/04042322048
+10.1306/13722318msb.6.1853
+10.1007/s13146-022-00791-4
+10.1007/s00531-020-01932-7
+10.1144/sp418.13
+10.1306/13732337msb.5.1708
+10.1016/j.marpetgeo.2022.105708
+10.1016/j.marpetgeo.2025.107455
+10.1016/j.jsames.2023.104541
+10.1016/j.jsames.2025.105734
+10.2110/jsr.2022.103
+10.1016/j.jsames.2025.105549
+10.1016/j.marpetgeo.2017.09.013
+10.1306/10042120171
+10.1016/j.marpetgeo.2020.104828
+10.1016/j.petrol.2021.108441
+10.1016/j.marpetgeo.2023.106203
+10.1002/dep2.288
+10.1016/j.marpetgeo.2019.104176
+10.2110/jsr.2017.70
+10.3997/2214-4609.202183037
+10.1007/s13131-025-2487-z
+10.1190/segam2017-17789870.1
+10.1190/int-2018-0004.1
+10.1130/b36378.1
+10.1016/j.sedgeo.2019.01.006
+10.1016/j.marpetgeo.2025.107645
+10.22564/rbgf.v39i3.2110
+10.2118/228310-pa
+10.1016/j.marpetgeo.2024.106700
+10.1016/j.jsg.2024.105271
+10.1016/j.marpetgeo.2025.107427
+10.1016/j.petrol.2022.111173
+10.1144/sp509-2019-78
+10.30632/spwla-2025-0039
+10.1016/j.jsames.2023.104402
+10.1144/sp548-2023-91
+10.1016/j.marpetgeo.2020.104829
+10.1016/j.petsci.2024.02.013
+10.1016/j.marpetgeo.2024.107134
+10.1016/j.jsames.2023.104446
+10.1306/13722325msb.13.1853
+10.1016/j.palaeo.2018.06.043
+10.1016/j.marpetgeo.2025.107529
+10.1016/j.jsames.2023.104731
+10.1016/j.marpetgeo.2023.106141
+10.1016/j.petrol.2019.106372
+10.22564/rbgf.v35i2.809
+10.1016/j.marpetgeo.2023.106432
+10.1306/02111615216
+10.56952/arma-2023-0508
+10.12957/jse.2017.30052
+10.1016/j.jsames.2024.104779
+10.1016/j.marpetgeo.2023.106494
+10.1016/j.jsames.2022.103947
+10.1144/sp548-2023-93
+10.1111/bre.12674
+10.1306/05302322046
+10.1306/11128tanaka2018
+10.1016/j.marpetgeo.2021.105392
+10.1306/13722365msb.14.1853
+10.1016/j.jsames.2023.104589
+10.1306/13722320msb.8.1853
+10.1016/j.marpetgeo.2023.106163
+10.1002/gj.4736
+10.1111/sed.12835
+10.3997/1365-2397.n0094
+10.3389/feart.2025.1551406
+10.1144/petgeo2023-045
+
+# DUPLICATE SOURCE ROWS SHARING A DOI
+10.1190/int-2018-0004.1 | JesusMultiAttributeIdentCarbMoundsBrazilPreSaltInterpretation2019.md | JesusSeismicIdentCarbMoundsPreSaltInterpretation2019 - Copy.md
+10.22564/rbgf.v39i3.2110 | MacedoSeismicArchitPreSaltCarbResBuziosFieldSantosBsBrazJouGeophys2021 - Copy.md | MacedoSeismInterprPreSaltCarbResBúziosFieldSantosBsSBGf2021 - Copy.md
+
+# NO CONFIRMED DOI
+BarnettGrainstonesPreSaltSantosBsAAPGSaltLake2018 - Copy.md | Michael Barnett; Michael Obermaier; Joachim Amthor; Zohreh Sharafodin; Adrian Bolton (2018). Origin and Significance of Thick Carbonate Grainstone Packages in Nonmarine Successions: A Case Study from the Barra Velha Formation, Santos Basin, Brazil. AAPG Annual Convention and Exhibition, Salt Lake City. | Conference source inferred from filename and later 2021 memoir chapter; no distinct 2018 DOI was found in Crossref, DataCite, or targeted metadata searches. Do not substitute the later chapter DOI.
+deJesusPermEstimImageLogsPreSaltKarstPetrophysics2016.md | de Jesus et al. (2016). Permeability estimation from image logs in pre-salt karst. Petrophysics. | Filename identifies a 2016 Petrophysics item, but no matching registered DOI or sufficiently complete publisher metadata was found; related later papers are not the same publication.
+SaraivaLithogeochPetrogrCharPreSaltResAtapuFldSBGf2023.md | Saraiva et al. (2023). Lithogeochemical and petrographic characterization of pre-salt reservoirs in the Atapu Field. 18th International Congress of the Brazilian Geophysical Society (SBGf). | Conference source identity is recoverable from the filename, but Crossref, DataCite, and prefix-scoped SBGf searches returned no matching registered DOI; author list remains incomplete.
+WrightBarnettCriticalEvalDepModelsPreSaltSntosBsAAPGLondon2017 - Copy.md | V. Paul Wright; Andrew J. Barnett (2017). Critical evaluation of depositional models for the pre-salt of the Santos Basin. AAPG conference, London. | Conference presentation inferred from filename; targeted Crossref and DataCite searches found no matching DOI. The related 2018 First Break and 2019 Facies papers are different publications.

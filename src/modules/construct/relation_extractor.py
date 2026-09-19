@@ -10,10 +10,10 @@ Output: construct_relations.csv (Term, Category, Property, Property_IRI,
         Filler, Filler_Source, Confidence, Evidence, Validation_Status,
         Validation_Reason)
 
-Design decisions (from 5-subagent consensus):
-  - 16 Tier 1 properties offered to the LLM (covers >95% of geological NLDs)
-  - Flat sequential batches of 10 terms
-  - 2-level confidence: 1.0 (explicit) or 0.8 (implied); <0.8 = don't extract
+Implementation:
+  - The active domain configuration defines the properties offered to the LLM.
+  - Flat sequential batches default to 10 terms.
+  - Prompt examples use 1.0 for explicit and 0.8 for implied statements.
   - Post-hoc property specialization: LLM emits a generic property (e.g.,
     has_part); Python upgrades it to the upper-ontology-specific variant
     (e.g., has_continuant_part) using rules declared under

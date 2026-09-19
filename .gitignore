@@ -9,9 +9,12 @@ output/*
 !output/final/**
 evaluation_study/output/
 .DS_Store
-inputs/
+inputs/*
+!inputs/README.txt
+!inputs/mock_*.pdf
 !evaluation_study/inputs/
 !evaluation_study/inputs/**
+test/output_test/
 .venv*/
 usage_log.csv
 .env.bak*
